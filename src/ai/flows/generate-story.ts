@@ -15,6 +15,7 @@ const GenerateStoryInputSchema = z.object({
   difficultyLevel: z
     .enum(['beginner', 'intermediate', 'advanced'])
     .describe('The difficulty level of the story to generate.'),
+  sourceLanguage: z.string().describe('The language the story should be written in.'),
 });
 export type GenerateStoryInput = z.infer<typeof GenerateStoryInputSchema>;
 
@@ -31,7 +32,7 @@ const generateStoryPrompt = ai.definePrompt({
   name: 'generateStoryPrompt',
   input: {schema: GenerateStoryInputSchema},
   output: {schema: GenerateStoryOutputSchema},
-  prompt: `You are a creative story writer. Write a short story for a {{difficultyLevel}} level language learner. The story should be engaging and suitable for language learning purposes.`,
+  prompt: `You are a creative story writer. Write a short story in {{sourceLanguage}} for a {{difficultyLevel}} level language learner. The story should be engaging and suitable for language learning purposes.`,
 });
 
 const generateStoryFlow = ai.defineFlow(

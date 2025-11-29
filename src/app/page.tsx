@@ -9,6 +9,7 @@ import {
   Languages,
   LoaderCircle,
   AlertCircle,
+  Book,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,9 @@ import { Logo } from "@/components/icons";
 
 const FormSchema = z.object({
   difficulty: z.enum(["beginner", "intermediate", "advanced"]),
+  sourceLanguage: z.string({
+    required_error: "Please select a source language.",
+  }),
   targetLanguage: z.string({
     required_error: "Please select a language.",
   }),
@@ -47,6 +51,7 @@ type StoryResult = {
   originalStory: string;
   translatedText: string;
   audioDataUri: string;
+  sourceLanguage: string;
 };
 
 export default function Home() {
@@ -58,6 +63,7 @@ export default function Home() {
     resolver: zodResolver(FormSchema),
     defaultValues: {
       difficulty: "beginner",
+      sourceLanguage: "English"
     },
   });
 
@@ -98,7 +104,7 @@ export default function Home() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormField
                   control={form.control}
                   name="difficulty"
@@ -123,6 +129,37 @@ export default function Home() {
                             Intermediate
                           </SelectItem>
                           <SelectItem value="advanced">Advanced</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="sourceLanguage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Book className="h-5 w-5" />
+                        Story Language
+                      </FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select story language" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {LANGUAGES.map((lang) => (
+                            <SelectItem key={lang.value} value={lang.value}>
+                              {lang.label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -205,6 +242,7 @@ export default function Home() {
           originalStory={storyResult.originalStory}
           translatedText={storyResult.translatedText}
           audioDataUri={storyResult.audioDataUri}
+          sourceLanguage={storyResult.sourceLanguage}
         />
       )}
     </main>

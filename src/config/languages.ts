@@ -13,4 +13,6 @@ export const LANGUAGES: Language[] = [
   { value: 'Portuguese', label: 'Portuguese' },
   { value: 'Russian', label: 'Russian' },
   { value: 'Chinese (Simplified)', label: 'Chinese (Simplified)' },
+  { value: 'Hebrew', label: 'Hebrew' },
+  { value: 'English', label: 'English' },
 ];

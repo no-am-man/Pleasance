@@ -10,12 +10,14 @@ type StoryViewerProps = {
   originalStory: string;
   translatedText: string;
   audioDataUri: string;
+  sourceLanguage: string;
 };
 
 export default function StoryViewer({
   originalStory,
   translatedText,
   audioDataUri,
+  sourceLanguage,
 }: StoryViewerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -82,7 +84,7 @@ export default function StoryViewer({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card>
           <CardHeader>
-            <CardTitle>Original Story (English)</CardTitle>
+            <CardTitle>Original Story ({sourceLanguage})</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
