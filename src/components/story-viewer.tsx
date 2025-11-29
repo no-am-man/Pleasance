@@ -41,7 +41,8 @@ export default function StoryViewer({
 
     const handlePlaybackEnded = () => {
       setIsPlaying(false);
-      setCurrentTime(0);
+      // Don't reset to 0, let the user see the full highlight
+      // setCurrentTime(0); 
     };
 
     audio.addEventListener("loadeddata", setAudioData);
@@ -94,7 +95,7 @@ export default function StoryViewer({
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Translated Story</CardTitle>
+            <CardTitle>Translated Story (Karaoke)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="relative isolate">
@@ -102,11 +103,12 @@ export default function StoryViewer({
                 {translatedText}
               </p>
               <div
-                className={cn(
-                  "absolute top-0 left-0 h-full bg-accent/30 -z-10 rounded-md",
-                  isPlaying && "transition-[width] duration-100 ease-linear"
-                )}
-                style={{ width: `${progress}%` }}
+                className="absolute top-0 left-0 h-full -z-10"
+                style={{ 
+                  width: `${progress}%`,
+                  background: 'linear-gradient(to right, hsl(var(--accent) / 0.3), hsl(var(--accent) / 0.1))',
+                  transition: isPlaying ? 'width 0.1s linear' : 'none'
+                }}
               />
             </div>
           </CardContent>
