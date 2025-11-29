@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, Pause } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 type StoryViewerProps = {
   originalStory: string;
@@ -41,20 +40,16 @@ export default function StoryViewer({
 
     const handlePlaybackEnded = () => {
       setIsPlaying(false);
-      // Don't reset to 0, let the user see the full highlight
-      // setCurrentTime(0); 
     };
 
     audio.addEventListener("loadeddata", setAudioData);
     audio.addEventListener("timeupdate", setAudioTime);
     audio.addEventListener("ended", handlePlaybackEnded);
 
-    // If audio is already loaded
     if (audio.readyState > 0) {
       setAudioData();
     }
     
-    // Autoplay when the component mounts with new audio
     audio.play().then(() => setIsPlaying(true)).catch(e => console.error("Autoplay failed", e));
 
 
@@ -88,19 +83,9 @@ export default function StoryViewer({
             <CardTitle>Original Story ({sourceLanguage})</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
-              {originalStory}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Translated Story (Karaoke)</CardTitle>
-          </CardHeader>
-          <CardContent>
             <div className="relative isolate">
-              <p className="text-foreground whitespace-pre-wrap leading-relaxed">
-                {translatedText}
+              <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                {originalStory}
               </p>
               <div
                 className="absolute top-0 left-0 h-full -z-10"
@@ -111,6 +96,16 @@ export default function StoryViewer({
                 }}
               />
             </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Translated Story</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-foreground whitespace-pre-wrap leading-relaxed">
+              {translatedText}
+            </p>
           </CardContent>
         </Card>
       </div>
