@@ -28,10 +28,14 @@ export async function translateStory(input: TranslateStoryInput): Promise<Transl
   return translateStoryFlow(input);
 }
 
+const TranslatedStorySchema = z.object({
+  translatedText: z.string().describe('The translated story text.'),
+});
+
 const translateStoryPrompt = ai.definePrompt({
   name: 'translateStoryPrompt',
   input: {schema: TranslateStoryInputSchema},
-  output: {schema: z.string().describe('The translated story text.')},
+  output: {schema: TranslatedStorySchema},
   prompt: `Translate the following story from {{sourceLanguage}} to {{targetLanguage}}:\n\n{{{storyText}}}`,
 });
 
@@ -102,7 +106,7 @@ const translateStoryFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await translateStoryPrompt(input);
-    const translatedText = output || '';
+    const translatedText = output?.translatedText || '';
 
     if (translatedText.trim() === '') {
         throw new Error('Failed to get a valid translation for the story.');
