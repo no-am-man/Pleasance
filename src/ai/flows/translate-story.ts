@@ -101,9 +101,11 @@ const translateStoryFlow = ai.defineFlow(
     outputSchema: TranslateStoryOutputSchema,
   },
   async input => {
-    const {output: translatedText} = await translateStoryPrompt(input);
-    if (!translatedText) {
-        throw new Error('Failed to translate the story.');
+    const {output} = await translateStoryPrompt(input);
+    const translatedText = output || '';
+
+    if (translatedText.trim() === '') {
+        throw new Error('Failed to get a valid translation for the story.');
     }
     const {media: audioDataUri} = await textToSpeechFlow(translatedText);
     return {translatedText: translatedText, audioDataUri: audioDataUri};
