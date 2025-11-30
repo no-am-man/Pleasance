@@ -21,10 +21,10 @@ export const COMMUNITY_DATA: CommunityData = {
   members: [
     {
       id: "0",
-      name: "The Visionary",
+      name: "Noam",
       role: "Founder",
       avatarUrl: "https://i.pravatar.cc/150?u=creator",
-      bio: "The partner who imagined this world.",
+      bio: "The partner who imagined this world. (Pleasance)",
     },
     {
       id: "1",
