@@ -63,7 +63,8 @@ export default function Home() {
     resolver: zodResolver(FormSchema),
     defaultValues: {
       difficulty: "beginner",
-      sourceLanguage: "English"
+      sourceLanguage: "English",
+      targetLanguage: "English",
     },
   });
 
