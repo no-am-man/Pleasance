@@ -25,34 +25,14 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
     }
     const originalStory = storyResult.story;
 
-    // If source and target languages are the same, no need to translate.
-    if (sourceLanguage === targetLanguage) {
-      const translationResult = await translateStory({
-        storyText: originalStory,
-        sourceLanguage: sourceLanguage,
-        targetLanguage: targetLanguage,
-      });
-
-       if (!translationResult.translatedText || !translationResult.audioDataUri) {
-         throw new Error('Failed to generate audio for the story.');
-       }
-
-      return {
-        originalStory,
-        translatedText: translationResult.translatedText,
-        audioDataUri: translationResult.audioDataUri,
-        sourceLanguage: sourceLanguage
-      };
-    }
-
     const translationResult = await translateStory({
       storyText: originalStory,
       sourceLanguage: sourceLanguage,
       targetLanguage: targetLanguage,
     });
 
-    if (!translationResult.translatedText || !translationResult.audioDataUri) {
-      throw new Error('Failed to translate the story or generate audio.');
+    if (!translationResult.translatedText) {
+      throw new Error('Failed to translate the story.');
     }
 
     return {
