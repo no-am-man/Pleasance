@@ -64,7 +64,7 @@ export default function Home() {
     defaultValues: {
       difficulty: "beginner",
       sourceLanguage: "English",
-      targetLanguage: "English",
+      targetLanguage: "Spanish",
     },
   });
 
@@ -73,12 +73,17 @@ export default function Home() {
     setError(null);
     setStoryResult(null);
 
-    const result = await generateAndTranslateStory(data);
-
-    if (result.error) {
-      setError(result.error);
-    } else {
-      setStoryResult(result as StoryResult);
+    try {
+        const result = await generateAndTranslateStory(data);
+    
+        if (result.error) {
+          setError(result.error);
+        } else {
+          setStoryResult(result as StoryResult);
+        }
+    } catch(e) {
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        setError(`An unexpected error occurred. ${message}`);
     }
 
     setIsLoading(false);
