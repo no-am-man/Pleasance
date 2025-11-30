@@ -4,6 +4,7 @@ export type Language = {
 };
 
 export const LANGUAGES: Language[] = [
+  { value: 'Arabic', label: 'Arabic' },
   { value: 'French', label: 'French' },
   { value: 'Spanish', label: 'Spanish' },
   { value: 'German', label: 'German' },
