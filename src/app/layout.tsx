@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { Button } from '@/components/ui/button';
 import { Home, Users } from 'lucide-react';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
   title: 'LinguaTune',
@@ -23,24 +24,26 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <header className="container mx-auto max-w-4xl py-4">
-          <nav className="flex items-center gap-4">
-            <Button asChild variant="ghost">
-              <Link href="/">
-                <Home className="h-4 w-4 mr-2" />
-                Home
-              </Link>
-            </Button>
-            <Button asChild variant="ghost">
-              <Link href="/community">
-                <Users className="h-4 w-4 mr-2" />
-                Community
-              </Link>
-            </Button>
-          </nav>
-        </header>
-        {children}
-        <Toaster />
+        <FirebaseClientProvider>
+          <header className="container mx-auto max-w-4xl py-4">
+            <nav className="flex items-center gap-4">
+              <Button asChild variant="ghost">
+                <Link href="/">
+                  <Home className="h-4 w-4 mr-2" />
+                  Home
+                </Link>
+              </Button>
+              <Button asChild variant="ghost">
+                <Link href="/community">
+                  <Users className="h-4 w-4 mr-2" />
+                  Community
+                </Link>
+              </Button>
+            </nav>
+          </header>
+          {children}
+          <Toaster />
+        </FirebaseClientProvider>
       </body>
     </html>
   );

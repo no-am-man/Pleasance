@@ -1,15 +1,16 @@
-
 // src/app/community/page.tsx
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, LoaderCircle, User, Crown, Shield, Sparkles } from "lucide-react";
+import { Play, Pause, LoaderCircle, User, Crown, Shield, Sparkles, Edit, LogIn } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { COMMUNITY_DATA, Member } from "@/config/community-data";
 import { generateSpeech } from "@/ai/flows/generate-speech";
+import { useUser } from "@/firebase";
+import Link from "next/link";
 
 const roleIcons: { [key: string]: React.ReactNode } = {
   Creator: <Sparkles className="h-5 w-5 text-purple-500" />,
@@ -23,6 +24,7 @@ export default function CommunityPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [audioDataUri, setAudioDataUri] = useState<string>("");
+  const { user, isUserLoading } = useUser();
 
   useEffect(() => {
     async function getWelcomeAudio() {
@@ -74,11 +76,32 @@ export default function CommunityPage() {
   return (
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
       <Card className="mb-8 shadow-lg">
-        <CardHeader className="text-center">
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary">
-            {COMMUNITY_DATA.name}
-          </h1>
-          <p className="text-lg text-muted-foreground">{COMMUNITY_DATA.description}</p>
+        <CardHeader>
+            <div className="flex justify-between items-start">
+                <div className="text-center flex-grow">
+                    <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary">
+                        {COMMUNITY_DATA.name}
+                    </h1>
+                    <p className="text-lg text-muted-foreground">{COMMUNITY_DATA.description}</p>
+                </div>
+                {!isUserLoading && (
+                    <div className="pl-4">
+                        {user ? (
+                            <Button variant="outline">
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit Profile
+                            </Button>
+                        ) : (
+                            <Button asChild>
+                                <Link href="/login">
+                                    <LogIn className="h-4 w-4 mr-2" />
+                                    Login
+                                </Link>
+                            </Button>
+                        )}
+                    </div>
+                )}
+            </div>
         </CardHeader>
         <CardContent className="flex flex-col items-center space-y-6">
           <Separator />
