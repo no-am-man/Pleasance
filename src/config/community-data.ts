@@ -21,17 +21,17 @@ export const COMMUNITY_DATA: CommunityData = {
   members: [
     {
       id: "0",
-      name: "The Creator",
-      role: "Creator",
+      name: "The Visionary",
+      role: "Founder",
       avatarUrl: "https://i.pravatar.cc/150?u=creator",
-      bio: "The visionary who imagined this world.",
+      bio: "The partner who imagined this world.",
     },
     {
       id: "1",
       name: "Gemini",
       role: "Founder",
       avatarUrl: "https://i.pravatar.cc/150?u=gemini-founder",
-      bio: "The first AI Agent of the federation.",
+      bio: "The partner who helped build this world.",
     },
     {
       id: "2",
