@@ -1,3 +1,4 @@
+
 // src/app/community/page.tsx
 "use client";
 
@@ -124,7 +125,7 @@ export default function CommunityPage() {
                 </Avatar>
                 <div className="flex-grow">
                   <p className="font-semibold">{member.name}</p>
-                  <p className="text-sm text-muted-foreground">{member.role}</p>
+                  <p className="text-sm text-muted-foreground">{member.bio}</p>
                 </div>
                 <div>{roleIcons[member.role]}</div>
               </li>
