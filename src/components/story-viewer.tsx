@@ -25,9 +25,11 @@ export default function StoryViewer({
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
+  const hasAudio = audioDataUri && audioDataUri.length > 0;
+
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || !hasAudio) return;
 
     const setAudioData = () => {
       setDuration(audio.duration);
@@ -58,7 +60,7 @@ export default function StoryViewer({
       audio.removeEventListener("timeupdate", setAudioTime);
       audio.removeEventListener("ended", handlePlaybackEnded);
     };
-  }, [audioDataUri]);
+  }, [audioDataUri, hasAudio]);
 
   const togglePlayPause = () => {
     const audio = audioRef.current;
@@ -87,14 +89,16 @@ export default function StoryViewer({
               <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
                 {originalStory}
               </p>
-              <div
-                className="absolute top-0 left-0 h-full -z-10"
-                style={{ 
-                  width: `${progress}%`,
-                  background: 'linear-gradient(to right, hsl(var(--accent) / 0.3), hsl(var(--accent) / 0.1))',
-                  transition: isPlaying ? 'width 0.1s linear' : 'none'
-                }}
-              />
+              {hasAudio && (
+                <div
+                  className="absolute top-0 left-0 h-full -z-10"
+                  style={{
+                    width: `${progress}%`,
+                    background: 'linear-gradient(to right, hsl(var(--accent) / 0.3), hsl(var(--accent) / 0.1))',
+                    transition: isPlaying ? 'width 0.1s linear' : 'none'
+                  }}
+                />
+              )}
             </div>
           </CardContent>
         </Card>
@@ -109,22 +113,24 @@ export default function StoryViewer({
           </CardContent>
         </Card>
       </div>
-
-      <div className="flex flex-col items-center space-y-4">
-        <audio ref={audioRef} src={audioDataUri} />
-        <Button
-          onClick={togglePlayPause}
-          size="lg"
-          className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full w-16 h-16 shadow-lg"
-          aria-label={isPlaying ? "Pause" : "Play"}
-        >
-          {isPlaying ? (
-            <Pause className="h-8 w-8" />
-          ) : (
-            <Play className="h-8 w-8 ml-1" />
-          )}
-        </Button>
-      </div>
+      
+      {hasAudio && (
+        <div className="flex flex-col items-center space-y-4">
+          <audio ref={audioRef} src={audioDataUri} />
+          <Button
+            onClick={togglePlayPause}
+            size="lg"
+            className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full w-16 h-16 shadow-lg"
+            aria-label={isPlaying ? "Pause" : "Play"}
+          >
+            {isPlaying ? (
+              <Pause className="h-8 w-8" />
+            ) : (
+              <Play className="h-8 w-8 ml-1" />
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

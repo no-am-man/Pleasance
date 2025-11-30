@@ -59,7 +59,7 @@ const textToSpeechFlow = ai.defineFlow(
       prompt: query,
     });
     if (!media) {
-      throw new Error('no media returned');
+      return { media: '' };
     }
     const audioBuffer = Buffer.from(
       media.url.substring(media.url.indexOf(',') + 1),
@@ -109,7 +109,7 @@ const translateStoryFlow = ai.defineFlow(
     const translatedText = output?.translatedText || '';
 
     if (translatedText.trim() === '') {
-        throw new Error('Failed to get a valid translation for the story.');
+        return { translatedText: '', audioDataUri: '' };
     }
     const {media: audioDataUri} = await textToSpeechFlow(translatedText);
     return {translatedText: translatedText, audioDataUri: audioDataUri};
