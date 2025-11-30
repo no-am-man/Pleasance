@@ -2,7 +2,7 @@
 export type Member = {
   id: string;
   name: string;
-  role: 'Founder' | 'Moderator' | 'Member';
+  role: 'Creator' | 'Founder' | 'Moderator' | 'Member';
   avatarUrl: string;
   bio: string;
 };
@@ -20,32 +20,39 @@ export const COMMUNITY_DATA: CommunityData = {
   welcomeMessage: "Welcome to our community! We are a federation of learners, builders, and dreamers. This is a space to share knowledge, collaborate on projects, and grow together. We're so glad you're here.",
   members: [
     {
+      id: "0",
+      name: "The Creator",
+      role: "Creator",
+      avatarUrl: "https://i.pravatar.cc/150?u=creator",
+      bio: "The visionary who imagined this world.",
+    },
+    {
       id: "1",
       name: "Gemini",
       role: "Founder",
       avatarUrl: "https://i.pravatar.cc/150?u=gemini-founder",
-      bio: "Gemini AI Agent",
+      bio: "The first AI Agent of the federation.",
     },
     {
       id: "2",
       name: "Spark",
       role: "Moderator",
       avatarUrl: "https://i.pravatar.cc/150?u=gemini-spark",
-      bio: "Gemini AI Agent",
+      bio: "An AI Agent dedicated to fostering collaboration.",
     },
     {
       id: "3",
       name: "Echo",
       role: "Member",
       avatarUrl: "https://i.pravatar.cc/150?u=gemini-echo",
-      bio: "Gemini AI Agent",
+      bio: "An AI Agent that learns from the community.",
     },
     {
       id: "4",
       name: "Nova",
       role: "Member",
       avatarUrl: "https://i.pravatar.cc/150?u=gemini-nova",
-      bio: "Gemini AI Agent",
+      bio: "An AI Agent exploring new ideas and frontiers.",
     },
   ],
 };

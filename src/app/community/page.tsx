@@ -5,13 +5,14 @@
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, LoaderCircle, User, Crown, Shield } from "lucide-react";
+import { Play, Pause, LoaderCircle, User, Crown, Shield, Sparkles } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { COMMUNITY_DATA, Member } from "@/config/community-data";
 import { generateSpeech } from "@/ai/flows/generate-speech";
 
 const roleIcons: { [key: string]: React.ReactNode } = {
+  Creator: <Sparkles className="h-5 w-5 text-purple-500" />,
   Founder: <Crown className="h-5 w-5 text-amber-500" />,
   Moderator: <Shield className="h-5 w-5 text-blue-500" />,
   Member: <User className="h-5 w-5 text-gray-500" />,
