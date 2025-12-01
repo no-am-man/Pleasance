@@ -22,6 +22,7 @@ const AssetSchema = z.object({
   name: z.string().min(2, 'Asset name must be at least 2 characters.'),
   description: z.string().min(10, 'Description must be at least 10 characters.').max(500, 'Description cannot exceed 500 characters.'),
   type: z.enum(['physical', 'ip'], { required_error: 'Please select an asset type.' }),
+  value: z.coerce.number().min(0, 'Value must be a positive number.'),
 });
 
 type Asset = z.infer<typeof AssetSchema> & {
@@ -38,7 +39,7 @@ function AddAssetForm() {
 
     const form = useForm<z.infer<typeof AssetSchema>>({
         resolver: zodResolver(AssetSchema),
-        defaultValues: { name: '', description: '', type: 'physical' },
+        defaultValues: { name: '', description: '', type: 'physical', value: 0 },
     });
 
     async function onSubmit(data: z.infer<typeof AssetSchema>) {
@@ -85,19 +86,34 @@ function AddAssetForm() {
             <CardContent>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                        <FormField
-                            control={form.control}
-                            name="name"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Asset Name</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="e.g., Custom 3D Printed Drone Frame" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <FormField
+                                control={form.control}
+                                name="name"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Asset Name</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="e.g., Custom 3D Printed Drone Frame" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="value"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Asset Value (USD)</FormLabel>
+                                        <FormControl>
+                                            <Input type="number" placeholder="100.00" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
                          <FormField
                             control={form.control}
                             name="description"
@@ -179,7 +195,10 @@ function AssetList() {
                             <div key={asset.id} className="flex items-start gap-4 rounded-md border p-4">
                                 {asset.type === 'physical' ? <Box className="h-8 w-8 text-primary mt-1" /> : <BrainCircuit className="h-8 w-8 text-primary mt-1" />}
                                 <div className="flex-1">
-                                    <h3 className="font-semibold">{asset.name}</h3>
+                                    <div className="flex justify-between items-center">
+                                        <h3 className="font-semibold">{asset.name}</h3>
+                                        <p className="font-mono text-primary font-bold text-lg">${asset.value.toLocaleString()}</p>
+                                    </div>
                                     <p className="text-sm text-muted-foreground">{asset.description}</p>
                                 </div>
                             </div>
