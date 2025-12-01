@@ -91,14 +91,19 @@ service cloud.firestore {
         let data = request.resource.data;
         let baseValidation = data.userId == request.auth.uid
             && data.status == 'active'
-            && data.communityId == communityId
-            && data.keys().hasAll(['communityId', 'userId', 'userName', 'type', 'status']);
+            && data.communityId == communityId;
+            // The hasAll check was too brittle and checked for server-generated fields.
+            // We now validate fields individually.
         
         if (data.type == 'text') {
-            return baseValidation && data.text is string && data.text.size() > 0 && data.text.size() < 500;
+            return baseValidation 
+                && data.text is string 
+                && data.text.size() > 0 && data.text.size() < 500;
         }
         if (data.type == 'voice') {
-            return baseValidation && data.keys().hasAll(['audioUrl', 'transcription']);
+            return baseValidation 
+                && data.audioUrl is string
+                && data.transcription is string;
         }
         return false;
     }
