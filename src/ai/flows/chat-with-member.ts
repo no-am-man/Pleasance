@@ -10,9 +10,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { initializeFirebase } from '@/firebase/config-for-actions';
-import { doc, updateDoc, getDoc, increment } from 'firebase/firestore';
-
 
 const MemberSchema = z.object({
   name: z.string().describe("The AI member's unique name."),
@@ -27,7 +24,6 @@ const ChatHistorySchema = z.object({
 });
 
 const ChatWithMemberInputSchema = z.object({
-  communityId: z.string().describe('The ID of the community the member belongs to.'),
   member: MemberSchema.describe('The AI member the user is chatting with.'),
   userMessage: z.string().describe('The latest message from the user.'),
   history: z.array(ChatHistorySchema).optional().describe('The recent chat history.'),
@@ -59,37 +55,6 @@ Bio: ${input.member.bio}
 
 Your response must be concise, engaging, and directly related to the user's message.`;
 
-    const { firestore } = initializeFirebase();
-
-    // Use a try-catch block for the Firestore operation for robustness.
-    try {
-        const communityRef = doc(firestore, 'communities', input.communityId);
-        const communitySnap = await getDoc(communityRef);
-
-        if (communitySnap.exists()) {
-            const communityData = communitySnap.data();
-            const members = communityData.members || [];
-            
-            // Find the specific AI member and update their interaction count
-            const updatedMembers = members.map((m: any) => {
-                if (m.name === input.member.name && m.type === 'AI') {
-                    return {
-                        ...m,
-                        interactionCount: (m.interactionCount || 0) + 1,
-                    };
-                }
-                return m;
-            });
-            
-            // Update the document with the new members array
-            await updateDoc(communityRef, { members: updatedMembers });
-        }
-    } catch (error) {
-        // Log the error but don't block the chat response
-        console.error("Failed to increment AI member interaction count:", error);
-    }
-
-
     const { text } = await ai.generate({
         system: systemPrompt,
         prompt: input.userMessage,
@@ -99,5 +64,3 @@ Your response must be concise, engaging, and directly related to the user's mess
     return { response: text };
   }
 );
-
-    

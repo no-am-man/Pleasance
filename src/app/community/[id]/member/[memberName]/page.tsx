@@ -15,7 +15,6 @@ import { Input } from '@/components/ui/input';
 import { getAiChatResponse } from '@/app/actions';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { FederationIdentityFlag } from '@/components/federation-identity-flag';
 
 type Member = {
   name: string;
@@ -38,7 +37,7 @@ type ChatMessage = {
     text: string;
 };
 
-function ChatInterface({ member, communityId }: { member: Member, communityId: string }) {
+function ChatInterface({ member }: { member: Member }) {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -60,7 +59,6 @@ function ChatInterface({ member, communityId }: { member: Member, communityId: s
         }));
 
         const result = await getAiChatResponse({
-            communityId,
             member,
             userMessage: input,
             history: chatHistory,
@@ -111,7 +109,6 @@ function ChatInterface({ member, communityId }: { member: Member, communityId: s
                                             <AvatarImage src={user.photoURL || ''} />
                                             <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
                                         </Avatar>
-                                        <FederationIdentityFlag userId={user.uid} />
                                      </div>
                                 )}
                             </div>
@@ -239,11 +236,9 @@ export default function AiMemberProfilePage() {
                 <h3 className="font-semibold flex items-center gap-2 text-muted-foreground"><Bot className="w-5 h-5"/> Bio</h3>
                 <p className="text-lg bg-muted p-4 rounded-md">{member.bio}</p>
             </div>
-            <ChatInterface member={member} communityId={communityId} />
+            <ChatInterface member={member} />
         </CardContent>
       </Card>
     </main>
   );
 }
-
-    

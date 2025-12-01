@@ -1,4 +1,3 @@
-
 // src/app/community/page.tsx
 "use client";
 
@@ -16,7 +15,6 @@ import { createCommunityDetails } from "../actions";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { CommunityValueFlag } from "@/components/CommunityValueFlag";
 
 const FormSchema = z.object({
   prompt: z.string().min(10, "Please enter a prompt of at least 10 characters."),
@@ -152,10 +150,7 @@ function CommunityList({ title, communities, isLoading, error }: { title: string
                 <li key={community.id} className="rounded-md border transition-colors hover:bg-muted/50">
                    <Link href={`/community/${community.id}`} className="block p-4">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-lg text-primary">{community.name}</h3>
-                        </div>
-                        <CommunityValueFlag members={community.members} />
+                        <h3 className="font-semibold text-lg text-primary">{community.name}</h3>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">{community.description}</p>
                   </Link>

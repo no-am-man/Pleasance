@@ -9,7 +9,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LoaderCircle, AlertCircle, ArrowLeft, Languages, User, BookUser } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { FederationIdentityFlag } from '@/components/federation-identity-flag';
 
 type CommunityProfile = {
     id: string;
@@ -101,8 +100,6 @@ export default function UserProfilePage() {
           </Avatar>
           <CardTitle className="text-3xl">{profile.name}</CardTitle>
           
-          <FederationIdentityFlag userId={profile.userId} />
-
           {isOwnProfile && (
              <Button asChild variant="link">
                 <Link href="/profile">Edit Your Profile</Link>

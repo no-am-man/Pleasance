@@ -1,4 +1,3 @@
-
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -19,8 +18,6 @@ import { useToast } from '@/hooks/use-toast';
 import { getTranscription } from '@/app/actions';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { FederationIdentityFlag } from '@/components/federation-identity-flag';
-import { CommunityValueFlag } from '@/components/CommunityValueFlag';
 
 type Member = {
   name: string;
@@ -103,10 +100,7 @@ function MemberCard({ member, index, communityId }: { member: Member; index: num
                 <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex-1 space-y-1">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-x-2">
-                    <CardTitle className="text-xl">{member.name}</CardTitle>
-                    {isHuman && member.userId && <FederationIdentityFlag userId={member.userId} />}
-                </div>
+                <CardTitle className="text-xl">{member.name}</CardTitle>
                 <CardDescription className="text-primary font-medium">{member.role}</CardDescription>
             </div>
             {isHuman ? (
@@ -375,10 +369,7 @@ function VoiceCommentCard({ comment }: { comment: VoiceComment }) {
             </Avatar>
             <div className="flex-1 space-y-1.5">
                 <div className="flex justify-between items-center">
-                     <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm">{comment.userName}</span>
-                        <FederationIdentityFlag userId={comment.userId} />
-                    </div>
+                    <span className="font-semibold text-sm">{comment.userName}</span>
                      <span className="text-xs text-muted-foreground">
                         {comment.createdAt
                             ? new Date(comment.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -478,10 +469,7 @@ function VoiceMessageCard({ message }: { message: VoiceMessage }) {
                 </Avatar>
                 <div className="flex-1">
                     <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                            <span className="font-bold">{message.userName}</span>
-                            <FederationIdentityFlag userId={message.userId} />
-                        </div>
+                        <span className="font-bold">{message.userName}</span>
                         <span className="text-xs text-muted-foreground">
                             {message.createdAt
                                 ? new Date(message.createdAt.seconds * 1000).toLocaleTimeString()
@@ -804,12 +792,9 @@ export default function CommunityProfilePage() {
       </div>
 
       <div className="text-center mb-8">
-        <div className="flex justify-center items-center gap-4">
-            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary">
-            {community.name}
-            </h1>
-            <CommunityValueFlag members={allMembers} />
-        </div>
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary">
+          {community.name}
+        </h1>
         <p className="text-lg text-muted-foreground mt-2">{community.description}</p>
       </div>
 

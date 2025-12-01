@@ -76,17 +76,11 @@ export async function createCommunityDetails(values: z.infer<typeof communitySch
             throw new Error('AI failed to generate complete community details.');
         }
 
-        // Initialize interactionCount for AI members
-        const membersWithCount = communityDetails.members.map(member => ({
-            ...member,
-            interactionCount: 0,
-        }));
-
         return {
             name: communityDetails.name,
             description: communityDetails.description,
             welcomeMessage: communityDetails.welcomeMessage,
-            members: membersWithCount,
+            members: communityDetails.members,
         };
 
     } catch (e) {
@@ -189,5 +183,3 @@ export async function assessPronunciation(values: z.infer<typeof assessmentSchem
     return { error: `Assessment failed. ${message}` };
   }
 }
-
-    
