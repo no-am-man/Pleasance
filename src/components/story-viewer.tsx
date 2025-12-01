@@ -345,20 +345,18 @@ export default function StoryViewer({
             </Button>
           </CardHeader>
           <CardContent>
-            <div className="relative">
-                <p className="text-foreground whitespace-pre-wrap leading-relaxed">
-                {translatedText}
-                </p>
+            <p className="relative text-foreground whitespace-pre-wrap leading-relaxed">
                 {hasAudio && (
                     <div
-                    className="absolute inset-0 -z-10 bg-gradient-to-r from-accent/70 to-accent/10 pointer-events-none"
-                    style={{
-                        width: `${progress}%`,
-                        transition: isPlaying ? 'width 0.1s linear' : 'none',
-                    }}
+                        className="absolute inset-0 bg-gradient-to-r from-accent/70 to-accent/10 pointer-events-none -z-10"
+                        style={{
+                            width: `${progress}%`,
+                            transition: isPlaying ? 'width 0.1s linear' : 'none',
+                        }}
                     />
                 )}
-            </div>
+                <span className="relative z-0">{translatedText}</span>
+            </p>
           </CardContent>
         </Card>
       </div>
