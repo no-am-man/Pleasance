@@ -8,6 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
+type Member = {
+  name: string;
+  role: string;
+  bio: string;
+  avatarUrl?: string; // Made optional as it will be generated
+};
 
 type Community = {
   id: string;
@@ -15,7 +23,31 @@ type Community = {
   description: string;
   welcomeMessage: string;
   ownerId: string;
+  members: Member[];
 };
+
+function MemberCard({ member, index }: { member: Member, index: number }) {
+    // Generate a consistent avatar URL based on the member's name and index
+    const avatarUrl = `https://i.pravatar.cc/150?u=${member.name}-${index}`;
+    return (
+      <Card className="shadow-md transition-all hover:shadow-lg hover:-translate-y-1">
+        <CardHeader className="flex flex-row items-center gap-4">
+          <Avatar className="w-16 h-16 border-2 border-primary/20">
+            <AvatarImage src={avatarUrl} alt={member.name} />
+            <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+          </Avatar>
+          <div>
+            <CardTitle>{member.name}</CardTitle>
+            <CardDescription className="text-primary font-medium">{member.role}</CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">{member.bio}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
 
 export default function CommunityProfilePage() {
   const params = useParams();
@@ -104,7 +136,7 @@ export default function CommunityProfilePage() {
         <p className="text-lg text-muted-foreground mt-2">{community.description}</p>
       </div>
 
-      <Card className="shadow-lg">
+      <Card className="shadow-lg mb-8">
         <CardHeader>
           <CardTitle>Welcome Message</CardTitle>
         </CardHeader>
@@ -112,8 +144,16 @@ export default function CommunityProfilePage() {
           <p className="text-lg leading-relaxed whitespace-pre-wrap">{community.welcomeMessage}</p>
         </CardContent>
       </Card>
+      
+      <div>
+        <h2 className="text-3xl font-bold text-center mb-8">Meet the Members</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {community.members?.map((member, index) => (
+            <MemberCard key={`${member.name}-${index}`} member={member} index={index} />
+          ))}
+        </div>
+      </div>
 
-      {/* Placeholder for future content like member list or community feed */}
     </main>
   );
 }

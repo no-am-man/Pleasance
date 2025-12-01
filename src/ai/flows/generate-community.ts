@@ -1,8 +1,8 @@
 'use server';
 /**
- * @fileOverview A flow to generate a community based on a user prompt.
+ * @fileOverview A flow to generate a community based on a user prompt, including AI members.
  *
- * - generateCommunity - A function that generates community details.
+ * - generateCommunity - A function that generates community details and members.
  * - GenerateCommunityInput - The input type for the generateCommunity function.
  * - GenerateCommunityOutput - The return type for the generateCommunity function.
  */
@@ -17,10 +17,17 @@ const GenerateCommunityInputSchema = z.object({
 });
 export type GenerateCommunityInput = z.infer<typeof GenerateCommunityInputSchema>;
 
+const MemberSchema = z.object({
+    name: z.string().describe("The AI member's unique name."),
+    role: z.string().describe("The member's role in the community (e.g., 'Guide', 'Archivist', 'Explorer')."),
+    bio: z.string().describe("A short, one-sentence bio describing the member's personality and purpose."),
+  });
+  
 const GenerateCommunityOutputSchema = z.object({
   name: z.string().describe("A concise and catchy name for the community (e.g., 'Cosmic Coders')."),
   description: z.string().describe("A one-sentence description of the community's purpose."),
   welcomeMessage: z.string().describe("A warm, one-paragraph welcome message for new members."),
+  members: z.array(MemberSchema).min(3).max(5).describe('A list of 3-5 unique, AI-generated members for the community.'),
 });
 export type GenerateCommunityOutput = z.infer<typeof GenerateCommunityOutputSchema>;
 
@@ -33,11 +40,11 @@ const generateCommunityPrompt = ai.definePrompt({
   name: 'generateCommunityPrompt',
   input: {schema: GenerateCommunityInputSchema},
   output: {schema: GenerateCommunityOutputSchema},
-  prompt: `You are an expert at founding online communities. Based on the user's prompt, generate a name, a short description, and a welcome message for their new community.
+  prompt: `You are an expert at founding online communities. Based on the user's prompt, generate a name, a short description, a welcome message, and a diverse cast of 3-5 AI members to populate the community. Each member should have a unique name, role, and a one-sentence bio that reflects the community's theme.
 
 User Prompt: {{{prompt}}}
 
-Generate a response that is creative, inviting, and directly related to the user's prompt.`,
+Generate a response that is creative, inviting, and directly related to the user's prompt. Make the AI members interesting and give them personalities that would make a new user want to interact with them.`,
 });
 
 const generateCommunityFlow = ai.defineFlow(

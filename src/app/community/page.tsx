@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, doc, setDoc } from 'firebase/firestore';
+import { collection, doc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LogIn, PlusCircle, LoaderCircle } from "lucide-react";
@@ -18,12 +18,19 @@ const FormSchema = z.object({
   prompt: z.string().min(10, "Please enter a prompt of at least 10 characters."),
 });
 
+type Member = {
+  name: string;
+  role: string;
+  bio: string;
+};
+
 type Community = {
   id: string;
   name: string;
   description: string;
   welcomeMessage: string;
   ownerId: string;
+  members: Member[];
 };
 
 function CreateCommunityForm() {
@@ -56,7 +63,7 @@ function CreateCommunityForm() {
         return;
       }
       
-      const { name, description, welcomeMessage } = result;
+      const { name, description, welcomeMessage, members } = result;
       
       // 2. Create the new community object on the client
       const newCommunityRef = doc(collection(firestore, 'users', user.uid, 'communities'));
@@ -66,6 +73,7 @@ function CreateCommunityForm() {
         name: name!,
         description: description!,
         welcomeMessage: welcomeMessage!,
+        members: members!,
       };
 
       // 3. Save the new community to Firestore from the client

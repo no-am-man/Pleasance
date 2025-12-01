@@ -65,7 +65,7 @@ export async function createCommunityDetails(values: z.infer<typeof communitySch
         // Generate community details using the AI flow
         const communityDetails = await generateCommunity({ prompt });
 
-        if (!communityDetails.name || !communityDetails.description || !communityDetails.welcomeMessage) {
+        if (!communityDetails.name || !communityDetails.description || !communityDetails.welcomeMessage || !communityDetails.members) {
             throw new Error('AI failed to generate complete community details.');
         }
 
@@ -73,6 +73,7 @@ export async function createCommunityDetails(values: z.infer<typeof communitySch
             name: communityDetails.name,
             description: communityDetails.description,
             welcomeMessage: communityDetails.welcomeMessage,
+            members: communityDetails.members,
         };
 
     } catch (e) {
