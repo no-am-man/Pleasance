@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { LogIn, PlusCircle, LoaderCircle } from "lucide-react";
 import { createCommunityDetails } from "../actions";
+import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 const FormSchema = z.object({
   prompt: z.string().min(10, "Please enter a prompt of at least 10 characters."),
@@ -68,7 +69,7 @@ function CreateCommunityForm() {
       };
 
       // 3. Save the new community to Firestore from the client
-      await setDoc(newCommunityRef, newCommunity);
+      setDocumentNonBlocking(newCommunityRef, newCommunity, { merge: false });
       
       form.reset();
       // The list will update automatically via the useCollection hook
@@ -145,9 +146,11 @@ function CommunityList() {
         {communities && communities.length > 0 ? (
           <ul className="space-y-4">
             {communities.map((community) => (
-              <li key={community.id} className="p-4 rounded-md border transition-colors hover:bg-muted/50">
-                <h3 className="font-semibold text-lg text-primary">{community.name}</h3>
-                <p className="text-sm text-muted-foreground">{community.description}</p>
+              <li key={community.id} className="rounded-md border transition-colors hover:bg-muted/50">
+                 <Link href={`/community/${community.id}`} className="block p-4">
+                  <h3 className="font-semibold text-lg text-primary">{community.name}</h3>
+                  <p className="text-sm text-muted-foreground">{community.description}</p>
+                </Link>
               </li>
             ))}
           </ul>
