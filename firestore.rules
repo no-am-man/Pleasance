@@ -7,18 +7,17 @@
  * Data Structure:
  * - `/users/{userId}`: Strictly private user account data.
  *   - `/users/{userId}/stories/{storyId}`: Stories are nested and private to the user.
+ *   - `/users/{userId}/assets/{assetId}`: Assets are nested and private to the user.
  * - `/community-profiles/{userId}`: Publicly readable profiles, writable only by the owner.
  * - `/communities/{communityId}`: Publicly readable communities, writable only by the owner.
  *   - `/communities/{communityId}/messages/{messageId}`: Messages are readable/writable by any signed-in user.
  *
  * Key Security Decisions:
  * - User data (`/users`) is strictly private.
- * - User stories are nested under the user document, making them inherently private and easy to secure.
+ * - User-owned data (stories, assets) is nested under the user document, making it inherently private.
  * - Community Profiles (`/community-profiles`) are public to read, but a user can only write to their own profile.
- * - Communities (`/communities`) are public to read, which is essential for discovery and search.
- *   Writes are restricted to the owner of the community, verified by the `ownerId` field.
- * - Listing all users from the top-level `/users` collection is explicitly
- *   disallowed to protect user privacy.
+ * - Communities (`/communities`) are public to read for discovery. Writes are restricted to the owner.
+ * - Listing all users from the top-level `/users` collection is explicitly disallowed.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -71,9 +70,9 @@ service cloud.firestore {
         return request.resource.data.id == resource.data.id && request.resource.data.userId == resource.data.userId;
     }
 
-    // --- Story Validation Functions ---
-    function hasValidStoryData(userId) {
-        return request.resource.data.userId == userId;
+    // --- Subcollection Validation ---
+    function hasValidSubcollectionData(userId) {
+        return request.resource.data.ownerId == userId || request.resource.data.userId == userId;
     }
 
     //================================================================================
@@ -90,11 +89,19 @@ service cloud.firestore {
         /**
          * @description Manages AI-generated stories for a specific user.
          * @path /users/{userId}/stories/{storyId}
-         * @allow A user can perform any action on their own stories within their own subcollection.
-         * @principle Data is owned by the user and nested, simplifying rules.
+         * @allow A user can perform any action on their own stories.
          */
         match /stories/{storyId} {
-            allow read, write: if isOwner(userId);
+            allow read, write: if isOwner(userId) && hasValidSubcollectionData(userId);
+        }
+
+        /**
+         * @description Manages personal assets for a specific user.
+         * @path /users/{userId}/assets/{assetId}
+         * @allow A user can perform any action on their own assets.
+         */
+        match /assets/{assetId} {
+            allow read, write: if isOwner(userId) && hasValidSubcollectionData(userId);
         }
     }
 
@@ -102,7 +109,6 @@ service cloud.firestore {
      * @description Manages user community profiles.
      * @path /community-profiles/{userId}
      * @allow Anyone can read a profile, but only the owner can create/update/delete it.
-     * @principle Public read access for profiles, but write access is restricted to the owner.
      */
     match /community-profiles/{userId} {
         allow get: if true;
@@ -115,8 +121,7 @@ service cloud.firestore {
     /**
      * @description Manages all communities.
      * @path /communities/{communityId}
-     * @allow Anyone can read/list communities for discovery. Only the owner can create, update, or delete.
-     * @principle Balances public discoverability with strict ownership for writes.
+     * @allow Anyone can read/list communities. Only the owner can create, update, or delete.
      */
     match /communities/{communityId} {
         allow get: if true;
@@ -128,8 +133,7 @@ service cloud.firestore {
         /**
          * @description Manages voice messages within a community.
          * @path /communities/{communityId}/messages/{messageId}
-         * @allow Any signed-in user can create a message. Any user can read messages.
-         * @principle Encourages open communication within a community.
+         * @allow Any signed-in user can create/read a message.
          */
         match /messages/{messageId} {
             allow read: if true;
@@ -139,7 +143,6 @@ service cloud.firestore {
              * @description Manages voice comments on a specific message.
              * @path /communities/{communityId}/messages/{messageId}/comments/{commentId}
              * @allow Any signed-in user can read or write comments.
-             * @principle Fosters detailed discussion on individual messages.
              */
             match /comments/{commentId} {
                 allow read: if true;
@@ -149,5 +152,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

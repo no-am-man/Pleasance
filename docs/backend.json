@@ -222,6 +222,21 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "userId", "userName", "audioUrl", "createdAt"]
+    },
+    "Asset": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Asset",
+      "type": "object",
+      "description": "Represents a physical or intellectual property asset in a user's treasury.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the asset." },
+        "ownerId": { "type": "string", "description": "The UID of the user who owns the asset." },
+        "name": { "type": "string", "description": "The name of the asset." },
+        "description": { "type": "string", "description": "A detailed description of the asset." },
+        "type": { "type": "string", "enum": ["physical", "ip"], "description": "The type of asset (physical or intellectual property)." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the asset was declared." }
+      },
+      "required": ["id", "ownerId", "name", "description", "type", "createdAt"]
     }
   },
   "auth": {
@@ -265,6 +280,26 @@
             {
               "name": "storyId",
               "description": "The unique identifier for the story."
+            }
+          ]
+        }
+      },
+       {
+        "path": "/users/{userId}/assets/{assetId}",
+        "definition": {
+          "entityName": "Asset",
+          "schema": {
+            "$ref": "#/backend/entities/Asset"
+          },
+          "description": "Stores asset information for a specific user. A user can only access their own assets.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "assetId",
+              "description": "The unique identifier for the asset."
             }
           ]
         }
@@ -324,6 +359,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities` in a top-level collection, they become publicly queryable, which is essential for search and join features. User-specific data, including stories, is nested under `/users/{userId}` to ensure data privacy and allow for simple, secure queries. Public profiles are in `/community-profiles` to allow discoverability without exposing private user account details. Voice messages are stored in a subcollection under each community to keep them organized and contextual."
+    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities` in a top-level collection, they become publicly queryable, which is essential for search and join features. User-specific data, including stories and assets, is nested under `/users/{userId}` to ensure data privacy and allow for simple, secure queries. Public profiles are in `/community-profiles` to allow discoverability without exposing private user account details. Voice messages are stored in a subcollection under each community to keep them organized and contextual."
   }
 }

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, BookOpen, Warehouse, ArrowRight } from 'lucide-react';
+import { Users, BookOpen, Warehouse, ArrowRight, Banknote } from 'lucide-react';
 import { Logo } from '@/components/icons';
 
 export default function Home() {
@@ -17,7 +17,7 @@ export default function Home() {
         A federated universe for co-learning, creation, and fabrication. Explore communities, generate AI-powered stories, or bring your digital creations to life.
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 w-full max-w-6xl">
         <Card className="text-left flex flex-col">
           <CardHeader>
             <div className="flex items-center gap-4">
@@ -80,6 +80,28 @@ export default function Home() {
              <Button asChild className="w-full">
                 <Link href="/fabrication">
                   Submit a Job <ArrowRight className="ml-2" />
+                </Link>
+              </Button>
+          </div>
+        </Card>
+         <Card className="text-left flex flex-col">
+          <CardHeader>
+             <div className="flex items-center gap-4">
+               <div className="mx-auto bg-primary/10 rounded-full p-3 w-fit">
+                    <Banknote className="h-8 w-8 text-primary" />
+                </div>
+                <CardTitle className="text-2xl">Treasury</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="flex-grow">
+            <CardDescription>
+              Declare and manage your personal sovereign assets, both physical and intellectual, within the federation.
+            </CardDescription>
+          </CardContent>
+           <div className="p-6 pt-0">
+             <Button asChild className="w-full">
+                <Link href="/treasury">
+                  Manage Assets <ArrowRight className="ml-2" />
                 </Link>
               </Button>
           </div>
