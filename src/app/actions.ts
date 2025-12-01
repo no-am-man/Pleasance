@@ -7,7 +7,7 @@ import { translateStory } from '@/ai/flows/translate-story';
 import { generateCommunity } from '@/ai/flows/generate-community';
 import { transcribeAudio } from '@/ai/flows/transcribe-audio';
 import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member';
-import { getFirestore, doc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase/config-for-actions'; // Use server-safe initialization
 
 const storySchema = z.object({
@@ -66,7 +66,6 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
     
     // Add the new story
     const docRef = await addDoc(storyCollectionRef, newStory);
-    await addDoc(storyCollectionRef, { ...newStory, id: docRef.id });
 
 
     return {
