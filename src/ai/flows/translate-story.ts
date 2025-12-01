@@ -9,7 +9,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import wav from 'wav';
+import { generateSpeech } from '@/ai/flows/generate-speech';
 
 const TranslateStoryInputSchema = z.object({
   storyText: z.string().describe('The story text in the source language.'),
@@ -39,65 +39,6 @@ const translateStoryPrompt = ai.definePrompt({
   prompt: `Translate the following story from {{sourceLanguage}} to {{targetLanguage}}:\n\n{{{storyText}}}`,
 });
 
-const textToSpeechFlow = ai.defineFlow(
-  {
-    name: 'textToSpeechFlow',
-    inputSchema: z.string(),
-    outputSchema: z.any(),
-  },
-  async (query) => {
-    const { media } = await ai.generate({
-      model: 'googleai/gemini-2.5-flash-preview-tts',
-      config: {
-        responseModalities: ['AUDIO'],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Algenib' },
-          },
-        },
-      },
-      prompt: query,
-    });
-    if (!media) {
-      return { media: '' };
-    }
-    const audioBuffer = Buffer.from(
-      media.url.substring(media.url.indexOf(',') + 1),
-      'base64'
-    );
-    return {
-      media: 'data:audio/wav;base64,' + (await toWav(audioBuffer)),
-    };
-  }
-);
-
-async function toWav(
-  pcmData: Buffer,
-  channels = 1,
-  rate = 24000,
-  sampleWidth = 2
-): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const writer = new wav.Writer({
-      channels,
-      sampleRate: rate,
-      bitDepth: sampleWidth * 8,
-    });
-
-    let bufs = [] as any[];
-    writer.on('error', reject);
-    writer.on('data', function (d) {
-      bufs.push(d);
-    });
-    writer.on('end', function () {
-      resolve(Buffer.concat(bufs).toString('base64'));
-    });
-
-    writer.write(pcmData);
-    writer.end();
-  });
-}
-
 const translateStoryFlow = ai.defineFlow(
   {
     name: 'translateStoryFlow',
@@ -111,7 +52,7 @@ const translateStoryFlow = ai.defineFlow(
     if (translatedText.trim() === '') {
         return { translatedText: '', audioDataUri: '' };
     }
-    const {media: audioDataUri} = await textToSpeechFlow(translatedText);
-    return {translatedText: translatedText, audioDataUri: audioDataUri};
+    const speechResult = await generateSpeech({ text: translatedText });
+    return {translatedText: translatedText, audioDataUri: speechResult.media};
   }
 );
