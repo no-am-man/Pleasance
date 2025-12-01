@@ -10,7 +10,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebas
 import { collection, doc, setDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LogIn, PlusCircle, LoaderCircle, Users } from "lucide-react";
+import { LogIn, PlusCircle, LoaderCircle } from "lucide-react";
 import { createCommunityDetails } from "../actions";
 
 const FormSchema = z.object({
