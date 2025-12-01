@@ -59,13 +59,14 @@ export function FederationIdentityFlag({ userId }: { userId: string }) {
   }
 
   const { Icon } = tier;
+  const formattedValue = `$${totalValue.toLocaleString()}`;
 
   return (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="ghost" className="h-auto p-1 rounded-md">
-            <div className="flex items-center gap-2 text-lg">
-                <Icon className="h-8 w-8" />
+            <div className="flex items-center gap-2 text-sm font-mono text-primary">
+                {formattedValue}
             </div>
         </Button>
       </DialogTrigger>
