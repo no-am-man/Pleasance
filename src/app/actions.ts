@@ -4,13 +4,11 @@ import { z } from 'zod';
 import { generateStory } from '@/ai/flows/generate-story';
 import { translateStory } from '@/ai/flows/translate-story';
 import { generateCommunity } from '@/ai/flows/generate-community';
-import { generateImage } from '@/ai/flows/generate-image';
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
   sourceLanguage: z.string().min(1),
   targetLanguage: z.string().min(1),
-  stylePrompt: z.string().optional(),
 });
 
 export async function generateAndTranslateStory(values: z.infer<typeof storySchema>) {
@@ -20,7 +18,7 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
       return { error: 'Invalid input.' };
     }
     
-    const { difficulty, sourceLanguage, targetLanguage, stylePrompt } = validatedFields.data;
+    const { difficulty, sourceLanguage, targetLanguage } = validatedFields.data;
 
     // Generate Story
     const storyResult = await generateStory({ difficultyLevel: difficulty, sourceLanguage });
@@ -29,13 +27,6 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
     }
     const originalStory = storyResult.story;
     
-    // Generate Image
-    const imagePrompt = `Create a book cover for a ${difficulty} level story. The story is about: ${originalStory.substring(0, 200)}. The style should be ${stylePrompt || 'a vibrant digital painting'}.`;
-    const imageResult = await generateImage({ prompt: imagePrompt });
-    if (!imageResult.imageUrl) {
-        throw new Error('Failed to generate an image.');
-    }
-
     // Translate Story
     const translationResult = await translateStory({
       storyText: originalStory,
@@ -51,7 +42,6 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
       originalStory,
       translatedText: translationResult.translatedText,
       audioDataUri: translationResult.audioDataUri,
-      imageUrl: imageResult.imageUrl,
       sourceLanguage: sourceLanguage,
     };
   } catch (e) {
