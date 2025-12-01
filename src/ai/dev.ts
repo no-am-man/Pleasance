@@ -7,3 +7,4 @@ import '@/ai/flows/translate-story.ts';
 import '@/ai/flows/generate-speech.ts';
 import '@/ai/flows/generate-community.ts';
 import '@/ai/flows/transcribe-audio.ts';
+import '@/ai/flows/chat-with-member.ts';

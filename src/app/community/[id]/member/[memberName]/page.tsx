@@ -6,9 +6,14 @@ import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { useState, useRef, useEffect } from 'react';
+import { Input } from '@/components/ui/input';
+import { getAiChatResponse } from '@/app/actions';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 type Member = {
   name: string;
@@ -26,6 +31,114 @@ type Community = {
   members: Member[];
 };
 
+type ChatMessage = {
+    sender: 'user' | 'ai';
+    text: string;
+};
+
+function ChatInterface({ member }: { member: Member }) {
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
+    const [input, setInput] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const { user } = useUser();
+    const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+    const handleSendMessage = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!input.trim() || !user) return;
+
+        const userMessage: ChatMessage = { sender: 'user', text: input };
+        setMessages(prev => [...prev, userMessage]);
+        setInput('');
+        setIsLoading(true);
+
+        const chatHistory = messages.map(msg => ({
+            role: msg.sender === 'user' ? 'user' : 'model',
+            parts: [{ text: msg.text }],
+        }));
+
+        const result = await getAiChatResponse({
+            member,
+            userMessage: input,
+            history: chatHistory,
+        });
+
+        setIsLoading(false);
+        
+        if (result.error) {
+            const errorMessage: ChatMessage = { sender: 'ai', text: `Sorry, I encountered an error: ${result.error}` };
+            setMessages(prev => [...prev, errorMessage]);
+        } else {
+            const aiMessage: ChatMessage = { sender: 'ai', text: result.response! };
+            setMessages(prev => [...prev, aiMessage]);
+        }
+    };
+
+    useEffect(() => {
+        if (scrollAreaRef.current) {
+            scrollAreaRef.current.scrollTo({ top: scrollAreaRef.current.scrollHeight, behavior: 'smooth' });
+        }
+    }, [messages]);
+
+    return (
+        <Card className="bg-background/50">
+            <CardHeader>
+                <CardTitle>Interact with {member.name}</CardTitle>
+                <CardDescription>
+                    Start a conversation with this AI community member.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <ScrollArea className="h-72 w-full pr-4" ref={scrollAreaRef}>
+                     <div className="space-y-4">
+                        {messages.map((msg, index) => (
+                             <div key={index} className={cn("flex items-end gap-2", msg.sender === 'user' ? 'justify-end' : 'justify-start')}>
+                                {msg.sender === 'ai' && (
+                                    <Avatar className="w-8 h-8">
+                                        <AvatarImage src={`https://i.pravatar.cc/150?u=${member.name}`} />
+                                        <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                )}
+                                <div className={cn("rounded-lg px-4 py-2 max-w-[80%]", msg.sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
+                                    <p className="text-sm">{msg.text}</p>
+                                </div>
+                                {msg.sender === 'user' && (
+                                     <Avatar className="w-8 h-8">
+                                        <AvatarImage src={user?.photoURL || ''} />
+                                        <AvatarFallback>{user?.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                                    </Avatar>
+                                )}
+                            </div>
+                        ))}
+                        {isLoading && (
+                            <div className="flex items-center gap-2">
+                                <Avatar className="w-8 h-8">
+                                    <AvatarImage src={`https://i.pravatar.cc/150?u=${member.name}`} />
+                                    <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div className="bg-muted rounded-lg px-4 py-2 flex items-center">
+                                    <LoaderCircle className="w-4 h-4 animate-spin"/>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </ScrollArea>
+                <form onSubmit={handleSendMessage} className="mt-4 flex gap-2">
+                    <Input
+                        value={input}
+                        onChange={e => setInput(e.target.value)}
+                        placeholder={`Message ${member.name}...`}
+                        disabled={isLoading}
+                    />
+                    <Button type="submit" disabled={isLoading || !input.trim()}>
+                        <Send className="w-4 h-4" />
+                    </Button>
+                </form>
+            </CardContent>
+        </Card>
+    );
+}
+
 export default function AiMemberProfilePage() {
   const params = useParams();
   const router = useRouter();
@@ -36,7 +149,6 @@ export default function AiMemberProfilePage() {
 
   const communityDocRef = useMemoFirebase(() => {
     if (!firestore || !communityId) return null;
-    // Fetch from the top-level 'communities' collection
     return doc(firestore, 'communities', communityId);
   }, [firestore, communityId]);
 
@@ -121,17 +233,7 @@ export default function AiMemberProfilePage() {
                 <h3 className="font-semibold flex items-center gap-2 text-muted-foreground"><Bot className="w-5 h-5"/> Bio</h3>
                 <p className="text-lg bg-muted p-4 rounded-md">{member.bio}</p>
             </div>
-             <Card className="bg-background/50">
-                <CardHeader>
-                    <CardTitle>Interact with {member.name}</CardTitle>
-                    <CardDescription>This is where you'll be able to chat with this AI. Coming soon!</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex items-center justify-center h-24 border-2 border-dashed rounded-md">
-                        <p className="text-muted-foreground">Chat interface coming soon...</p>
-                    </div>
-                </CardContent>
-            </Card>
+            <ChatInterface member={member} />
         </CardContent>
       </Card>
     </main>

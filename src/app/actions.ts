@@ -6,6 +6,7 @@ import { generateStory } from '@/ai/flows/generate-story';
 import { translateStory } from '@/ai/flows/translate-story';
 import { generateCommunity } from '@/ai/flows/generate-community';
 import { transcribeAudio } from '@/ai/flows/transcribe-audio';
+import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member';
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
@@ -107,5 +108,20 @@ export async function getTranscription(values: z.infer<typeof voiceMessageSchema
         console.error('Transcription Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
         return { error: `Transcription failed. ${message}` };
+    }
+}
+
+
+export async function getAiChatResponse(input: ChatWithMemberInput) {
+    try {
+        const result = await chatWithMember(input);
+        if (!result.response) {
+            return { error: 'The AI member could not think of a response.' };
+        }
+        return { response: result.response };
+    } catch (e) {
+        console.error('AI Chat Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `AI chat failed. ${message}` };
     }
 }
