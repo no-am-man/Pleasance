@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, doc, query, where } from 'firebase/firestore';
+import { collection, doc, query, where, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LogIn, PlusCircle, LoaderCircle, Search } from "lucide-react";
@@ -164,56 +164,53 @@ function CommunityList({ title, communities, isLoading, error }: { title: string
     );
 }
 
-function CommunitySearch() {
-    const [searchTerm, setSearchTerm] = useState('');
+function CommunitySearchResults({ searchTerm }: { searchTerm: string }) {
     const firestore = useFirestore();
-  
-    // Note: Firestore doesn't support native text search.
-    // This query is a simple "startsWith" search. For full-text search, an external service like Algolia is needed.
+
     const searchCommunitiesQuery = useMemoFirebase(() => {
       if (!firestore || !searchTerm) return null;
       const communitiesRef = collection(firestore, 'communities');
+      // A simple "startsWith" search. For full-text search, an external service like Algolia is better.
       return query(communitiesRef, where('name', '>=', searchTerm), where('name', '<=', searchTerm + '\uf8ff'));
     }, [firestore, searchTerm]);
   
     const { data: communities, isLoading, error } = useCollection<Community>(searchCommunitiesQuery);
 
     return (
-        <div className="space-y-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Find a Community</CardTitle>
-                    <CardDescription>Search for communities to join.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <Input 
-                            placeholder="Search by community name..."
-                            className="pl-10"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                </CardContent>
-            </Card>
+        <CommunityList 
+            title="Search Results"
+            communities={communities}
+            isLoading={isLoading}
+            error={error}
+        />
+    )
+}
 
-            {searchTerm && (
-                <CommunityList 
-                    title="Search Results"
-                    communities={communities}
-                    isLoading={isLoading}
-                    error={error}
-                />
-            )}
-        </div>
-    );
+function PublicCommunityList() {
+    const firestore = useFirestore();
+
+    const publicCommunitiesQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'communities'), orderBy('name', 'asc'));
+    }, [firestore]);
+
+    const { data: communities, isLoading, error } = useCollection<Community>(publicCommunitiesQuery);
+
+    return (
+        <CommunityList
+            title="All Communities"
+            communities={communities}
+            isLoading={isLoading}
+            error={error}
+        />
+    )
 }
 
 
 export default function CommunityPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const [searchTerm, setSearchTerm] = useState('');
 
   const userCommunitiesQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -240,7 +237,30 @@ export default function CommunityPage() {
       </div>
 
       <div className="space-y-12">
-        <CommunitySearch />
+        <Card>
+            <CardHeader>
+                <CardTitle>Find a Community</CardTitle>
+                <CardDescription>Search for communities to join or browse the list below.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input 
+                        placeholder="Search by community name..."
+                        className="pl-10"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+            </CardContent>
+        </Card>
+
+        {searchTerm ? (
+            <CommunitySearchResults searchTerm={searchTerm} />
+        ) : (
+            <PublicCommunityList />
+        )}
+        
         <Separator />
         
         {user ? (
