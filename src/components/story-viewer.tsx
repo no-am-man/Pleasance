@@ -178,15 +178,15 @@ function PronunciationAssessment({ storyText }: { storyText: string }) {
             >
             {isRecording ? <Square /> : <Mic />}
             </Button>
-            <p className="text-sm text-muted-foreground">
+            &lt;div className="text-sm text-muted-foreground"&gt;
             {isRecording ? "Recording... Click to stop." : "Click to record."}
-            </p>
+            &lt;/div&gt;
         </div>
         
         {isAssessing && (
           <div className="flex items-center justify-center gap-2 p-4 text-primary">
             <LoaderCircle className="animate-spin" />
-            <p>Assessing your pronunciation...</p>
+            &lt;div&gt;Assessing your pronunciation...&lt;/div&gt;
           </div>
         )}
 
@@ -195,7 +195,7 @@ function PronunciationAssessment({ storyText }: { storyText: string }) {
             <Info className="h-4 w-4" />
             <AlertTitle>Assessment Feedback</AlertTitle>
             <AlertDescription>
-                <div className="prose prose-sm dark:prose-invert" dangerouslySetInnerHTML={{ __html: assessmentResult.replace(/\\n/g, '<br />') }} />
+                <div className="prose prose-sm dark:prose-invert" dangerouslySetInnerHTML={{ __html: assessmentResult.replace(/\\n/g, '&lt;br /&gt;') }} />
             </AlertDescription>
           </Alert>
         )}
@@ -213,7 +213,7 @@ export default function StoryViewer({
   setIsLoading,
   setError,
 }: StoryViewerProps) {
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const audioRef = useRef&lt;HTMLAudioElement&gt;(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -332,9 +332,9 @@ export default function StoryViewer({
             </Button>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
+            &lt;p className="text-muted-foreground whitespace-pre-wrap leading-relaxed"&gt;
               {originalStory}
-            </p>
+            &lt;/p&gt;
           </CardContent>
         </Card>
         <Card>
@@ -345,7 +345,7 @@ export default function StoryViewer({
             </Button>
           </CardHeader>
           <CardContent>
-            <p className="relative text-foreground whitespace-pre-wrap leading-relaxed">
+            <div className="relative text-foreground whitespace-pre-wrap leading-relaxed">
                 {hasAudio && (
                     <div
                         className="absolute inset-0 bg-gradient-to-r from-accent/70 to-accent/10 pointer-events-none -z-10"
@@ -355,8 +355,8 @@ export default function StoryViewer({
                         }}
                     />
                 )}
-                <span className="relative z-0">{translatedText}</span>
-            </p>
+                &lt;span className="relative z-0"&gt;{translatedText}&lt;/span&gt;
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -373,14 +373,14 @@ export default function StoryViewer({
                 disabled={!hasAudio || isLoading}
             />
             <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                <span>{formatTime(currentTime)}</span>
-                <span>{formatTime(duration)}</span>
+                &lt;span&gt;{formatTime(currentTime)}&lt;/span&gt;
+                &lt;span&gt;{formatTime(duration)}&lt;/span&gt;
             </div>
         </div>
 
         <div className="flex items-center gap-4">
             <div className="grid gap-1.5">
-                <Label htmlFor="voice-select">Speaker Voice</Label>
+                &lt;Label htmlFor="voice-select"&gt;Speaker Voice&lt;/Label&gt;
                 <Select value={selectedVoice} onValueChange={setSelectedVoice} disabled={isLoading}>
                     <SelectTrigger className="w-[180px]" id="voice-select">
                         <SelectValue placeholder="Select a voice" />
