@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 type Member = {
   name: string;
@@ -18,6 +19,7 @@ type Member = {
   bio: string;
   type: 'AI' | 'human';
   avatarUrl?: string;
+  userId?: string;
 };
 
 type Community = {
@@ -38,36 +40,45 @@ type CommunityProfile = {
     learningLanguage: string;
 };
 
-function MemberCard({ member, index, isHumanOwner = false }: { member: Member; index: number; isHumanOwner?: boolean }) {
-    // Generate a consistent avatar URL based on the member's name and index
-    const avatarUrl = isHumanOwner ? `https://i.pravatar.cc/150?u=${member.name}` : `https://i.pravatar.cc/150?u=${member.name}-${index}`;
+function MemberCard({ member, index }: { member: Member; index: number;}) {
+    const isHuman = member.type === 'human';
+    const avatarUrl = `https://i.pravatar.cc/150?u=${member.name}-${index}`;
+    
+    const Wrapper = isHuman && member.userId ? Link : 'div';
+    const wrapperProps = isHuman && member.userId ? { href: `/profile/${member.userId}` } : {};
+
     return (
-      <Card className="shadow-md transition-all hover:shadow-lg hover:-translate-y-1">
-        <CardHeader className="flex flex-row items-start gap-4">
-          <Avatar className="w-16 h-16 border-2 border-primary/20">
-            <AvatarImage src={avatarUrl} alt={member.name} />
-            <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <CardTitle>{member.name}</CardTitle>
-            <CardDescription className="text-primary font-medium">{member.role}</CardDescription>
-          </div>
-          {member.type === 'AI' ? (
-            <Badge variant="outline" className="flex items-center gap-1">
-                <Bot className="w-3 h-3" />
-                AI Member
-            </Badge>
-          ) : (
-            <Badge variant="secondary" className="flex items-center gap-1">
-                <User className="w-3 h-3" />
-                Human
-            </Badge>
-          )}
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">{member.bio}</p>
-        </CardContent>
-      </Card>
+      <Wrapper {...wrapperProps}>
+        <Card className={cn(
+            "shadow-md transition-all h-full",
+            isHuman && "hover:shadow-lg hover:-translate-y-1 hover:bg-muted/50 cursor-pointer"
+        )}>
+            <CardHeader className="flex flex-row items-start gap-4">
+            <Avatar className="w-16 h-16 border-2 border-primary/20">
+                <AvatarImage src={avatarUrl} alt={member.name} />
+                <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+                <CardTitle>{member.name}</CardTitle>
+                <CardDescription className="text-primary font-medium">{member.role}</CardDescription>
+            </div>
+            {member.type === 'AI' ? (
+                <Badge variant="outline" className="flex items-center gap-1">
+                    <Bot className="w-3 h-3" />
+                    AI Member
+                </Badge>
+            ) : (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                    <User className="w-3 h-3" />
+                    Human
+                </Badge>
+            )}
+            </CardHeader>
+            <CardContent>
+            <p className="text-muted-foreground">{member.bio}</p>
+            </CardContent>
+        </Card>
+      </Wrapper>
     );
 }
 
@@ -97,6 +108,7 @@ export default function CommunityProfilePage() {
       let members: Member[] = [...(community.members || [])];
       if (ownerProfile) {
         const ownerMember: Member = {
+          userId: ownerProfile.userId,
           name: ownerProfile.name,
           role: 'Founder',
           bio: ownerProfile.bio,
@@ -196,7 +208,7 @@ export default function CommunityProfilePage() {
         <h2 className="text-3xl font-bold text-center mb-8">Meet the Members</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {allMembers.map((member, index) => (
-            <MemberCard key={`${member.name}-${index}`} member={member} index={index} isHumanOwner={member.type === 'human'} />
+            <MemberCard key={`${member.name}-${index}`} member={member} index={index} />
           ))}
         </div>
       </div>

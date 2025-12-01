@@ -54,7 +54,7 @@ export default function RootLayout({
                <Button asChild variant="ghost">
                 <Link href="/profile">
                   <UserCircle className="h-4 w-4 mr-2" />
-                  Profile
+                  My Profile
                 </Link>
               </Button>
             </nav>
