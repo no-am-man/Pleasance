@@ -45,7 +45,7 @@ type StoryResult = {
     sourceLanguage: string;
 } | null;
 
-function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void; }) {
+function StoryHistory({ onSelectStory, isUserLoading }: { onSelectStory: (story: Story) => void; isUserLoading: boolean; }) {
     const { user } = useUser();
     const firestore = useFirestore();
 
@@ -329,7 +329,7 @@ export default function StoryPage() {
                 </CardContent>
             </Card>
 
-            <StoryHistory onSelectStory={handleSelectStoryFromHistory} />
+            <StoryHistory onSelectStory={handleSelectStoryFromHistory} isUserLoading={isUserLoading} />
         </div>
       )}
     </main>
