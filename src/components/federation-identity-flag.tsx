@@ -3,8 +3,17 @@
 import { useMemo } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
-import { Shield, Gem, Crown, Star, LoaderCircle } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Shield, Gem, Crown, Star, LoaderCircle, QrCode } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import QRCode from 'react-qr-code';
+import { Button } from './ui/button';
 
 type Asset = {
   id: string;
@@ -51,18 +60,39 @@ export function FederationIdentityFlag({ userId }: { userId: string }) {
   const Icon = tier.icon;
 
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className="flex items-center gap-2 text-lg">
-            <Icon className={`h-6 w-6 ${tier.color}`} />
-            <span className={`font-semibold ${tier.color}`}>{tier.name} Contributor</span>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>Total Treasury Value: ${totalValue.toLocaleString()}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="ghost" className="h-auto p-1 rounded-md">
+            <div className="flex items-center gap-2 text-lg">
+                <Icon className={`h-6 w-6 ${tier.color}`} />
+                <span className={`font-semibold ${tier.color}`}>{tier.name} Contributor</span>
+            </div>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Icon className={`h-6 w-6 ${tier.color}`} /> {tier.name} Identity Token
+          </DialogTitle>
+          <DialogDescription>
+            This token represents the total declared value of this user's assets within the federation. Scan the QR code to verify its value.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col items-center justify-center space-y-4 p-4">
+            <div className="bg-white p-4 rounded-lg">
+                <QRCode
+                    value={totalValue.toString()}
+                    size={180}
+                    level="Q"
+                    viewBox={`0 0 180 180`}
+                />
+            </div>
+            <div className="text-center">
+                <p className="text-sm text-muted-foreground">Total Treasury Value</p>
+                <p className="text-3xl font-bold font-mono">${totalValue.toLocaleString()}</p>
+            </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
