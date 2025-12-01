@@ -142,7 +142,7 @@ function TextMessageForm({ communityId }: { communityId: string }) {
     const { user } = useUser();
     const firestore = useFirestore();
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!text.trim() || !user || !firestore) return;
 
@@ -1012,7 +1012,7 @@ export default function CommunityProfilePage() {
         <p className="text-lg text-muted-foreground mt-2">{community.description}</p>
       </div>
 
-      <Card className="shadow-lg mb-8">
+      <Card className="shadow-lg mb-8 border-2 border-primary">
         <CardHeader>
           <CardTitle>Welcome Message</CardTitle>
         </CardHeader>
