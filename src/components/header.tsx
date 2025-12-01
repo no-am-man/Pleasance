@@ -30,6 +30,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
 
 const navLinks = [
   { href: '/', label: 'Home', icon: Home },
@@ -78,7 +79,10 @@ export function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm">
       <Link href="/" className="flex items-center gap-2">
         <Logo className="h-8 w-8 text-primary" />
-        <span className="text-lg font-semibold text-primary">Pleasance</span>
+        <div className="flex items-center gap-2">
+          <span className="text-lg font-semibold text-primary">Pleasance</span>
+          <Badge variant="outline" className="text-xs">BETA</Badge>
+        </div>
       </Link>
 
       {/* Desktop Navigation */}
@@ -127,9 +131,12 @@ export function Header() {
             <div className="flex flex-col gap-4 p-4">
               <Link href="/" className="flex items-center gap-2 mb-4">
                 <Logo className="h-8 w-8 text-primary" />
-                <span className="text-lg font-semibold text-primary">
-                  Pleasance
-                </span>
+                <div className="flex items-center gap-2">
+                    <span className="text-lg font-semibold text-primary">
+                    Pleasance
+                    </span>
+                    <Badge variant="outline" className="text-xs">BETA</Badge>
+                </div>
               </Link>
               <nav className="flex flex-col gap-2">
                 {navLinks.map((link) => (
