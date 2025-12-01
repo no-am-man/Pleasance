@@ -202,7 +202,7 @@ function RecordAudio({ communityId, onMessageSent }: { communityId: string, onMe
                 recorder.ondataavailable = (event) => {
                     audioChunksRef.current.push(event.data);
                 };
-                recorder.onstop = async () => {
+                recorder.onstop = () => {
                     setIsProcessing(true);
                     const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
                     const reader = new FileReader();
@@ -349,7 +349,7 @@ function CommentCard({ comment }: { comment: Comment }) {
     return (
         <div className="p-3 rounded-md bg-muted/50 flex gap-3 items-start">
             <Avatar className="w-8 h-8">
-                <AvatarImage src={comment.userAvatarUrl} alt={comment.userName} />
+                <AvatarImage src={comment.userAvatarUrl || `https://i.pravatar.cc/150?u=${comment.userId}`} alt={comment.userName} />
                 <AvatarFallback>{comment.userName.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex-1 space-y-1.5">
@@ -1030,4 +1030,6 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
+    
+
     
