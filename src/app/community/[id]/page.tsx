@@ -530,7 +530,7 @@ function VoiceChat({ communityId }: { communityId: string }) {
                     <Button asChild>
                         <Link href="/login">
                             <LogIn className="mr-2" />
-                            Login to post a message
+                            Login to record a message
                         </Link>
                     </Button>
                 </div>
