@@ -7,9 +7,10 @@ import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LoaderCircle, LogIn, LogOut } from 'lucide-react';
+import { LoaderCircle, LogIn, LogOut, MailPlus } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { doc } from 'firebase/firestore';
+import Link from 'next/link';
 
 const GoogleIcon = () => (
     <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -126,6 +127,14 @@ export default function LoginPage() {
                         )}
                         Sign in with Google
                     </Button>
+
+                     <Button asChild variant="outline" className="w-full">
+                        <Link href="https://accounts.google.com/signup" target="_blank" rel="noopener noreferrer">
+                           <MailPlus className="mr-2" />
+                           Create a new Gmail
+                        </Link>
+                    </Button>
+
                     {error && <p className="text-sm text-destructive text-center">{error}</p>}
                 </div>
             )}
