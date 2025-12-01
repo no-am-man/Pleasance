@@ -4,11 +4,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoaderCircle, LogIn, LogOut } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { doc } from 'firebase/firestore';
 
 const GoogleIcon = () => (
     <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -31,13 +32,20 @@ const GoogleIcon = () => (
     </svg>
 );
 
-
 export default function LoginPage() {
   const auth = useAuth();
+  const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isSigningIn, setIsSigningIn] = useState(false);
+
+  const profileRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'community-profiles', user.uid);
+  }, [user, firestore]);
+
+  const { data: profile, isLoading: isProfileLoading } = useDoc(profileRef);
 
   const handleGoogleSignIn = async () => {
     setIsSigningIn(true);
@@ -58,12 +66,18 @@ export default function LoginPage() {
   }
 
   useEffect(() => {
-    if (!isUserLoading && user) {
-      router.push('/community');
+    if (!isUserLoading && !isProfileLoading) {
+      if (user) {
+        if (profile) {
+          router.push('/community');
+        } else {
+          router.push('/profile');
+        }
+      }
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, profile, isProfileLoading, router]);
   
-  if (isUserLoading || (user && !isSigningIn)) {
+  if (isUserLoading || isProfileLoading || (user && !isSigningIn)) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <LoaderCircle className="w-12 h-12 animate-spin text-primary" />

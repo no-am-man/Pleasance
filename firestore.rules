@@ -15,6 +15,7 @@
  *   disallowed to protect user privacy.
  * - The `/stories` collection is publicly readable by anyone but disallows writes.
  * - The `communities` subcollection is only accessible by the owner.
+ * - Community profiles are publicly readable but only writable by the owner.
  *
  * Denormalization for Authorization: The rules rely on path-based ownership
  * (`/users/{userId}`), which is the most performant way to secure user data.
@@ -63,6 +64,15 @@ service cloud.firestore {
         return request.resource.data.ownerId == resource.data.ownerId;
     }
 
+    // --- Community Profile Validation ---
+    function hasValidProfileData(userId) {
+        return request.resource.data.userId == userId && request.resource.data.id == userId;
+    }
+
+    function isImmutableProfileIds() {
+        return request.resource.data.id == resource.data.id && request.resource.data.userId == resource.data.userId;
+    }
+
 
     //================================================================================
     // Collection Rules
@@ -87,6 +97,20 @@ service cloud.firestore {
         allow create: if isOwner(userId) && hasValidCommunityData(userId);
         allow update: if isOwner(userId) && isImmutableCommunityOwnerId();
       }
+    }
+
+     /**
+     * @description Manages user community profiles.
+     * @path /community-profiles/{userId}
+     * @allow Anyone can read a profile, but only the owner can create/update/delete it.
+     * @principle Public read access for profiles, but write access is restricted to the owner.
+     */
+    match /community-profiles/{userId} {
+        allow get: if true;
+        allow list: if true;
+        allow create: if isOwner(userId) && hasValidProfileData(userId);
+        allow update: if isOwner(userId) && isImmutableProfileIds();
+        allow delete: if isOwner(userId);
     }
 
     /**

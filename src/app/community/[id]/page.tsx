@@ -1,4 +1,3 @@
-
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -7,10 +6,11 @@ import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { useEffect, useState } from 'react';
 
 type Member = {
   name: string;
@@ -29,9 +29,18 @@ type Community = {
   members: Member[];
 };
 
-function MemberCard({ member, index }: { member: Member, index: number }) {
+type CommunityProfile = {
+    id: string;
+    userId: string;
+    name: string;
+    bio: string;
+    nativeLanguage: string;
+    learningLanguage: string;
+};
+
+function MemberCard({ member, index, isHumanOwner = false }: { member: Member; index: number; isHumanOwner?: boolean }) {
     // Generate a consistent avatar URL based on the member's name and index
-    const avatarUrl = `https://i.pravatar.cc/150?u=${member.name}-${index}`;
+    const avatarUrl = isHumanOwner ? `https://i.pravatar.cc/150?u=${member.name}` : `https://i.pravatar.cc/150?u=${member.name}-${index}`;
     return (
       <Card className="shadow-md transition-all hover:shadow-lg hover:-translate-y-1">
         <CardHeader className="flex flex-row items-start gap-4">
@@ -43,10 +52,15 @@ function MemberCard({ member, index }: { member: Member, index: number }) {
             <CardTitle>{member.name}</CardTitle>
             <CardDescription className="text-primary font-medium">{member.role}</CardDescription>
           </div>
-          {member.type === 'AI' && (
+          {member.type === 'AI' ? (
             <Badge variant="outline" className="flex items-center gap-1">
                 <Bot className="w-3 h-3" />
                 AI Member
+            </Badge>
+          ) : (
+            <Badge variant="secondary" className="flex items-center gap-1">
+                <User className="w-3 h-3" />
+                Human
             </Badge>
           )}
         </CardHeader>
@@ -55,8 +69,7 @@ function MemberCard({ member, index }: { member: Member, index: number }) {
         </CardContent>
       </Card>
     );
-  }
-
+}
 
 export default function CommunityProfilePage() {
   const params = useParams();
@@ -70,6 +83,31 @@ export default function CommunityProfilePage() {
   }, [firestore, user, id]);
 
   const { data: community, isLoading, error } = useDoc<Community>(communityDocRef);
+  
+  const ownerProfileRef = useMemoFirebase(() => {
+    if (!firestore || !community?.ownerId) return null;
+    return doc(firestore, 'community-profiles', community.ownerId);
+  }, [firestore, community?.ownerId]);
+
+  const { data: ownerProfile } = useDoc<CommunityProfile>(ownerProfileRef);
+  const [allMembers, setAllMembers] = useState<Member[]>([]);
+
+  useEffect(() => {
+    if (community) {
+      let members: Member[] = [...(community.members || [])];
+      if (ownerProfile) {
+        const ownerMember: Member = {
+          name: ownerProfile.name,
+          role: 'Founder',
+          bio: ownerProfile.bio,
+          type: 'human',
+        };
+        // Add the owner to the start of the list
+        members.unshift(ownerMember);
+      }
+      setAllMembers(members);
+    }
+  }, [community, ownerProfile]);
 
   if (isLoading) {
     return (
@@ -157,8 +195,8 @@ export default function CommunityProfilePage() {
       <div>
         <h2 className="text-3xl font-bold text-center mb-8">Meet the Members</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {community.members?.map((member, index) => (
-            <MemberCard key={`${member.name}-${index}`} member={member} index={index} />
+          {allMembers.map((member, index) => (
+            <MemberCard key={`${member.name}-${index}`} member={member} index={index} isHumanOwner={member.type === 'human'} />
           ))}
         </div>
       </div>

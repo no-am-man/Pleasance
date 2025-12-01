@@ -40,11 +40,15 @@
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the Community Profile."
+          "description": "Unique identifier for the Community Profile, typically the same as the user's UID."
         },
         "userId": {
           "type": "string",
           "description": "Reference to User. (Relationship: User 1:1 CommunityProfile)"
+        },
+        "name": {
+            "type": "string",
+            "description": "The user's display name."
         },
         "bio": {
           "type": "string",
@@ -62,6 +66,7 @@
       "required": [
         "id",
         "userId",
+        "name",
         "bio",
         "nativeLanguage",
         "learningLanguage"
@@ -192,6 +197,22 @@
         }
       },
       {
+        "path": "/community-profiles/{userId}",
+        "definition": {
+          "entityName": "CommunityProfile",
+          "schema": {
+            "$ref": "#/backend/entities/CommunityProfile"
+          },
+          "description": "Stores user community profiles. A user can read anyone's profile, but can only write to their own.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
         "path": "/users/{userId}/communities/{communityId}",
         "definition": {
           "entityName": "Community",
@@ -222,6 +243,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability. User data and their created communities are stored under `/users/{userId}` using a subcollection for communities. This path-based ownership simplifies security rules and ensures that a user can only access their own data. Global content like stories remains in a top-level collection."
+    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability. User data and their created communities are stored under `/users/{userId}` using a subcollection for communities. This path-based ownership simplifies security rules and ensures that a user can only access their own data. Global content like stories remains in a top-level collection. User profiles are stored in a top-level `community-profiles` collection to allow public readability while maintaining user-specific write access."
   }
 }

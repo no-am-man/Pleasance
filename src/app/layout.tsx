@@ -3,7 +3,7 @@ import Link from 'next/link';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { Button } from '@/components/ui/button';
-import { Home, Users, Sparkles, BookText } from 'lucide-react';
+import { Home, Users, Sparkles, BookText, UserCircle } from 'lucide-react';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
@@ -49,6 +49,12 @@ export default function RootLayout({
                 <Link href="/burlington-speech-trainer">
                   <BookText className="h-4 w-4 mr-2" />
                   Burlington Speech Trainer
+                </Link>
+              </Button>
+               <Button asChild variant="ghost">
+                <Link href="/profile">
+                  <UserCircle className="h-4 w-4 mr-2" />
+                  Profile
                 </Link>
               </Button>
             </nav>
