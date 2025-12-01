@@ -44,7 +44,7 @@ service cloud.firestore {
     }
 
     function isCommunityOwner(communityId) {
-      return isSignedIn() && request.auth.uid == get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId;
+      return isSignedIn() && get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId == request.auth.uid;
     }
     
     // --- User Validation Functions ---
@@ -197,7 +197,7 @@ service cloud.firestore {
          */
         match /joinRequests/{requestId} {
             allow get: if isSignedIn() && (isCommunityOwner(communityId) || request.auth.uid == resource.data.userId);
-            allow list: if isCommunityOwner(communityId) || request.query.where.userId == request.auth.uid;
+            allow list: if isCommunityOwner(communityId);
             allow create: if isSignedIn() && isValidJoinRequest();
             allow update, delete: if isCommunityOwner(communityId);
         }
