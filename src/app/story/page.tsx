@@ -132,6 +132,16 @@ export default function StoryPage() {
     } 
     
     if (result.originalStory && result.translatedText) {
+        const newStoryData = {
+            userId: user.uid,
+            level: data.difficulty,
+            sourceLanguage: data.sourceLanguage,
+            targetLanguage: data.targetLanguage,
+            nativeText: result.originalStory,
+            translatedText: result.translatedText,
+            createdAt: serverTimestamp() 
+        };
+
         setStoryResult({
             originalStory: result.originalStory,
             translatedText: result.translatedText,
@@ -141,15 +151,7 @@ export default function StoryPage() {
       
         try {
             const storyCollectionRef = collection(firestore, 'users', user.uid, 'stories');
-            await addDoc(storyCollectionRef, {
-                userId: user.uid,
-                level: data.difficulty,
-                sourceLanguage: data.sourceLanguage,
-                targetLanguage: data.targetLanguage,
-                nativeText: result.originalStory,
-                translatedText: result.translatedText,
-                createdAt: serverTimestamp() 
-            });
+            await addDoc(storyCollectionRef, newStoryData);
         } catch (firestoreError) {
             const message = firestoreError instanceof Error ? firestoreError.message : 'An unknown error occurred';
             setError("Story generated, but failed to save to your history. " + message);
