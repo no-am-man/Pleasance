@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -535,8 +534,8 @@ const sidebarMenuButtonVariants = cva(
 )
 
 const SidebarMenuButton = React.forwardRef<
-  React.ElementRef<typeof Slot>,
-  React.ComponentProps<typeof Slot> & {
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement> & {
     asChild?: boolean;
     isActive?: boolean
     tooltip?: string | React.ComponentProps<typeof TooltipContent>
