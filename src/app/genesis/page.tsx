@@ -5,10 +5,8 @@ import { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Play, Pause, Edit, Sparkles } from "lucide-react";
+import { Play, Pause, Sparkles } from "lucide-react";
 import { COMMUNITY_DATA, Member } from "@/config/community-data";
-import { generateSpeech } from "@/ai/flows/generate-speech";
-
 
 function MemberCard({ member }: { member: Member }) {
     return (
@@ -34,42 +32,6 @@ export default function GenesisPage() {
     const { name, description, welcomeMessage, members } = COMMUNITY_DATA;
     const audioRef = useRef<HTMLAudioElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [audioDataUri, setAudioDataUri] = useState<string | null>(null);
-
-    const handlePlayWelcome = async () => {
-        if (audioRef.current && audioDataUri) {
-          if (isPlaying) {
-            audioRef.current.pause();
-            setIsPlaying(false);
-          } else {
-            audioRef.current.play();
-            setIsPlaying(true);
-          }
-          return;
-        }
-    
-        setIsGenerating(true);
-        try {
-          const result = await generateSpeech({ text: welcomeMessage });
-          if (result.media) {
-            setAudioDataUri(result.media);
-          }
-        } catch (error) {
-          console.error("Error generating speech:", error);
-        } finally {
-          setIsGenerating(false);
-        }
-      };
-
-      // Effect to play audio once it's loaded
-    if (audioDataUri && audioRef.current && !isPlaying && !isGenerating) {
-        audioRef.current.src = audioDataUri;
-        audioRef.current.play().then(() => {
-            setIsPlaying(true);
-        });
-        audioRef.current.onended = () => setIsPlaying(false);
-    }
 
   return (
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
@@ -86,17 +48,15 @@ export default function GenesisPage() {
             <div className="flex justify-between items-start">
                 <div>
                     <CardTitle className="text-2xl">A Message from the Founders</CardTitle>
-                    <CardDescription>Listen to our welcome message.</CardDescription>
+                    <CardDescription>Our welcome message.</CardDescription>
                 </div>
             </div>
         </CardHeader>
         <CardContent>
           <p className="mb-6 text-lg leading-relaxed">{welcomeMessage}</p>
           <div className="flex items-center gap-4">
-          <Button onClick={handlePlayWelcome} disabled={isGenerating}>
-              {isGenerating ? (
-                "Generating..."
-              ) : isPlaying ? (
+          <Button disabled={true}>
+              {isPlaying ? (
                 <>
                   <Pause className="mr-2 h-4 w-4" /> Pause
                 </>
