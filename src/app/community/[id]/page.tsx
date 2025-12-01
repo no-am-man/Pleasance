@@ -1,3 +1,4 @@
+
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -716,6 +717,27 @@ export default function CommunityProfilePage() {
     }
   };
 
+  const handleInvite = (profile: CommunityProfile) => {
+    if (!communityDocRef) return;
+    
+    const newMember: Member = {
+        userId: profile.userId,
+        name: profile.name,
+        bio: profile.bio,
+        role: 'Member',
+        type: 'human',
+    };
+
+    updateDocumentNonBlocking(communityDocRef, {
+        members: arrayUnion(newMember)
+    });
+
+    toast({
+        title: "Member Invited!",
+        description: `${profile.name} has been added to the community.`
+    })
+  };
+
 
   if (isLoading || profilesLoading) {
     return (
@@ -861,7 +883,7 @@ export default function CommunityProfilePage() {
                                     <Link href={`/profile/${profile.id}`} className="font-bold underline">{profile.name}</Link>
                                     <p className="text-sm text-muted-foreground line-clamp-2">{profile.bio}</p>
                                 </div>
-                                <Button variant="outline" size="sm" disabled>
+                                <Button variant="outline" size="sm" onClick={() => handleInvite(profile)}>
                                     <Send className="mr-2 h-4 w-4" />
                                     Invite
                                 </Button>
