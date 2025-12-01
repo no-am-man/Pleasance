@@ -196,11 +196,13 @@ service cloud.firestore {
          * @path /communities/{communityId}/joinRequests/{requestId}
          */
         match /joinRequests/{requestId} {
-            allow get: if isSignedIn() && (isCommunityOwner(communityId) || request.auth.uid == resource.data.userId);
-            allow list: if isCommunityOwner(communityId);
+            allow get: if isSignedIn() && (isCommunityOwner(communityId) || isOwner(resource.data.userId));
+            allow list: if isCommunityOwner(communityId) || (isSignedIn() && request.query.where.userId == request.auth.uid);
             allow create: if isSignedIn() && isValidJoinRequest();
             allow update, delete: if isCommunityOwner(communityId);
         }
     }
   }
 }
+
+    
