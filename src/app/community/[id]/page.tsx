@@ -145,7 +145,7 @@ function TextMessageForm({ communityId }: { communityId: string }) {
         setIsSubmitting(true);
         try {
             const messagesColRef = collection(firestore, `communities/${communityId}/messages`);
-            const newMessage: Omit<Message, 'id' | 'createdAt'> & { createdAt: any } = {
+            const newMessage = {
                 communityId,
                 userId: user.uid,
                 userName: user.displayName || 'Anonymous',
@@ -223,7 +223,7 @@ function RecordAudio({ communityId }: { communityId: string }) {
                                 throw new Error(transcriptionResult.error);
                             }
 
-                            const newMessage: Omit<Message, 'id'|'createdAt'> & {createdAt: any} = {
+                            const newMessage = {
                                 communityId,
                                 userId: user.uid,
                                 userName: user.displayName || 'Anonymous',
