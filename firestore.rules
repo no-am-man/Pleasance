@@ -87,45 +87,6 @@ service cloud.firestore {
             && incomingData.status == 'pending';
     }
 
-    function isValidMessageUpdate() {
-      let data = request.resource.data;
-      // Allow only the 'status' field to be updated to 'done' or 'active'
-      return data.status != resource.data.status
-        && (data.status == 'done' || data.status == 'active')
-        // Ensure other mutable fields are not changed during a status update
-        && data.id == resource.data.id
-        && data.userId == resource.data.userId
-        && data.createdAt == resource.data.createdAt
-        && data.userName == resource.data.userName
-        && data.userAvatarUrl == resource.data.userAvatarUrl
-        && data.audioUrl == resource.data.audioUrl
-        && data.transcription == resource.data.transcription
-        && data.communityId == resource.data.communityId;
-    }
-
-    function isValidCommentCreate() {
-        let data = request.resource.data;
-        // The user must be the author of the comment.
-        if (data.userId != request.auth.uid) {
-            return false;
-        }
-
-        // The userName must be a string.
-        if (!(data.userName is string)) {
-            return false;
-        }
-
-        // Validate based on comment type
-        if (data.type == 'text') {
-            return data.text is string && data.text.size() > 0 && data.text.size() < 500;
-        }
-        if (data.type == 'voice') {
-            return data.audioUrl is string && data.transcription is string;
-        }
-        return false;
-    }
-    
-
     //================================================================================
     // Collection Rules
     //================================================================================
@@ -188,13 +149,8 @@ service cloud.firestore {
          */
         match /messages/{messageId} {
             allow read: if true;
-            allow create: if isSignedIn() 
-                && request.resource.data.userId == request.auth.uid
-                && (
-                    (request.resource.data.type == 'text' && request.resource.data.text is string && request.resource.data.text.size() > 0) ||
-                    (request.resource.data.type == 'voice' && request.resource.data.audioUrl is string && request.resource.data.transcription is string)
-                );
-            allow update: if (isOwner(resource.data.userId) || isCommunityOwner(communityId)) && isValidMessageUpdate();
+            allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+            allow update: if (isOwner(resource.data.userId) || isCommunityOwner(communityId));
             allow delete: if isCommunityOwner(communityId) || isOwner(resource.data.userId);
 
 
@@ -205,7 +161,7 @@ service cloud.firestore {
              */
             match /comments/{commentId} {
                 allow read: if true;
-                allow create: if isSignedIn() && isValidCommentCreate();
+                allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
                 allow update: if false;
                 allow delete: if isSignedIn() && (isOwner(resource.data.userId) || isCommunityOwner(communityId));
             }
