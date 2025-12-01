@@ -689,7 +689,7 @@ function Chat({ communityId, isOwner }: { communityId: string; isOwner: boolean 
             </CardHeader>
             <CardContent className="space-y-4">
                 {isLoading && <LoaderCircle className="mx-auto animate-spin" />}
-                {error && <p className="text-destructive">Error loading messages.</p>}
+                {error && <p className="text-destructive">Error loading messages: {error.message}</p>}
                 {messages && messages.length === 0 && <p className="text-muted-foreground text-center py-8">No messages yet. Be the first!</p>}
                 <div className="max-h-[40rem] overflow-y-auto space-y-4 pr-2">
                     {messages?.map(msg => <MessageCard key={msg.id} message={msg} canManage={isOwner || msg.userId === user?.uid}/>)}
@@ -1009,7 +1009,7 @@ export default function CommunityProfilePage() {
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary">
           {community.name}
         </h1>
-        <p className="text-lg text-muted-foreground mt-2">{community.description}</p>
+        <p className="text-lg text-accent-foreground mt-2">{community.description}</p>
       </div>
 
       <Card className="shadow-lg mb-8 border-2 border-primary">
