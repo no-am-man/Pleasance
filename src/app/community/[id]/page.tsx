@@ -7,7 +7,7 @@ import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@
 import { doc, collection, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mic, Square, Trash2 } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mic, Square, Trash2, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +18,8 @@ import { useToast } from '@/hooks/use-toast';
 import { getTranscription } from '@/app/actions';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 
 type Member = {
   name: string;
@@ -215,6 +217,36 @@ function RecordAudio({ communityId }: { communityId: string }) {
     );
 }
 
+function CommentDialog({ message }: { message: VoiceMessage }) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm">
+          <MessageSquare className="mr-2 h-4 w-4" />
+          Comment
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Comments on {message.userName}'s message</DialogTitle>
+          <DialogDescription>
+            "{message.transcription}"
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+            <div className="text-center text-muted-foreground text-sm">
+                No comments yet.
+            </div>
+            <div className="grid w-full gap-2">
+                <Textarea placeholder="Write a comment..." />
+                <Button disabled>Post Comment</Button>
+            </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 function VoiceMessageCard({ message }: { message: VoiceMessage }) {
     const audioRef = useRef<HTMLAudioElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -255,9 +287,13 @@ function VoiceMessageCard({ message }: { message: VoiceMessage }) {
                     </span>
                 </div>
                 <audio ref={audioRef} src={message.audioUrl} className="hidden" />
-                <Button onClick={togglePlay} variant="outline" size="sm">
-                    {isPlaying ? 'Pause' : 'Play Message'}
-                </Button>
+                
+                <div className="flex items-center gap-2">
+                    <Button onClick={togglePlay} variant="outline" size="sm">
+                        {isPlaying ? 'Pause' : 'Play Message'}
+                    </Button>
+                    <CommentDialog message={message} />
+                </div>
                 {message.transcription && (
                     <p className="text-sm text-muted-foreground pt-2 italic">"{message.transcription}"</p>
                 )}
@@ -498,5 +534,3 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
-
-    
