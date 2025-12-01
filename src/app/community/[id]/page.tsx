@@ -704,25 +704,17 @@ export default function CommunityProfilePage() {
   const { data: userProfile } = useDoc<CommunityProfile>(userProfileRef);
 
   // Use a direct doc ref to check for a specific user's join request.
-  // This avoids a collection query which is causing permission issues for non-owners.
   const userJoinRequestRef = useMemoFirebase(() => {
     if (!firestore || !user || !id) return null;
-    // We can't know the request ID, so we must query. But the rules block it.
-    // Let's create a predictable ID for the join request.
-    const requestId = user.uid; // Use user's UID as the document ID.
-    return doc(firestore, 'communities', id, 'joinRequests', requestId);
+    // Use the user's UID as the predictable document ID.
+    return doc(firestore, 'communities', id, 'joinRequests', user.uid);
   }, [firestore, user, id]);
+  
+  // Use useDoc to fetch the specific request document.
+  const { data: userJoinRequest, isLoading: isRequestLoading } = useDoc<JoinRequest>(userJoinRequestRef);
 
-  // We need to query for the join request still because we can't predict the ID.
-  // The rules should allow this if filtered by userId.
-  const joinRequestQuery = useMemoFirebase(() => {
-    if (!firestore || !user || !id) return null;
-    const requestsRef = collection(firestore, 'communities', id, 'joinRequests');
-    return query(requestsRef, where('userId', '==', user.uid), where('status', '==', 'pending'));
-  }, [firestore, user, id]);
-
-  const { data: userJoinRequest, isLoading: isRequestLoading } = useCollection<JoinRequest>(joinRequestQuery);
-  const hasPendingRequest = userJoinRequest && userJoinRequest.length > 0;
+  // Determine if a pending request exists based on the useDoc result.
+  const hasPendingRequest = userJoinRequest?.status === 'pending';
 
   useEffect(() => {
     if (community) {
@@ -765,7 +757,8 @@ export default function CommunityProfilePage() {
         return;
     }
     setIsSubmitting(true);
-    const requestRef = doc(collection(firestore, `communities/${id}/joinRequests`));
+    // Create a doc ref with the user's UID as the ID.
+    const requestRef = doc(firestore, `communities/${id}/joinRequests`, user.uid);
     const newRequest: Omit<JoinRequest, 'createdAt'> = {
         id: requestRef.id,
         userId: user.uid,
