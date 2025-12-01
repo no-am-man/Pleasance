@@ -47,7 +47,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             <SidebarMenuItem>
               <Link href="/" asChild>
                 <SidebarMenuButton
-                  asChild
                   isActive={isActive('/')}
                   icon={<Home />}
                   tooltip="Home"
@@ -59,7 +58,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             <SidebarMenuItem>
               <Link href="/community" asChild>
                 <SidebarMenuButton
-                  asChild
                   isActive={isActive('/community')}
                   icon={<Users />}
                   tooltip="Community"
@@ -71,7 +69,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             <SidebarMenuItem>
               <Link href="/story" asChild>
                 <SidebarMenuButton
-                  asChild
                   isActive={isActive('/story')}
                   icon={<BookOpen />}
                   tooltip="Burlington Edge"
@@ -83,7 +80,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             <SidebarMenuItem>
               <Link href="/fabrication" asChild>
                 <SidebarMenuButton
-                  asChild
                   isActive={isActive('/fabrication')}
                   icon={<Warehouse />}
                   tooltip="Fabrication"
@@ -95,7 +91,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             <SidebarMenuItem>
               <Link href="/treasury" asChild>
                 <SidebarMenuButton
-                  asChild
                   isActive={isActive('/treasury')}
                   icon={<Banknote />}
                   tooltip="Treasury"
@@ -107,7 +102,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             <SidebarMenuItem>
               <Link href="/wiki" asChild>
                 <SidebarMenuButton
-                  asChild
                   isActive={isActive('/wiki')}
                   icon={<Info />}
                   tooltip="Wiki"
@@ -123,7 +117,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             <SidebarMenuItem>
               <Link href="/profile" asChild>
                 <SidebarMenuButton
-                  asChild
                   isActive={isActive('/profile')}
                   icon={<UserCircle />}
                   tooltip="My Profile"
