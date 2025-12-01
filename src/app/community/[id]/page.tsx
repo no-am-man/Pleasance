@@ -26,7 +26,6 @@ type Member = {
   type: 'AI' | 'human';
   avatarUrl?: string;
   userId?: string;
-  interactionCount?: number;
 };
 
 type Community = {
@@ -101,7 +100,7 @@ function MemberCard({ member, index, communityId }: { member: Member; index: num
                 <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex-1 space-y-1">
-                <CardTitle className="text-xl hover:underline">{member.name}</CardTitle>
+                <CardTitle className="text-xl underline">{member.name}</CardTitle>
                 <CardDescription className="text-primary font-medium">{member.role}</CardDescription>
             </div>
             {isHuman ? (
@@ -593,7 +592,7 @@ function JoinRequests({ communityId, communityDocRef }: { communityId: string, c
                         <AvatarFallback>{req.userName.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-grow">
-                        <Link href={`/profile/${req.userId}`} className="font-bold hover:underline">{req.userName}</Link>
+                        <Link href={`/profile/${req.userId}`} className="font-bold underline">{req.userName}</Link>
                         <p className="text-sm text-muted-foreground line-clamp-2">{req.userBio}</p>
                     </div>
                     <div className="flex gap-2 self-start sm:self-center">
@@ -658,13 +657,10 @@ export default function CommunityProfilePage() {
 
   useEffect(() => {
     if (community) {
-      // Create a new array from the community members
       let members: Member[] = community.members ? [...community.members] : [];
 
-      // Find if the owner is already in the members list as a 'human' type
       const ownerAsMember = members.find(m => m.userId === community.ownerId);
 
-      // If there's a profile for the owner, create a member object for them
       if (ownerProfile) {
         const ownerMemberObject: Member = {
           userId: ownerProfile.userId,
@@ -675,10 +671,8 @@ export default function CommunityProfilePage() {
         };
 
         if (ownerAsMember) {
-          // If the owner exists as a human member, update their info
           members = members.map(m => m.userId === community.ownerId ? ownerMemberObject : m);
         } else {
-          // If the owner is not in the list, add them to the start
           members.unshift(ownerMemberObject);
         }
       }
@@ -863,7 +857,7 @@ export default function CommunityProfilePage() {
                                     <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
                                 </Avatar>
                                 <div className="flex-grow">
-                                    <Link href={`/profile/${profile.id}`} className="font-bold hover:underline">{profile.name}</Link>
+                                    <Link href={`/profile/${profile.id}`} className="font-bold underline">{profile.name}</Link>
                                     <p className="text-sm text-muted-foreground line-clamp-2">{profile.bio}</p>
                                 </div>
                                 <Button variant="outline" size="sm" disabled>

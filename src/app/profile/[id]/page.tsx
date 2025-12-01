@@ -101,7 +101,7 @@ export default function UserProfilePage() {
           <CardTitle className="text-3xl">{profile.name}</CardTitle>
           
           {isOwnProfile && (
-             <Button asChild variant="link">
+             <Button asChild variant="link" className="underline">
                 <Link href="/profile">Edit Your Profile</Link>
              </Button>
           )}

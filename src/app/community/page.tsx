@@ -25,7 +25,6 @@ type Member = {
   role: string;
   bio: string;
   type: 'AI' | 'human';
-  interactionCount?: number;
 };
 
 type Community = {
@@ -151,7 +150,7 @@ function CommunityList({ title, communities, isLoading, error }: { title: string
                 <li key={community.id} className="rounded-md border transition-colors hover:bg-muted/50">
                    <Link href={`/community/${community.id}`} className="block p-4">
                     <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-lg text-primary hover:underline">{community.name}</h3>
+                        <h3 className="font-semibold text-lg text-primary underline">{community.name}</h3>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">{community.description}</p>
                   </Link>
