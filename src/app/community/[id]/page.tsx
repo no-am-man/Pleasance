@@ -2,16 +2,17 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { doc, collection } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
 
 type Member = {
   name: string;
@@ -106,7 +107,18 @@ export default function CommunityProfilePage() {
   }, [firestore, community?.ownerId]);
 
   const { data: ownerProfile } = useDoc<CommunityProfile>(ownerProfileRef);
+  
+  const allProfilesQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'community-profiles');
+  }, [firestore]);
+
+  const { data: allProfiles, isLoading: profilesLoading } = useCollection<CommunityProfile>(allProfilesQuery);
+
   const [allMembers, setAllMembers] = useState<Member[]>([]);
+  const [suggestedUsers, setSuggestedUsers] = useState<CommunityProfile[]>([]);
+
+  const isOwner = user?.uid === community?.ownerId;
 
   useEffect(() => {
     if (community) {
@@ -127,8 +139,17 @@ export default function CommunityProfilePage() {
       setAllMembers(members);
     }
   }, [community, ownerProfile]);
+  
+  useEffect(() => {
+    if (allProfiles && allMembers.length > 0) {
+      const memberUserIds = new Set(allMembers.filter(m => m.userId).map(m => m.userId));
+      const suggestions = allProfiles.filter(p => !memberUserIds.has(p.userId));
+      setSuggestedUsers(suggestions);
+    }
+  }, [allProfiles, allMembers]);
 
-  if (isLoading) {
+
+  if (isLoading || profilesLoading) {
     return (
       <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
         <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
@@ -211,7 +232,7 @@ export default function CommunityProfilePage() {
         </CardContent>
       </Card>
       
-      <div>
+      <div className="mb-12">
         <h2 className="text-3xl font-bold text-center mb-8">Meet the Members</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {allMembers.map((member, index) => (
@@ -219,6 +240,39 @@ export default function CommunityProfilePage() {
           ))}
         </div>
       </div>
+      
+      {isOwner && (
+        <>
+            <Separator className="my-12" />
+            <div>
+                <h2 className="text-3xl font-bold text-center mb-8">Invite Members</h2>
+                {suggestedUsers.length > 0 ? (
+                    <div className="space-y-4">
+                        {suggestedUsers.map(profile => (
+                            <Card key={profile.id} className="flex items-center p-4">
+                                <Avatar className="w-12 h-12 mr-4">
+                                    <AvatarImage src={`https://i.pravatar.cc/150?u=${profile.name}`} alt={profile.name} />
+                                    <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-grow">
+                                    <Link href={`/profile/${profile.id}`} className="font-bold hover:underline">{profile.name}</Link>
+                                    <p className="text-sm text-muted-foreground line-clamp-2">{profile.bio}</p>
+                                </div>
+                                <Button variant="outline" size="sm" disabled>
+                                    <Send className="mr-2 h-4 w-4" />
+                                    Invite
+                                </Button>
+                            </Card>
+                        ))}
+                    </div>
+                ) : (
+                    <Card className="flex items-center justify-center p-8">
+                        <p className="text-muted-foreground">No new users to invite right now.</p>
+                    </Card>
+                )}
+            </div>
+        </>
+      )}
 
     </main>
   );
