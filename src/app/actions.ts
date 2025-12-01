@@ -10,7 +10,7 @@ import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member
 import { generateSpeech } from '@/ai/flows/generate-speech';
 import { VOICES } from '@/config/languages';
 import { initializeFirebase } from '@/firebase/config-for-actions';
-import { doc, deleteDoc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
 
 const storySchema = z.object({
@@ -202,28 +202,22 @@ export async function deleteMessage(values: z.infer<typeof deleteMessageSchema>)
         const { firestore, storage } = initializeFirebase();
 
         const messageDocRef = doc(firestore, `communities/${communityId}/messages`, messageId);
-        const messageSnap = await getDoc(messageDocRef);
-        
-        if (!messageSnap.exists()) {
-            return { error: 'Message not found.' };
-        }
-
-        const messageData = messageSnap.data();
 
         // Delete Firestore document
         await deleteDoc(messageDocRef);
         
-        // If it's a voice message, delete the audio file from Storage
-        if (messageData.type === 'voice') {
-            const audioPath = `communities/${communityId}/messages/${messageId}.wav`;
-            const storageRef = ref(storage, audioPath);
-            try {
-                await deleteObject(storageRef);
-            } catch (storageError: any) {
-                // If the file doesn't exist, we can ignore the error.
-                if (storageError.code !== 'storage/object-not-found') {
-                    throw storageError;
-                }
+        // Attempt to delete the audio file from Storage.
+        // This will not throw an error if the file doesn't exist (e.g., for a text message).
+        const audioPath = `communities/${communityId}/messages/${messageId}.wav`;
+        const storageRef = ref(storage, audioPath);
+        try {
+            await deleteObject(storageRef);
+        } catch (storageError: any) {
+            // If the object doesn't exist, we can safely ignore the error.
+            // This is expected when deleting a text message.
+            if (storageError.code !== 'storage/object-not-found') {
+                // Re-throw any other storage errors.
+                throw storageError;
             }
         }
 
