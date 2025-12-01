@@ -44,7 +44,7 @@ type StoryResult = {
     sourceLanguage: string;
 } | null;
 
-function StoryHistory({ onSelectStory, isUserLoading }: { onSelectStory: (story: Story) => void; isUserLoading: boolean }) {
+function StoryHistory({ onSelectStory, isUserLoading }: { onSelectStory: (story: Story) => void; isUserLoading: boolean; }) {
     const { user } = useUser();
     const firestore = useFirestore();
 
