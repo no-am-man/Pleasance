@@ -1,3 +1,4 @@
+
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -6,15 +7,17 @@ import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 type Member = {
   name: string;
   role: string;
   bio: string;
-  avatarUrl?: string; // Made optional as it will be generated
+  type: 'AI' | 'human';
+  avatarUrl?: string;
 };
 
 type Community = {
@@ -31,15 +34,21 @@ function MemberCard({ member, index }: { member: Member, index: number }) {
     const avatarUrl = `https://i.pravatar.cc/150?u=${member.name}-${index}`;
     return (
       <Card className="shadow-md transition-all hover:shadow-lg hover:-translate-y-1">
-        <CardHeader className="flex flex-row items-center gap-4">
+        <CardHeader className="flex flex-row items-start gap-4">
           <Avatar className="w-16 h-16 border-2 border-primary/20">
             <AvatarImage src={avatarUrl} alt={member.name} />
             <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
           </Avatar>
-          <div>
+          <div className="flex-1">
             <CardTitle>{member.name}</CardTitle>
             <CardDescription className="text-primary font-medium">{member.role}</CardDescription>
           </div>
+          {member.type === 'AI' && (
+            <Badge variant="outline" className="flex items-center gap-1">
+                <Bot className="w-3 h-3" />
+                AI Member
+            </Badge>
+          )}
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">{member.bio}</p>

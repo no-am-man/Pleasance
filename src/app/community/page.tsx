@@ -1,3 +1,4 @@
+
 // src/app/community/page.tsx
 "use client";
 
@@ -22,6 +23,7 @@ type Member = {
   name: string;
   role: string;
   bio: string;
+  type: 'AI' | 'human';
 };
 
 type Community = {

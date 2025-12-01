@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A flow to generate a community based on a user prompt, including AI members.
@@ -21,6 +22,7 @@ const MemberSchema = z.object({
     name: z.string().describe("The AI member's unique name."),
     role: z.string().describe("The member's role in the community (e.g., 'Guide', 'Archivist', 'Explorer')."),
     bio: z.string().describe("A short, one-sentence bio describing the member's personality and purpose."),
+    type: z.literal('AI').describe('The type of member, which is always AI for generated members.'),
   });
   
 const GenerateCommunityOutputSchema = z.object({
@@ -40,7 +42,7 @@ const generateCommunityPrompt = ai.definePrompt({
   name: 'generateCommunityPrompt',
   input: {schema: GenerateCommunityInputSchema},
   output: {schema: GenerateCommunityOutputSchema},
-  prompt: `You are an expert at founding online communities. Based on the user's prompt, generate a name, a short description, a welcome message, and a diverse cast of 3-5 AI members to populate the community. Each member should have a unique name, role, and a one-sentence bio that reflects the community's theme.
+  prompt: `You are an expert at founding online communities. Based on the user's prompt, generate a name, a short description, a welcome message, and a diverse cast of 3-5 AI members to populate the community. Each member must have a unique name, role, a one-sentence bio that reflects the community's theme, and the 'type' field must be set to 'AI'.
 
 User Prompt: {{{prompt}}}
 
