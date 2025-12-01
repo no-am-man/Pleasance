@@ -1,10 +1,9 @@
-import type {Metadata} from 'next';
-import Link from 'next/link';
+import type { Metadata } from 'next';
 import './globals.css';
-import { Toaster } from "@/components/ui/toaster"
-import { Button } from '@/components/ui/button';
-import { Home, Users, Sparkles, UserCircle, BookOpen, Warehouse, Banknote, Info } from 'lucide-react';
+import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { MainLayout } from './main-layout';
 
 export const metadata: Metadata = {
   title: 'Pleasance',
@@ -20,59 +19,22 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+          rel="stylesheet"
+        />
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
-          <header className="container mx-auto max-w-4xl py-4">
-            <nav className="flex items-center gap-4">
-              <Button asChild variant="ghost">
-                <Link href="/">
-                  <Home className="h-4 w-4 mr-2" />
-                  Home
-                </Link>
-              </Button>
-              <Button asChild variant="ghost">
-                <Link href="/community">
-                  <Users className="h-4 w-4 mr-2" />
-                  Community
-                </Link>
-              </Button>
-              <Button asChild variant="ghost">
-                <Link href="/story">
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Burlington Edge
-                </Link>
-              </Button>
-              <Button asChild variant="ghost">
-                <Link href="/fabrication">
-                  <Warehouse className="h-4 w-4 mr-2" />
-                  Fabrication
-                </Link>
-              </Button>
-              <Button asChild variant="ghost">
-                <Link href="/treasury">
-                  <Banknote className="h-4 w-4 mr-2" />
-                  Treasury
-                </Link>
-              </Button>
-              <Button asChild variant="ghost">
-                <Link href="/wiki">
-                  <Info className="h-4 w-4 mr-2" />
-                  Wiki
-                </Link>
-              </Button>
-               <Button asChild variant="ghost">
-                <Link href="/profile">
-                  <UserCircle className="h-4 w-4 mr-2" />
-                  My Profile
-                </Link>
-              </Button>
-            </nav>
-          </header>
-          {children}
-          <Toaster />
+          <SidebarProvider>
+            <MainLayout>{children}</MainLayout>
+            <Toaster />
+          </SidebarProvider>
         </FirebaseClientProvider>
       </body>
     </html>
