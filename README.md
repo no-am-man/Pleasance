@@ -2,6 +2,8 @@
 
 > A federated universe for co-learning, creation, and fabrication.
 
+**[Live App](https://[your-app-url].firebaseapp.com) | [GitHub Repository](https://github.com/no-am-man/Pleasance)**
+
 This project is open source. You can find the repository [here](https://github.com/no-am-man/Pleasance).
 
 ## 🎉 Version 1.0.0 is Live!
