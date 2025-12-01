@@ -94,19 +94,11 @@ export default function CommunityProfilePage() {
   const firestore = useFirestore();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
-  // This reference is tricky. We don't know the owner's ID upfront.
-  // This hook will fail until we find the community and its owner.
-  // Let's adjust the logic. We need to fetch the community first, but from where?
-  // We can't assume the current user is the owner.
-  // This indicates a modeling issue. A community should probably be a top-level collection.
-  // For now, let's assume we can only view our own communities.
   const communityDocRef = useMemoFirebase(() => {
-    if (!firestore || !user || !id) return null;
-    // THIS IS THE PROBLEM: It assumes the logged-in user is the owner.
-    // We need a way to look up communities by ID regardless of owner.
-    // For now, this will only work for communities the current user owns.
-    return doc(firestore, 'users', user.uid, 'communities', id);
-  }, [firestore, user, id]);
+    if (!firestore || !id) return null;
+    // Fetch from the top-level 'communities' collection
+    return doc(firestore, 'communities', id);
+  }, [firestore, id]);
 
   const { data: community, isLoading, error } = useDoc<Community>(communityDocRef);
   
@@ -178,7 +170,7 @@ export default function CommunityProfilePage() {
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-4">
-              There was a problem loading this community. This might be a private community you do not have access to.
+              There was a problem loading this community.
             </p>
             <pre className="mb-4 text-left text-sm bg-muted p-2 rounded-md overflow-x-auto">
               <code>{error.message}</code>
@@ -186,7 +178,7 @@ export default function CommunityProfilePage() {
             <Button asChild variant="outline">
               <Link href="/community">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Your Communities
+                Back to All Communities
               </Link>
             </Button>
           </CardContent>
@@ -203,11 +195,11 @@ export default function CommunityProfilePage() {
               <CardTitle>Community Not Found</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground mb-4">We couldn't find the community you were looking for. It may be private or you may need to be logged in as the owner to see it.</p>
+              <p className="text-muted-foreground mb-4">We couldn't find the community you were looking for. It may have been deleted or the ID is incorrect.</p>
               <Button asChild variant="outline">
               <Link href="/community">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Your Communities
+                Back to Community Federation
               </Link>
             </Button>
             </CardContent>

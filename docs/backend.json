@@ -213,15 +213,14 @@
         }
       },
       {
-        "path": "/users/{userId}/communities/{communityId}",
+        "path": "/communities/{communityId}",
         "definition": {
           "entityName": "Community",
           "schema": {
             "$ref": "#/backend/entities/Community"
           },
-          "description": "Stores communities created by a user. Only the owner can create, read, update, or delete their communities.",
+          "description": "Stores all communities in a top-level collection. Communities are publicly readable, but only the owner can update or delete their own community.",
           "params": [
-            { "name": "userId", "description": "The ID of the user who owns the community." },
             { "name": "communityId", "description": "The unique ID for the community." }
           ]
         }
@@ -243,6 +242,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability. User data and their created communities are stored under `/users/{userId}` using a subcollection for communities. This path-based ownership simplifies security rules and ensures that a user can only access their own data. Global content like stories remains in a top-level collection. User profiles are stored in a top-level `community-profiles` collection to allow public readability while maintaining user-specific write access."
+    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities` in a top-level collection, they become publicly queryable, which is essential for search and join features. User-specific data remains private under `/users/{userId}`. Public profiles are in `/community-profiles` to allow discoverability without exposing private user account details. This separation of concerns simplifies security rules and improves data access patterns."
   }
 }

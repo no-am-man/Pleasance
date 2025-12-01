@@ -8,12 +8,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, doc } from 'firebase/firestore';
+import { collection, doc, query, where } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LogIn, PlusCircle, LoaderCircle } from "lucide-react";
+import { LogIn, PlusCircle, LoaderCircle, Search } from "lucide-react";
 import { createCommunityDetails } from "../actions";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 
 const FormSchema = z.object({
   prompt: z.string().min(10, "Please enter a prompt of at least 10 characters."),
@@ -67,8 +69,8 @@ function CreateCommunityForm() {
       
       const { name, description, welcomeMessage, members } = result;
       
-      // 2. Create the new community object on the client
-      const newCommunityRef = doc(collection(firestore, 'users', user.uid, 'communities'));
+      // 2. Create the new community object on the client in the top-level 'communities' collection
+      const newCommunityRef = doc(collection(firestore, 'communities'));
       const newCommunity: Community = {
         id: newCommunityRef.id,
         ownerId: user.uid,
@@ -128,53 +130,97 @@ function CreateCommunityForm() {
   );
 }
 
-function CommunityList() {
-  const { user } = useUser();
-  const firestore = useFirestore();
+function CommunityList({ title, communities, isLoading, error }: { title: string, communities: Community[] | null, isLoading: boolean, error: Error | null }) {
+    if (isLoading) {
+      return <div className="flex justify-center"><LoaderCircle className="w-8 h-8 animate-spin text-primary" /></div>;
+    }
+  
+    if (error) {
+      return <p className="text-destructive text-center">Error loading communities: {error.message}</p>;
+    }
+  
+    return (
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle className="text-2xl">{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {communities && communities.length > 0 ? (
+            <ul className="space-y-4">
+              {communities.map((community) => (
+                <li key={community.id} className="rounded-md border transition-colors hover:bg-muted/50">
+                   <Link href={`/community/${community.id}`} className="block p-4">
+                    <h3 className="font-semibold text-lg text-primary">{community.name}</h3>
+                    <p className="text-sm text-muted-foreground">{community.description}</p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-muted-foreground text-center py-4">No communities found.</p>
+          )}
+        </CardContent>
+      </Card>
+    );
+}
 
-  const userCommunitiesQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return collection(firestore, 'users', user.uid, 'communities');
-  }, [firestore, user]);
+function CommunitySearch() {
+    const [searchTerm, setSearchTerm] = useState('');
+    const firestore = useFirestore();
+  
+    // Note: Firestore doesn't support native text search.
+    // This query is a simple "startsWith" search. For full-text search, an external service like Algolia is needed.
+    const searchCommunitiesQuery = useMemoFirebase(() => {
+      if (!firestore || !searchTerm) return null;
+      const communitiesRef = collection(firestore, 'communities');
+      return query(communitiesRef, where('name', '>=', searchTerm), where('name', '<=', searchTerm + '\uf8ff'));
+    }, [firestore, searchTerm]);
+  
+    const { data: communities, isLoading, error } = useCollection<Community>(searchCommunitiesQuery);
 
-  const { data: communities, isLoading, error } = useCollection<Community>(userCommunitiesQuery);
+    return (
+        <div className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Find a Community</CardTitle>
+                    <CardDescription>Search for communities to join.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input 
+                            placeholder="Search by community name..."
+                            className="pl-10"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                </CardContent>
+            </Card>
 
-  if (isLoading) {
-    return <div className="flex justify-center"><LoaderCircle className="w-8 h-8 animate-spin text-primary" /></div>;
-  }
-
-  if (error) {
-    return <p className="text-destructive">Error loading communities: {error.message}</p>;
-  }
-
-  return (
-    <Card className="shadow-lg">
-      <CardHeader>
-        <CardTitle className="text-2xl">Your Communities</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {communities && communities.length > 0 ? (
-          <ul className="space-y-4">
-            {communities.map((community) => (
-              <li key={community.id} className="rounded-md border transition-colors hover:bg-muted/50">
-                 <Link href={`/community/${community.id}`} className="block p-4">
-                  <h3 className="font-semibold text-lg text-primary">{community.name}</h3>
-                  <p className="text-sm text-muted-foreground">{community.description}</p>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-muted-foreground text-center py-4">You haven't created any communities yet.</p>
-        )}
-      </CardContent>
-    </Card>
-  );
+            {searchTerm && (
+                <CommunityList 
+                    title="Search Results"
+                    communities={communities}
+                    isLoading={isLoading}
+                    error={error}
+                />
+            )}
+        </div>
+    );
 }
 
 
 export default function CommunityPage() {
   const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+
+  const userCommunitiesQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(collection(firestore, 'communities'), where('ownerId', '==', user.uid));
+  }, [firestore, user]);
+
+  const { data: userCommunities, isLoading, error } = useCollection<Community>(userCommunitiesQuery);
 
   if (isUserLoading) {
     return (
@@ -210,10 +256,21 @@ export default function CommunityPage() {
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary">
           Community Federation
         </h1>
-        <p className="text-lg text-muted-foreground">Create and manage your co-learning communities.</p>
+        <p className="text-lg text-muted-foreground">Create, manage, and discover co-learning communities.</p>
       </div>
-      <CreateCommunityForm />
-      <CommunityList />
+
+      <div className="space-y-12">
+        <CommunitySearch />
+        <Separator />
+        <CreateCommunityForm />
+        <Separator />
+        <CommunityList 
+            title="Your Communities"
+            communities={userCommunities}
+            isLoading={isLoading}
+            error={error}
+        />
+      </div>
     </main>
   );
 }

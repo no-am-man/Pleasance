@@ -29,16 +29,16 @@ type Community = {
 export default function AiMemberProfilePage() {
   const params = useParams();
   const router = useRouter();
-  const { user } = useUser();
   const firestore = useFirestore();
 
   const communityId = Array.isArray(params.id) ? params.id[0] : params.id;
   const memberName = Array.isArray(params.memberName) ? params.memberName[0] : params.memberName;
 
   const communityDocRef = useMemoFirebase(() => {
-    if (!firestore || !user || !communityId) return null;
-    return doc(firestore, 'users', user.uid, 'communities', communityId);
-  }, [firestore, user, communityId]);
+    if (!firestore || !communityId) return null;
+    // Fetch from the top-level 'communities' collection
+    return doc(firestore, 'communities', communityId);
+  }, [firestore, communityId]);
 
   const { data: community, isLoading, error } = useDoc<Community>(communityDocRef);
 

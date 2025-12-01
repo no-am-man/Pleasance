@@ -1,26 +1,21 @@
 /**
- * Core Philosophy: This ruleset enforces a strict user-ownership model. All data
- * created by a user is stored within their own data tree and is inaccessible to
- * other users. This prevents data leakage and user enumeration.
+ * Core Philosophy: This ruleset enforces a strict user-ownership model for writes,
+ * but allows for public readability of shared content like communities and profiles.
+ * This supports discoverability while maintaining security.
  *
- * Data Structure: User-specific data, including their main profile and created
- * communities, is hierarchically organized under `/users/{userId}`. This
- * path-based ownership simplifies security rules significantly. Global, public
- * content like stories is stored in a separate top-level `/stories` collection.
+ * Data Structure:
+ * - `/users/{userId}`: Strictly private user account data.
+ * - `/community-profiles/{userId}`: Publicly readable profiles, writable only by the owner.
+ * - `/communities/{communityId}`: Publicly readable communities, writable only by the owner.
+ * - `/stories/{storyId}`: Publicly readable, admin-only writes.
  *
  * Key Security Decisions:
- * - User data is strictly private. A user can only access documents where the
- *   path contains their own UID.
+ * - User data (`/users`) is strictly private.
+ * - Community Profiles (`/community-profiles`) are public to read, but a user can only write to their own profile.
+ * - Communities (`/communities`) are public to read, which is essential for discovery and search.
+ *   Writes are restricted to the owner of the community, verified by the `ownerId` field.
  * - Listing all users from the top-level `/users` collection is explicitly
  *   disallowed to protect user privacy.
- * - The `/stories` collection is publicly readable by anyone but disallows writes.
- * - The `communities` subcollection is only accessible by the owner.
- * - Community profiles are publicly readable but only writable by the owner.
- *
- * Denormalization for Authorization: The rules rely on path-based ownership
- * (`/users/{userId}`), which is the most performant way to secure user data.
- * For documents within this structure (like Community), rules validate
- * that an `ownerId` field within the document matches the `userId` from the path.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -56,8 +51,8 @@ service cloud.firestore {
     }
     
     // --- Community Validation Functions ---
-    function hasValidCommunityData(userId) {
-        return request.resource.data.ownerId == userId;
+    function hasValidCommunityData() {
+        return request.resource.data.ownerId == request.auth.uid;
     }
     
     function isImmutableCommunityOwnerId() {
@@ -84,19 +79,6 @@ service cloud.firestore {
       allow create: if isOwner(userId) && hasValidUserData(userId);
       allow update: if isExistingOwner(userId) && isImmutableUserId();
       allow delete: if isExistingOwner(userId);
-
-      /**
-       * @description Manages communities created by a user.
-       * @path /users/{userId}/communities/{communityId}
-       * @allow The user can manage their own communities.
-       * @deny Other users cannot access or modify these communities.
-       * @principle Enforces strict ownership via path hierarchy for user subcollections.
-       */
-      match /communities/{communityId} {
-        allow read, delete: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidCommunityData(userId);
-        allow update: if isOwner(userId) && isImmutableCommunityOwnerId();
-      }
     }
 
      /**
@@ -111,6 +93,20 @@ service cloud.firestore {
         allow create: if isOwner(userId) && hasValidProfileData(userId);
         allow update: if isOwner(userId) && isImmutableProfileIds();
         allow delete: if isOwner(userId);
+    }
+
+    /**
+     * @description Manages all communities.
+     * @path /communities/{communityId}
+     * @allow Anyone can read/list communities for discovery. Only the owner can create, update, or delete.
+     * @principle Balances public discoverability with strict ownership for writes.
+     */
+    match /communities/{communityId} {
+        allow get: if true;
+        allow list: if true;
+        allow create: if isSignedIn() && hasValidCommunityData();
+        allow update: if isOwner(resource.data.ownerId) && isImmutableCommunityOwnerId();
+        allow delete: if isOwner(resource.data.ownerId);
     }
 
     /**
