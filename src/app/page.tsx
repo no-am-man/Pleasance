@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, BookOpen, Warehouse, ArrowRight, Banknote } from 'lucide-react';
+import { Users, BookOpen, Warehouse, ArrowRight, Banknote, Info } from 'lucide-react';
 import { Logo } from '@/components/icons';
 
 export default function Home() {
@@ -106,6 +106,15 @@ export default function Home() {
               </Button>
           </div>
         </Card>
+      </div>
+
+       <div className="mt-16">
+        <Button asChild variant="link" className="text-lg">
+          <Link href="/wiki">
+            <Info className="mr-2 h-5 w-5" />
+            Please Read the Wiki to Understand What You Are Joining
+          </Link>
+        </Button>
       </div>
     </main>
   );
