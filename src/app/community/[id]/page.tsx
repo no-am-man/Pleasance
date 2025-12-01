@@ -371,17 +371,8 @@ function CommentCard({ comment }: { comment: Comment }) {
     )
 }
 
-function CommentThread({ message }: { message: Message }) {
-    const firestore = useFirestore();
+function CommentThread({ message, comments, isLoading }: { message: Message, comments: Comment[] | null, isLoading: boolean }) {
     const { user } = useUser();
-
-    const commentsQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
-        const commentsColRef = collection(firestore, `communities/${message.communityId}/messages/${message.id}/comments`);
-        return query(commentsColRef, orderBy('createdAt', 'asc'));
-    }, [firestore, message.communityId, message.id]);
-
-    const { data: comments, isLoading } = useCollection<Comment>(commentsQuery);
 
     return (
         <div className="pl-12 pr-4 pb-4 space-y-4">
@@ -400,9 +391,19 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
     const { toast } = useToast();
     const [isUpdating, setIsUpdating] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const firestore = useFirestore();
 
     const isDone = message.status === 'done';
     const isDeleted = message.deleted;
+    
+    const commentsQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        const commentsColRef = collection(firestore, `communities/${message.communityId}/messages/${message.id}/comments`);
+        return query(commentsColRef, orderBy('createdAt', 'asc'));
+    }, [firestore, message.communityId, message.id]);
+
+    const { data: comments, isLoading: isLoadingComments } = useCollection<Comment>(commentsQuery);
+    const commentCount = comments?.length || 0;
 
 
     const togglePlay = () => {
@@ -570,16 +571,21 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                                 </Button>
                             )}
                             <CollapsibleTrigger asChild>
-                                <Button variant="ghost" size="sm">
+                                <Button variant="ghost" size="sm" className="relative">
                                     <MessageSquare className="mr-2 h-4 w-4" />
                                     Comment
+                                    {commentCount > 0 && (
+                                        <Badge variant="secondary" className="ml-2">
+                                            {commentCount}
+                                        </Badge>
+                                    )}
                                 </Button>
                             </CollapsibleTrigger>
                         </div>
                     </CardFooter>
                 </div>
                 <CollapsibleContent>
-                   <CommentThread message={message} />
+                   <CommentThread message={message} comments={comments} isLoading={isLoadingComments} />
                 </CollapsibleContent>
             </Card>
         </Collapsible>
@@ -1049,3 +1055,4 @@ export default function CommunityProfilePage() {
     
 
     
+
