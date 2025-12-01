@@ -36,7 +36,7 @@ export default function Home() {
           <div className="p-6 pt-0">
              <Button asChild className="w-full">
                 <Link href="/community">
-                  Explore Communities <ArrowRight className="ml-2" />
+                  Browse Communities <ArrowRight className="ml-2" />
                 </Link>
               </Button>
           </div>
