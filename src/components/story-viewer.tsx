@@ -221,21 +221,24 @@ export default function StoryViewer({
                     </SelectContent>
                 </Select>
             </div>
-            <Button
-            onClick={togglePlayPause}
-            size="lg"
-            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-16 h-16 shadow-lg self-end"
-            aria-label={isPlaying ? "Pause" : "Play"}
-            disabled={isLoading}
-            >
-            {isLoading ? (
-                <LoaderCircle className="h-8 w-8 animate-spin" />
-            ) : isPlaying ? (
-                <Pause className="h-8 w-8" />
-            ) : (
-                <Play className="h-8 w-8 ml-1" />
-            )}
-            </Button>
+            <div className="flex flex-col items-center gap-2 self-end">
+                 <Button
+                    onClick={togglePlayPause}
+                    size="lg"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-16 h-16 shadow-lg"
+                    aria-label={isPlaying ? "Pause" : "Play"}
+                    disabled={isLoading}
+                    >
+                    {isLoading ? (
+                        <LoaderCircle className="h-8 w-8 animate-spin" />
+                    ) : isPlaying ? (
+                        <Pause className="h-8 w-8" />
+                    ) : (
+                        <Play className="h-8 w-8 ml-1" />
+                    )}
+                </Button>
+                {!hasAudio && !isLoading && <p className="text-xs text-muted-foreground">Click to Play</p>}
+            </div>
         </div>
       </div>
     </div>
