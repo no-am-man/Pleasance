@@ -36,6 +36,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import useIsMobile from '@/hooks/use-is-mobile';
 
 const navLinks = [
   { href: '/', label: 'Home', icon: Home },
@@ -121,6 +122,7 @@ function UserNav() {
 export function Header() {
   const pathname = usePathname();
   const { user } = useUser();
+  const isMobile = useIsMobile();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm">
@@ -133,97 +135,96 @@ export function Header() {
           </Badge>
         </div>
       </Link>
-
-      {/* Desktop Navigation */}
-      <nav className="hidden items-center gap-2 md:flex">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost">
-              Menu <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            {navLinks.map((link) => (
-                <DropdownMenuItem key={link.href} asChild>
-                  <NavLink
-                    {...link}
-                    isActive={pathname === link.href}
-                    isDropdown
-                  />
-                </DropdownMenuItem>
-              ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <div className="w-px h-6 bg-border mx-2"></div>
-        <UserNav />
-      </nav>
-
-      {/* Mobile Navigation */}
-      <div className="md:hidden">
+      
+      {isMobile ? (
         <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Menu />
-              <span className="sr-only">Toggle menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="top">
-            <SheetHeader>
-              <SheetTitle className="sr-only">Main Menu</SheetTitle>
-            </SheetHeader>
-            <div className="flex flex-col gap-4 p-4">
-              <Link href="/" className="flex items-center gap-2 mb-4">
-                <Logo className="h-8 w-8 text-primary" />
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-semibold text-primary">
-                    Pleasance
-                  </span>
-                  <Badge variant="outline" className="text-xs">
-                    BETA
-                  </Badge>
-                </div>
-              </Link>
-              <nav className="flex flex-col gap-2">
-                {navLinks.map((link) => (
-                  <NavLink
-                    key={link.href}
-                    {...link}
-                    isActive={pathname === link.href}
-                  />
-                ))}
-                 <div className="border-t -mx-4 my-2"></div>
-                 {user ? (
-                    <>
-                     <NavLink
-                        href="/profile"
-                        label="My Profile"
-                        icon={UserCircle}
-                        isActive={pathname === '/profile'}
-                      />
-                      <button
-                        onClick={() => signOut(useAuth())}
-                        className={cn(
-                            'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-accent/50 hover:text-foreground'
-                        )}
-                        >
-                        <LogOut className="h-5 w-5" />
-                        <span>Sign Out</span>
-                      </button>
-                    </>
-                 ) : (
+            <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                <Menu />
+                <span className="sr-only">Toggle menu</span>
+                </Button>
+            </SheetTrigger>
+            <SheetContent side="top">
+                <SheetHeader>
+                <SheetTitle className="sr-only">Main Menu</SheetTitle>
+                </SheetHeader>
+                <div className="flex flex-col gap-4 p-4">
+                <Link href="/" className="flex items-center gap-2 mb-4">
+                    <Logo className="h-8 w-8 text-primary" />
+                    <div className="flex items-center gap-2">
+                    <span className="text-lg font-semibold text-primary">
+                        Pleasance
+                    </span>
+                    <Badge variant="outline" className="text-xs">
+                        BETA
+                    </Badge>
+                    </div>
+                </Link>
+                <nav className="flex flex-col gap-2">
+                    {navLinks.map((link) => (
                     <NavLink
-                        href="/login"
-                        label="Login"
-                        icon={UserCircle}
-                        isActive={pathname === '/login'}
-                      />
-                 )}
-              </nav>
-            </div>
-          </SheetContent>
+                        key={link.href}
+                        {...link}
+                        isActive={pathname === link.href}
+                    />
+                    ))}
+                    <div className="border-t -mx-4 my-2"></div>
+                    {user ? (
+                        <>
+                        <NavLink
+                            href="/profile"
+                            label="My Profile"
+                            icon={UserCircle}
+                            isActive={pathname === '/profile'}
+                        />
+                        <button
+                            onClick={() => signOut(useAuth())}
+                            className={cn(
+                                'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                            )}
+                            >
+                            <LogOut className="h-5 w-5" />
+                            <span>Sign Out</span>
+                        </button>
+                        </>
+                    ) : (
+                        <NavLink
+                            href="/login"
+                            label="Login"
+                            icon={UserCircle}
+                            isActive={pathname === '/login'}
+                        />
+                    )}
+                </nav>
+                </div>
+            </SheetContent>
         </Sheet>
-      </div>
+      ) : (
+         <nav className="flex items-center gap-2">
+            <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost">
+                Menu <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+                {navLinks.map((link) => (
+                    <DropdownMenuItem key={link.href} asChild>
+                    <NavLink
+                        {...link}
+                        isActive={pathname === link.href}
+                        isDropdown
+                    />
+                    </DropdownMenuItem>
+                ))}
+            </DropdownMenuContent>
+            </DropdownMenu>
+
+            <div className="w-px h-6 bg-border mx-2"></div>
+            <UserNav />
+        </nav>
+      )}
+      
     </header>
   );
 }
