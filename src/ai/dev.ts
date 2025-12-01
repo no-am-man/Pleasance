@@ -5,3 +5,4 @@ import '@/ai/flows/generate-story.ts';
 import '@/ai/flows/translate-story.ts';
 import '@/ai/flows/generate-speech.ts';
 import '@/ai/flows/generate-community.ts';
+import '@/ai/flows/generate-image.ts';
