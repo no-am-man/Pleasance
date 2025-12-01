@@ -731,7 +731,7 @@ function Chat({ communityId, isOwner, allMembers }: { communityId: string; isOwn
     const { data: messages, isLoading, error } = useCollection<Message>(messagesQuery);
     
     const triggerAiResponse = async (userMessage: string) => {
-        if (!firestore) return;
+        if (!firestore || !user) return;
         
         const aiMembers = allMembers.filter(m => m.type === 'AI');
         if (aiMembers.length === 0) return;

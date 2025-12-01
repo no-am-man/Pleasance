@@ -203,21 +203,22 @@ export async function deleteMessage(values: z.infer<typeof deleteMessageSchema>)
 
         const messageDocRef = doc(firestore, `communities/${communityId}/messages`, messageId);
 
-        // Delete Firestore document
+        // 1. Delete the Firestore document.
         await deleteDoc(messageDocRef);
         
-        // Attempt to delete the audio file from Storage.
-        // This will not throw an error if the file doesn't exist (e.g., for a text message).
+        // 2. Attempt to delete the associated audio file from Storage.
         const audioPath = `communities/${communityId}/messages/${messageId}.wav`;
         const storageRef = ref(storage, audioPath);
+        
         try {
             await deleteObject(storageRef);
         } catch (storageError: any) {
-            // If the object doesn't exist, we can safely ignore the error.
-            // This is expected when deleting a text message.
+            // It's expected that a text message won't have an audio file.
+            // We can safely ignore the 'object-not-found' error.
             if (storageError.code !== 'storage/object-not-found') {
-                // Re-throw any other storage errors.
-                throw storageError;
+                // If it's a different error, we should log it but not fail the whole operation,
+                // as the primary data (the Firestore doc) has been deleted.
+                console.warn(`Could not delete storage object ${audioPath}, but Firestore doc was deleted.`, storageError);
             }
         }
 

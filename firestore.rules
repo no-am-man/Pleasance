@@ -10,7 +10,7 @@
  *   - `/users/{userId}/assets/{assetId}`: Assets are nested and private to the user.
  * - `/community-profiles/{userId}`: Publicly readable profiles, writable only by the owner.
  * - `/communities/{communityId}`: Publicly readable communities, writable only by the owner.
- *   - `/communities/{communityId}/messages/{messageId}`: Messages are readable/writable by any signed-in user.
+ *   - `/communities/{communityId}/messages/{messageId}`: Messages are readable by any signed-in user.
  *
  * Key Security Decisions:
  * - User data (`/users`) is strictly private.
@@ -33,11 +33,6 @@ service cloud.firestore {
 
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
-    }
-
-    // Checks ownership of an *existing* document.
-    function isDocumentOwner() {
-        return isSignedIn() && request.auth.uid == resource.data.userId;
     }
 
     function isCommunityOwner(communityId) {
@@ -147,9 +142,8 @@ service cloud.firestore {
         match /messages/{messageId} {
             allow read: if true;
             allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-            allow update: if isDocumentOwner() || isCommunityOwner(communityId);
-            allow delete: if isDocumentOwner() || isCommunityOwner(communityId);
-
+            allow update: if (request.auth.uid == resource.data.userId) || isCommunityOwner(communityId);
+            allow delete: if (request.auth.uid == resource.data.userId) || isCommunityOwner(communityId);
 
              /**
              * @description Manages comments on a specific message.
@@ -160,7 +154,7 @@ service cloud.firestore {
                 allow read: if true;
                 allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
                 allow update: if false;
-                allow delete: if isDocumentOwner() || isCommunityOwner(communityId);
+                allow delete: if (request.auth.uid == resource.data.userId) || isCommunityOwner(communityId);
             }
         }
         
