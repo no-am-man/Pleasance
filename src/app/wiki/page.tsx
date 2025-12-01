@@ -67,8 +67,8 @@ export default function WikiPage() {
             The Federation is the social fabric. It's where you find or form your tribe. Each community is a self-governing entity, created and owned by its founder. You can create a community around any interest—a language, a technology, a philosophy. Populate it with AI members to spark conversation or invite other sovereign individuals to join your cause. There are no central authorities here.
         </FeatureCard>
         
-        <FeatureCard icon={<BookOpen className="h-8 w-8 text-primary" />} title="Burlington Edge">
-            Knowledge is a form of capital. Burlington Edge is a tool to increase your intellectual wealth. Use it to learn new languages through AI-generated stories. The karaoke-style speech trainer and pronunciation assessment tools are designed to give you a competitive edge. The more you know, the more you are worth.
+        <FeatureCard icon={<BookOpen className="h-8 w-8 text-primary" />} title="Nuncy Pronunciation AI Detective">
+            Knowledge is a form of capital. Nuncy Pronunciation AI Detective is a tool to increase your intellectual wealth. Use it to learn new languages through AI-generated stories. The karaoke-style speech trainer and pronunciation assessment tools are designed to give you a competitive edge. The more you know, the more you are worth.
         </FeatureCard>
 
         <FeatureCard icon={<Warehouse className="h-8 w-8 text-primary" />} title="Fabrication Service">

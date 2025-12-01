@@ -183,7 +183,7 @@ export default function StoryPage() {
   return (
     <main className="container mx-auto max-w-4xl py-8">
       <div className="text-center mb-12">
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary">Burlington Edge</h1>
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary">Nuncy Pronunciation AI Detective</h1>
         <p className="text-lg text-muted-foreground mt-2">
           Generate a short story at your difficulty level, then practice your reading with our karaoke-style player.
         </p>
@@ -213,7 +213,7 @@ export default function StoryPage() {
       {!user ? (
          <Card className="w-full max-w-md mx-auto text-center shadow-lg">
           <CardHeader>
-            <CardTitle>Welcome to Burlington Edge</CardTitle>
+            <CardTitle>Welcome to Nuncy Pronunciation AI Detective</CardTitle>
             <CardDescription>Log in to generate stories and save your history.</CardDescription>
           </CardHeader>
           <CardContent>
