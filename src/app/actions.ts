@@ -7,14 +7,11 @@ import { translateStory } from '@/ai/flows/translate-story';
 import { generateCommunity } from '@/ai/flows/generate-community';
 import { transcribeAudio } from '@/ai/flows/transcribe-audio';
 import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member';
-import { collection, addDoc } from 'firebase/firestore';
-import { initializeFirebase } from '@/firebase/config-for-actions'; // Use server-safe initialization
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
   sourceLanguage: z.string().min(1),
   targetLanguage: z.string().min(1),
-  userId: z.string().min(1),
 });
 
 export async function generateAndTranslateStory(values: z.infer<typeof storySchema>) {
@@ -24,7 +21,7 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
       return { error: 'Invalid input.' };
     }
     
-    const { difficulty, sourceLanguage, targetLanguage, userId } = validatedFields.data;
+    const { difficulty, sourceLanguage, targetLanguage } = validatedFields.data;
 
     // Generate Story
     const storyResult = await generateStory({ difficultyLevel: difficulty, sourceLanguage });
@@ -43,30 +40,6 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
     if (!translationResult.translatedText) {
       throw new Error('Failed to translate the story.');
     }
-    
-    // Initialize Firebase services for actions
-    const { firestore } = initializeFirebase();
-    
-    // Create a reference for the new story document
-    const storyCollectionRef = collection(firestore, 'users', userId, 'stories');
-
-    // Audio is not saved to storage in this temporary version
-    const audioUrl = '';
-
-    const newStory = {
-        userId: userId,
-        level: difficulty,
-        sourceLanguage,
-        targetLanguage,
-        nativeText: originalStory,
-        translatedText: translationResult.translatedText,
-        audioUrl, // This will be an empty string
-        createdAt: new Date() // Use a standard JS Date object on the server
-    };
-    
-    // Add the new story
-    const docRef = await addDoc(storyCollectionRef, newStory);
-
 
     return {
       originalStory,

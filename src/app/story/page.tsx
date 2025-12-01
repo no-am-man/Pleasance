@@ -16,7 +16,7 @@ import { generateAndTranslateStory } from '@/app/actions';
 import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 
@@ -60,6 +60,14 @@ function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void
 
     if (!user) return null;
 
+    if (isUserLoading) {
+      return (
+          <main className="container mx-auto flex min-h-[80vh] items-center justify-center">
+              <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
+          </main>
+      );
+    }
+
     return (
         <Card className="shadow-lg">
             <CardHeader>
@@ -97,6 +105,7 @@ export default function StoryPage() {
   const [error, setError] = useState<string | null>(null);
   const [storyResult, setStoryResult] = useState<StoryResult>(null);
   const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
 
   const form = useForm<z.infer<typeof StoryFormSchema>>({
     resolver: zodResolver(StoryFormSchema),
@@ -106,7 +115,7 @@ export default function StoryPage() {
   });
 
   async function onSubmit(data: z.infer<typeof StoryFormSchema>) {
-    if (!user) {
+    if (!user || !firestore) {
         setError("You must be logged in to generate a story.");
         return;
     }
@@ -114,7 +123,7 @@ export default function StoryPage() {
     setError(null);
     setStoryResult(null);
 
-    const result = await generateAndTranslateStory({...data, userId: user.uid });
+    const result = await generateAndTranslateStory(data);
 
     if (result.error) {
       setError(result.error);
@@ -125,6 +134,28 @@ export default function StoryPage() {
         audioUrl: result.audioUrl || '',
         sourceLanguage: result.sourceLanguage || 'English',
       });
+      
+      // Save story to Firestore on the client
+      const storyCollectionRef = collection(firestore, 'users', user.uid, 'stories');
+      const newStory = {
+        userId: user.uid,
+        level: data.difficulty,
+        sourceLanguage: data.sourceLanguage,
+        targetLanguage: data.targetLanguage,
+        nativeText: result.originalStory,
+        translatedText: result.translatedText,
+        audioUrl: '', // Not saving audio URL for now
+        createdAt: serverTimestamp(),
+      };
+      
+      try {
+        await addDoc(storyCollectionRef, newStory);
+      } catch (firestoreError) {
+          console.error("Failed to save story to Firestore:", firestoreError);
+          // Optionally, inform the user that saving to history failed
+          setError("Story generated, but failed to save to your history.");
+      }
+
     } else {
         setError('An unknown error occurred while generating the story.');
     }
@@ -149,7 +180,6 @@ export default function StoryPage() {
         </main>
     );
   }
-
 
   return (
     <main className="container mx-auto max-w-4xl py-8">
