@@ -4,7 +4,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, LoaderCircle, Copy, Mic, Square, CheckCircle, Info } from "lucide-react";
+import { Play, Pause, LoaderCircle, Copy, Mic, Square, Info, Volume2 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { VOICES } from "@/config/languages";
@@ -31,6 +31,9 @@ function PronunciationAssessment({ storyText }: { storyText: string }) {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const { toast } = useToast();
+  
+  const sentenceAudioRef = useRef<HTMLAudioElement>(null);
+  const [isSentencePlaying, setIsSentencePlaying] = useState<number | null>(null);
 
   const sentences = storyText.match(/[^.!?]+[.!?]+/g) || [];
 
@@ -38,6 +41,42 @@ function PronunciationAssessment({ storyText }: { storyText: string }) {
     setSelectedSentence(sentence);
     setAssessmentResult(null);
   };
+  
+  const handlePreviewSentence = async (sentence: string, index: number) => {
+    if (!sentenceAudioRef.current) return;
+    
+    // If the same sentence is clicked while playing, pause it.
+    if (isSentencePlaying === index && !sentenceAudioRef.current.paused) {
+        sentenceAudioRef.current.pause();
+        setIsSentencePlaying(null);
+        return;
+    }
+
+    setIsSentencePlaying(index); // Show loading state
+
+    try {
+      const result = await synthesizeSpeech({ text: sentence, voice: VOICES[0].value });
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      if (result.audioDataUri) {
+        sentenceAudioRef.current.src = result.audioDataUri;
+        await sentenceAudioRef.current.play();
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'An error occurred';
+      toast({ variant: 'destructive', title: 'Could not play audio', description: message });
+      setIsSentencePlaying(null);
+    }
+  };
+
+  useEffect(() => {
+    const audio = sentenceAudioRef.current;
+    if (!audio) return;
+    const onEnded = () => setIsSentencePlaying(null);
+    audio.addEventListener('ended', onEnded);
+    return () => audio.removeEventListener('ended', onEnded);
+  }, []);
 
   const handleRecord = async () => {
     if (isRecording) {
@@ -89,6 +128,7 @@ function PronunciationAssessment({ storyText }: { storyText: string }) {
 
   return (
     <Card>
+      <audio ref={sentenceAudioRef} className="hidden" />
       <CardHeader>
         <CardTitle>Pronunciation Practice</CardTitle>
         <CardDescription>Select a sentence, record yourself, and get feedback on your pronunciation.</CardDescription>
@@ -98,15 +138,25 @@ function PronunciationAssessment({ storyText }: { storyText: string }) {
           <Label>1. Select a sentence to practice</Label>
           <div className="max-h-40 overflow-y-auto rounded-md border p-2 space-y-1 bg-muted/50">
             {sentences.map((sentence, index) => (
-              <button
-                key={index}
-                onClick={() => handleSentenceSelect(sentence)}
-                className={`w-full text-left p-2 rounded-md text-sm transition-colors ${
-                  selectedSentence === sentence ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'
-                }`}
-              >
-                {sentence}
-              </button>
+               <div key={index} className={`flex items-center gap-2 rounded-md transition-colors pr-2 ${
+                  selectedSentence === sentence ? 'bg-primary text-primary-foreground' : ''
+                }`}>
+                <button
+                  onClick={() => handleSentenceSelect(sentence)}
+                  className={`flex-grow text-left p-2 rounded-md text-sm ${selectedSentence !== sentence ? 'hover:bg-accent' : ''}`}
+                >
+                  {sentence}
+                </button>
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="shrink-0" 
+                    onClick={() => handlePreviewSentence(sentence, index)}
+                    disabled={isSentencePlaying !== null && isSentencePlaying !== index}
+                >
+                    {isSentencePlaying === index ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Volume2 className="w-4 h-4" />}
+                </Button>
+              </div>
             ))}
           </div>
         </div>
