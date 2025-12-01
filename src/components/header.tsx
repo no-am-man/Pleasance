@@ -9,6 +9,7 @@ import {
   ChevronDown,
   Home,
   Info,
+  LogOut,
   Menu,
   UserCircle,
   Users,
@@ -28,9 +29,13 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { useAuth, useUser } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 const navLinks = [
   { href: '/', label: 'Home', icon: Home },
@@ -39,7 +44,6 @@ const navLinks = [
   { href: '/fabrication', label: 'Fabrication', icon: Warehouse },
   { href: '/treasury', label: 'Treasury', icon: Banknote },
   { href: '/wiki', label: 'Wiki', icon: Info },
-  { href: '/profile', label: 'My Profile', icon: UserCircle, isProfile: true },
 ];
 
 function NavLink({
@@ -72,8 +76,51 @@ function NavLink({
   );
 }
 
+function UserNav() {
+  const { user } = useUser();
+  const auth = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+  };
+
+  if (!user) {
+    return (
+      <NavLink href="/login" label="Login" icon={UserCircle} isActive={false} />
+    );
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+          <Avatar className="h-9 w-9">
+            <AvatarImage src={user.photoURL || ''} alt={user.displayName || ''} />
+            <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
+          </Avatar>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56" align="end" forceMount>
+        <DropdownMenuItem asChild>
+          <Link href="/profile">
+            <UserCircle className="mr-2 h-4 w-4" />
+            <span>My Profile</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleSignOut}>
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Sign out</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+
 export function Header() {
   const pathname = usePathname();
+  const { user } = useUser();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm">
@@ -81,7 +128,9 @@ export function Header() {
         <Logo className="h-8 w-8 text-primary" />
         <div className="flex items-center gap-2">
           <span className="text-lg font-semibold text-primary">Pleasance</span>
-          <Badge variant="outline" className="text-xs">BETA</Badge>
+          <Badge variant="outline" className="text-xs">
+            BETA
+          </Badge>
         </div>
       </Link>
 
@@ -94,9 +143,7 @@ export function Header() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            {navLinks
-              .filter((link) => !link.isProfile)
-              .map((link) => (
+            {navLinks.map((link) => (
                 <DropdownMenuItem key={link.href} asChild>
                   <NavLink
                     {...link}
@@ -109,10 +156,7 @@ export function Header() {
         </DropdownMenu>
 
         <div className="w-px h-6 bg-border mx-2"></div>
-        <NavLink
-          {...navLinks.find((link) => link.isProfile)!}
-          isActive={pathname === '/profile'}
-        />
+        <UserNav />
       </nav>
 
       {/* Mobile Navigation */}
@@ -132,10 +176,12 @@ export function Header() {
               <Link href="/" className="flex items-center gap-2 mb-4">
                 <Logo className="h-8 w-8 text-primary" />
                 <div className="flex items-center gap-2">
-                    <span className="text-lg font-semibold text-primary">
+                  <span className="text-lg font-semibold text-primary">
                     Pleasance
-                    </span>
-                    <Badge variant="outline" className="text-xs">BETA</Badge>
+                  </span>
+                  <Badge variant="outline" className="text-xs">
+                    BETA
+                  </Badge>
                 </div>
               </Link>
               <nav className="flex flex-col gap-2">
@@ -146,6 +192,33 @@ export function Header() {
                     isActive={pathname === link.href}
                   />
                 ))}
+                 <div className="border-t -mx-4 my-2"></div>
+                 {user ? (
+                    <>
+                     <NavLink
+                        href="/profile"
+                        label="My Profile"
+                        icon={UserCircle}
+                        isActive={pathname === '/profile'}
+                      />
+                      <button
+                        onClick={() => signOut(useAuth())}
+                        className={cn(
+                            'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                        )}
+                        >
+                        <LogOut className="h-5 w-5" />
+                        <span>Sign Out</span>
+                      </button>
+                    </>
+                 ) : (
+                    <NavLink
+                        href="/login"
+                        label="Login"
+                        icon={UserCircle}
+                        isActive={pathname === '/login'}
+                      />
+                 )}
               </nav>
             </div>
           </SheetContent>
