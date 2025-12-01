@@ -8,7 +8,6 @@ import { generateCommunity } from '@/ai/flows/generate-community';
 import { transcribeAudio } from '@/ai/flows/transcribe-audio';
 import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member';
 import { generateSpeech } from '@/ai/flows/generate-speech';
-import { assessPronunciation as assessPronunciationFlow } from '@/ai/flows/assess-pronunciation';
 import { VOICES } from '@/config/languages';
 import { initializeFirebase } from '@/firebase/config-for-actions';
 import { doc, deleteDoc, updateDoc } from 'firebase/firestore';
@@ -159,34 +158,6 @@ export async function synthesizeSpeech(values: z.infer<typeof speechSchema>) {
     }
 }
 
-
-const assessmentSchema = z.object({
-  audioDataUri: z.string(),
-  text: z.string(),
-});
-
-export async function assessPronunciation(values: z.infer<typeof assessmentSchema>) {
-  try {
-    const validatedFields = assessmentSchema.safeParse(values);
-    if (!validatedFields.success) {
-      return { error: 'Invalid input for assessment.' };
-    }
-
-    const { audioDataUri, text } = validatedFields.data;
-    const result = await assessPronunciationFlow({ audioDataUri, text });
-    
-    if (!result.assessment) {
-      return { error: 'Pronunciation assessment failed to return feedback.' };
-    }
-
-    return { assessment: result.assessment };
-  } catch (e) {
-    console.error('Pronunciation Assessment Error:', e);
-    const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
-    return { error: `Assessment failed. ${message}` };
-  }
-}
-
 const updateMessageStatusSchema = z.object({
     communityId: z.string(),
     messageId: z.string(),
@@ -215,4 +186,36 @@ export async function updateMessageStatus(values: z.infer<typeof updateMessageSt
     }
 }
 
+const deleteMessageSchema = z.object({
+    communityId: z.string(),
+    messageId: z.string(),
+});
+
+export async function deleteVoiceMessage(values: z.infer<typeof deleteMessageSchema>) {
+    try {
+        const validatedFields = deleteMessageSchema.safeParse(values);
+        if (!validatedFields.success) {
+            return { error: 'Invalid message data.' };
+        }
+
+        const { communityId, messageId } = validatedFields.data;
+        const { firestore, storage } = initializeFirebase();
+
+        // Delete Firestore document
+        const messageDocRef = doc(firestore, `communities/${communityId}/messages`, messageId);
+        await deleteDoc(messageDocRef);
+        
+        // Delete audio file from Storage
+        const audioPath = `communities/${communityId}/messages/${messageId}.wav`;
+        const storageRef = ref(storage, audioPath);
+        await deleteObject(storageRef);
+
+        return { success: true };
+
+    } catch (e) {
+        console.error('Delete Message Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Failed to delete message. ${message}` };
+    }
+}
     

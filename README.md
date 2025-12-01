@@ -21,7 +21,7 @@ The Federation is the social fabric. It's where you find or form your tribe. Eac
 
 ### 📖 Nuncy Lingua
 
-Knowledge is a form of capital. Nuncy Lingua is a tool to increase your intellectual wealth. Use it to learn new languages through AI-generated stories. The karaoke-style speech trainer and pronunciation assessment tools are designed to give you a competitive edge. The more you know, the more you are worth.
+Knowledge is a form of capital. Nuncy Lingua is a tool to increase your intellectual wealth. Use it to learn new languages through AI-generated stories and listen to them with a karaoke-style speech player. The more you know, the more you are worth.
 
 ### 🏭 Fabrication Service
 

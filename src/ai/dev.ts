@@ -8,4 +8,3 @@ import '@/ai/flows/generate-speech.ts';
 import '@/ai/flows/generate-community.ts';
 import '@/ai/flows/transcribe-audio.ts';
 import '@/ai/flows/chat-with-member.ts';
-import '@/ai/flows/assess-pronunciation.ts';
