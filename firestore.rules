@@ -127,7 +127,7 @@ service cloud.firestore {
      */
     match /communities/{communityId} {
         allow get: if true;
-        allow list: if isSignedIn();
+        allow list: if true;
         allow create: if isSignedIn() && hasValidCommunityData();
         allow update: if isOwner(resource.data.ownerId) && isImmutableCommunityOwnerId();
         allow delete: if isOwner(resource.data.ownerId);
