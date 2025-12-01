@@ -42,19 +42,18 @@ function NavLink({
   const isActive = pathname === href;
 
   return (
-    <Link href={href} legacyBehavior passHref>
-      <a
-        className={cn(
-          'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-          isActive
-            ? 'bg-accent text-accent-foreground'
-            : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-          isMobile ? 'text-base' : ''
-        )}
-      >
-        <Icon className="h-5 w-5" />
-        <span>{label}</span>
-      </a>
+    <Link
+      href={href}
+      className={cn(
+        'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+        isActive
+          ? 'bg-accent text-accent-foreground'
+          : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+        isMobile ? 'text-base' : ''
+      )}
+    >
+      <Icon className="h-5 w-5" />
+      <span>{label}</span>
     </Link>
   );
 }
