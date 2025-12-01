@@ -4,7 +4,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, useStorage, setDocumentNonBlocking, updateDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
-import { doc, collection, query, orderBy, serverTimestamp, where, updateDoc, arrayUnion } from 'firebase/firestore';
+import { doc, collection, query, orderBy, serverTimestamp, where, updateDoc, arrayUnion, setDoc } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,8 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
+import { HumanIcon } from '@/components/icons/human-icon';
+import { AiIcon } from '@/components/icons/ai-icon';
 
 type Member = {
   name: string;
@@ -87,8 +89,6 @@ type JoinRequest = {
 
 function MemberCard({ member, index, communityId }: { member: Member; index: number; communityId: string;}) {
     const isHuman = member.type === 'human';
-    // Use the member's avatarUrl if it exists, otherwise use the placeholder
-    const avatarUrl = member.avatarUrl || `https://i.pravatar.cc/150?u=${member.name}-${index}`;
     
     const Wrapper = Link;
     
@@ -105,10 +105,13 @@ function MemberCard({ member, index, communityId }: { member: Member; index: num
             "shadow-md transition-all h-full hover:shadow-lg hover:-translate-y-1 hover:bg-muted/50 cursor-pointer"
         )}>
             <CardHeader className="flex flex-row items-start gap-4">
-            <Avatar className="w-16 h-16 border-2 border-primary/20">
-                <AvatarImage src={avatarUrl} alt={member.name} />
-                <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-            </Avatar>
+                <div className="w-16 h-16 flex items-center justify-center rounded-lg bg-background border-2 border-primary/20">
+                    {isHuman ? (
+                        <HumanIcon className="w-10 h-10 text-primary" />
+                    ) : (
+                        <AiIcon className="w-10 h-10 text-primary" />
+                    )}
+                </div>
             <div className="flex-1 space-y-1">
                 <CardTitle className="text-xl underline">{member.name}</CardTitle>
                 <CardDescription className="text-primary font-medium">{member.role}</CardDescription>
@@ -880,7 +883,7 @@ export default function CommunityProfilePage() {
     }
     setIsSubmitting(true);
     const requestRef = doc(firestore, `communities/${id}/joinRequests`, user.uid);
-    const newRequest: Omit<JoinRequest, 'createdAt' | 'id'> & { createdAt: any } = {
+    const newRequest: Omit<JoinRequest, 'id' | 'createdAt'> & { createdAt: any } = {
         userId: user.uid,
         userName: userProfile.name,
         userBio: userProfile.bio,
@@ -888,7 +891,7 @@ export default function CommunityProfilePage() {
         createdAt: serverTimestamp()
     };
     try {
-        await setDocumentNonBlocking(requestRef, { ...newRequest, id: requestRef.id }, { merge: false });
+        await setDoc(requestRef, { ...newRequest, id: requestRef.id });
         toast({ title: 'Request Sent!', description: 'The community owner has been notified.' });
     } catch(e) {
         const message = e instanceof Error ? e.message : 'An error occurred';
@@ -1084,5 +1087,3 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
-
-    
