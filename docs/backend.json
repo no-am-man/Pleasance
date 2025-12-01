@@ -186,6 +186,22 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "communityId", "userId", "userName", "audioUrl", "createdAt"]
+    },
+    "VoiceComment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "VoiceComment",
+      "type": "object",
+      "description": "Represents a voice comment on a message.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userAvatarUrl": { "type": "string", "format": "uri" },
+        "audioUrl": { "type": "string", "format": "uri" },
+        "transcription": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "userName", "audioUrl", "createdAt"]
     }
   },
   "auth": {
@@ -267,6 +283,19 @@
           "params": [
             { "name": "communityId", "description": "The ID of the community." },
             { "name": "messageId", "description": "The ID of the message." }
+          ]
+        }
+      },
+      {
+        "path": "/communities/{communityId}/messages/{messageId}/comments/{commentId}",
+        "definition": {
+          "entityName": "VoiceComment",
+          "schema": { "$ref": "#/backend/entities/VoiceComment" },
+          "description": "Stores voice comments for a specific message.",
+          "params": [
+            { "name": "communityId", "description": "The ID of the community." },
+            { "name": "messageId", "description": "The ID of the message being commented on." },
+            { "name": "commentId", "description": "The ID of the comment." }
           ]
         }
       }

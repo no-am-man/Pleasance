@@ -58,6 +58,16 @@ type VoiceMessage = {
     createdAt: { seconds: number, nanoseconds: number } | null;
 };
 
+type VoiceComment = {
+    id: string;
+    userId: string;
+    userName: string;
+    userAvatarUrl: string;
+    audioUrl: string;
+    transcription?: string;
+    createdAt: { seconds: number, nanoseconds: number } | null;
+}
+
 function MemberCard({ member, index, communityId }: { member: Member; index: number; communityId: string;}) {
     const isHuman = member.type === 'human';
     const avatarUrl = `https://i.pravatar.cc/150?u=${member.name}-${index}`;
@@ -216,22 +226,78 @@ function RecordAudio({ communityId }: { communityId: string }) {
     );
 }
 
-function RecordComment({ message }: { message: VoiceMessage }) {
+function RecordComment({ communityId, messageId }: { communityId: string, messageId: string }) {
     const [isRecording, setIsRecording] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const audioChunksRef = useRef<Blob[]>([]);
+    const { user } = useUser();
+    const firestore = useFirestore();
     const { toast } = useToast();
 
-    // Placeholder function for recording logic
-    const toggleRecording = () => {
-        setIsRecording(!isRecording);
-        toast({
-            title: isRecording ? 'Recording Stopped' : 'Recording Started',
-            description: 'Comment recording coming soon!',
-        });
-    }
+    const toggleRecording = async () => {
+        if (isRecording) {
+            mediaRecorderRef.current?.stop();
+            setIsRecording(false);
+            return;
+        }
 
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorderRef.current = new MediaRecorder(stream);
+            mediaRecorderRef.current.ondataavailable = (event) => {
+                audioChunksRef.current.push(event.data);
+            };
+            mediaRecorderRef.current.onstop = async () => {
+                setIsProcessing(true);
+                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+                const reader = new FileReader();
+                reader.readAsDataURL(audioBlob);
+                reader.onloadend = async () => {
+                    const base64Audio = reader.result as string;
+                    const transcriptionResult = await getTranscription({ audioDataUri: base64Audio });
+
+                    if (transcriptionResult.error || !user || !firestore) {
+                        toast({ variant: 'destructive', title: 'Transcription failed', description: transcriptionResult.error });
+                        setIsProcessing(false);
+                        return;
+                    }
+
+                    const commentsColRef = collection(firestore, `communities/${communityId}/messages/${messageId}/comments`);
+                    const newComment = {
+                        userId: user.uid,
+                        userName: user.displayName || 'Anonymous',
+                        userAvatarUrl: `https://i.pravatar.cc/150?u=${user.uid}`,
+                        audioUrl: base64Audio,
+                        transcription: transcriptionResult.transcription,
+                        createdAt: serverTimestamp(),
+                    };
+
+                    await addDocumentNonBlocking(commentsColRef, newComment);
+                    toast({ title: 'Comment posted!' });
+                    audioChunksRef.current = [];
+                    setIsProcessing(false);
+                };
+            };
+            mediaRecorderRef.current.start();
+            setIsRecording(true);
+        } catch (err) {
+            toast({ variant: 'destructive', title: 'Microphone access denied.' });
+        }
+    };
+
+    if (isProcessing) {
+        return (
+            <div className="flex items-center justify-center gap-2 text-muted-foreground p-4">
+                <LoaderCircle className="animate-spin" />
+                <span>Processing...</span>
+            </div>
+        );
+    }
+    
     return (
          <div className="flex flex-col items-center gap-4 p-4 border rounded-lg bg-background">
-            <Button onClick={toggleRecording} size="lg" className="rounded-full w-16 h-16 shadow-lg" disabled>
+            <Button onClick={toggleRecording} size="lg" className="rounded-full w-16 h-16 shadow-lg">
                 {isRecording ? <Square /> : <Mic />}
             </Button>
             <p className="text-sm text-muted-foreground">{isRecording ? "Recording comment..." : "Record a voice comment"}</p>
@@ -239,34 +305,104 @@ function RecordComment({ message }: { message: VoiceMessage }) {
     )
 }
 
-function CommentDialog({ message }: { message: VoiceMessage }) {
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm">
-          <MessageSquare className="mr-2 h-4 w-4" />
-          Comment
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Reply to {message.userName}'s message</DialogTitle>
-          <DialogDescription>
-            "{message.transcription}"
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-            <div className="text-center text-muted-foreground text-sm">
-                No replies yet. Be the first to comment.
-            </div>
-             <Separator />
-            <div className="grid w-full gap-2">
-                <RecordComment message={message} />
+
+function VoiceCommentCard({ comment }: { comment: VoiceComment }) {
+    const audioRef = useRef<HTMLAudioElement>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+
+    const togglePlay = () => {
+        if (audioRef.current) {
+            if (isPlaying) {
+                audioRef.current.pause();
+            } else {
+                audioRef.current.play();
+            }
+            setIsPlaying(!isPlaying);
+        }
+    };
+    
+    useEffect(() => {
+        const audio = audioRef.current;
+        if(audio) {
+            const handleEnd = () => setIsPlaying(false);
+            audio.addEventListener('ended', handleEnd);
+            return () => audio.removeEventListener('ended', handleEnd);
+        }
+    }, [])
+
+    return (
+        <div className="p-3 rounded-md bg-muted/50 flex gap-3 items-start">
+            <Avatar className="w-8 h-8">
+                <AvatarImage src={comment.userAvatarUrl} alt={comment.userName} />
+                <AvatarFallback>{comment.userName.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 space-y-1.5">
+                <div className="flex justify-between items-center">
+                    <span className="font-semibold text-sm">{comment.userName}</span>
+                     <span className="text-xs text-muted-foreground">
+                        {comment.createdAt
+                            ? new Date(comment.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                            : "sending..."}
+                    </span>
+                </div>
+                 <audio ref={audioRef} src={comment.audioUrl} className="hidden" />
+                 <Button onClick={togglePlay} variant="outline" size="sm">
+                    {isPlaying ? 'Pause' : 'Play Comment'}
+                </Button>
+                {comment.transcription && (
+                    <p className="text-sm text-muted-foreground italic">"{comment.transcription}"</p>
+                )}
             </div>
         </div>
-      </DialogContent>
-    </Dialog>
-  )
+    )
+}
+
+function CommentDialog({ message }: { message: VoiceMessage }) {
+    const firestore = useFirestore();
+
+    const commentsQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        const commentsColRef = collection(firestore, `communities/${message.communityId}/messages/${message.id}/comments`);
+        return query(commentsColRef, orderBy('createdAt', 'asc'));
+    }, [firestore, message.communityId, message.id]);
+
+    const { data: comments, isLoading } = useCollection<VoiceComment>(commentsQuery);
+
+    return (
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button variant="ghost" size="sm">
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Comment
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                <DialogTitle>Reply to {message.userName}'s message</DialogTitle>
+                <DialogDescription>
+                    "{message.transcription}"
+                </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <div className="max-h-60 overflow-y-auto space-y-3 pr-2">
+                        {isLoading && <LoaderCircle className="mx-auto animate-spin" />}
+                        {comments && comments.length > 0 ? (
+                             comments.map(comment => <VoiceCommentCard key={comment.id} comment={comment} />)
+                        ) : (
+                            <div className="text-center text-muted-foreground text-sm py-4">
+                                No replies yet. Be the first to comment.
+                            </div>
+                        )}
+                       
+                    </div>
+                    <Separator />
+                    <div className="grid w-full gap-2">
+                        <RecordComment communityId={message.communityId} messageId={message.id} />
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+    )
 }
 
 function VoiceMessageCard({ message }: { message: VoiceMessage }) {

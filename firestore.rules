@@ -119,6 +119,17 @@ service cloud.firestore {
         match /messages/{messageId} {
             allow read: if true;
             allow write: if isSignedIn();
+
+             /**
+             * @description Manages voice comments on a specific message.
+             * @path /communities/{communityId}/messages/{messageId}/comments/{commentId}
+             * @allow Any signed-in user can read or write comments.
+             * @principle Fosters detailed discussion on individual messages.
+             */
+            match /comments/{commentId} {
+                allow read: if true;
+                allow write: if isSignedIn();
+            }
         }
     }
 
