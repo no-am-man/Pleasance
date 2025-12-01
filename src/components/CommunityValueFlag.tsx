@@ -3,7 +3,7 @@
 
 import { useMemo, useState, useEffect } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, documentId } from 'firebase/firestore';
+import { collection, query, where, documentId, getDocs } from 'firebase/firestore';
 import { LoaderCircle } from 'lucide-react';
 import {
   Dialog,
@@ -39,18 +39,6 @@ export function CommunityValueFlag({ members }: { members: Member[] }) {
   const humanMemberIds = useMemo(() => {
     return members.filter(m => m.type === 'human' && m.userId).map(m => m.userId!);
   }, [members]);
-
-  const assetsQuery = useMemoFirebase(() => {
-    if (!firestore || humanMemberIds.length === 0) return null;
-    // This is not a scalable query for a large number of members.
-    // In a production scenario, this value would be denormalized and calculated on the backend.
-    // Firestore 'in' queries are limited to 30 items.
-    const q = query(collection(firestore, 'users'), where(documentId(), 'in', humanMemberIds.slice(0, 30)));
-    // We can't directly query subcollections of multiple documents, so this is a simplified example.
-    // A better approach would be a separate top-level collection for all assets.
-    // For this prototype, we'll fetch assets for each user individually.
-    return null; // We will handle fetching inside the component.
-  }, [firestore, humanMemberIds]);
   
   const [totalValue, setTotalValue] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,36 +46,40 @@ export function CommunityValueFlag({ members }: { members: Member[] }) {
   useEffect(() => {
     if (!firestore || humanMemberIds.length === 0) {
         setIsLoading(false);
+        setTotalValue(0);
         return;
     }
     
-    setIsLoading(true);
     let isMounted = true;
+    setIsLoading(true);
 
     const fetchAllAssets = async () => {
         let cumulativeValue = 0;
-        const assetPromises = humanMemberIds.map(userId => {
-            const assetsRef = collection(firestore, 'users', userId, 'assets');
-            const q = query(assetsRef);
-            return useCollection<Asset>(q); // This is not ideal inside an effect, but demonstrates the concept
-        });
-        
-        // This is a conceptual demonstration. `useCollection` is a hook and cannot be called in a loop.
-        // A real implementation would require a different data fetching strategy.
-        // For this prototype, we will simulate the fetching.
-        
-        // A better, but still client-heavy approach:
-        const { getDocs } = await import('firebase/firestore');
-        const userAssetDocs = await Promise.all(humanMemberIds.map(uid => getDocs(collection(firestore, 'users', uid, 'assets'))));
+        try {
+            // Fetch assets for each user and sum their values.
+            const assetPromises = humanMemberIds.map(uid => 
+                getDocs(collection(firestore, 'users', uid, 'assets'))
+            );
+            
+            const userAssetSnapshots = await Promise.all(assetPromises);
 
-        if (isMounted) {
-            userAssetDocs.forEach(snapshot => {
-                snapshot.forEach(doc => {
-                    cumulativeValue += (doc.data() as Asset).value || 0;
+            if (isMounted) {
+                userAssetSnapshots.forEach(snapshot => {
+                    snapshot.forEach(doc => {
+                        cumulativeValue += (doc.data() as Asset).value || 0;
+                    });
                 });
-            });
-            setTotalValue(cumulativeValue);
-            setIsLoading(false);
+                setTotalValue(cumulativeValue);
+            }
+        } catch (error) {
+            console.error("Error fetching community assets:", error);
+            if (isMounted) {
+                setTotalValue(0);
+            }
+        } finally {
+            if (isMounted) {
+                setIsLoading(false);
+            }
         }
     };
 
