@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { LoaderCircle, UploadCloud, CheckCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import Link from 'next/link';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ACCEPTED_FILE_TYPES = [
@@ -71,7 +72,13 @@ export default function FabricationPage() {
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="text-3xl">Fabrication Service</CardTitle>
-          <CardDescription>Upload a PDF for print-on-demand books or a CAD file (.stl, .obj) for 3D printing.</CardDescription>
+          <CardDescription>
+            Upload a PDF for print-on-demand books or a CAD file (.stl, .obj) for 3D printing.
+            This service is slowly evolving into a 3D printing farm at{' '}
+            <Link href="https://www.nno.studio/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                https://www.nno.studio/
+            </Link>.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
