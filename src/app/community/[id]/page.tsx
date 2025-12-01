@@ -802,38 +802,39 @@ export default function CommunityProfilePage() {
 
   useEffect(() => {
     if (community && allProfiles) {
-      const profilesMap = new Map(allProfiles.map(p => [p.userId, p]));
-      
-      const humanMembers = community.members
-        .filter(m => m.type === 'human' && m.userId)
-        .map(member => {
-          const profile = profilesMap.get(member.userId!);
-          return {
-            ...member,
-            name: profile?.name || member.name,
-            bio: profile?.bio || member.bio,
-            avatarUrl: profile?.avatarUrl, // Use avatar from profile
-          };
-        });
+        const profilesMap = new Map(allProfiles.map(p => [p.userId, p]));
+        
+        const humanMembers = community.members
+            .filter(m => m.type === 'human' && m.userId)
+            .map(member => {
+                const profile = profilesMap.get(member.userId!);
+                return {
+                    ...member,
+                    name: profile?.name || member.name,
+                    bio: profile?.bio || member.bio,
+                    avatarUrl: profile?.avatarUrl || '', // Fallback to empty string
+                };
+            });
 
-      const aiMembers = community.members.filter(m => m.type === 'AI');
+        const aiMembers = community.members.filter(m => m.type === 'AI');
 
-      const ownerProfile = profilesMap.get(community.ownerId);
-      if (ownerProfile) {
-        const ownerInList = humanMembers.find(m => m.userId === community.ownerId);
-        if (!ownerInList) {
-          humanMembers.unshift({
-            userId: ownerProfile.userId,
-            name: ownerProfile.name,
-            role: 'Founder',
-            bio: ownerProfile.bio,
-            type: 'human',
-            avatarUrl: ownerProfile.avatarUrl,
-          });
+        const ownerProfile = profilesMap.get(community.ownerId);
+        // Ensure ownerProfile exists before trying to use it
+        if (ownerProfile) {
+            const ownerInList = humanMembers.find(m => m.userId === community.ownerId);
+            if (!ownerInList) {
+                humanMembers.unshift({
+                    userId: ownerProfile.userId,
+                    name: ownerProfile.name,
+                    role: 'Founder',
+                    bio: ownerProfile.bio,
+                    type: 'human',
+                    avatarUrl: ownerProfile.avatarUrl || '', // Fallback to empty string
+                });
+            }
         }
-      }
-      
-      setAllMembers([...humanMembers, ...aiMembers]);
+        
+        setAllMembers([...humanMembers, ...aiMembers]);
     }
   }, [community, allProfiles]);
   
