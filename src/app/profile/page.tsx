@@ -27,7 +27,11 @@ const ProfileSchema = z.object({
   learningLanguage: z.string({ required_error: 'Please select a language to learn.' }),
 });
 
-type CommunityProfile = z.infer<typeof ProfileSchema> & { id: string; userId: string };
+type CommunityProfile = z.infer<typeof ProfileSchema> & {
+  id: string;
+  userId: string;
+  avatarUrl?: string;
+};
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
@@ -81,6 +85,7 @@ export default function ProfilePage() {
       ...data,
       id: user.uid,
       userId: user.uid,
+      avatarUrl: user.photoURL || undefined, // Add the avatar URL from the user object
     };
 
     try {
@@ -235,3 +240,5 @@ export default function ProfilePage() {
     </main>
   );
 }
+
+    

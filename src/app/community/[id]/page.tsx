@@ -4,7 +4,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, useStorage, setDocumentNonBlocking, updateDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
-import { doc, collection, query, orderBy, serverTimestamp, addDoc, where, updateDoc, arrayUnion } from 'firebase/firestore';
+import { doc, collection, query, orderBy, serverTimestamp, where, updateDoc, arrayUnion } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,6 +47,7 @@ type CommunityProfile = {
     bio: string;
     nativeLanguage: string;
     learningLanguage: string;
+    avatarUrl?: string; // Add avatarUrl to profile type
 };
 
 type Message = {
@@ -86,6 +87,7 @@ type JoinRequest = {
 
 function MemberCard({ member, index, communityId }: { member: Member; index: number; communityId: string;}) {
     const isHuman = member.type === 'human';
+    // Use the member's avatarUrl if it exists, otherwise use the placeholder
     const avatarUrl = member.avatarUrl || `https://i.pravatar.cc/150?u=${member.name}-${index}`;
     
     const Wrapper = Link;
@@ -206,7 +208,7 @@ function RecordAudio({ communityId }: { communityId: string }) {
 
                         try {
                             const messagesColRef = collection(firestore, `communities/${communityId}/messages`);
-                            const newMessageRef = doc(messagesColRef);
+                            const newMessageRef = doc(messagesColRef); // Create a reference to get an ID
 
                             const audioPath = `communities/${communityId}/messages/${newMessageRef.id}.wav`;
                             const storageRef = ref(storage, audioPath);
@@ -229,8 +231,9 @@ function RecordAudio({ communityId }: { communityId: string }) {
                                 createdAt: serverTimestamp(),
                                 status: 'active',
                             };
-
-                            await addDoc(messagesColRef, newMessage);
+                            
+                            // Use setDoc with the ref that has an ID now
+                            await setDocumentNonBlocking(newMessageRef, newMessage, { merge: false });
 
                             toast({ title: 'Message sent!' });
                         } catch (error) {
@@ -300,31 +303,24 @@ function TextCommentForm({ communityId, messageId }: { communityId: string, mess
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useUser();
     const firestore = useFirestore();
-    const { toast } = useToast();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!text.trim() || !user || !firestore) return;
 
         setIsSubmitting(true);
-        try {
-            const commentsColRef = collection(firestore, `communities/${communityId}/messages/${messageId}/comments`);
-            const newComment = {
-                userId: user.uid,
-                userName: user.displayName || 'Anonymous',
-                userAvatarUrl: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
-                type: 'text',
-                text: text.trim(),
-                createdAt: serverTimestamp(),
-            };
-            await addDoc(commentsColRef, newComment);
-            setText('');
-        } catch (error) {
-            const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
-            toast({ variant: 'destructive', title: 'Failed to post comment', description: message });
-        } finally {
-            setIsSubmitting(false);
-        }
+        const commentsColRef = collection(firestore, `communities/${communityId}/messages/${messageId}/comments`);
+        const newComment = {
+            userId: user.uid,
+            userName: user.displayName || 'Anonymous',
+            userAvatarUrl: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
+            type: 'text',
+            text: text.trim(),
+            createdAt: serverTimestamp(),
+        };
+        addDocumentNonBlocking(commentsColRef, newComment);
+        setText('');
+        setIsSubmitting(false);
     };
 
     return (
@@ -400,7 +396,7 @@ function RecordComment({ communityId, messageId }: { communityId: string, messag
                             createdAt: serverTimestamp(),
                         };
 
-                        await addDoc(commentsColRef, newComment);
+                        setDocumentNonBlocking(newCommentRef, newComment, { merge: false });
                         toast({ title: 'Comment posted!' });
                     } catch (error) {
                         const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
@@ -801,13 +797,6 @@ export default function CommunityProfilePage() {
 
   const { data: community, isLoading, error } = useDoc<Community>(communityDocRef);
   
-  const ownerProfileRef = useMemoFirebase(() => {
-    if (!firestore || !community?.ownerId) return null;
-    return doc(firestore, 'community-profiles', community.ownerId);
-  }, [firestore, community?.ownerId]);
-
-  const { data: ownerProfile } = useDoc<CommunityProfile>(ownerProfileRef);
-  
   const allProfilesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'community-profiles');
@@ -827,43 +816,51 @@ export default function CommunityProfilePage() {
   }, [firestore, user]);
   const { data: userProfile } = useDoc<CommunityProfile>(userProfileRef);
 
-  // Use a direct doc ref to check for a specific user's join request.
   const userJoinRequestRef = useMemoFirebase(() => {
     if (!firestore || !user || !id) return null;
-    // Use the user's UID as the predictable document ID.
     return doc(firestore, 'communities', id, 'joinRequests', user.uid);
   }, [firestore, user, id]);
   
-  // Use useDoc to fetch the specific request document.
   const { data: userJoinRequest, isLoading: isRequestLoading } = useDoc<JoinRequest>(userJoinRequestRef);
 
-  // Determine if a pending request exists based on the useDoc result.
   const hasPendingRequest = userJoinRequest?.status === 'pending';
 
   useEffect(() => {
-    if (community) {
-      let members: Member[] = community.members ? [...community.members] : [];
+    if (community && allProfiles) {
+      const profilesMap = new Map(allProfiles.map(p => [p.userId, p]));
+      
+      const humanMembers = community.members
+        .filter(m => m.type === 'human' && m.userId)
+        .map(member => {
+          const profile = profilesMap.get(member.userId!);
+          return {
+            ...member,
+            name: profile?.name || member.name,
+            bio: profile?.bio || member.bio,
+            avatarUrl: profile?.avatarUrl, // Use avatar from profile
+          };
+        });
 
-      const ownerAsMember = members.find(m => m.userId === community.ownerId);
+      const aiMembers = community.members.filter(m => m.type === 'AI');
 
+      const ownerProfile = profilesMap.get(community.ownerId);
       if (ownerProfile) {
-        const ownerMemberObject: Member = {
-          userId: ownerProfile.userId,
-          name: ownerProfile.name,
-          role: 'Founder',
-          bio: ownerProfile.bio,
-          type: 'human',
-        };
-
-        if (ownerAsMember) {
-          members = members.map(m => m.userId === community.ownerId ? ownerMemberObject : m);
-        } else {
-          members.unshift(ownerMemberObject);
+        const ownerInList = humanMembers.find(m => m.userId === community.ownerId);
+        if (!ownerInList) {
+          humanMembers.unshift({
+            userId: ownerProfile.userId,
+            name: ownerProfile.name,
+            role: 'Founder',
+            bio: ownerProfile.bio,
+            type: 'human',
+            avatarUrl: ownerProfile.avatarUrl,
+          });
         }
       }
-      setAllMembers(members);
+      
+      setAllMembers([...humanMembers, ...aiMembers]);
     }
-  }, [community, ownerProfile]);
+  }, [community, allProfiles]);
   
   const isMember = allMembers.some(m => m.userId === user?.uid);
 
@@ -881,7 +878,6 @@ export default function CommunityProfilePage() {
         return;
     }
     setIsSubmitting(true);
-    // Create a doc ref with the user's UID as the ID.
     const requestRef = doc(firestore, `communities/${id}/joinRequests`, user.uid);
     const newRequest: Omit<JoinRequest, 'createdAt' | 'id'> & { createdAt: any } = {
         userId: user.uid,
@@ -910,6 +906,7 @@ export default function CommunityProfilePage() {
         bio: profile.bio,
         role: 'Member',
         type: 'human',
+        avatarUrl: profile.avatarUrl, // Include avatarUrl when inviting
     };
 
     updateDocumentNonBlocking(communityDocRef, {
@@ -1060,7 +1057,7 @@ export default function CommunityProfilePage() {
                         {suggestedUsers.map(profile => (
                             <Card key={profile.id} className="flex items-center p-4">
                                 <Avatar className="w-12 h-12 mr-4">
-                                    <AvatarImage src={`https://i.pravatar.cc/150?u=${profile.name}`} alt={profile.name} />
+                                    <AvatarImage src={profile.avatarUrl || `https://i.pravatar.cc/150?u=${profile.name}`} alt={profile.name} />
                                     <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
                                 </Avatar>
                                 <div className="flex-grow">
@@ -1086,3 +1083,5 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
+
+    

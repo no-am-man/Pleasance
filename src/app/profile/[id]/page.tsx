@@ -17,6 +17,7 @@ type CommunityProfile = {
     bio: string;
     nativeLanguage: string;
     learningLanguage: string;
+    avatarUrl?: string;
 };
 
 export default function UserProfilePage() {
@@ -95,7 +96,7 @@ export default function UserProfilePage() {
       <Card className="shadow-lg">
         <CardHeader className="text-center items-center space-y-4">
           <Avatar className="w-24 h-24 mb-4 border-4 border-primary">
-            <AvatarImage src={`https://i.pravatar.cc/150?u=${profile.name}`} alt={profile.name} />
+            <AvatarImage src={profile.avatarUrl || `https://i.pravatar.cc/150?u=${profile.name}`} alt={profile.name} />
             <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
           </Avatar>
           <CardTitle className="text-3xl">{profile.name}</CardTitle>
@@ -126,3 +127,5 @@ export default function UserProfilePage() {
     </main>
   );
 }
+
+    
