@@ -119,8 +119,10 @@ export default function CommunityProfilePage() {
           bio: ownerProfile.bio,
           type: 'human',
         };
-        // Add the owner to the start of the list
-        members.unshift(ownerMember);
+        // Add the owner to the start of the list if not already present
+        if (!members.some(m => m.userId === ownerMember.userId)) {
+          members.unshift(ownerMember);
+        }
       }
       setAllMembers(members);
     }
