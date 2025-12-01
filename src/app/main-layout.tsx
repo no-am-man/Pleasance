@@ -45,68 +45,74 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <Link href="/">
+              <Link href="/" asChild>
                 <SidebarMenuButton
+                  asChild
                   isActive={isActive('/')}
                   icon={<Home />}
                   tooltip="Home"
                 >
-                  Home
+                  <span>Home</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/community">
+              <Link href="/community" asChild>
                 <SidebarMenuButton
+                  asChild
                   isActive={isActive('/community')}
                   icon={<Users />}
                   tooltip="Community"
                 >
-                  Community
+                  <span>Community</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/story">
+              <Link href="/story" asChild>
                 <SidebarMenuButton
+                  asChild
                   isActive={isActive('/story')}
                   icon={<BookOpen />}
                   tooltip="Burlington Edge"
                 >
-                  Burlington Edge
+                  <span>Burlington Edge</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/fabrication">
+              <Link href="/fabrication" asChild>
                 <SidebarMenuButton
+                  asChild
                   isActive={isActive('/fabrication')}
                   icon={<Warehouse />}
                   tooltip="Fabrication"
                 >
-                  Fabrication
+                  <span>Fabrication</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/treasury">
+              <Link href="/treasury" asChild>
                 <SidebarMenuButton
+                  asChild
                   isActive={isActive('/treasury')}
                   icon={<Banknote />}
                   tooltip="Treasury"
                 >
-                  Treasury
+                  <span>Treasury</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/wiki">
+              <Link href="/wiki" asChild>
                 <SidebarMenuButton
+                  asChild
                   isActive={isActive('/wiki')}
                   icon={<Info />}
                   tooltip="Wiki"
                 >
-                  Wiki
+                  <span>Wiki</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -115,13 +121,14 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <SidebarContent className="!flex-grow-0">
           <SidebarMenu>
             <SidebarMenuItem>
-              <Link href="/profile">
+              <Link href="/profile" asChild>
                 <SidebarMenuButton
+                  asChild
                   isActive={isActive('/profile')}
                   icon={<UserCircle />}
                   tooltip="My Profile"
                 >
-                  My Profile
+                  <span>My Profile</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
