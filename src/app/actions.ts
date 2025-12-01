@@ -10,6 +10,9 @@ import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member
 import { generateSpeech } from '@/ai/flows/generate-speech';
 import { assessPronunciation as assessPronunciationFlow } from '@/ai/flows/assess-pronunciation';
 import { VOICES } from '@/config/languages';
+import { initializeFirebase } from '@/firebase/config-for-actions';
+import { doc, deleteDoc } from 'firebase/firestore';
+import { ref, deleteObject } from 'firebase/storage';
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
@@ -182,4 +185,39 @@ export async function assessPronunciation(values: z.infer<typeof assessmentSchem
     const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
     return { error: `Assessment failed. ${message}` };
   }
+}
+
+const deleteMessageSchema = z.object({
+    communityId: z.string(),
+    messageId: z.string(),
+    audioUrl: z.string(),
+});
+
+export async function deleteVoiceMessage(values: z.infer<typeof deleteMessageSchema>) {
+    try {
+        const validatedFields = deleteMessageSchema.safeParse(values);
+        if (!validatedFields.success) {
+            return { error: 'Invalid message data.' };
+        }
+
+        const { communityId, messageId, audioUrl } = validatedFields.data;
+        const { firestore, storage } = initializeFirebase();
+
+        // 1. Delete Firestore document
+        const messageDocRef = doc(firestore, `communities/${communityId}/messages`, messageId);
+        await deleteDoc(messageDocRef);
+
+        // 2. Delete audio file from Storage
+        if (audioUrl) {
+            const storageRef = ref(storage, audioUrl);
+            await deleteObject(storageRef);
+        }
+
+        return { success: true };
+
+    } catch (e) {
+        console.error('Delete Message Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Failed to delete message. ${message}` };
+    }
 }

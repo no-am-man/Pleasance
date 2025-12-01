@@ -8,7 +8,7 @@ import { doc, collection, query, orderBy, serverTimestamp, addDoc, where, update
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mic, Square, MessageSquare, LogIn, Check, X, Hourglass, Volume2 } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mic, Square, MessageSquare, LogIn, Check, X, Hourglass, Volume2, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -16,9 +16,10 @@ import { useEffect, useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { getTranscription } from '@/app/actions';
+import { getTranscription, deleteVoiceMessage } from '@/app/actions';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 type Member = {
   name: string;
@@ -437,9 +438,11 @@ function CommentDialog({ message }: { message: VoiceMessage }) {
     )
 }
 
-function VoiceMessageCard({ message }: { message: VoiceMessage }) {
+function VoiceMessageCard({ message, canDelete }: { message: VoiceMessage; canDelete: boolean; }) {
     const audioRef = useRef<HTMLAudioElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
+    const { toast } = useToast();
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const togglePlay = () => {
         if (audioRef.current) {
@@ -461,8 +464,31 @@ function VoiceMessageCard({ message }: { message: VoiceMessage }) {
         }
     }, [])
 
+    const handleDelete = async () => {
+        setIsDeleting(true);
+        const result = await deleteVoiceMessage({
+            communityId: message.communityId,
+            messageId: message.id,
+            audioUrl: message.audioUrl,
+        });
+        setIsDeleting(false);
+
+        if (result.error) {
+            toast({
+                variant: 'destructive',
+                title: 'Delete Failed',
+                description: result.error,
+            });
+        } else {
+            toast({
+                title: 'Message Deleted',
+                description: 'The voice message has been removed.',
+            });
+        }
+    };
+
     return (
-        <Card className="flex flex-col">
+        <Card className={cn("flex flex-col", isDeleting && "opacity-50")}>
             <CardHeader className="flex flex-row items-start gap-4 pb-4">
                 <Avatar>
                     <AvatarImage src={message.userAvatarUrl} alt={message.userName} />
@@ -478,6 +504,29 @@ function VoiceMessageCard({ message }: { message: VoiceMessage }) {
                         </span>
                     </div>
                 </div>
+                 {canDelete && (
+                     <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" disabled={isDeleting}>
+                                <Trash2 className="w-4 h-4 text-muted-foreground" />
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete the voice message and its audio from the servers.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+                                    {isDeleting ? <LoaderCircle className="animate-spin" /> : 'Delete'}
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                )}
             </CardHeader>
             <CardContent className="flex-grow space-y-4">
                  <audio ref={audioRef} src={message.audioUrl} className="hidden" />
@@ -498,7 +547,7 @@ function VoiceMessageCard({ message }: { message: VoiceMessage }) {
     )
 }
 
-function VoiceChat({ communityId }: { communityId: string }) {
+function VoiceChat({ communityId, isOwner }: { communityId: string; isOwner: boolean }) {
     const { user } = useUser();
     const firestore = useFirestore();
 
@@ -521,7 +570,7 @@ function VoiceChat({ communityId }: { communityId: string }) {
                 {error && <p className="text-destructive">Error loading messages.</p>}
                 {messages && messages.length === 0 && <p className="text-muted-foreground text-center py-8">No messages yet. Be the first!</p>}
                 <div className="max-h-96 overflow-y-auto space-y-4 pr-2">
-                    {messages?.map(msg => <VoiceMessageCard key={msg.id} message={msg} />)}
+                    {messages?.map(msg => <VoiceMessageCard key={msg.id} message={msg} canDelete={isOwner || msg.userId === user?.uid}/>)}
                 </div>
             </CardContent>
             {user ? (
@@ -837,7 +886,7 @@ export default function CommunityProfilePage() {
       </Card>
       
        <div className="my-12">
-        <VoiceChat communityId={community.id} />
+        <VoiceChat communityId={community.id} isOwner={isOwner} />
        </div>
       
       {isOwner && (

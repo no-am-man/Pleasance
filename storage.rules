@@ -3,6 +3,11 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
+    // Helper function to check community ownership
+    function isCommunityOwner(communityId) {
+      return request.auth != null && request.auth.uid == get(/databases/(default)/documents/communities/$(communityId)).data.ownerId;
+    }
+
     //====================================================================
     // Generic rule: Allow read access to all files.
     // This is useful for public assets like story audio.
@@ -22,13 +27,17 @@ service firebase.storage {
     
     //====================================================================
     // Community Voice Messages: Allow any authenticated user to write
-    // voice messages and comments.
+    // voice messages and comments. Deletion is restricted.
     //====================================================================
     match /communities/{communityId}/messages/{messageId}.wav {
         allow write: if request.auth != null;
+        // The user who uploaded the file or the community owner can delete it.
+        allow delete: if request.auth != null && (request.auth.uid == resource.data.userId || isCommunityOwner(communityId));
     }
     match /communities/{communityId}/messages/{messageId}/comments/{commentId}.wav {
         allow write: if request.auth != null;
+        // The user who uploaded the comment or the community owner can delete it.
+        allow delete: if request.auth != null && (request.auth.uid == resource.data.userId || isCommunityOwner(communityId));
     }
   }
 }
