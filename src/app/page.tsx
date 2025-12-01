@@ -110,7 +110,7 @@ export default function Home() {
       </div>
 
        <div className="mt-16">
-        <Button asChild variant="link" className="text-lg">
+        <Button asChild variant="link" className="text-lg whitespace-normal h-auto">
           <Link href="/wiki">
             <Info className="mr-2 h-5 w-5" />
             Please Read the Wiki to Understand What You Are Joining
