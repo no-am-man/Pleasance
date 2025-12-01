@@ -22,25 +22,25 @@ const roleIcons: { [key: string]: React.ReactNode } = {
 export default function CommunityPage() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Changed initial state to false
   const [audioDataUri, setAudioDataUri] = useState<string>("");
   const { user, isUserLoading } = useUser();
 
-  useEffect(() => {
-    async function getWelcomeAudio() {
-      try {
-        const result = await generateSpeech({ text: COMMUNITY_DATA.welcomeMessage });
-        if (result.media) {
-          setAudioDataUri(result.media);
-        }
-      } catch (error) {
-        console.error("Failed to generate welcome audio:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    getWelcomeAudio();
-  }, []);
+  // useEffect(() => {
+  //   async function getWelcomeAudio() {
+  //     try {
+  //       const result = await generateSpeech({ text: COMMUNITY_DATA.welcomeMessage });
+  //       if (result.media) {
+  //         setAudioDataUri(result.media);
+  //       }
+  //     } catch (error) {
+  //       console.error("Failed to generate welcome audio:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   }
+  //   getWelcomeAudio();
+  // }, []);
   
 
   useEffect(() => {
@@ -60,7 +60,7 @@ export default function CommunityPage() {
 
   const togglePlayPause = () => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || !audioDataUri) return;
 
     if (isPlaying) {
       audio.pause();
@@ -114,23 +114,22 @@ export default function CommunityPage() {
                 <LoaderCircle className="h-8 w-8 animate-spin" />
              </Button>
           ) : (
-            audioDataUri && (
-              <>
-                <audio ref={audioRef} src={audioDataUri} />
-                <Button
-                  onClick={togglePlayPause}
-                  size="lg"
-                  className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full w-16 h-16 shadow-lg"
-                  aria-label={isPlaying ? "Pause Welcome Message" : "Play Welcome Message"}
-                >
-                  {isPlaying ? (
-                    <Pause className="h-8 w-8" />
-                  ) : (
-                    <Play className="h-8 w-8 ml-1" />
-                  )}
-                </Button>
-              </>
-            )
+            <>
+              {audioDataUri && <audio ref={audioRef} src={audioDataUri} />}
+              <Button
+                onClick={togglePlayPause}
+                size="lg"
+                className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full w-16 h-16 shadow-lg"
+                aria-label={isPlaying ? "Pause Welcome Message" : "Play Welcome Message"}
+                disabled={!audioDataUri}
+              >
+                {isPlaying ? (
+                  <Pause className="h-8 w-8" />
+                ) : (
+                  <Play className="h-8 w-8 ml-1" />
+                )}
+              </Button>
+            </>
           )}
         </CardContent>
       </Card>
