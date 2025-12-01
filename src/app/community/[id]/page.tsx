@@ -16,7 +16,7 @@ import { useEffect, useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { getTranscription, updateMessageStatus } from '@/app/actions';
+import { getAiChatResponse, getTranscription, updateMessageStatus } from '@/app/actions';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -136,7 +136,7 @@ function MemberCard({ member, index, communityId }: { member: Member; index: num
     );
 }
 
-function TextMessageForm({ communityId }: { communityId: string }) {
+function TextMessageForm({ communityId, onMessageSent }: { communityId: string, onMessageSent: (messageText: string) => void }) {
     const [text, setText] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useUser();
@@ -162,6 +162,7 @@ function TextMessageForm({ communityId }: { communityId: string }) {
         };
 
         addDocumentNonBlocking(messagesColRef, newMessage);
+        onMessageSent(text.trim());
         setText('');
         setIsSubmitting(false);
     };
@@ -181,7 +182,7 @@ function TextMessageForm({ communityId }: { communityId: string }) {
     );
 }
 
-function RecordAudio({ communityId }: { communityId: string }) {
+function RecordAudio({ communityId, onMessageSent }: { communityId: string, onMessageSent: (messageText: string) => void }) {
     const [isRecording, setIsRecording] = useState(false);
     const [hasPermission, setHasPermission] = useState<boolean | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -223,6 +224,7 @@ function RecordAudio({ communityId }: { communityId: string }) {
                              if (transcriptionResult.error) {
                                 throw new Error(transcriptionResult.error);
                             }
+                             const transcription = transcriptionResult.transcription || '';
 
                             const newMessage = {
                                 communityId,
@@ -231,13 +233,13 @@ function RecordAudio({ communityId }: { communityId: string }) {
                                 userAvatarUrl: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
                                 type: 'voice',
                                 audioUrl,
-                                transcription: transcriptionResult.transcription,
+                                transcription: transcription,
                                 createdAt: serverTimestamp(),
                                 status: 'active',
                             };
                             
-                            // Use setDoc with the ref that has an ID now
                             setDocumentNonBlocking(newMessageRef, newMessage, { merge: false });
+                            onMessageSent(transcription);
 
                             toast({ title: 'Message sent!' });
                         } catch (error) {
@@ -254,7 +256,7 @@ function RecordAudio({ communityId }: { communityId: string }) {
                 console.error("Mic permission denied:", err);
                 setHasPermission(false);
             });
-    }, [user, firestore, storage, communityId, toast]);
+    }, [user, firestore, storage, communityId, toast, onMessageSent]);
 
     const startRecording = () => {
         if (!hasPermission || !mediaRecorderRef.current) {
@@ -669,7 +671,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
     )
 }
 
-function Chat({ communityId, isOwner }: { communityId: string; isOwner: boolean }) {
+function Chat({ communityId, isOwner, allMembers }: { communityId: string; isOwner: boolean, allMembers: Member[] }) {
     const { user } = useUser();
     const firestore = useFirestore();
 
@@ -680,6 +682,48 @@ function Chat({ communityId, isOwner }: { communityId: string; isOwner: boolean 
     }, [firestore, communityId]);
 
     const { data: messages, isLoading, error } = useCollection<Message>(messagesQuery);
+    
+    const triggerAiResponse = async (userMessage: string) => {
+        if (!firestore) return;
+        
+        const aiMembers = allMembers.filter(m => m.type === 'AI');
+        if (aiMembers.length === 0) return;
+        
+        // Select a random AI member
+        const randomAiMember = aiMembers[Math.floor(Math.random() * aiMembers.length)];
+
+        // Get chat history
+        const chatHistory = (messages || [])
+            .slice(0, 10) // Get last 10 messages for context
+            .reverse() // Oldest first
+            .map(msg => ({
+                role: msg.userId === user?.uid ? 'user' : 'model' as 'user' | 'model',
+                content: [{ text: msg.text || msg.transcription || '' }],
+            }));
+            
+        // Generate AI response
+        const result = await getAiChatResponse({
+            member: randomAiMember,
+            userMessage,
+            history: chatHistory,
+        });
+        
+        if (result.response) {
+            const aiMessage = {
+                communityId,
+                userId: `ai_${randomAiMember.name.toLowerCase().replace(/\s/g, '_')}`,
+                userName: randomAiMember.name,
+                userAvatarUrl: `https://i.pravatar.cc/150?u=${randomAiMember.name}`,
+                type: 'text' as const,
+                text: result.response,
+                status: 'active' as const,
+                createdAt: serverTimestamp(),
+            };
+            const messagesColRef = collection(firestore, `communities/${communityId}/messages`);
+            addDocumentNonBlocking(messagesColRef, aiMessage);
+        }
+    };
+
 
     return (
         <Card className="shadow-lg">
@@ -697,12 +741,12 @@ function Chat({ communityId, isOwner }: { communityId: string; isOwner: boolean 
             </CardContent>
             {user ? (
                 <div className="border-t p-4 space-y-4">
-                    <TextMessageForm communityId={communityId} />
+                    <TextMessageForm communityId={communityId} onMessageSent={triggerAiResponse} />
                     <div className="relative">
                         <Separator />
                         <span className="absolute left-1/2 -translate-x-1/2 -top-3 bg-card px-2 text-xs text-muted-foreground">OR</span>
                     </div>
-                    <RecordAudio communityId={communityId} />
+                    <RecordAudio communityId={communityId} onMessageSent={triggerAiResponse} />
                 </div>
             ) : (
                 <div className="border-t p-4 text-center">
@@ -1022,7 +1066,7 @@ export default function CommunityProfilePage() {
       </Card>
       
        <div className="my-12">
-        <Chat communityId={community.id} isOwner={isOwner} />
+        <Chat communityId={community.id} isOwner={isOwner} allMembers={allMembers} />
        </div>
       
       {isOwner && (
@@ -1087,3 +1131,5 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
+
+    
