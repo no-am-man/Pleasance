@@ -10,7 +10,7 @@ export default function Home() {
       <div className="flex items-center gap-3 mb-4">
         <Logo className="h-16 w-16 text-primary" />
         <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-primary">
-          LinguaTune
+          Pleasance
         </h1>
       </div>
       <p className="max-w-3xl text-lg sm:text-xl text-muted-foreground mb-12">
@@ -46,7 +46,7 @@ export default function Home() {
                <div className="mx-auto bg-primary/10 rounded-full p-3 w-fit">
                     <BookOpen className="h-8 w-8 text-primary" />
                 </div>
-                <CardTitle className="text-2xl">Burlington Edge</CardTitle>
+                <CardTitle className="text-2xl">Nuncy</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="flex-grow">

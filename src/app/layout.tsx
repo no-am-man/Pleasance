@@ -7,8 +7,8 @@ import { Home, Users, Sparkles, UserCircle, BookOpen, Warehouse } from 'lucide-r
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
-  title: 'LinguaTune',
-  description: 'Learn languages with AI-powered stories and karaoke-style reading.',
+  title: 'Pleasance',
+  description: 'A federated universe for co-learning, creation, and fabrication.',
 };
 
 export default function RootLayout({
@@ -42,7 +42,7 @@ export default function RootLayout({
               <Button asChild variant="ghost">
                 <Link href="/story">
                   <BookOpen className="h-4 w-4 mr-2" />
-                  Burlington Edge
+                  Nuncy
                 </Link>
               </Button>
                <Button asChild variant="ghost">

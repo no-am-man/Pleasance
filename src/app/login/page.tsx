@@ -104,7 +104,7 @@ export default function LoginPage() {
             ) : (
                 <>
                     <CardTitle>Join the Community</CardTitle>
-                    <CardDescription>Sign in to continue to LinguaTune</CardDescription>
+                    <CardDescription>Sign in to continue to Pleasance</CardDescription>
                 </>
             )}
         </CardHeader>
