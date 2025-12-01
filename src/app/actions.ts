@@ -7,10 +7,11 @@ import { translateStory } from '@/ai/flows/translate-story';
 import { generateCommunity } from '@/ai/flows/generate-community';
 import { transcribeAudio } from '@/ai/flows/transcribe-audio';
 import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member';
-import { generateSpeech } from '@/ai/flows/generate-speech';
+import { generateSpeech } from '@/aiflows/generate-speech';
 import { VOICES } from '@/config/languages';
 import { initializeFirebase } from '@/firebase/config-for-actions';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
@@ -202,13 +203,16 @@ export async function softDeleteMessage(values: z.infer<typeof softDeleteMessage
 
         const messageDocRef = doc(firestore, `communities/${communityId}/messages`, messageId);
 
-        await updateDoc(messageDocRef, {
+        const updatePayload = {
             deleted: true,
             deletedAt: serverTimestamp(),
             text: null, // Clear content for privacy
             transcription: null,
             audioUrl: null,
-        });
+        };
+
+        // Use the non-blocking update function
+        updateDocumentNonBlocking(messageDocRef, updatePayload);
 
         return { success: true };
 
