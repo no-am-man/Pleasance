@@ -2,15 +2,17 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, LoaderCircle, Copy } from "lucide-react";
+import { Play, Pause, LoaderCircle, Copy, Mic, Square, CheckCircle, Info } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { VOICES } from "@/config/languages";
 import { Label } from "@/components/ui/label";
-import { synthesizeSpeech } from "@/app/actions";
+import { synthesizeSpeech, assessPronunciation as assessPronunciationAction } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "./ui/separator";
 
 type StoryViewerProps = {
   originalStory: string;
@@ -20,6 +22,135 @@ type StoryViewerProps = {
   setIsLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
 };
+
+function PronunciationAssessment({ storyText }: { storyText: string }) {
+  const [selectedSentence, setSelectedSentence] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isAssessing, setIsAssessing] = useState(false);
+  const [assessmentResult, setAssessmentResult] = useState<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const { toast } = useToast();
+
+  const sentences = storyText.match(/[^.!?]+[.!?]+/g) || [];
+
+  const handleSentenceSelect = (sentence: string) => {
+    setSelectedSentence(sentence);
+    setAssessmentResult(null);
+  };
+
+  const handleRecord = async () => {
+    if (isRecording) {
+      mediaRecorderRef.current?.stop();
+      setIsRecording(false);
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      audioChunksRef.current = [];
+
+      recorder.ondataavailable = (event) => {
+        audioChunksRef.current.push(event.data);
+      };
+
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = async () => {
+          const base64Audio = reader.result as string;
+          if (!selectedSentence) return;
+
+          setIsAssessing(true);
+          setAssessmentResult(null);
+          const result = await assessPronunciationAction({
+            audioDataUri: base64Audio,
+            text: selectedSentence,
+          });
+          setIsAssessing(false);
+
+          if (result.error) {
+            toast({ variant: 'destructive', title: 'Assessment Failed', description: result.error });
+          } else {
+            setAssessmentResult(result.assessment!);
+          }
+        };
+      };
+
+      recorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Microphone access denied.' });
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Pronunciation Practice</CardTitle>
+        <CardDescription>Select a sentence, record yourself, and get feedback on your pronunciation.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label>1. Select a sentence to practice</Label>
+          <div className="max-h-40 overflow-y-auto rounded-md border p-2 space-y-1 bg-muted/50">
+            {sentences.map((sentence, index) => (
+              <button
+                key={index}
+                onClick={() => handleSentenceSelect(sentence)}
+                className={`w-full text-left p-2 rounded-md text-sm transition-colors ${
+                  selectedSentence === sentence ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'
+                }`}
+              >
+                {sentence}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {selectedSentence && (
+          <div className="space-y-4 animate-in fade-in-50">
+            <Label>2. Record your pronunciation</Label>
+            <div className="flex items-center gap-4 p-4 border rounded-lg justify-center">
+              <Button
+                onClick={handleRecord}
+                disabled={isAssessing}
+                size="lg"
+                className="rounded-full w-16 h-16 shadow-lg"
+              >
+                {isRecording ? <Square /> : <Mic />}
+              </Button>
+              <p className="text-sm text-muted-foreground">
+                {isRecording ? "Recording... Click to stop." : "Click to record."}
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {isAssessing && (
+          <div className="flex items-center justify-center gap-2 p-4 text-primary">
+            <LoaderCircle className="animate-spin" />
+            <p>Assessing your pronunciation...</p>
+          </div>
+        )}
+
+        {assessmentResult && (
+          <Alert className="animate-in fade-in-50">
+            <Info className="h-4 w-4" />
+            <AlertTitle>Assessment Feedback</AlertTitle>
+            <AlertDescription>
+                <p className="whitespace-pre-wrap">{assessmentResult}</p>
+            </AlertDescription>
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 
 export default function StoryViewer({
   originalStory,
@@ -229,6 +360,10 @@ export default function StoryViewer({
             </Button>
         </div>
       </div>
+      
+      <Separator className="my-8" />
+      
+      <PronunciationAssessment storyText={translatedText} />
     </div>
   );
 }

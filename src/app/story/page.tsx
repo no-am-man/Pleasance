@@ -293,7 +293,7 @@ export default function StoryPage() {
                                 <FormControl>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select difficulty" />
-                                </Trigger>
+                                </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
                                 <SelectItem value="beginner">Beginner</SelectItem>
