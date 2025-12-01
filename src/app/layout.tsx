@@ -2,8 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
-import { SidebarProvider } from '@/components/ui/sidebar';
-import { MainLayout } from './main-layout';
+import { Header } from '@/components/header';
 
 export const metadata: Metadata = {
   title: 'Pleasance',
@@ -31,10 +30,9 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
-          <SidebarProvider>
-            <MainLayout>{children}</MainLayout>
-            <Toaster />
-          </SidebarProvider>
+          <Header />
+          <main className="pt-16">{children}</main>
+          <Toaster />
         </FirebaseClientProvider>
       </body>
     </html>

@@ -33,7 +33,7 @@ export default function Home() {
             </CardDescription>
           </CardContent>
           <div className="p-6 pt-0">
-             <Button asChild className="w-full">
+             <Button aschild className="w-full">
                 <Link href="/community">
                   Explore Communities <ArrowRight className="ml-2" />
                 </Link>
@@ -55,7 +55,7 @@ export default function Home() {
             </CardDescription>
           </CardContent>
            <div className="p-6 pt-0">
-             <Button asChild className="w-full">
+             <Button aschild className="w-full">
                 <Link href="/story">
                   Start Learning <ArrowRight className="ml-2" />
                 </Link>
@@ -77,7 +77,7 @@ export default function Home() {
             </CardDescription>
           </CardContent>
            <div className="p-6 pt-0">
-             <Button asChild className="w-full">
+             <Button aschild className="w-full">
                 <Link href="/fabrication">
                   Submit a Job <ArrowRight className="ml-2" />
                 </Link>
@@ -99,7 +99,7 @@ export default function Home() {
             </CardDescription>
           </CardContent>
            <div className="p-6 pt-0">
-             <Button asChild className="w-full">
+             <Button aschild className="w-full">
                 <Link href="/treasury">
                   Manage Assets <ArrowRight className="ml-2" />
                 </Link>
@@ -109,7 +109,7 @@ export default function Home() {
       </div>
 
        <div className="mt-16">
-        <Button asChild variant="link" className="text-lg">
+        <Button aschild variant="link" className="text-lg">
           <Link href="/wiki">
             <Info className="mr-2 h-5 w-5" />
             Please Read the Wiki to Understand What You Are Joining
