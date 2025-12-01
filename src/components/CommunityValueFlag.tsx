@@ -2,8 +2,8 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, documentId, getDocs } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 import { LoaderCircle } from 'lucide-react';
 import {
   Dialog,
