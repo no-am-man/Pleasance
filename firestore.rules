@@ -87,26 +87,6 @@ service cloud.firestore {
             && incomingData.status == 'pending';
     }
 
-    function isValidMessageCreate() {
-        let data = request.resource.data;
-
-        // The user must be the author of the message. This is the most critical check.
-        if (data.userId != request.auth.uid) {
-            return false;
-        }
-
-        // Validate based on message type
-        if (data.type == 'text') {
-            return data.text is string && data.text.size() > 0 && data.text.size() < 500;
-        }
-        if (data.type == 'voice') {
-            return data.audioUrl is string && data.transcription is string;
-        }
-        
-        // Deny if type is not 'text' or 'voice'.
-        return false;
-    }
-
     function isValidMessageUpdate() {
       let data = request.resource.data;
       // Allow only the 'status' field to be updated to 'done' or 'active'
@@ -208,7 +188,12 @@ service cloud.firestore {
          */
         match /messages/{messageId} {
             allow read: if true;
-            allow create: if isSignedIn() && isValidMessageCreate();
+            allow create: if isSignedIn() 
+                && request.resource.data.userId == request.auth.uid
+                && (
+                    (request.resource.data.type == 'text' && request.resource.data.text is string && request.resource.data.text.size() > 0) ||
+                    (request.resource.data.type == 'voice' && request.resource.data.audioUrl is string && request.resource.data.transcription is string)
+                );
             allow update: if (isOwner(resource.data.userId) || isCommunityOwner(communityId)) && isValidMessageUpdate();
             allow delete: if isCommunityOwner(communityId) || isOwner(resource.data.userId);
 
