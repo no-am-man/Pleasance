@@ -74,10 +74,20 @@ export default function StoryViewer({
     const audio = audioRef.current;
     if (audio && audioUrl) {
       audio.src = audioUrl;
-      audio.load(); // Make sure to load the new source
-      audio.play().then(() => setIsPlaying(true)).catch(e => console.error("Autoplay failed", e));
+      audio.load();
+      audio.play().then(() => {
+        setIsPlaying(true);
+      }).catch(e => {
+        console.error("Autoplay was prevented.", e);
+        setIsPlaying(false); // Update state to reflect that it's not playing
+        toast({
+          variant: 'destructive',
+          title: 'Playback Error',
+          description: 'Audio could not be played automatically. Please click play again.',
+        });
+      });
     }
-  }, [audioUrl]);
+  }, [audioUrl, toast]);
 
 
   const handlePlay = async () => {
