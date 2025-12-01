@@ -46,27 +46,14 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
     }
     
     // Initialize Firebase services for actions
-    const { firestore, app } = initializeFirebase();
-    const storage = getStorage(app);
-
+    const { firestore } = initializeFirebase();
+    
     // Create a reference for the new story document
     const storyCollectionRef = collection(firestore, 'users', userId, 'stories');
     const storyRef = doc(storyCollectionRef);
 
-    let audioUrl = '';
-    if (translationResult.audioWavBase64) {
-        const audioPath = `stories/${userId}/${storyRef.id}.wav`;
-        const storageRef = ref(storage, audioPath);
-        
-        // Convert base64 to buffer
-        const audioBuffer = Buffer.from(translationResult.audioWavBase64, 'base64');
-        
-        // Upload the buffer to Firebase Storage
-        const uploadResult = await uploadBytes(storageRef, audioBuffer, { contentType: 'audio/wav' });
-        
-        // Get the public download URL
-        audioUrl = await getDownloadURL(uploadResult.ref);
-    }
+    // Set audioUrl to empty string as we are not using storage for now
+    const audioUrl = '';
 
     const newStory = {
         id: storyRef.id,
@@ -85,7 +72,8 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
     return {
       originalStory,
       translatedText: translationResult.translatedText,
-      audioUrl: audioUrl,
+      // For the current session, we can still pass the audio data (if available)
+      audioUrl: translationResult.audioWavBase64 ? `data:audio/wav;base64,${translationResult.audioWavBase64}` : '',
       sourceLanguage: sourceLanguage,
     };
   } catch (e) {
@@ -119,6 +107,7 @@ export async function createCommunityDetails(values: z.infer<typeof communitySch
             name: communityDetails.name,
             description: communityDetails.description,
             welcomeMessage: communityDetails.welcomeMessage,
+
             members: communityDetails.members,
         };
 
