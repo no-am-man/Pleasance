@@ -85,6 +85,15 @@ function PronunciationAssessment({ storyText }: { storyText: string }) {
       return;
     }
 
+    if (!selectedSentence) {
+        toast({
+            variant: "destructive",
+            title: "No sentence selected",
+            description: "Please select a sentence to practice before recording.",
+        });
+        return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
@@ -135,7 +144,6 @@ function PronunciationAssessment({ storyText }: { storyText: string }) {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label>1. Select a sentence to practice</Label>
           <div className="max-h-40 overflow-y-auto rounded-md border p-2 space-y-1 bg-muted/50">
             {sentences.map((sentence, index) => (
                <div key={index} className={`flex items-center gap-2 rounded-md transition-colors pr-2 ${
@@ -161,24 +169,19 @@ function PronunciationAssessment({ storyText }: { storyText: string }) {
           </div>
         </div>
 
-        {selectedSentence && (
-          <div className="space-y-4 animate-in fade-in-50">
-            <Label>2. Record your pronunciation</Label>
-            <div className="flex items-center gap-4 p-4 border rounded-lg justify-center">
-              <Button
-                onClick={handleRecord}
-                disabled={isAssessing}
-                size="lg"
-                className="rounded-full w-16 h-16 shadow-lg"
-              >
-                {isRecording ? <Square /> : <Mic />}
-              </Button>
-              <p className="text-sm text-muted-foreground">
-                {isRecording ? "Recording... Click to stop." : "Click to record."}
-              </p>
-            </div>
-          </div>
-        )}
+        <div className="flex flex-col items-center gap-2">
+            <Button
+            onClick={handleRecord}
+            disabled={isAssessing}
+            size="lg"
+            className="rounded-full w-16 h-16 shadow-lg"
+            >
+            {isRecording ? <Square /> : <Mic />}
+            </Button>
+            <p className="text-sm text-muted-foreground">
+            {isRecording ? "Recording... Click to stop." : "Click to record."}
+            </p>
+        </div>
         
         {isAssessing && (
           <div className="flex items-center justify-center gap-2 p-4 text-primary">
