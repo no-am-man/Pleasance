@@ -68,15 +68,15 @@ function MemberCard({ member, index, communityId }: { member: Member; index: num
                 <CardTitle>{member.name}</CardTitle>
                 <CardDescription className="text-primary font-medium">{member.role}</CardDescription>
             </div>
-            {member.type === 'AI' ? (
-                <Badge variant="outline" className="flex items-center gap-1">
-                    <Bot className="w-3 h-3" />
-                    AI Member
-                </Badge>
-            ) : (
+            {isHuman ? (
                 <Badge variant="secondary" className="flex items-center gap-1">
                     <User className="w-3 h-3" />
                     Human
+                </Badge>
+            ) : (
+                <Badge variant="outline" className="flex items-center gap-1">
+                    <Bot className="w-3 h-3" />
+                    AI Member
                 </Badge>
             )}
             </CardHeader>
