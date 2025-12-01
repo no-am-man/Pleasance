@@ -1,161 +1,187 @@
 // src/app/community/page.tsx
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import Link from "next/link";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, LoaderCircle, User, Crown, Shield, Sparkles, Edit, LogIn } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
-import { COMMUNITY_DATA, Member } from "@/config/community-data";
-import { generateSpeech } from "@/ai/flows/generate-speech";
-import { useUser } from "@/firebase";
-import Link from "next/link";
+import { LogIn, PlusCircle, LoaderCircle, Users, Sun, Moon } from "lucide-react";
+import { createCommunity } from "../actions";
 
-const roleIcons: { [key: string]: React.ReactNode } = {
-  Creator: <Sparkles className="h-5 w-5 text-purple-500" />,
-  Founder: <Crown className="h-5 w-5 text-amber-500" />,
-  Moderator: <Shield className="h-5 w-5 text-blue-500" />,
-  Member: <User className="h-5 w-5 text-gray-500" />,
+const FormSchema = z.object({
+  prompt: z.string().min(10, "Please enter a prompt of at least 10 characters."),
+});
+
+type Community = {
+  id: string;
+  name: string;
+  description: string;
+  welcomeMessage: string;
+  ownerId: string;
 };
 
-export default function CommunityPage() {
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // Changed initial state to false
-  const [audioDataUri, setAudioDataUri] = useState<string>("");
-  const { user, isUserLoading } = useUser();
+function CreateCommunityForm() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useUser();
 
-  // useEffect(() => {
-  //   async function getWelcomeAudio() {
-  //     try {
-  //       const result = await generateSpeech({ text: COMMUNITY_DATA.welcomeMessage });
-  //       if (result.media) {
-  //         setAudioDataUri(result.media);
-  //       }
-  //     } catch (error) {
-  //       console.error("Failed to generate welcome audio:", error);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   }
-  //   getWelcomeAudio();
-  // }, []);
-  
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      prompt: "",
+    },
+  });
 
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const handlePlaybackEnded = () => {
-      setIsPlaying(false);
-    };
-
-    audio.addEventListener("ended", handlePlaybackEnded);
-
-    return () => {
-      audio.removeEventListener("ended", handlePlaybackEnded);
-    };
-  }, [audioDataUri]);
-
-  const togglePlayPause = () => {
-    const audio = audioRef.current;
-    if (!audio || !audioDataUri) return;
-
-    if (isPlaying) {
-      audio.pause();
-    } else {
-      if (audio.currentTime >= audio.duration) {
-          audio.currentTime = 0;
-      }
-      audio.play();
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    if (!user) {
+      setError("You must be logged in to create a community.");
+      return;
     }
-    setIsPlaying(!isPlaying);
-  };
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const result = await createCommunity({ prompt: data.prompt });
+      if (result.error) {
+        setError(result.error);
+      } else {
+        form.reset();
+        // The list will update automatically via the useCollection hook
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+      setError(`Failed to create community. ${message}`);
+    }
+    setIsLoading(false);
+  }
 
   return (
-    <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
-      <Card className="mb-8 shadow-lg">
-        <CardHeader>
-            <div className="flex justify-between items-start">
-                <div className="text-center flex-grow">
-                    <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary">
-                        {COMMUNITY_DATA.name}
-                    </h1>
-                    <p className="text-lg text-muted-foreground">{COMMUNITY_DATA.description}</p>
-                </div>
-                {!isUserLoading && (
-                    <div className="pl-4">
-                        {user ? (
-                            <Button variant="outline">
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit Profile
-                            </Button>
-                        ) : (
-                            <Button asChild>
-                                <Link href="/login">
-                                    <LogIn className="h-4 w-4 mr-2" />
-                                    Login
-                                </Link>
-                            </Button>
-                        )}
-                    </div>
-                )}
-            </div>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center space-y-6">
-          <Separator />
-          <h2 className="text-2xl font-semibold pt-4">Voice Welcome</h2>
-          <p className="text-center text-muted-foreground max-w-2xl">
-            {COMMUNITY_DATA.welcomeMessage}
-          </p>
-          {isLoading ? (
-             <Button size="lg" className="rounded-full w-16 h-16 shadow-lg" disabled>
-                <LoaderCircle className="h-8 w-8 animate-spin" />
-             </Button>
-          ) : (
-            <>
-              {audioDataUri && <audio ref={audioRef} src={audioDataUri} />}
-              <Button
-                onClick={togglePlayPause}
-                size="lg"
-                className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full w-16 h-16 shadow-lg"
-                aria-label={isPlaying ? "Pause Welcome Message" : "Play Welcome Message"}
-                disabled={!audioDataUri}
-              >
-                {isPlaying ? (
-                  <Pause className="h-8 w-8" />
-                ) : (
-                  <Play className="h-8 w-8 ml-1" />
-                )}
-              </Button>
-            </>
-          )}
-        </CardContent>
-      </Card>
+    <Card className="mb-8 shadow-lg">
+      <CardHeader>
+        <CardTitle className="text-2xl">Create a New Community</CardTitle>
+        <CardDescription>Describe the community you want to create. What is its purpose? Who is it for?</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div>
+            <textarea
+              {...form.register("prompt")}
+              placeholder="e.g., 'A community for amateur astronomers to share tips, photos, and organize stargazing events.'"
+              className="w-full p-2 border rounded-md min-h-[100px] bg-background"
+            />
+            {form.formState.errors.prompt && (
+              <p className="text-sm text-destructive mt-1">{form.formState.errors.prompt.message}</p>
+            )}
+          </div>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              <>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Create Community
+              </>
+            )}
+          </Button>
+          {error && <p className="text-sm text-destructive mt-2">{error}</p>}
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
 
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-2xl">Community Structure</CardTitle>
-        </CardHeader>
-        <CardContent>
+function CommunityList() {
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const userCommunitiesQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, 'users', user.uid, 'communities');
+  }, [firestore, user]);
+
+  const { data: communities, isLoading, error } = useCollection<Community>(userCommunitiesQuery);
+
+  if (isLoading) {
+    return <div className="flex justify-center"><LoaderCircle className="w-8 h-8 animate-spin text-primary" /></div>;
+  }
+
+  if (error) {
+    return <p className="text-destructive">Error loading communities: {error.message}</p>;
+  }
+
+  return (
+    <Card className="shadow-lg">
+      <CardHeader>
+        <CardTitle className="text-2xl">Your Communities</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {communities && communities.length > 0 ? (
           <ul className="space-y-4">
-            {COMMUNITY_DATA.members.map((member: Member) => (
-              <li key={member.id} className="flex items-center space-x-4 p-2 rounded-md transition-colors hover:bg-muted/50">
-                <Avatar>
-                  <AvatarImage src={member.avatarUrl} alt={member.name} />
-                  <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className="flex-grow">
-                  <p className="font-semibold">{member.name}</p>
-                  <p className="text-sm text-muted-foreground">{member.bio}</p>
-                </div>
-                <div>{roleIcons[member.role]}</div>
+            {communities.map((community) => (
+              <li key={community.id} className="p-4 rounded-md border transition-colors hover:bg-muted/50">
+                <h3 className="font-semibold text-lg text-primary">{community.name}</h3>
+                <p className="text-sm text-muted-foreground">{community.description}</p>
               </li>
             ))}
           </ul>
-        </CardContent>
-      </Card>
+        ) : (
+          <p className="text-muted-foreground text-center py-4">You haven't created any communities yet.</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+
+export default function CommunityPage() {
+  const { user, isUserLoading } = useUser();
+
+  if (isUserLoading) {
+    return (
+      <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
+        <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
+      </main>
+    );
+  }
+
+  if (!user) {
+    return (
+      <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
+        <Card className="w-full max-w-md text-center shadow-lg">
+          <CardHeader>
+            <CardTitle>Welcome to the Federation</CardTitle>
+            <CardDescription>Log in to create and manage your communities.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild>
+              <Link href="/login">
+                <LogIn className="mr-2 h-4 w-4" /> Login to Continue
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+
+  return (
+    <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
+      <div className="text-center mb-8">
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary">
+          Community Federation
+        </h1>
+        <p className="text-lg text-muted-foreground">Create and manage your co-learning communities.</p>
+      </div>
+      <CreateCommunityForm />
+      <CommunityList />
     </main>
   );
 }

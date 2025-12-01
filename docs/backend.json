@@ -101,6 +101,35 @@
         "translatedText",
         "audioUrl"
       ]
+    },
+    "Community": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Community",
+      "type": "object",
+      "description": "Represents a user-created community in the federation.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Community."
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "The UID of the user who created the community."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the community."
+        },
+        "description": {
+          "type": "string",
+          "description": "A short description of the community."
+        },
+        "welcomeMessage": {
+          "type": "string",
+          "description": "A welcome message for new members."
+        }
+      },
+      "required": ["id", "ownerId", "name", "description"]
     }
   },
   "auth": {
@@ -129,18 +158,16 @@
         }
       },
       {
-        "path": "/users/{userId}/communityProfile",
+        "path": "/users/{userId}/communities/{communityId}",
         "definition": {
-          "entityName": "CommunityProfile",
+          "entityName": "Community",
           "schema": {
-            "$ref": "#/backend/entities/CommunityProfile"
+            "$ref": "#/backend/entities/Community"
           },
-          "description": "Stores the community profile of a user. Only the user has access to this profile. Parameter 'userId' represents the unique identifier of the user.",
+          "description": "Stores communities created by a user. Only the owner can create, read, update, or delete their communities.",
           "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            }
+            { "name": "userId", "description": "The ID of the user who owns the community." },
+            { "name": "communityId", "description": "The unique ID for the community." }
           ]
         }
       },
@@ -161,6 +188,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability, adhering to the core principles and strategy mandates.  User data and community profiles are stored under `/users/{userId}`. Stories are stored in a top-level collection for easy querying and management. Path-based ownership is implemented for user-specific data. Specifically, the `CommunityProfile` data is located in `/users/{userId}/communityProfile` guaranteeing ownership. This approach eliminates the need for `get()` calls in security rules, which facilitates atomic operations and improves security rule debuggability. Segregation of concerns is achieved by separating user data from global content. The structure supports secure list operations by using path-based ownership, ensuring that only the owner can access a user's private data (QAPs)."
+    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability. User data and their created communities are stored under `/users/{userId}` using a subcollection for communities. This path-based ownership simplifies security rules and ensures that a user can only access their own data. Global content like stories remains in a top-level collection."
   }
 }

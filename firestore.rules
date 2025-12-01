@@ -3,31 +3,23 @@
  * created by a user is stored within their own data tree and is inaccessible to
  * other users. This prevents data leakage and user enumeration.
  *
- * Data Structure: User-specific data, including their main profile and community
- * profile, is hierarchically organized under `/users/{userId}`. This path-based
- * ownership simplifies security rules significantly. Global, public content like
- * stories is stored in a separate top-level `/stories` collection.
+ * Data Structure: User-specific data, including their main profile and created
+ * communities, is hierarchically organized under `/users/{userId}`. This
+ * path-based ownership simplifies security rules significantly. Global, public
+ * content like stories is stored in a separate top-level `/stories` collection.
  *
  * Key Security Decisions:
  * - User data is strictly private. A user can only access documents where the
  *   path contains their own UID.
  * - Listing all users from the top-level `/users` collection is explicitly
  *   disallowed to protect user privacy.
- * - The `/stories` collection is publicly readable by anyone (including
- *   unauthenticated users) but currently disallows all write operations.
- *   This is a secure default because the 'Story' data model lacks an 'ownerId'
- *   field, making it impossible to authorize writes securely.
+ * - The `/stories` collection is publicly readable by anyone but disallows writes.
+ * - The `communities` subcollection is only accessible by the owner.
  *
  * Denormalization for Authorization: The rules rely on path-based ownership
  * (`/users/{userId}`), which is the most performant way to secure user data.
- * For documents within this structure (like CommunityProfile), rules validate
- * that a `userId` field within the document matches the `userId` from the path,
- * ensuring relational integrity without costly cross-document reads.
- *
- * Structural Segregation: The ruleset leverages separate collections for private
- * user data (`/users`) and public content (`/stories`). This is a secure and
- * performant pattern that prevents accidental exposure of private data in public
- * queries.
+ * For documents within this structure (like Community), rules validate
+ * that an `ownerId` field within the document matches the `userId` from the path.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -37,70 +29,38 @@ service cloud.firestore {
     // Helper Functions
     //================================================================================
 
-    /**
-     * Checks if a user is authenticated.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * Checks if the authenticated user's UID matches the provided userId.
-     * This is the foundation of the user-ownership model.
-     * @param userId The user ID to check against the authenticated user.
-     */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /**
-     * Checks if the document being accessed already exists.
-     * Crucial for protecting against writes to non-existent paths.
-     */
     function isExistingDoc() {
       return resource != null;
     }
 
-    /**
-     * Combines ownership and existence checks for secure updates and deletes.
-     * @param userId The user ID to check against the authenticated user.
-     */
     function isExistingOwner(userId) {
       return isOwner(userId) && isExistingDoc();
     }
 
     // --- User Validation Functions ---
-
-    /**
-     * Validates the integrity of a new User document on creation.
-     * Ensures the document's internal ID matches the path ID.
-     */
     function hasValidUserData(userId) {
       return request.resource.data.id == userId;
     }
 
-    /**
-     * Ensures the user ID within a User document cannot be changed after creation.
-     */
     function isImmutableUserId() {
       return request.resource.data.id == resource.data.id;
     }
-
-    // --- CommunityProfile Validation Functions ---
-
-    /**
-     * Validates the integrity of a new CommunityProfile document.
-     * Ensures the document's internal userId points back to its owner.
-     */
-    function hasValidProfileData(userId) {
-      return request.resource.data.userId == userId;
+    
+    // --- Community Validation Functions ---
+    function hasValidCommunityData(userId) {
+        return request.resource.data.ownerId == userId;
     }
-
-    /**
-     * Ensures the userId within a CommunityProfile cannot be changed.
-     */
-    function isImmutableProfileUserId() {
-      return request.resource.data.userId == resource.data.userId;
+    
+    function isImmutableCommunityOwnerId() {
+        return request.resource.data.ownerId == resource.data.ownerId;
     }
 
 
@@ -108,13 +68,6 @@ service cloud.firestore {
     // Collection Rules
     //================================================================================
 
-    /**
-     * @description Manages user documents, which contain private profile info.
-     * @path /users/{userId}
-     * @allow A user creating their own user document: `(create) where auth.uid == userId`.
-     * @deny An authenticated user trying to read another user's document: `(get) where auth.uid != userId`.
-     * @principle Restricts access to a user's own data tree and prevents user enumeration.
-     */
     match /users/{userId} {
       allow get: if isOwner(userId);
       allow list: if false;
@@ -123,18 +76,16 @@ service cloud.firestore {
       allow delete: if isExistingOwner(userId);
 
       /**
-       * @description Manages a user's single community profile document.
-       * @path /users/{userId}/communityProfile/{profileId}
-       * @allow The user updating their own profile: `(update) where auth.uid == userId`.
-       * @deny Another user trying to create a profile in someone else's space: `(create) where auth.uid != userId`.
-       * @principle Enforces document ownership via path hierarchy for user subcollections.
+       * @description Manages communities created by a user.
+       * @path /users/{userId}/communities/{communityId}
+       * @allow The user can manage their own communities.
+       * @deny Other users cannot access or modify these communities.
+       * @principle Enforces strict ownership via path hierarchy for user subcollections.
        */
-      match /communityProfile/{profileId} {
-        allow get: if isOwner(userId);
-        allow list: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidProfileData(userId);
-        allow update: if isExistingOwner(userId) && isImmutableProfileUserId();
-        allow delete: if isExistingOwner(userId);
+      match /communities/{communityId} {
+        allow read, delete: if isOwner(userId);
+        allow create: if isOwner(userId) && hasValidCommunityData(userId);
+        allow update: if isOwner(userId) && isImmutableCommunityOwnerId();
       }
     }
 
@@ -148,8 +99,7 @@ service cloud.firestore {
     match /stories/{storyId} {
       allow get: if true;
       allow list: if true;
-      // CRITICAL: Cannot implement owner-only writes. The 'Story' entity is missing an 'ownerId' or 'authorId' field.
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create, update, delete: if false;
     }
   }
 }
