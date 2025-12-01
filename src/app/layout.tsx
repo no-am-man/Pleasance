@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Header } from '@/components/header';
 import Link from 'next/link';
+import { ScrollIndicator } from '@/components/ui/scroll-indicator';
 
 export const metadata: Metadata = {
   title: 'Pleasance',
@@ -39,6 +40,7 @@ export default function RootLayout({
             </Link>
           </footer>
           <Toaster />
+          <ScrollIndicator />
         </FirebaseClientProvider>
       </body>
     </html>
