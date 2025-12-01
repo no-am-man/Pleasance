@@ -7,6 +7,8 @@ import { translateStory } from '@/ai/flows/translate-story';
 import { generateCommunity } from '@/ai/flows/generate-community';
 import { transcribeAudio } from '@/ai/flows/transcribe-audio';
 import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member';
+import { generateSpeech } from '@/ai/flows/generate-speech';
+import { VOICES } from '@/config/languages';
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
@@ -44,8 +46,6 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
     return {
       originalStory,
       translatedText: translationResult.translatedText,
-      // For the current session, we pass the audio data URI
-      audioUrl: translationResult.audioWavBase64 ? `data:audio/wav;base64,${translationResult.audioWavBase64}` : '',
       sourceLanguage: sourceLanguage,
     };
   } catch (e) {
@@ -125,5 +125,33 @@ export async function getAiChatResponse(input: ChatWithMemberInput) {
         console.error('AI Chat Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
         return { error: `AI chat failed. ${message}` };
+    }
+}
+
+const speechSchema = z.object({
+    text: z.string(),
+    voice: z.enum(VOICES.map(v => v.value) as [string, ...string[]]),
+});
+
+export async function synthesizeSpeech(values: z.infer<typeof speechSchema>) {
+    try {
+        const validatedFields = speechSchema.safeParse(values);
+        if (!validatedFields.success) {
+            return { error: 'Invalid input for speech synthesis.' };
+        }
+        
+        const { text, voice } = validatedFields.data;
+        const speechResult = await generateSpeech({ text, voiceName: voice });
+        
+        if (!speechResult.wavBase64) {
+            return { error: 'Speech synthesis failed.' };
+        }
+
+        return { audioDataUri: `data:audio/wav;base64,${speechResult.wavBase64}` };
+
+    } catch (e) {
+        console.error('Speech Synthesis Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Speech synthesis failed. ${message}` };
     }
 }

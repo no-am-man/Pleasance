@@ -20,3 +20,17 @@ export const LANGUAGES: Language[] = [
   { value: 'Vulgar Latin', label: 'Vulgar Latin' },
   { value: 'Yiddish', label: 'Yiddish' },
 ];
+
+export type Voice = {
+  value: string;
+  label: string;
+}
+
+export const VOICES: Voice[] = [
+    { value: 'Algenib', label: 'Algenib (Female)' },
+    { value: 'Achernar', label: 'Achernar (Male)' },
+    { value: 'Enif', label: 'Enif (Female)' },
+    { value: 'Hadar', label: 'Hadar (Male)' },
+    { value: 'Mirzam', label: 'Mirzam (Female)' },
+    { value: 'Sirius', label: 'Sirius (Male)' },
+];

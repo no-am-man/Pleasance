@@ -4,7 +4,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, LoaderCircle } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 
 type StoryViewerProps = {
@@ -12,6 +12,8 @@ type StoryViewerProps = {
   translatedText: string;
   audioUrl: string;
   sourceLanguage: string;
+  onPlay: () => void;
+  isLoading: boolean;
 };
 
 export default function StoryViewer({
@@ -19,6 +21,8 @@ export default function StoryViewer({
   translatedText,
   audioUrl,
   sourceLanguage,
+  onPlay,
+  isLoading,
 }: StoryViewerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -28,9 +32,10 @@ export default function StoryViewer({
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
   const hasAudio = audioUrl && audioUrl.length > 0;
 
+  // Effect for handling audio lifecycle
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio || !hasAudio) return;
+    if (!audio) return;
 
     const setAudioData = () => {
       setDuration(audio.duration);
@@ -43,30 +48,39 @@ export default function StoryViewer({
 
     const handlePlaybackEnded = () => {
       setIsPlaying(false);
+      setCurrentTime(audio.duration); // Ensure slider goes to the end
     };
 
     audio.addEventListener("loadeddata", setAudioData);
     audio.addEventListener("timeupdate", setAudioTime);
     audio.addEventListener("ended", handlePlaybackEnded);
-
-    if (audio.readyState > 0) {
-      setAudioData();
-    }
     
-    // Autoplay when the component mounts or audio data changes
-    audio.play().then(() => setIsPlaying(true)).catch(e => console.error("Autoplay failed", e));
-
-
+    // Cleanup
     return () => {
       audio.removeEventListener("loadeddata", setAudioData);
       audio.removeEventListener("timeupdate", setAudioTime);
       audio.removeEventListener("ended", handlePlaybackEnded);
     };
-  }, [audioUrl, hasAudio]);
+  }, []);
+
+  // Effect to play audio when URL changes
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio && audioUrl) {
+      audio.src = audioUrl;
+      audio.play().then(() => setIsPlaying(true)).catch(e => console.error("Autoplay failed", e));
+    }
+  }, [audioUrl]);
+
 
   const togglePlayPause = () => {
     const audio = audioRef.current;
     if (!audio) return;
+
+    if (!hasAudio) {
+      onPlay();
+      return;
+    }
 
     if (isPlaying) {
       audio.pause();
@@ -130,36 +144,38 @@ export default function StoryViewer({
         </Card>
       </div>
       
-      {hasAudio && (
-        <div className="flex flex-col items-center space-y-4 pt-4">
-          <audio ref={audioRef} src={audioUrl} crossOrigin="anonymous" />
-          <div className="w-full max-w-md">
+      <div className="flex flex-col items-center space-y-4 pt-4">
+        <audio ref={audioRef} crossOrigin="anonymous" />
+        <div className="w-full max-w-md">
             <Slider
                 value={[progress]}
                 onValueChange={handleSeek}
                 max={100}
                 step={0.1}
                 aria-label="Audio progress"
+                disabled={!hasAudio || isLoading}
             />
             <div className="flex justify-between text-xs text-muted-foreground mt-2">
                 <span>{formatTime(currentTime)}</span>
                 <span>{formatTime(duration)}</span>
             </div>
-          </div>
-          <Button
-            onClick={togglePlayPause}
-            size="lg"
-            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-16 h-16 shadow-lg"
-            aria-label={isPlaying ? "Pause" : "Play"}
-          >
-            {isPlaying ? (
-              <Pause className="h-8 w-8" />
-            ) : (
-              <Play className="h-8 w-8 ml-1" />
-            )}
-          </Button>
         </div>
-      )}
+        <Button
+          onClick={togglePlayPause}
+          size="lg"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-16 h-16 shadow-lg"
+          aria-label={isPlaying ? "Pause" : "Play"}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+             <LoaderCircle className="h-8 w-8 animate-spin" />
+          ) : isPlaying ? (
+            <Pause className="h-8 w-8" />
+          ) : (
+            <Play className="h-8 w-8 ml-1" />
+          )}
+        </Button>
+      </div>
     </div>
   );
 }

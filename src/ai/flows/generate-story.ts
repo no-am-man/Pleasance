@@ -33,26 +33,6 @@ const generateStoryPrompt = ai.definePrompt({
   input: {schema: GenerateStoryInputSchema},
   output: {schema: GenerateStoryOutputSchema},
   prompt: `You are a creative story writer. Write a short story in {{sourceLanguage}} for a {{difficultyLevel}} level language learner. The story should be engaging and suitable for language learning purposes.`,
-  config: {
-    safetySettings: [
-        {
-            category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-            threshold: 'BLOCK_NONE',
-        },
-        {
-            category: 'HARM_CATEGORY_HARASSMENT',
-            threshold: 'BLOCK_NONE',
-        },
-        {
-            category: 'HARM_CATEGORY_HATE_SPEECH',
-            threshold: 'BLOCK_NONE',
-        },
-        {
-            category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-            threshold: 'BLOCK_NONE',
-        },
-    ]
-  }
 });
 
 const generateStoryFlow = ai.defineFlow(
