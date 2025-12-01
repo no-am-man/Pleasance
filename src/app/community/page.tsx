@@ -7,11 +7,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection } from 'firebase/firestore';
+import { collection, doc, setDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LogIn, PlusCircle, LoaderCircle, Users, Sun, Moon } from "lucide-react";
-import { createCommunity } from "../actions";
+import { LogIn, PlusCircle, LoaderCircle, Users } from "lucide-react";
+import { createCommunityDetails } from "../actions";
 
 const FormSchema = z.object({
   prompt: z.string().min(10, "Please enter a prompt of at least 10 characters."),
@@ -29,6 +29,7 @@ function CreateCommunityForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
+  const firestore = useFirestore();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -38,7 +39,7 @@ function CreateCommunityForm() {
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    if (!user) {
+    if (!user || !firestore) {
       setError("You must be logged in to create a community.");
       return;
     }
@@ -46,13 +47,31 @@ function CreateCommunityForm() {
     setError(null);
 
     try {
-      const result = await createCommunity({ prompt: data.prompt });
+      // 1. Call server action to get AI-generated details
+      const result = await createCommunityDetails({ prompt: data.prompt });
       if (result.error) {
         setError(result.error);
-      } else {
-        form.reset();
-        // The list will update automatically via the useCollection hook
+        setIsLoading(false);
+        return;
       }
+      
+      const { name, description, welcomeMessage } = result;
+      
+      // 2. Create the new community object on the client
+      const newCommunityRef = doc(collection(firestore, 'users', user.uid, 'communities'));
+      const newCommunity: Community = {
+        id: newCommunityRef.id,
+        ownerId: user.uid,
+        name: name!,
+        description: description!,
+        welcomeMessage: welcomeMessage!,
+      };
+
+      // 3. Save the new community to Firestore from the client
+      await setDoc(newCommunityRef, newCommunity);
+      
+      form.reset();
+      // The list will update automatically via the useCollection hook
     } catch (e) {
       const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
       setError(`Failed to create community. ${message}`);
