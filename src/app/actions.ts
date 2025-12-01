@@ -8,7 +8,7 @@ import { generateCommunity } from '@/ai/flows/generate-community';
 import { transcribeAudio } from '@/ai/flows/transcribe-audio';
 import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member';
 import { generateSpeech } from '@/ai/flows/generate-speech';
-import { assessPronunciation } from '@/ai/flows/assess-pronunciation';
+import { assessPronunciation as assessPronunciationFlow } from '@/ai/flows/assess-pronunciation';
 import { VOICES } from '@/config/languages';
 
 const storySchema = z.object({
@@ -171,7 +171,7 @@ export async function assessPronunciation(values: z.infer<typeof assessmentSchem
     }
 
     const { audioDataUri, text } = validatedFields.data;
-    const result = await assessPronunciation({ audioDataUri, text });
+    const result = await assessPronunciationFlow({ audioDataUri, text });
     
     if (!result.assessment) {
       return { error: 'Pronunciation assessment failed to return feedback.' };
