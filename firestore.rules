@@ -88,10 +88,18 @@ service cloud.firestore {
     }
 
     function isValidMessageCreate() {
-      let data = request.resource.data;
-      return data.userId == request.auth.uid 
-        && data.status == 'active'
-        && data.keys().hasAll(['id', 'communityId', 'userId', 'userName', 'userAvatarUrl', 'audioUrl', 'transcription', 'createdAt', 'status']);
+        let data = request.resource.data;
+        let baseValidation = data.userId == request.auth.uid
+            && data.status == 'active'
+            && data.keys().hasAll(['id', 'communityId', 'userId', 'userName', 'userAvatarUrl', 'type', 'createdAt', 'status']);
+        
+        if (data.type == 'text') {
+            return baseValidation && data.text is string && data.text.size() > 0 && data.text.size() < 500;
+        }
+        if (data.type == 'voice') {
+            return baseValidation && data.audioUrl is string && data.transcription is string;
+        }
+        return false;
     }
 
     function isValidMessageUpdate() {
@@ -108,6 +116,20 @@ service cloud.firestore {
         && data.audioUrl == resource.data.audioUrl
         && data.transcription == resource.data.transcription
         && data.communityId == resource.data.communityId;
+    }
+
+    function isValidCommentCreate() {
+        let data = request.resource.data;
+        let baseValidation = data.userId == request.auth.uid
+            && data.keys().hasAll(['id', 'userId', 'userName', 'userAvatarUrl', 'type', 'createdAt']);
+
+        if (data.type == 'text') {
+            return baseValidation && data.text is string && data.text.size() > 0 && data.text.size() < 500;
+        }
+        if (data.type == 'voice') {
+            return baseValidation && data.audioUrl is string && data.transcription is string;
+        }
+        return false;
     }
     
 
@@ -168,7 +190,7 @@ service cloud.firestore {
         allow delete: if isCommunityOwner(communityId);
 
         /**
-         * @description Manages voice messages within a community.
+         * @description Manages messages within a community.
          * @path /communities/{communityId}/messages/{messageId}
          */
         match /messages/{messageId} {
@@ -179,13 +201,13 @@ service cloud.firestore {
 
 
              /**
-             * @description Manages voice comments on a specific message.
+             * @description Manages comments on a specific message.
              * @path /communities/{communityId}/messages/{messageId}/comments/{commentId}
              * @allow Any signed-in user can read or write comments. Delete is restricted to owner or community owner.
              */
             match /comments/{commentId} {
                 allow read: if true;
-                allow create: if isSignedIn();
+                allow create: if isSignedIn() && isValidCommentCreate();
                 allow update: if false;
                 allow delete: if isSignedIn() && (isOwner(resource.data.userId) || isCommunityOwner(communityId));
             }

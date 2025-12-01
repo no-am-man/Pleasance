@@ -1,3 +1,4 @@
+
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -19,6 +20,7 @@ import { getTranscription, updateMessageStatus } from '@/app/actions';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
 
 type Member = {
   name: string;
@@ -47,24 +49,28 @@ type CommunityProfile = {
     learningLanguage: string;
 };
 
-type VoiceMessage = {
+type Message = {
     id: string;
     communityId: string;
     userId: string;
     userName: string;
     userAvatarUrl: string;
-    audioUrl: string;
+    type: 'text' | 'voice';
+    text?: string;
+    audioUrl?: string;
     transcription?: string;
     createdAt: { seconds: number, nanoseconds: number } | null;
     status: 'active' | 'done';
 };
 
-type VoiceComment = {
+type Comment = {
     id: string;
     userId: string;
     userName: string;
     userAvatarUrl: string;
-    audioUrl: string;
+    type: 'text' | 'voice';
+    text?: string;
+    audioUrl?: string;
     transcription?: string;
     createdAt: { seconds: number, nanoseconds: number } | null;
 }
@@ -125,6 +131,55 @@ function MemberCard({ member, index, communityId }: { member: Member; index: num
     );
 }
 
+function TextMessageForm({ communityId }: { communityId: string }) {
+    const [text, setText] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const { toast } = useToast();
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!text.trim() || !user || !firestore) return;
+
+        setIsSubmitting(true);
+        try {
+            const messagesColRef = collection(firestore, `communities/${communityId}/messages`);
+            const newMessage: Omit<Message, 'id' | 'createdAt'> & { createdAt: any } = {
+                communityId,
+                userId: user.uid,
+                userName: user.displayName || 'Anonymous',
+                userAvatarUrl: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
+                type: 'text',
+                text: text.trim(),
+                status: 'active',
+                createdAt: serverTimestamp(),
+            };
+            await addDoc(messagesColRef, newMessage);
+            setText('');
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
+            toast({ variant: 'destructive', title: 'Failed to send message', description: message });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="flex gap-2">
+            <Input
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Type a message..."
+                disabled={isSubmitting}
+            />
+            <Button type="submit" disabled={isSubmitting || !text.trim()}>
+                {isSubmitting ? <LoaderCircle className="animate-spin" /> : <Send />}
+            </Button>
+        </form>
+    );
+}
+
 function RecordAudio({ communityId }: { communityId: string }) {
     const [isRecording, setIsRecording] = useState(false);
     const [hasPermission, setHasPermission] = useState<boolean | null>(null);
@@ -168,15 +223,16 @@ function RecordAudio({ communityId }: { communityId: string }) {
                                 throw new Error(transcriptionResult.error);
                             }
 
-                            const newMessage = {
+                            const newMessage: Message = {
                                 id: newMessageRef.id,
                                 communityId,
                                 userId: user.uid,
                                 userName: user.displayName || 'Anonymous',
                                 userAvatarUrl: `https://i.pravatar.cc/150?u=${user.uid}`,
+                                type: 'voice',
                                 audioUrl,
                                 transcription: transcriptionResult.transcription,
-                                createdAt: serverTimestamp(),
+                                createdAt: serverTimestamp() as any,
                                 status: 'active',
                             };
 
@@ -228,7 +284,7 @@ function RecordAudio({ communityId }: { communityId: string }) {
     }
 
     return (
-        <div className="flex flex-col items-center gap-4 p-4 border-t">
+        <div className="flex flex-col items-center gap-4">
             {isProcessing ? (
                  <div className="flex items-center gap-2 text-muted-foreground">
                     <LoaderCircle className="animate-spin" />
@@ -297,6 +353,7 @@ function RecordComment({ communityId, messageId }: { communityId: string, messag
                             userId: user.uid,
                             userName: user.displayName || 'Anonymous',
                             userAvatarUrl: `https://i.pravatar.cc/150?u=${user.uid}`,
+                            type: 'voice',
                             audioUrl,
                             transcription: transcriptionResult.transcription,
                             createdAt: serverTimestamp(),
@@ -340,7 +397,7 @@ function RecordComment({ communityId, messageId }: { communityId: string, messag
 }
 
 
-function VoiceCommentCard({ comment }: { comment: VoiceComment }) {
+function CommentCard({ comment }: { comment: Comment }) {
     const audioRef = useRef<HTMLAudioElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
 
@@ -379,19 +436,25 @@ function VoiceCommentCard({ comment }: { comment: VoiceComment }) {
                             : "sending..."}
                     </span>
                 </div>
-                 <audio ref={audioRef} src={comment.audioUrl} className="hidden" />
-                 <Button onClick={togglePlay} variant="outline" size="sm">
-                    {isPlaying ? 'Pause' : 'Play Comment'}
-                </Button>
-                {comment.transcription && (
-                    <p className="text-sm text-muted-foreground italic whitespace-pre-wrap">"{comment.transcription}"</p>
+                {comment.type === 'voice' ? (
+                    <>
+                        <audio ref={audioRef} src={comment.audioUrl} className="hidden" />
+                        <Button onClick={togglePlay} variant="outline" size="sm">
+                            {isPlaying ? 'Pause' : 'Play Comment'}
+                        </Button>
+                        {comment.transcription && (
+                            <p className="text-sm text-muted-foreground italic whitespace-pre-wrap">"{comment.transcription}"</p>
+                        )}
+                    </>
+                ) : (
+                    <p className="text-sm text-foreground whitespace-pre-wrap">{comment.text}</p>
                 )}
             </div>
         </div>
     )
 }
 
-function CommentDialog({ message }: { message: VoiceMessage }) {
+function CommentDialog({ message }: { message: Message }) {
     const firestore = useFirestore();
 
     const commentsQuery = useMemoFirebase(() => {
@@ -400,7 +463,7 @@ function CommentDialog({ message }: { message: VoiceMessage }) {
         return query(commentsColRef, orderBy('createdAt', 'asc'));
     }, [firestore, message.communityId, message.id]);
 
-    const { data: comments, isLoading } = useCollection<VoiceComment>(commentsQuery);
+    const { data: comments, isLoading } = useCollection<Comment>(commentsQuery);
 
     return (
         <Dialog>
@@ -414,14 +477,14 @@ function CommentDialog({ message }: { message: VoiceMessage }) {
                 <DialogHeader>
                 <DialogTitle>Reply to {message.userName}'s message</DialogTitle>
                 <DialogDescription>
-                    "{message.transcription}"
+                    {message.type === 'voice' ? `"${message.transcription}"` : message.text}
                 </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                     <div className="max-h-60 overflow-y-auto space-y-3 pr-2">
                         {isLoading && <LoaderCircle className="mx-auto animate-spin" />}
                         {comments && comments.length > 0 ? (
-                             comments.map(comment => <VoiceCommentCard key={comment.id} comment={comment} />)
+                             comments.map(comment => <CommentCard key={comment.id} comment={comment} />)
                         ) : (
                             <div className="text-center text-muted-foreground text-sm py-4">
                                 No replies yet. Be the first to comment.
@@ -439,7 +502,7 @@ function CommentDialog({ message }: { message: VoiceMessage }) {
     )
 }
 
-function VoiceMessageCard({ message, canManage }: { message: VoiceMessage; canManage: boolean; }) {
+function MessageCard({ message, canManage }: { message: Message; canManage: boolean; }) {
     const audioRef = useRef<HTMLAudioElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const { toast } = useToast();
@@ -534,17 +597,25 @@ function VoiceMessageCard({ message, canManage }: { message: VoiceMessage; canMa
                 )}
             </CardHeader>
             <CardContent className="flex-grow space-y-4">
-                 <audio ref={audioRef} src={message.audioUrl} className="hidden" />
-                {message.transcription && (
-                    <p className="text-sm text-muted-foreground pt-2 italic whitespace-pre-wrap">"{message.transcription}"</p>
+                {message.type === 'voice' ? (
+                    <>
+                        <audio ref={audioRef} src={message.audioUrl} className="hidden" />
+                        {message.transcription && (
+                            <p className="text-sm text-muted-foreground pt-2 italic whitespace-pre-wrap">"{message.transcription}"</p>
+                        )}
+                    </>
+                ) : (
+                    <p className="text-sm text-foreground whitespace-pre-wrap">{message.text}</p>
                 )}
             </CardContent>
             <CardFooter className="bg-muted/50 p-2">
                 <div className="flex items-center gap-2">
-                    <Button onClick={togglePlay} variant="outline" size="sm">
-                        <Volume2 className="mr-2 h-4 w-4" />
-                        {isPlaying ? 'Pause' : 'Original'}
-                    </Button>
+                    {message.type === 'voice' && (
+                        <Button onClick={togglePlay} variant="outline" size="sm">
+                            <Volume2 className="mr-2 h-4 w-4" />
+                            {isPlaying ? 'Pause' : 'Original'}
+                        </Button>
+                    )}
                     <CommentDialog message={message} />
                 </div>
             </CardFooter>
@@ -552,7 +623,7 @@ function VoiceMessageCard({ message, canManage }: { message: VoiceMessage; canMa
     )
 }
 
-function VoiceChat({ communityId, isOwner }: { communityId: string; isOwner: boolean }) {
+function Chat({ communityId, isOwner }: { communityId: string; isOwner: boolean }) {
     const { user } = useUser();
     const firestore = useFirestore();
 
@@ -562,30 +633,34 @@ function VoiceChat({ communityId, isOwner }: { communityId: string; isOwner: boo
         return query(messagesColRef, orderBy('createdAt', 'desc'));
     }, [firestore, communityId]);
 
-    const { data: messages, isLoading, error } = useCollection<VoiceMessage>(messagesQuery);
+    const { data: messages, isLoading, error } = useCollection<Message>(messagesQuery);
 
     return (
         <Card className="shadow-lg">
             <CardHeader>
-                <CardTitle>Voice Chat</CardTitle>
-                <CardDescription>Record and listen to voice messages from the community.</CardDescription>
+                <CardTitle>Community Chat</CardTitle>
+                <CardDescription>Share messages with the community.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 {isLoading && <LoaderCircle className="mx-auto animate-spin" />}
                 {error && <p className="text-destructive">Error loading messages.</p>}
                 {messages && messages.length === 0 && <p className="text-muted-foreground text-center py-8">No messages yet. Be the first!</p>}
                 <div className="max-h-[40rem] overflow-y-auto space-y-4 pr-2">
-                    {messages?.map(msg => <VoiceMessageCard key={msg.id} message={msg} canManage={isOwner || msg.userId === user?.uid}/>)}
+                    {messages?.map(msg => <MessageCard key={msg.id} message={msg} canManage={isOwner || msg.userId === user?.uid}/>)}
                 </div>
             </CardContent>
             {user ? (
-                <RecordAudio communityId={communityId} />
+                <div className="border-t p-4 space-y-4">
+                    <TextMessageForm communityId={communityId} />
+                    <Separator />
+                    <RecordAudio communityId={communityId} />
+                </div>
             ) : (
                 <div className="border-t p-4 text-center">
                     <Button asChild>
                         <Link href="/login">
                             <LogIn className="mr-2" />
-                            Login to record a message
+                            Login to send a message
                         </Link>
                     </Button>
                 </div>
@@ -759,15 +834,14 @@ export default function CommunityProfilePage() {
     setIsSubmitting(true);
     // Create a doc ref with the user's UID as the ID.
     const requestRef = doc(firestore, `communities/${id}/joinRequests`, user.uid);
-    const newRequest: Omit<JoinRequest, 'createdAt'> = {
-        id: requestRef.id,
+    const newRequest: Omit<JoinRequest, 'createdAt' | 'id'> = {
         userId: user.uid,
         userName: userProfile.name,
         userBio: userProfile.bio,
         status: 'pending',
     };
     try {
-        await setDocumentNonBlocking(requestRef, { ...newRequest, createdAt: serverTimestamp() }, { merge: false });
+        await setDocumentNonBlocking(requestRef, { ...newRequest, id: requestRef.id, createdAt: serverTimestamp() }, { merge: false });
         toast({ title: 'Request Sent!', description: 'The community owner has been notified.' });
     } catch(e) {
         const message = e instanceof Error ? e.message : 'An error occurred';
@@ -897,7 +971,7 @@ export default function CommunityProfilePage() {
       </Card>
       
        <div className="my-12">
-        <VoiceChat communityId={community.id} isOwner={isOwner} />
+        <Chat communityId={community.id} isOwner={isOwner} />
        </div>
       
       {isOwner && (

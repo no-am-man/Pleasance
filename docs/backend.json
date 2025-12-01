@@ -191,39 +191,43 @@
       },
       "required": ["name", "role", "bio", "type"]
     },
-     "VoiceMessage": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "VoiceMessage",
-      "type": "object",
-      "description": "Represents a voice message in a community chat.",
-      "properties": {
-        "id": { "type": "string" },
-        "communityId": { "type": "string" },
-        "userId": { "type": "string" },
-        "userName": { "type": "string" },
-        "userAvatarUrl": { "type": "string", "format": "uri" },
-        "audioUrl": { "type": "string", "format": "uri" },
-        "transcription": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "status": { "type": "string", "enum": ["active", "done"], "description": "The status of the voice message." }
-      },
-      "required": ["id", "communityId", "userId", "userName", "audioUrl", "createdAt", "status"]
-    },
-    "VoiceComment": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "VoiceComment",
-      "type": "object",
-      "description": "Represents a voice comment on a message.",
-      "properties": {
-        "id": { "type": "string" },
-        "userId": { "type": "string" },
-        "userName": { "type": "string" },
-        "userAvatarUrl": { "type": "string", "format": "uri" },
-        "audioUrl": { "type": "string", "format": "uri" },
-        "transcription": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "userId", "userName", "audioUrl", "createdAt"]
+     "Message": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Message",
+        "type": "object",
+        "description": "Represents a message in a community chat, which can be text or voice.",
+        "properties": {
+            "id": { "type": "string" },
+            "communityId": { "type": "string" },
+            "userId": { "type": "string" },
+            "userName": { "type": "string" },
+            "userAvatarUrl": { "type": "string", "format": "uri" },
+            "type": { "type": "string", "enum": ["text", "voice"], "description": "The type of message." },
+            "text": { "type": "string", "description": "The content of a text message." },
+            "audioUrl": { "type": "string", "format": "uri", "description": "The URL for a voice message." },
+            "transcription": { "type": "string", "description": "The transcription of a voice message." },
+            "createdAt": { "type": "string", "format": "date-time" },
+            "status": { "type": "string", "enum": ["active", "done"], "description": "The status of the message." }
+        },
+        "required": ["id", "communityId", "userId", "userName", "type", "createdAt", "status"]
+     },
+    "Comment": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Comment",
+        "type": "object",
+        "description": "Represents a comment on a message.",
+        "properties": {
+            "id": { "type": "string" },
+            "userId": { "type": "string" },
+            "userName": { "type": "string" },
+            "userAvatarUrl": { "type": "string", "format": "uri" },
+            "type": { "type": "string", "enum": ["text", "voice"], "description": "The type of comment." },
+            "text": { "type": "string", "description": "The content of a text comment." },
+            "audioUrl": { "type": "string", "format": "uri", "description": "The URL for a voice comment." },
+            "transcription": { "type": "string", "description": "The transcription of a voice comment." },
+            "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "userId", "userName", "type", "createdAt"]
     },
     "Asset": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -354,9 +358,9 @@
        {
         "path": "/communities/{communityId}/messages/{messageId}",
         "definition": {
-          "entityName": "VoiceMessage",
-          "schema": { "$ref": "#/backend/entities/VoiceMessage" },
-          "description": "Stores voice messages for a community.",
+          "entityName": "Message",
+          "schema": { "$ref": "#/backend/entities/Message" },
+          "description": "Stores messages for a community.",
           "params": [
             { "name": "communityId", "description": "The ID of the community." },
             { "name": "messageId", "description": "The ID of the message." }
@@ -366,9 +370,9 @@
       {
         "path": "/communities/{communityId}/messages/{messageId}/comments/{commentId}",
         "definition": {
-          "entityName": "VoiceComment",
-          "schema": { "$ref": "#/backend/entities/VoiceComment" },
-          "description": "Stores voice comments for a specific message.",
+          "entityName": "Comment",
+          "schema": { "$ref": "#/backend/entities/Comment" },
+          "description": "Stores comments for a specific message.",
           "params": [
             { "name": "communityId", "description": "The ID of the community." },
             { "name": "messageId", "description": "The ID of the message being commented on." },
@@ -389,8 +393,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities` in a top-level collection, they become publicly queryable, which is essential for search and join features. User-specific data, including stories and assets, is nested under `/users/{userId}` to ensure data privacy and allow for simple, secure queries. Public profiles are in `/community-profiles` to allow discoverability without exposing private user account details. Voice messages are stored in a subcollection under each community to keep them organized and contextual."
+    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities` in a top-level collection, they become publicly queryable, which is essential for search and join features. User-specific data, including stories and assets, is nested under `/users/{userId}` to ensure data privacy and allow for simple, secure queries. Public profiles are in `/community-profiles` to allow discoverability without exposing private user account details. Messages are stored in a subcollection under each community to keep them organized and contextual."
   }
 }
-
-    
