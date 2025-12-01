@@ -52,6 +52,7 @@ export default function StoryViewer({
       setAudioData();
     }
     
+    // Autoplay when the component mounts or audio data changes
     audio.play().then(() => setIsPlaying(true)).catch(e => console.error("Autoplay failed", e));
 
 
@@ -70,7 +71,7 @@ export default function StoryViewer({
       audio.pause();
     } else {
         if (audio.currentTime >= audio.duration) {
-            audio.currentTime = 0;
+            audio.currentTime = 0; // Restart if at the end
         }
         audio.play();
     }
@@ -86,6 +87,7 @@ export default function StoryViewer({
   };
 
   const formatTime = (seconds: number) => {
+    if (isNaN(seconds)) return "0:00";
     const minutes = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
@@ -104,12 +106,11 @@ export default function StoryViewer({
                 {originalStory}
               </p>
               {hasAudio && (
-                <div
-                  className="absolute top-0 left-0 h-full -z-10"
+                 <div
+                  className="absolute inset-0 -z-10 bg-gradient-to-r from-accent/70 to-accent/10"
                   style={{
                     width: `${progress}%`,
-                    background: 'linear-gradient(to right, hsl(var(--accent) / 0.3), hsl(var(--accent) / 0.1))',
-                    transition: isPlaying ? 'width 0.1s linear' : 'none'
+                    transition: isPlaying ? 'width 0.1s linear' : 'none',
                   }}
                 />
               )}
@@ -147,7 +148,7 @@ export default function StoryViewer({
           <Button
             onClick={togglePlayPause}
             size="lg"
-            className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full w-16 h-16 shadow-lg"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-16 h-16 shadow-lg"
             aria-label={isPlaying ? "Pause" : "Play"}
           >
             {isPlaying ? (
