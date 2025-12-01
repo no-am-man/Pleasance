@@ -689,7 +689,7 @@ export default function CommunityProfilePage() {
   
   useEffect(() => {
     if (allProfiles && allMembers.length > 0) {
-      const memberUserIds = new Set(allMembers.filter(m => m.userId).map(m => m.userId));
+      const memberUserIds = new Set(allMembers.filter(m => m.userId).map(m => m.userId!));
       const suggestions = allProfiles.filter(p => !memberUserIds.has(p.userId));
       setSuggestedUsers(suggestions);
     }

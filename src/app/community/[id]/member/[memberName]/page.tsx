@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { getAiChatResponse } from '@/app/actions';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { FederationIdentityFlag } from '@/components/federation-identity-flag';
 
 type Member = {
   name: string;
@@ -102,11 +103,14 @@ function ChatInterface({ member }: { member: Member }) {
                                 <div className={cn("rounded-lg px-4 py-2 max-w-[80%]", msg.sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
                                     <p className="text-sm">{msg.text}</p>
                                 </div>
-                                {msg.sender === 'user' && (
-                                     <Avatar className="w-8 h-8">
-                                        <AvatarImage src={user?.photoURL || ''} />
-                                        <AvatarFallback>{user?.displayName?.charAt(0) || 'U'}</AvatarFallback>
-                                    </Avatar>
+                                {msg.sender === 'user' && user && (
+                                     <div className="flex flex-col items-center">
+                                        <Avatar className="w-8 h-8">
+                                            <AvatarImage src={user.photoURL || ''} />
+                                            <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                                        </Avatar>
+                                        <FederationIdentityFlag userId={user.uid} />
+                                     </div>
                                 )}
                             </div>
                         ))}
