@@ -1,3 +1,4 @@
+
 // src/app/community/[id]/member/[memberName]/page.tsx
 'use client';
 
@@ -37,7 +38,7 @@ type ChatMessage = {
     text: string;
 };
 
-function ChatInterface({ member }: { member: Member }) {
+function ChatInterface({ member, communityId }: { member: Member, communityId: string }) {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -59,6 +60,7 @@ function ChatInterface({ member }: { member: Member }) {
         }));
 
         const result = await getAiChatResponse({
+            communityId,
             member,
             userMessage: input,
             history: chatHistory,
@@ -237,9 +239,11 @@ export default function AiMemberProfilePage() {
                 <h3 className="font-semibold flex items-center gap-2 text-muted-foreground"><Bot className="w-5 h-5"/> Bio</h3>
                 <p className="text-lg bg-muted p-4 rounded-md">{member.bio}</p>
             </div>
-            <ChatInterface member={member} />
+            <ChatInterface member={member} communityId={communityId} />
         </CardContent>
       </Card>
     </main>
   );
 }
+
+    

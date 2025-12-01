@@ -24,6 +24,7 @@ type Member = {
   type: 'AI' | 'human';
   avatarUrl?: string;
   userId?: string;
+  interactionCount?: number;
 };
 
 type Asset = {
@@ -37,6 +38,7 @@ type MemberContribution = {
     userId: string;
     userName: string;
     totalValue: number;
+    isAi: boolean;
 }
 
 export function CommunityValueFlag({ members }: { members: Member[] }) {
@@ -45,12 +47,8 @@ export function CommunityValueFlag({ members }: { members: Member[] }) {
   const [totalCommunityValue, setTotalCommunityValue] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  const humanMembers = useMemo(() => {
-    return members.filter(m => m.type === 'human' && m.userId);
-  }, [members]);
-
   useEffect(() => {
-    if (!firestore || humanMembers.length === 0) {
+    if (!firestore || members.length === 0) {
         setIsLoading(false);
         setContributions([]);
         setTotalCommunityValue(0);
@@ -62,25 +60,38 @@ export function CommunityValueFlag({ members }: { members: Member[] }) {
 
     const fetchAllContributions = async () => {
         try {
-            const contributionPromises = humanMembers.map(async (member) => {
-                if (!member.userId) return { userId: '', userName: member.name, totalValue: 0 };
+            const contributionPromises = members.map(async (member) => {
+                if (member.type === 'AI') {
+                    const aiValue = member.interactionCount || 0;
+                    return {
+                        userId: `ai-${member.name}`,
+                        userName: member.name,
+                        totalValue: aiValue,
+                        isAi: true,
+                    };
+                }
+
+                if (!member.userId) return null;
+
                 const assetsRef = collection(firestore, 'users', member.userId, 'assets');
                 const assetSnapshot = await getDocs(assetsRef);
                 const memberTotalValue = assetSnapshot.docs.reduce((sum, doc) => {
                     return sum + (doc.data() as Asset).value || 0;
                 }, 0);
+                
                 return {
                     userId: member.userId,
                     userName: member.name,
-                    totalValue: memberTotalValue
+                    totalValue: memberTotalValue,
+                    isAi: false,
                 };
             });
             
-            const resolvedContributions = await Promise.all(contributionPromises);
+            const resolvedContributions = (await Promise.all(contributionPromises)).filter(Boolean) as MemberContribution[];
 
             if (isMounted) {
                 const totalValue = resolvedContributions.reduce((sum, c) => sum + c.totalValue, 0);
-                setContributions(resolvedContributions.filter(c => c.totalValue > 0));
+                setContributions(resolvedContributions.filter(c => c.totalValue > 0).sort((a, b) => b.totalValue - a.totalValue));
                 setTotalCommunityValue(totalValue);
             }
         } catch (error) {
@@ -100,7 +111,7 @@ export function CommunityValueFlag({ members }: { members: Member[] }) {
 
     return () => { isMounted = false; };
 
-  }, [firestore, humanMembers]);
+  }, [firestore, members]);
 
 
   if (isLoading) {
@@ -143,7 +154,7 @@ export function CommunityValueFlag({ members }: { members: Member[] }) {
                 <TableBody>
                     {contributions && contributions.length > 0 ? contributions.map(c => (
                         <TableRow key={c.userId}>
-                            <TableCell className="font-medium">{c.userName}</TableCell>
+                            <TableCell className="font-medium">{c.userName} {c.isAi && '(AI)'}</TableCell>
                             <TableCell className="text-right">${c.totalValue.toLocaleString()}</TableCell>
                         </TableRow>
                     )) : (
@@ -164,3 +175,5 @@ export function CommunityValueFlag({ members }: { members: Member[] }) {
     </Dialog>
   );
 }
+
+    
