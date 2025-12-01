@@ -7,7 +7,7 @@ import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@
 import { doc, collection, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mic, Square, Trash2, MessageSquare } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mic, Square, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +19,6 @@ import { getTranscription } from '@/app/actions';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
 
 type Member = {
   name: string;
@@ -217,6 +216,29 @@ function RecordAudio({ communityId }: { communityId: string }) {
     );
 }
 
+function RecordComment({ message }: { message: VoiceMessage }) {
+    const [isRecording, setIsRecording] = useState(false);
+    const { toast } = useToast();
+
+    // Placeholder function for recording logic
+    const toggleRecording = () => {
+        setIsRecording(!isRecording);
+        toast({
+            title: isRecording ? 'Recording Stopped' : 'Recording Started',
+            description: 'Comment recording coming soon!',
+        });
+    }
+
+    return (
+         <div className="flex flex-col items-center gap-4 p-4 border rounded-lg bg-background">
+            <Button onClick={toggleRecording} size="lg" className="rounded-full w-16 h-16 shadow-lg" disabled>
+                {isRecording ? <Square /> : <Mic />}
+            </Button>
+            <p className="text-sm text-muted-foreground">{isRecording ? "Recording comment..." : "Record a voice comment"}</p>
+        </div>
+    )
+}
+
 function CommentDialog({ message }: { message: VoiceMessage }) {
   return (
     <Dialog>
@@ -228,18 +250,18 @@ function CommentDialog({ message }: { message: VoiceMessage }) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Comments on {message.userName}'s message</DialogTitle>
+          <DialogTitle>Reply to {message.userName}'s message</DialogTitle>
           <DialogDescription>
             "{message.transcription}"
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
             <div className="text-center text-muted-foreground text-sm">
-                No comments yet.
+                No replies yet. Be the first to comment.
             </div>
+             <Separator />
             <div className="grid w-full gap-2">
-                <Textarea placeholder="Write a comment..." />
-                <Button disabled>Post Comment</Button>
+                <RecordComment message={message} />
             </div>
         </div>
       </DialogContent>
