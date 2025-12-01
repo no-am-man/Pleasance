@@ -49,13 +49,11 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
     
     // Create a reference for the new story document
     const storyCollectionRef = collection(firestore, 'users', userId, 'stories');
-    const storyRef = doc(storyCollectionRef);
 
     // Audio is not saved to storage in this temporary version
     const audioUrl = '';
 
     const newStory = {
-        id: storyRef.id,
         userId: userId,
         level: difficulty,
         sourceLanguage,
@@ -63,11 +61,13 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
         nativeText: originalStory,
         translatedText: translationResult.translatedText,
         audioUrl, // This will be an empty string
-        createdAt: serverTimestamp()
+        createdAt: new Date() // Use a standard JS Date object on the server
     };
     
-    // Temporarily use addDoc instead of setDoc with a generated ref to avoid conflicts
-    await addDoc(storyCollectionRef, newStory);
+    // Add the new story
+    const docRef = await addDoc(storyCollectionRef, newStory);
+    await addDoc(storyCollectionRef, { ...newStory, id: docRef.id });
+
 
     return {
       originalStory,
