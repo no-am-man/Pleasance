@@ -1,4 +1,5 @@
 
+
 {
   "entities": {
     "User": {
@@ -238,6 +239,21 @@
         "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the asset was declared." }
       },
       "required": ["id", "ownerId", "name", "description", "type", "value", "createdAt"]
+    },
+    "JoinRequest": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "JoinRequest",
+        "type": "object",
+        "description": "Represents a user's request to join a community.",
+        "properties": {
+            "id": { "type": "string", "description": "Unique ID for the join request." },
+            "userId": { "type": "string", "description": "The UID of the user requesting to join." },
+            "userName": { "type": "string", "description": "The name of the user requesting to join." },
+            "userBio": { "type": "string", "description": "The bio of the user requesting to join." },
+            "status": { "type": "string", "enum": ["pending", "approved", "rejected"], "description": "The status of the join request." },
+            "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "userId", "userName", "userBio", "status", "createdAt"]
     }
   },
   "auth": {
@@ -358,8 +374,23 @@
             { "name": "commentId", "description": "The ID of the comment." }
           ]
         }
+      },
+      {
+        "path": "/communities/{communityId}/joinRequests/{requestId}",
+        "definition": {
+            "entityName": "JoinRequest",
+            "schema": { "$ref": "#/backend/entities/JoinRequest" },
+            "description": "Stores requests from users to join a community.",
+            "params": [
+                { "name": "communityId", "description": "The ID of the community." },
+                { "name": "requestId", "description": "The ID of the join request." }
+            ]
+        }
       }
     ],
     "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities` in a top-level collection, they become publicly queryable, which is essential for search and join features. User-specific data, including stories and assets, is nested under `/users/{userId}` to ensure data privacy and allow for simple, secure queries. Public profiles are in `/community-profiles` to allow discoverability without exposing private user account details. Voice messages are stored in a subcollection under each community to keep them organized and contextual."
   }
 }
+
+
+    

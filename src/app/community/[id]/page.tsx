@@ -3,12 +3,12 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, useStorage } from '@/firebase';
-import { doc, collection, query, orderBy, serverTimestamp, addDoc } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, useStorage, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import { doc, collection, query, orderBy, serverTimestamp, addDoc, where, updateDoc, arrayUnion } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mic, Square, MessageSquare, LogIn } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mic, Square, MessageSquare, LogIn, Check, X, Hourglass } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -65,6 +65,15 @@ type VoiceComment = {
     userAvatarUrl: string;
     audioUrl: string;
     transcription?: string;
+    createdAt: { seconds: number, nanoseconds: number } | null;
+}
+
+type JoinRequest = {
+    id: string;
+    userId: string;
+    userName: string;
+    userBio: string;
+    status: 'pending' | 'approved' | 'rejected';
     createdAt: { seconds: number, nanoseconds: number } | null;
 }
 
@@ -530,12 +539,80 @@ function VoiceChat({ communityId }: { communityId: string }) {
     )
 }
 
+function JoinRequests({ communityId, communityDocRef }: { communityId: string, communityDocRef: any }) {
+    const firestore = useFirestore();
+    const { toast } = useToast();
+
+    const requestsQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        const requestsColRef = collection(firestore, `communities/${communityId}/joinRequests`);
+        return query(requestsColRef, where('status', '==', 'pending'));
+    }, [firestore, communityId]);
+
+    const { data: requests, isLoading } = useCollection<JoinRequest>(requestsQuery);
+
+    const handleRequest = async (request: JoinRequest, newStatus: 'approved' | 'rejected') => {
+        if (!firestore) return;
+        const requestDocRef = doc(firestore, `communities/${communityId}/joinRequests`, request.id);
+        
+        try {
+            if (newStatus === 'approved') {
+                const newMember: Member = {
+                    userId: request.userId,
+                    name: request.userName,
+                    bio: request.userBio,
+                    role: 'Member',
+                    type: 'human',
+                };
+                await updateDoc(communityDocRef, {
+                    members: arrayUnion(newMember)
+                });
+            }
+            await updateDoc(requestDocRef, { status: newStatus });
+            toast({ title: `Request ${newStatus}.` });
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "An unexpected error occurred.";
+            toast({ variant: 'destructive', title: `Failed to ${newStatus} request`, description: message });
+        }
+    };
+
+    if (isLoading) {
+        return <LoaderCircle className="animate-spin mx-auto" />
+    }
+    
+    if (!requests || requests.length === 0) {
+        return <p className="text-muted-foreground text-center py-4">No pending join requests.</p>;
+    }
+
+    return (
+        <div className="space-y-4">
+            {requests.map(req => (
+                <Card key={req.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <Avatar className="w-12 h-12">
+                        <AvatarImage src={`https://i.pravatar.cc/150?u=${req.userId}`} alt={req.userName} />
+                        <AvatarFallback>{req.userName.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-grow">
+                        <Link href={`/profile/${req.userId}`} className="font-bold hover:underline">{req.userName}</Link>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{req.userBio}</p>
+                    </div>
+                    <div className="flex gap-2 self-start sm:self-center">
+                        <Button size="sm" onClick={() => handleRequest(req, 'approved')}><Check className="mr-2" />Approve</Button>
+                        <Button size="sm" variant="destructive" onClick={() => handleRequest(req, 'rejected')}><X className="mr-2" />Decline</Button>
+                    </div>
+                </Card>
+            ))}
+        </div>
+    );
+}
+
 
 export default function CommunityProfilePage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const communityDocRef = useMemoFirebase(() => {
@@ -561,10 +638,24 @@ export default function CommunityProfilePage() {
 
   const [allMembers, setAllMembers] = useState<Member[]>([]);
   const [suggestedUsers, setSuggestedUsers] = useState<CommunityProfile[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isOwner = user?.uid === community?.ownerId;
   const isMember = allMembers.some(m => m.userId === user?.uid);
+  
+  const userProfileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'community-profiles', user.uid);
+  }, [firestore, user]);
+  const { data: userProfile } = useDoc<CommunityProfile>(userProfileRef);
 
+  const joinRequestQuery = useMemoFirebase(() => {
+      if (!firestore || !user || !id) return null;
+      const requestsRef = collection(firestore, 'communities', id, 'joinRequests');
+      return query(requestsRef, where('userId', '==', user.uid));
+  }, [firestore, user, id]);
+  const { data: userJoinRequests } = useCollection<JoinRequest>(joinRequestQuery);
+  const hasPendingRequest = userJoinRequests?.some(r => r.status === 'pending');
 
   useEffect(() => {
     if (community) {
@@ -593,6 +684,31 @@ export default function CommunityProfilePage() {
       setSuggestedUsers(suggestions);
     }
   }, [allProfiles, allMembers]);
+
+  const handleRequestToJoin = async () => {
+    if (!user || !firestore || !id || !userProfile) {
+        toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in and have a profile to join.' });
+        return;
+    }
+    setIsSubmitting(true);
+    const requestRef = doc(collection(firestore, `communities/${id}/joinRequests`));
+    const newRequest: Omit<JoinRequest, 'createdAt'> = {
+        id: requestRef.id,
+        userId: user.uid,
+        userName: userProfile.name,
+        userBio: userProfile.bio,
+        status: 'pending',
+    };
+    try {
+        await setDocumentNonBlocking(requestRef, { ...newRequest, createdAt: serverTimestamp() }, { merge: false });
+        toast({ title: 'Request Sent!', description: 'The community owner has been notified.' });
+    } catch(e) {
+        const message = e instanceof Error ? e.message : 'An error occurred';
+        toast({ variant: 'destructive', title: 'Failed to send request', description: message });
+    } finally {
+        setIsSubmitting(false);
+    }
+  };
 
 
   if (isLoading || profilesLoading) {
@@ -651,9 +767,18 @@ export default function CommunityProfilePage() {
       );
   }
 
-  const joinButtonAction = user
-    ? { disabled: true, children: <><PlusCircle className="mr-2 h-4 w-4" />Request to Join</> }
-    : { asChild: true, children: <Link href="/login"><LogIn className="mr-2 h-4 w-4" />Login to Join</Link> };
+  const getJoinButton = () => {
+    if (!user) {
+        return <Button asChild><Link href="/login"><LogIn className="mr-2 h-4 w-4" />Login to Join</Link></Button>
+    }
+    if (isOwner || isMember) return null;
+
+    if (hasPendingRequest) {
+        return <Button disabled><Hourglass className="mr-2 h-4 w-4 animate-spin" />Request Pending</Button>
+    }
+
+    return <Button onClick={handleRequestToJoin} disabled={isSubmitting}><PlusCircle className="mr-2 h-4 w-4" />Request to Join</Button>;
+  }
 
   return (
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
@@ -664,9 +789,7 @@ export default function CommunityProfilePage() {
                 Back to All Communities
             </Link>
         </Button>
-        {!isOwner && !isMember && (
-            <Button {...joinButtonAction} />
-        )}
+        {getJoinButton()}
       </div>
 
       <div className="text-center mb-8">
@@ -689,6 +812,23 @@ export default function CommunityProfilePage() {
         <VoiceChat communityId={community.id} />
        </div>
       
+      {isOwner && (
+         <>
+            <Separator className="my-12" />
+            <Card className="shadow-lg">
+                <CardHeader>
+                    <CardTitle>Pending Join Requests</CardTitle>
+                    <CardDescription>Approve or decline requests from users who want to join your community.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <JoinRequests communityId={id} communityDocRef={communityDocRef} />
+                </CardContent>
+            </Card>
+        </>
+      )}
+
+      <Separator className="my-12" />
+
       <div className="mb-12">
         <h2 className="text-3xl font-bold text-center mb-8">Meet the Members</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -734,3 +874,5 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
+
+    

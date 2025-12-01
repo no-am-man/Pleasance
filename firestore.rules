@@ -75,6 +75,13 @@ service cloud.firestore {
         // This validation is weak. It should check the incoming data.
         return request.resource.data.userId == userId || request.resource.data.ownerId == userId;
     }
+    
+    // --- Join Request Validation ---
+    function isValidJoinRequest() {
+        let incomingData = request.resource.data;
+        return incomingData.userId == request.auth.uid
+            && incomingData.status == 'pending';
+    }
 
     //================================================================================
     // Collection Rules
@@ -151,6 +158,19 @@ service cloud.firestore {
                 allow write: if isSignedIn();
             }
         }
+        
+        /**
+         * @description Manages requests from users to join a community.
+         * @path /communities/{communityId}/joinRequests/{requestId}
+         */
+        match /joinRequests/{requestId} {
+            allow get: if isSignedIn() && (isOwner(get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId) || request.auth.uid == resource.data.userId);
+            allow list: if isOwner(get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId);
+            allow create: if isSignedIn() && isValidJoinRequest();
+            allow update, delete: if isOwner(get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId);
+        }
     }
   }
 }
+
+    
