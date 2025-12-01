@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { getAiChatResponse } from '@/app/actions';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { type ChatHistory } from 'genkit';
 
 type Member = {
   name: string;
@@ -33,7 +34,7 @@ type Community = {
 };
 
 type ChatMessage = {
-    sender: 'user' | 'ai';
+    role: 'user' | 'model';
     text: string;
 };
 
@@ -48,14 +49,14 @@ function ChatInterface({ member }: { member: Member }) {
         e.preventDefault();
         if (!input.trim() || !user) return;
 
-        const userMessage: ChatMessage = { sender: 'user', text: input };
+        const userMessage: ChatMessage = { role: 'user', text: input };
         setMessages(prev => [...prev, userMessage]);
         setInput('');
         setIsLoading(true);
 
-        const chatHistory = messages.map(msg => ({
-            role: msg.sender === 'user' ? 'user' : 'model',
-            parts: [{ text: msg.text }],
+        const chatHistory: ChatHistory = messages.map(msg => ({
+            role: msg.role,
+            content: [{ text: msg.text }],
         }));
 
         const result = await getAiChatResponse({
@@ -67,10 +68,10 @@ function ChatInterface({ member }: { member: Member }) {
         setIsLoading(false);
         
         if (result.error) {
-            const errorMessage: ChatMessage = { sender: 'ai', text: `Sorry, I encountered an error: ${result.error}` };
+            const errorMessage: ChatMessage = { role: 'model', text: `Sorry, I encountered an error: ${result.error}` };
             setMessages(prev => [...prev, errorMessage]);
         } else {
-            const aiMessage: ChatMessage = { sender: 'ai', text: result.response! };
+            const aiMessage: ChatMessage = { role: 'model', text: result.response! };
             setMessages(prev => [...prev, aiMessage]);
         }
     };
@@ -93,17 +94,17 @@ function ChatInterface({ member }: { member: Member }) {
                 <ScrollArea className="h-72 w-full pr-4" ref={scrollAreaRef}>
                      <div className="space-y-4">
                         {messages.map((msg, index) => (
-                             <div key={index} className={cn("flex items-end gap-2", msg.sender === 'user' ? 'justify-end' : 'justify-start')}>
-                                {msg.sender === 'ai' && (
+                             <div key={index} className={cn("flex items-end gap-2", msg.role === 'user' ? 'justify-end' : 'justify-start')}>
+                                {msg.role === 'model' && (
                                     <Avatar className="w-8 h-8">
                                         <AvatarImage src={`https://i.pravatar.cc/150?u=${member.name}`} />
                                         <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                 )}
-                                <div className={cn("rounded-lg px-4 py-2 max-w-[80%]", msg.sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
+                                <div className={cn("rounded-lg px-4 py-2 max-w-[80%]", msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
                                     <p className="text-sm">{msg.text}</p>
                                 </div>
-                                {msg.sender === 'user' && user && (
+                                {msg.role === 'user' && user && (
                                      <div className="flex flex-col items-center">
                                         <Avatar className="w-8 h-8">
                                             <AvatarImage src={user.photoURL || ''} />

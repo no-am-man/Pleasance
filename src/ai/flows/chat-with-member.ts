@@ -20,7 +20,7 @@ const MemberSchema = z.object({
 
 const ChatHistorySchema = z.object({
     role: z.enum(['user', 'model']),
-    parts: z.array(z.object({ text: z.string() })),
+    content: z.array(z.object({ text: z.string() })),
 });
 
 const ChatWithMemberInputSchema = z.object({
@@ -55,12 +55,12 @@ Bio: ${input.member.bio}
 
 Your response must be concise, engaging, and directly related to the user's message.`;
 
-    const { text } = await ai.generate({
+    const { output } = await ai.generate({
         system: systemPrompt,
         prompt: input.userMessage,
         history: input.history,
     });
 
-    return { response: text };
+    return { response: output.candidates[0].message.content[0].text };
   }
 );

@@ -54,7 +54,7 @@ type Message = {
     communityId: string;
     userId: string;
     userName: string;
-    userAvatarUrl: string;
+    userAvatarUrl?: string;
     type: 'text' | 'voice';
     text?: string;
     audioUrl?: string;
@@ -67,7 +67,7 @@ type Comment = {
     id: string;
     userId: string;
     userName: string;
-    userAvatarUrl: string;
+    userAvatarUrl?: string;
     type: 'text' | 'voice';
     text?: string;
     audioUrl?: string;
@@ -86,7 +86,7 @@ type JoinRequest = {
 
 function MemberCard({ member, index, communityId }: { member: Member; index: number; communityId: string;}) {
     const isHuman = member.type === 'human';
-    const avatarUrl = `https://i.pravatar.cc/150?u=${member.name}-${index}`;
+    const avatarUrl = member.avatarUrl || `https://i.pravatar.cc/150?u=${member.name}-${index}`;
     
     const Wrapper = Link;
     
@@ -223,16 +223,15 @@ function RecordAudio({ communityId }: { communityId: string }) {
                                 throw new Error(transcriptionResult.error);
                             }
 
-                            const newMessage: Message = {
-                                id: newMessageRef.id,
+                            const newMessage: Omit<Message, 'id'|'createdAt'> & {createdAt: any} = {
                                 communityId,
                                 userId: user.uid,
                                 userName: user.displayName || 'Anonymous',
-                                userAvatarUrl: `https://i.pravatar.cc/150?u=${user.uid}`,
+                                userAvatarUrl: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
                                 type: 'voice',
                                 audioUrl,
                                 transcription: transcriptionResult.transcription,
-                                createdAt: serverTimestamp() as any,
+                                createdAt: serverTimestamp(),
                                 status: 'active',
                             };
 
@@ -301,6 +300,53 @@ function RecordAudio({ communityId }: { communityId: string }) {
     );
 }
 
+function TextCommentForm({ communityId, messageId }: { communityId: string, messageId: string }) {
+    const [text, setText] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const { toast } = useToast();
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!text.trim() || !user || !firestore) return;
+
+        setIsSubmitting(true);
+        try {
+            const commentsColRef = collection(firestore, `communities/${communityId}/messages/${messageId}/comments`);
+            const newComment = {
+                userId: user.uid,
+                userName: user.displayName || 'Anonymous',
+                userAvatarUrl: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
+                type: 'text',
+                text: text.trim(),
+                createdAt: serverTimestamp(),
+            };
+            await addDoc(commentsColRef, newComment);
+            setText('');
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
+            toast({ variant: 'destructive', title: 'Failed to post comment', description: message });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="flex gap-2">
+            <Input
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Write a reply..."
+                disabled={isSubmitting}
+            />
+            <Button type="submit" size="icon" disabled={isSubmitting || !text.trim()}>
+                {isSubmitting ? <LoaderCircle className="animate-spin" /> : <Send />}
+            </Button>
+        </form>
+    );
+}
+
 function RecordComment({ communityId, messageId }: { communityId: string, messageId: string }) {
     const [isRecording, setIsRecording] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -352,7 +398,7 @@ function RecordComment({ communityId, messageId }: { communityId: string, messag
                             id: newCommentRef.id,
                             userId: user.uid,
                             userName: user.displayName || 'Anonymous',
-                            userAvatarUrl: `https://i.pravatar.cc/150?u=${user.uid}`,
+                            userAvatarUrl: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
                             type: 'voice',
                             audioUrl,
                             transcription: transcriptionResult.transcription,
@@ -493,7 +539,12 @@ function CommentDialog({ message }: { message: Message }) {
                        
                     </div>
                     <Separator />
-                    <div className="grid w-full gap-2">
+                    <div className="grid w-full gap-4">
+                        <TextCommentForm communityId={message.communityId} messageId={message.id} />
+                        <div className="relative">
+                            <Separator />
+                            <span className="absolute left-1/2 -translate-x-1/2 -top-3 bg-background px-2 text-xs text-muted-foreground">OR</span>
+                        </div>
                         <RecordComment communityId={message.communityId} messageId={message.id} />
                     </div>
                 </div>
@@ -652,7 +703,10 @@ function Chat({ communityId, isOwner }: { communityId: string; isOwner: boolean 
             {user ? (
                 <div className="border-t p-4 space-y-4">
                     <TextMessageForm communityId={communityId} />
-                    <Separator />
+                    <div className="relative">
+                        <Separator />
+                        <span className="absolute left-1/2 -translate-x-1/2 -top-3 bg-card px-2 text-xs text-muted-foreground">OR</span>
+                    </div>
                     <RecordAudio communityId={communityId} />
                 </div>
             ) : (
@@ -834,14 +888,15 @@ export default function CommunityProfilePage() {
     setIsSubmitting(true);
     // Create a doc ref with the user's UID as the ID.
     const requestRef = doc(firestore, `communities/${id}/joinRequests`, user.uid);
-    const newRequest: Omit<JoinRequest, 'createdAt' | 'id'> = {
+    const newRequest: Omit<JoinRequest, 'createdAt' | 'id'> & { createdAt: any } = {
         userId: user.uid,
         userName: userProfile.name,
         userBio: userProfile.bio,
         status: 'pending',
+        createdAt: serverTimestamp()
     };
     try {
-        await setDocumentNonBlocking(requestRef, { ...newRequest, id: requestRef.id, createdAt: serverTimestamp() }, { merge: false });
+        await setDocumentNonBlocking(requestRef, { ...newRequest, id: requestRef.id }, { merge: false });
         toast({ title: 'Request Sent!', description: 'The community owner has been notified.' });
     } catch(e) {
         const message = e instanceof Error ? e.message : 'An error occurred';
