@@ -146,7 +146,7 @@ service cloud.firestore {
      */
     match /stories/{storyId} {
       allow get: if isOwner(resource.data.userId);
-      allow list: if isSignedIn() && request.auth.uid == request.query.where.userId;
+      allow list: if isSignedIn();
       allow create: if isSignedIn() && hasValidStoryData();
       allow update, delete: if isOwner(resource.data.userId);
     }
