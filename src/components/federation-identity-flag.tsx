@@ -4,7 +4,7 @@
 import { useMemo } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
-import { LoaderCircle } from 'lucide-react';
+import { LoaderCircle, Info } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -13,9 +13,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import QRCode from 'react-qr-code';
 import { Button } from './ui/button';
-import { BronzeMedal, SilverMedal, GoldMedal, PlatinumMedal } from './icons/medals';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from './ui/table';
 
 type Asset = {
   id: string;
@@ -23,13 +22,6 @@ type Asset = {
   value: number;
   type: 'physical' | 'ip';
 };
-
-const tiers = [
-  { threshold: 0, name: 'Bronze', Icon: BronzeMedal, color: 'text-yellow-700' },
-  { threshold: 1000, name: 'Silver', Icon: SilverMedal, color: 'text-gray-400' },
-  { threshold: 10000, name: 'Gold', Icon: GoldMedal, color: 'text-yellow-500' },
-  { threshold: 100000, name: 'Platinum', Icon: PlatinumMedal, color: 'text-cyan-400' },
-];
 
 export function FederationIdentityFlag({ userId }: { userId: string }) {
   const firestore = useFirestore();
@@ -41,13 +33,9 @@ export function FederationIdentityFlag({ userId }: { userId: string }) {
 
   const { data: assets, isLoading } = useCollection<Asset>(assetsQuery);
 
-  const { totalValue, tier } = useMemo(() => {
-    if (!assets) {
-      return { totalValue: 0, tier: tiers[0] };
-    }
-    const total = assets.reduce((sum, asset) => sum + asset.value, 0);
-    const currentTier = tiers.slice().reverse().find(t => total >= t.threshold) || tiers[0];
-    return { totalValue: total, tier: currentTier };
+  const totalValue = useMemo(() => {
+    if (!assets) return 0;
+    return assets.reduce((sum, asset) => sum + asset.value, 0);
   }, [assets]);
 
   if (isLoading) {
@@ -58,40 +46,47 @@ export function FederationIdentityFlag({ userId }: { userId: string }) {
     );
   }
 
-  const { Icon } = tier;
-  const formattedValue = `$${totalValue.toLocaleString()}`;
-
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" className="h-auto p-1 rounded-md">
-            <div className="flex items-center gap-2 text-sm font-mono text-primary">
-                {formattedValue}
-            </div>
+        <Button variant="ghost" size="icon" className="h-auto p-1 rounded-md">
+            <Info className="h-5 w-5 text-blue-400" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Icon className="h-8 w-8" /> {tier.name} Identity Token
-          </DialogTitle>
+          <DialogTitle>Personal Financial Report</DialogTitle>
           <DialogDescription>
-            This token represents the total declared value of this user's assets within the federation. Scan the QR code to verify its value.
+            A summary of all declared assets in this user's treasury.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col items-center justify-center space-y-4 p-4">
-            <div className="bg-white p-4 rounded-lg">
-                <QRCode
-                    value={totalValue.toString()}
-                    size={180}
-                    level="Q"
-                    viewBox={`0 0 180 180`}
-                />
-            </div>
-            <div className="text-center">
-                <p className="text-sm text-muted-foreground">Total Treasury Value</p>
-                <p className="text-3xl font-bold font-mono">${totalValue.toLocaleString()}</p>
-            </div>
+        <div className="max-h-96 overflow-y-auto">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                    <TableHead>Asset Name</TableHead>
+                    <TableHead className="text-right">Value</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {assets && assets.length > 0 ? assets.map(asset => (
+                        <TableRow key={asset.id}>
+                            <TableCell className="font-medium">{asset.name}</TableCell>
+                            <TableCell className="text-right">${asset.value.toLocaleString()}</TableCell>
+                        </TableRow>
+                    )) : (
+                        <TableRow>
+                            <TableCell colSpan={2} className="text-center text-muted-foreground">No assets declared.</TableCell>
+                        </TableRow>
+                    )}
+                </TableBody>
+                <TableFooter>
+                    <TableRow>
+                        <TableHead>Total Value</TableHead>
+                        <TableHead className="text-right font-bold">${totalValue.toLocaleString()}</TableHead>
+                    </TableRow>
+                </TableFooter>
+            </Table>
         </div>
       </DialogContent>
     </Dialog>
