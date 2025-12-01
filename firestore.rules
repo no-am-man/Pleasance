@@ -89,8 +89,7 @@ service cloud.firestore {
 
     function isValidMessageCreate() {
         let data = request.resource.data;
-        // The `userAvatarUrl` is optional, so it's not in the hasAll check.
-        // The client provides it if available from the user's profile.
+        // The client provides userAvatarUrl if available, but it's not strictly required.
         let baseValidation = data.userId == request.auth.uid
             && data.status == 'active'
             && data.keys().hasAll(['communityId', 'userId', 'userName', 'type', 'createdAt', 'status']);
