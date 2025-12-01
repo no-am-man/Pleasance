@@ -155,9 +155,7 @@ function CommunityList({ title, communities, isLoading, error }: { title: string
                         <div className="flex items-center gap-2">
                             <h3 className="font-semibold text-lg text-primary">{community.name}</h3>
                         </div>
-                        <div onClick={(e) => e.stopPropagation()}>
-                            <CommunityValueFlag members={community.members} />
-                        </div>
+                        <CommunityValueFlag members={community.members} />
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">{community.description}</p>
                   </Link>

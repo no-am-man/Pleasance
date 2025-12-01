@@ -63,13 +63,14 @@ export function CommunityValueFlag({ members }: { members: Member[] }) {
     const fetchAllContributions = async () => {
         try {
             const contributionPromises = humanMembers.map(async (member) => {
-                const assetsRef = collection(firestore, 'users', member.userId!, 'assets');
+                if (!member.userId) return { userId: '', userName: member.name, totalValue: 0 };
+                const assetsRef = collection(firestore, 'users', member.userId, 'assets');
                 const assetSnapshot = await getDocs(assetsRef);
                 const memberTotalValue = assetSnapshot.docs.reduce((sum, doc) => {
                     return sum + (doc.data() as Asset).value || 0;
                 }, 0);
                 return {
-                    userId: member.userId!,
+                    userId: member.userId,
                     userName: member.name,
                     totalValue: memberTotalValue
                 };
@@ -79,7 +80,7 @@ export function CommunityValueFlag({ members }: { members: Member[] }) {
 
             if (isMounted) {
                 const totalValue = resolvedContributions.reduce((sum, c) => sum + c.totalValue, 0);
-                setContributions(resolvedContributions);
+                setContributions(resolvedContributions.filter(c => c.totalValue > 0));
                 setTotalCommunityValue(totalValue);
             }
         } catch (error) {
@@ -113,7 +114,14 @@ export function CommunityValueFlag({ members }: { members: Member[] }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" className="h-auto p-1 rounded-md">
+        <Button 
+          variant="ghost" 
+          className="h-auto p-1 rounded-md"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
             <Info className="h-5 w-5 text-blue-400" />
         </Button>
       </DialogTrigger>
