@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -15,7 +16,13 @@ import {
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -114,6 +121,9 @@ export function Header() {
             </Button>
           </SheetTrigger>
           <SheetContent side="top">
+            <SheetHeader>
+              <SheetTitle className="sr-only">Main Menu</SheetTitle>
+            </SheetHeader>
             <div className="flex flex-col gap-4 p-4">
               <Link href="/" className="flex items-center gap-2 mb-4">
                 <Logo className="h-8 w-8 text-primary" />
