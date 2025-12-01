@@ -108,8 +108,7 @@
         },
         "audioUrl": {
           "type": "string",
-          "description": "Public URL of the TTS-generated audio file stored in Firebase Storage.",
-          "format": "uri"
+          "description": "Public URL of the TTS-generated audio file stored in Firebase Storage."
         },
         "createdAt": {
             "type": "string",

@@ -8,8 +8,7 @@ import { generateCommunity } from '@/ai/flows/generate-community';
 import { transcribeAudio } from '@/ai/flows/transcribe-audio';
 import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member';
 import { getFirestore, doc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
-import { getStorage, ref, uploadString, getDownloadURL, uploadBytes } from 'firebase/storage';
-import { initializeFirebase } from '@/firebase/config-for-actions'; // Keep this for now, but we will call it inside the function
+import { initializeFirebase } from '@/firebase';
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
@@ -52,7 +51,7 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
     const storyCollectionRef = collection(firestore, 'users', userId, 'stories');
     const storyRef = doc(storyCollectionRef);
 
-    // Set audioUrl to empty string as we are not using storage for now
+    // Audio is not saved to storage in this temporary version
     const audioUrl = '';
 
     const newStory = {
@@ -63,7 +62,7 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
         targetLanguage,
         nativeText: originalStory,
         translatedText: translationResult.translatedText,
-        audioUrl,
+        audioUrl, // This will be an empty string
         createdAt: serverTimestamp()
     };
     
@@ -72,7 +71,7 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
     return {
       originalStory,
       translatedText: translationResult.translatedText,
-      // For the current session, we can still pass the audio data (if available)
+      // For the current session, we pass the audio data URI
       audioUrl: translationResult.audioWavBase64 ? `data:audio/wav;base64,${translationResult.audioWavBase64}` : '',
       sourceLanguage: sourceLanguage,
     };
