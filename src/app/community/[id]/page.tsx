@@ -18,11 +18,11 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { getAiChatResponse, getTranscription, updateMessageStatus, deleteMessage } from '@/app/actions';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { HumanIcon } from '@/components/icons/human-icon';
 import { AiIcon } from '@/components/icons/ai-icon';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 type Member = {
   name: string;
@@ -336,134 +336,16 @@ function TextCommentForm({ communityId, messageId }: { communityId: string, mess
                 onChange={(e) => setText(e.target.value)}
                 placeholder="Write a reply..."
                 disabled={isSubmitting}
+                className="h-9"
             />
-            <Button type="submit" size="icon" disabled={isSubmitting || !text.trim()}>
-                {isSubmitting ? <LoaderCircle className="animate-spin" /> : <Send />}
+            <Button type="submit" size="icon" variant="ghost" disabled={isSubmitting || !text.trim()}>
+                {isSubmitting ? <LoaderCircle className="animate-spin" /> : <Send className="w-4 h-4" />}
             </Button>
         </form>
     );
 }
 
-function RecordComment({ communityId, messageId }: { communityId: string, messageId: string }) {
-    const [isRecording, setIsRecording] = useState(false);
-    const [isProcessing, setIsProcessing] = useState(false);
-    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-    const audioChunksRef = useRef<Blob[]>([]);
-    const { user } = useUser();
-    const firestore = useFirestore();
-    const storage = useStorage();
-    const { toast } = useToast();
-
-    const toggleRecording = async () => {
-        if (isRecording) {
-            mediaRecorderRef.current?.stop();
-            setIsRecording(false);
-            return;
-        }
-
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const recorder = new MediaRecorder(stream);
-            mediaRecorderRef.current = recorder;
-            recorder.ondataavailable = (event) => {
-                audioChunksRef.current.push(event.data);
-            };
-            recorder.onstop = async () => {
-                setIsProcessing(true);
-                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-                const reader = new FileReader();
-                reader.readAsDataURL(audioBlob);
-                reader.onloadend = async () => {
-                    const base64Audio = reader.result as string;
-                    if (!user || !firestore || !storage) return;
-
-                    try {
-                        const commentsColRef = collection(firestore, `communities/${communityId}/messages/${messageId}/comments`);
-                        const newCommentRef = doc(commentsColRef);
-
-                        const audioPath = `communities/${communityId}/messages/${messageId}/comments/${newCommentRef.id}.wav`;
-                        const storageRef = ref(storage, audioPath);
-                        const uploadResult = await uploadString(storageRef, base64Audio, 'data_url');
-                        const audioUrl = await getDownloadURL(uploadResult.ref);
-
-                        const transcriptionResult = await getTranscription({ audioDataUri: base64Audio });
-                        if (transcriptionResult.error) {
-                            throw new Error(transcriptionResult.error);
-                        }
-
-                        const newComment = {
-                            id: newCommentRef.id,
-                            userId: user.uid,
-                            userName: user.displayName || 'Anonymous',
-                            userAvatarUrl: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
-                            type: 'voice' as const,
-                            audioUrl,
-                            transcription: transcriptionResult.transcription,
-                            createdAt: serverTimestamp(),
-                        };
-
-                        setDocumentNonBlocking(newCommentRef, newComment, { merge: false });
-                        toast({ title: 'Comment posted!' });
-                    } catch (error) {
-                        const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
-                        toast({ variant: 'destructive', title: 'Failed to post comment', description: message });
-                    } finally {
-                        audioChunksRef.current = [];
-                        setIsProcessing(false);
-                    }
-                };
-            };
-            recorder.start();
-            setIsRecording(true);
-        } catch (err) {
-            toast({ variant: 'destructive', title: 'Microphone access denied.' });
-        }
-    };
-
-    if (isProcessing) {
-        return (
-            <div className="flex items-center justify-center gap-2 text-muted-foreground p-4">
-                <LoaderCircle className="animate-spin" />
-                <span>Processing...</span>
-            </div>
-        );
-    }
-    
-    return (
-         <div className="flex flex-col items-center gap-4 p-4 border rounded-lg bg-background">
-            <Button onClick={toggleRecording} size="lg" className="rounded-full w-16 h-16 shadow-lg">
-                {isRecording ? <Square /> : <Mic />}
-            </Button>
-            <p className="text-sm text-muted-foreground">{isRecording ? "Recording comment..." : "Record a voice comment"}</p>
-        </div>
-    )
-}
-
-
 function CommentCard({ comment }: { comment: Comment }) {
-    const audioRef = useRef<HTMLAudioElement>(null);
-    const [isPlaying, setIsPlaying] = useState(false);
-
-    const togglePlay = () => {
-        if (audioRef.current) {
-            if (isPlaying) {
-                audioRef.current.pause();
-            } else {
-                audioRef.current.play();
-            }
-            setIsPlaying(!isPlaying);
-        }
-    };
-    
-    useEffect(() => {
-        const audio = audioRef.current;
-        if(audio) {
-            const handleEnd = () => setIsPlaying(false);
-            audio.addEventListener('ended', handleEnd);
-            return () => audio.removeEventListener('ended', handleEnd);
-        }
-    }, [])
-
     return (
         <div className="p-3 rounded-md bg-muted/50 flex gap-3 items-start">
             <Avatar className="w-8 h-8">
@@ -479,26 +361,15 @@ function CommentCard({ comment }: { comment: Comment }) {
                             : "sending..."}
                     </span>
                 </div>
-                {comment.type === 'voice' ? (
-                    <>
-                        <audio ref={audioRef} src={comment.audioUrl} className="hidden" />
-                        <Button onClick={togglePlay} variant="outline" size="sm">
-                            {isPlaying ? 'Pause' : 'Play Comment'}
-                        </Button>
-                        {comment.transcription && (
-                            <p className="text-sm text-muted-foreground italic whitespace-pre-wrap">"{comment.transcription}"</p>
-                        )}
-                    </>
-                ) : (
-                    <p className="text-sm text-foreground whitespace-pre-wrap">{comment.text}</p>
-                )}
+                 <p className="text-sm text-foreground whitespace-pre-wrap">{comment.text}</p>
             </div>
         </div>
     )
 }
 
-function CommentDialog({ message }: { message: Message }) {
+function CommentThread({ message }: { message: Message }) {
     const firestore = useFirestore();
+    const { user } = useUser();
 
     const commentsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
@@ -509,45 +380,14 @@ function CommentDialog({ message }: { message: Message }) {
     const { data: comments, isLoading } = useCollection<Comment>(commentsQuery);
 
     return (
-        <Dialog>
-            <DialogTrigger asChild>
-                <Button variant="ghost" size="sm">
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    Comment
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                <DialogTitle>Reply to {message.userName}'s message</DialogTitle>
-                <DialogDescription>
-                    {message.type === 'voice' ? `"${message.transcription}"` : message.text}
-                </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                    <div className="max-h-60 overflow-y-auto space-y-3 pr-2">
-                        {isLoading && <LoaderCircle className="mx-auto animate-spin" />}
-                        {comments && comments.length > 0 ? (
-                             comments.map(comment => <CommentCard key={comment.id} comment={comment} />)
-                        ) : (
-                            <div className="text-center text-muted-foreground text-sm py-4">
-                                No replies yet. Be the first to comment.
-                            </div>
-                        )}
-                       
-                    </div>
-                    <Separator />
-                    <div className="grid w-full gap-4">
-                        <TextCommentForm communityId={message.communityId} messageId={message.id} />
-                        <div className="relative">
-                            <Separator />
-                            <span className="absolute left-1/2 -translate-x-1/2 -top-3 bg-background px-2 text-xs text-muted-foreground">OR</span>
-                        </div>
-                        <RecordComment communityId={message.communityId} messageId={message.id} />
-                    </div>
-                </div>
-            </DialogContent>
-        </Dialog>
-    )
+        <div className="pl-12 pr-4 pb-4 space-y-4">
+            <div className="max-h-60 overflow-y-auto space-y-3 pr-2">
+                {isLoading && <LoaderCircle className="mx-auto animate-spin" />}
+                {comments && comments.length > 0 && comments.map(comment => <CommentCard key={comment.id} comment={comment} />)}
+            </div>
+            {user && <TextCommentForm communityId={message.communityId} messageId={message.id} />}
+        </div>
+    );
 }
 
 function MessageCard({ message, canManage }: { message: Message; canManage: boolean; }) {
@@ -644,77 +484,89 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
     }
 
     return (
-        <Card className={cn("flex flex-col", (isUpdating || isDeleting) && "opacity-50")}>
-            <CardHeader className="flex flex-row items-start gap-4 pb-4">
-                <Avatar>
-                    <AvatarImage src={message.userAvatarUrl} alt={message.userName} />
-                    <AvatarFallback>{message.userName.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                    <div className="flex justify-between items-center">
-                        <span className="font-bold">{message.userName}</span>
-                        <span className="text-xs text-muted-foreground">
-                            {message.createdAt
-                                ? new Date(message.createdAt.seconds * 1000).toLocaleTimeString()
-                                : "sending..."}
-                        </span>
-                    </div>
-                </div>
-                <div className="flex items-center">
-                    {canManage && (
-                        <>
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" disabled={isDeleting} aria-label="Delete message">
-                                        <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+        <Collapsible asChild>
+            <Card className={cn("flex flex-col", (isUpdating || isDeleting) && "opacity-50")}>
+                <div>
+                    <CardHeader className="flex flex-row items-start gap-4 pb-4">
+                        <Avatar>
+                            <AvatarImage src={message.userAvatarUrl} alt={message.userName} />
+                            <AvatarFallback>{message.userName.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                            <div className="flex justify-between items-center">
+                                <span className="font-bold">{message.userName}</span>
+                                <span className="text-xs text-muted-foreground">
+                                    {message.createdAt
+                                        ? new Date(message.createdAt.seconds * 1000).toLocaleTimeString()
+                                        : "sending..."}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="flex items-center">
+                            {canManage && (
+                                <>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="ghost" size="icon" disabled={isDeleting} aria-label="Delete message">
+                                                <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This action cannot be undone. This will permanently delete the message.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+                                                    {isDeleting ? <LoaderCircle className="animate-spin" /> : 'Delete'}
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                    <Button variant="ghost" size="icon" onClick={handleToggleStatus} disabled={isUpdating} aria-label="Mark as done">
+                                        {isUpdating ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Circle className="w-4 h-4 text-muted-foreground" />}
                                     </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            This action cannot be undone. This will permanently delete the message.
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
-                                            {isDeleting ? <LoaderCircle className="animate-spin" /> : 'Delete'}
-                                        </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                            <Button variant="ghost" size="icon" onClick={handleToggleStatus} disabled={isUpdating} aria-label="Mark as done">
-                                {isUpdating ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Circle className="w-4 h-4 text-muted-foreground" />}
-                            </Button>
-                        </>
-                    )}
-                 </div>
-            </CardHeader>
-            <CardContent className="flex-grow space-y-4">
-                {message.type === 'voice' ? (
-                    <>
-                        <audio ref={audioRef} src={message.audioUrl} className="hidden" />
-                        {message.transcription && (
-                            <p className="text-sm text-muted-foreground pt-2 italic whitespace-pre-wrap">"{message.transcription}"</p>
+                                </>
+                            )}
+                         </div>
+                    </CardHeader>
+                    <CardContent className="flex-grow space-y-4">
+                        {message.type === 'voice' ? (
+                            <>
+                                <audio ref={audioRef} src={message.audioUrl} className="hidden" />
+                                {message.transcription && (
+                                    <p className="text-sm text-muted-foreground pt-2 italic whitespace-pre-wrap">"{message.transcription}"</p>
+                                )}
+                            </>
+                        ) : (
+                            <p className="text-sm text-foreground whitespace-pre-wrap">{message.text}</p>
                         )}
-                    </>
-                ) : (
-                    <p className="text-sm text-foreground whitespace-pre-wrap">{message.text}</p>
-                )}
-            </CardContent>
-            <CardFooter className="bg-muted/50 p-2">
-                <div className="flex items-center gap-2">
-                    {message.type === 'voice' && (
-                        <Button onClick={togglePlay} variant="outline" size="sm">
-                            <Volume2 className="mr-2 h-4 w-4" />
-                            {isPlaying ? 'Pause' : 'Original'}
-                        </Button>
-                    )}
-                    <CommentDialog message={message} />
+                    </CardContent>
+                    <CardFooter className="bg-muted/50 p-2">
+                        <div className="flex items-center gap-2">
+                            {message.type === 'voice' && (
+                                <Button onClick={togglePlay} variant="outline" size="sm">
+                                    <Volume2 className="mr-2 h-4 w-4" />
+                                    {isPlaying ? 'Pause' : 'Original'}
+                                </Button>
+                            )}
+                            <CollapsibleTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                    <MessageSquare className="mr-2 h-4 w-4" />
+                                    Comment
+                                </Button>
+                            </CollapsibleTrigger>
+                        </div>
+                    </CardFooter>
                 </div>
-            </CardFooter>
-        </Card>
+                <CollapsibleContent>
+                   <CommentThread message={message} />
+                </CollapsibleContent>
+            </Card>
+        </Collapsible>
     )
 }
 
