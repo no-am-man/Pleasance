@@ -1,3 +1,4 @@
+
 // src/app/story/page.tsx
 'use client';
 
@@ -43,8 +44,8 @@ type StoryResult = {
     sourceLanguage: string;
 } | null;
 
-function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void; }) {
-    const { user, isUserLoading } = useUser();
+function StoryHistory({ onSelectStory, isUserLoading }: { onSelectStory: (story: Story) => void; isUserLoading: boolean }) {
+    const { user } = useUser();
     const firestore = useFirestore();
 
     const storiesQuery = useMemoFirebase(() => {
@@ -120,38 +121,39 @@ export default function StoryPage() {
     setIsLoading(true);
     setError(null);
     setStoryResult(null);
+    setSelectedStory(null);
 
     const result = await generateAndTranslateStory(data);
 
     if (result.error) {
       setError(result.error);
-    } else if (result.originalStory && result.translatedText) {
+      setIsLoading(false);
+      return;
+    } 
+    
+    if (result.originalStory && result.translatedText) {
+        setStoryResult({
+            originalStory: result.originalStory,
+            translatedText: result.translatedText,
+            audioUrl: '', 
+            sourceLanguage: data.sourceLanguage,
+        });
       
-      const newStoryForHistory = {
-        userId: user.uid,
-        level: data.difficulty,
-        sourceLanguage: data.sourceLanguage,
-        targetLanguage: data.targetLanguage,
-        nativeText: result.originalStory,
-        translatedText: result.translatedText,
-        createdAt: serverTimestamp() 
-      };
-
-      try {
-        const storyCollectionRef = collection(firestore, 'users', user.uid, 'stories');
-        await addDoc(storyCollectionRef, newStoryForHistory);
-      } catch (firestoreError) {
-          const message = firestoreError instanceof Error ? firestoreError.message : 'An unknown error occurred';
-          setError("Story generated, but failed to save to your history. " + message);
-      }
-      
-      setStoryResult({
-        originalStory: result.originalStory,
-        translatedText: result.translatedText,
-        audioUrl: '', 
-        sourceLanguage: data.sourceLanguage,
-      });
-
+        try {
+            const storyCollectionRef = collection(firestore, 'users', user.uid, 'stories');
+            await addDoc(storyCollectionRef, {
+                userId: user.uid,
+                level: data.difficulty,
+                sourceLanguage: data.sourceLanguage,
+                targetLanguage: data.targetLanguage,
+                nativeText: result.originalStory,
+                translatedText: result.translatedText,
+                createdAt: serverTimestamp() 
+            });
+        } catch (firestoreError) {
+            const message = firestoreError instanceof Error ? firestoreError.message : 'An unknown error occurred';
+            setError("Story generated, but failed to save to your history. " + message);
+        }
     } else {
         setError('An unknown error occurred while generating the story.');
     }
@@ -297,7 +299,7 @@ export default function StoryPage() {
                             </FormItem>
                         )}
                         />
-                        <FormField
+                         <FormField
                         control={form.control}
                         name="difficulty"
                         render={({ field }) => (
@@ -335,7 +337,7 @@ export default function StoryPage() {
             
             <Separator />
 
-            <StoryHistory onSelectStory={handleSelectStoryFromHistory} />
+            <StoryHistory onSelectStory={handleSelectStoryFromHistory} isUserLoading={isUserLoading} />
         </div>
       )}
     </main>
