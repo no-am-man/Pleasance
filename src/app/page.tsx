@@ -46,7 +46,7 @@ export default function Home() {
                <div className="mx-auto bg-primary/10 rounded-full p-3 w-fit">
                     <BookOpen className="h-8 w-8 text-primary" />
                 </div>
-                <CardTitle className="text-2xl">Nuncy</CardTitle>
+                <CardTitle className="text-2xl">Burlington Edge</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="flex-grow">
