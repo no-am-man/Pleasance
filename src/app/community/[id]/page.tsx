@@ -20,6 +20,7 @@ import { getTranscription } from '@/app/actions';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { FederationIdentityFlag } from '@/components/federation-identity-flag';
+import { CommunityValueFlag } from '@/components/CommunityValueFlag';
 
 type Member = {
   name: string;
@@ -803,9 +804,12 @@ export default function CommunityProfilePage() {
       </div>
 
       <div className="text-center mb-8">
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary">
-          {community.name}
-        </h1>
+        <div className="flex justify-center items-center gap-4">
+            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary">
+            {community.name}
+            </h1>
+            <CommunityValueFlag members={allMembers} />
+        </div>
         <p className="text-lg text-muted-foreground mt-2">{community.description}</p>
       </div>
 
