@@ -35,12 +35,9 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    function isExistingDoc() {
-      return resource != null;
-    }
-
-    function isExistingOwner(userId) {
-      return isOwner(userId) && isExistingDoc();
+    // Checks ownership of an *existing* document.
+    function isDocumentOwner() {
+        return isSignedIn() && request.auth.uid == resource.data.userId;
     }
 
     function isCommunityOwner(communityId) {
@@ -76,8 +73,8 @@ service cloud.firestore {
 
     // --- Subcollection Validation ---
     function hasValidSubcollectionData(userId) {
-        // This validation is weak. It should check the incoming data.
-        return request.resource.data.userId == userId || request.resource.data.ownerId == userId;
+        let incomingData = request.resource.data;
+        return incomingData.userId == userId || incomingData.ownerId == userId;
     }
     
     // --- Join Request Validation ---
@@ -95,8 +92,8 @@ service cloud.firestore {
       allow get: if isOwner(userId);
       allow list: if false;
       allow create: if isOwner(userId) && hasValidUserData(userId);
-      allow update: if isExistingOwner(userId) && isImmutableUserId();
-      allow delete: if isExistingOwner(userId);
+      allow update: if isOwner(userId) && isImmutableUserId();
+      allow delete: if isOwner(userId);
 
         /**
          * @description Manages AI-generated stories for a specific user.
@@ -150,8 +147,8 @@ service cloud.firestore {
         match /messages/{messageId} {
             allow read: if true;
             allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-            allow update: if (isOwner(resource.data.userId) || isCommunityOwner(communityId));
-            allow delete: if isCommunityOwner(communityId) || isOwner(resource.data.userId);
+            allow update: if isDocumentOwner() || isCommunityOwner(communityId);
+            allow delete: if isDocumentOwner() || isCommunityOwner(communityId);
 
 
              /**
@@ -163,7 +160,7 @@ service cloud.firestore {
                 allow read: if true;
                 allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
                 allow update: if false;
-                allow delete: if isSignedIn() && (isOwner(resource.data.userId) || isCommunityOwner(communityId));
+                allow delete: if isDocumentOwner() || isCommunityOwner(communityId);
             }
         }
         
