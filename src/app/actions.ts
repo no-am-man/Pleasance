@@ -8,6 +8,7 @@ import { generateCommunity } from '@/ai/flows/generate-community';
 import { transcribeAudio } from '@/ai/flows/transcribe-audio';
 import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member';
 import { getFirestore, doc, setDoc, serverTimestamp, collection } from 'firebase/firestore/lite';
+import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { initializeFirebase } from '@/firebase/config-for-actions';
 
 const storySchema = z.object({
@@ -44,10 +45,23 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
       throw new Error('Failed to translate the story.');
     }
     
-    // Save to Firestore in user's subcollection
-    const { firestore } = initializeFirebase();
+    // Initialize Firebase services for actions
+    const { firestore, app } = initializeFirebase();
+    const storage = getStorage(app);
+
+    // Create a reference for the new story document
     const storyCollectionRef = collection(firestore, 'users', userId, 'stories');
     const storyRef = doc(storyCollectionRef);
+
+    let audioUrl = '';
+    if (translationResult.audioDataUri) {
+        const audioPath = `stories/${userId}/${storyRef.id}.wav`;
+        const storageRef = ref(storage, audioPath);
+        // Upload the base64 data URI to Firebase Storage
+        const uploadResult = await uploadString(storageRef, translationResult.audioDataUri, 'data_url');
+        // Get the public download URL
+        audioUrl = await getDownloadURL(uploadResult.ref);
+    }
 
     const newStory = {
         id: storyRef.id,
@@ -57,7 +71,7 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
         targetLanguage,
         nativeText: originalStory,
         translatedText: translationResult.translatedText,
-        // audioDataUri is intentionally omitted to avoid Firestore document size limits
+        audioUrl,
         createdAt: serverTimestamp()
     };
     
@@ -66,7 +80,7 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
     return {
       originalStory,
       translatedText: translationResult.translatedText,
-      audioDataUri: translationResult.audioDataUri,
+      audioUrl: audioUrl,
       sourceLanguage: sourceLanguage,
     };
   } catch (e) {
@@ -147,5 +161,3 @@ export async function getAiChatResponse(input: ChatWithMemberInput) {
         return { error: `AI chat failed. ${message}` };
     }
 }
-
-    

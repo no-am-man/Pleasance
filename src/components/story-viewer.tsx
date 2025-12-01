@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -9,14 +10,14 @@ import { Slider } from "@/components/ui/slider";
 type StoryViewerProps = {
   originalStory: string;
   translatedText: string;
-  audioDataUri: string;
+  audioUrl: string;
   sourceLanguage: string;
 };
 
 export default function StoryViewer({
   originalStory,
   translatedText,
-  audioDataUri,
+  audioUrl,
   sourceLanguage,
 }: StoryViewerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -25,7 +26,7 @@ export default function StoryViewer({
   const [currentTime, setCurrentTime] = useState(0);
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
-  const hasAudio = audioDataUri && audioDataUri.length > 0;
+  const hasAudio = audioUrl && audioUrl.length > 0;
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -61,7 +62,7 @@ export default function StoryViewer({
       audio.removeEventListener("timeupdate", setAudioTime);
       audio.removeEventListener("ended", handlePlaybackEnded);
     };
-  }, [audioDataUri, hasAudio]);
+  }, [audioUrl, hasAudio]);
 
   const togglePlayPause = () => {
     const audio = audioRef.current;
@@ -131,7 +132,7 @@ export default function StoryViewer({
       
       {hasAudio && (
         <div className="flex flex-col items-center space-y-4 pt-4">
-          <audio ref={audioRef} src={audioDataUri} />
+          <audio ref={audioRef} src={audioUrl} crossOrigin="anonymous" />
           <div className="w-full max-w-md">
             <Slider
                 value={[progress]}

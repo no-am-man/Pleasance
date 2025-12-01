@@ -106,9 +106,10 @@
           "type": "string",
           "description": "The translated story text in the user's selected foreign language."
         },
-        "audioDataUri": {
+        "audioUrl": {
           "type": "string",
-          "description": "Data URI of the TTS-generated audio file for the translated story."
+          "description": "Public URL of the TTS-generated audio file stored in Firebase Storage.",
+          "format": "uri"
         },
         "createdAt": {
             "type": "string",
@@ -124,7 +125,7 @@
         "targetLanguage",
         "nativeText",
         "translatedText",
-        "audioDataUri",
+        "audioUrl",
         "createdAt"
       ]
     },
@@ -327,6 +328,3 @@
     "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities` in a top-level collection, they become publicly queryable, which is essential for search and join features. User-specific data, including stories, is nested under `/users/{userId}` to ensure data privacy and allow for simple, secure queries. Public profiles are in `/community-profiles` to allow discoverability without exposing private user account details. Voice messages are stored in a subcollection under each community to keep them organized and contextual."
   }
 }
-
-
-    

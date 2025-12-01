@@ -34,14 +34,14 @@ type Story = {
     targetLanguage: string;
     nativeText: string;
     translatedText: string;
-    audioDataUri?: string; // Audio is now optional
+    audioUrl?: string; // Audio URL from storage
     createdAt: { seconds: number; nanoseconds: number; } | null;
 };
 
 type StoryResult = {
     originalStory: string;
     translatedText: string;
-    audioDataUri: string;
+    audioUrl: string;
     sourceLanguage: string;
 } | null;
 
@@ -64,7 +64,7 @@ function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void
         <Card className="shadow-lg">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><History /> Your Story History</CardTitle>
-                <CardDescription>Revisit stories you've generated in the past. Audio playback is not available for saved stories.</CardDescription>
+                <CardDescription>Revisit stories you've generated in the past.</CardDescription>
             </CardHeader>
             <CardContent>
                 {isLoading && <LoaderCircle className="animate-spin mx-auto" />}
@@ -122,7 +122,7 @@ export default function StoryPage() {
       setStoryResult({
         originalStory: result.originalStory,
         translatedText: result.translatedText,
-        audioDataUri: result.audioDataUri || '',
+        audioUrl: result.audioUrl || '',
         sourceLanguage: result.sourceLanguage || 'English',
       });
     } else {
@@ -136,7 +136,7 @@ export default function StoryPage() {
     setStoryResult({
         originalStory: story.nativeText,
         translatedText: story.translatedText,
-        audioDataUri: story.audioDataUri || '', // Will be empty string
+        audioUrl: story.audioUrl || '',
         sourceLanguage: story.sourceLanguage
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -165,7 +165,7 @@ export default function StoryPage() {
             <StoryViewer 
                 originalStory={storyResult.originalStory}
                 translatedText={storyResult.translatedText}
-                audioDataUri={storyResult.audioDataUri}
+                audioUrl={storyResult.audioUrl}
                 sourceLanguage={storyResult.sourceLanguage}
             />
             <div className="text-center mt-8">
@@ -278,7 +278,7 @@ export default function StoryPage() {
                                 <SelectContent>
                                 <SelectItem value="beginner">Beginner</SelectItem>
                                 <SelectItem value="intermediate">Intermediate</SelectItem>
-                                <SelectItem value="advanced">Advanced</SelectItem>
+                                <SelectItem value="advanced">Advanced</iem>
                                 </SelectContent>
                             </Select>
                             <FormMessage />
@@ -305,5 +305,3 @@ export default function StoryPage() {
     </main>
   );
 }
-
-    
