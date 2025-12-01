@@ -36,7 +36,7 @@ export default function RootLayout({
           <main className="flex-grow pt-16">{children}</main>
           <footer className="text-center p-4 border-t">
             <Link href="https://github.com/no-am-man/Pleasance" target="_blank" rel="noopener noreferrer" className="text-green-500 hover:underline">
-                Open Source
+                Open Source Comunity? Fork me on git!
             </Link>
           </footer>
           <Toaster />
