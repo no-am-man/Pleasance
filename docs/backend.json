@@ -204,9 +204,10 @@
         "userAvatarUrl": { "type": "string", "format": "uri" },
         "audioUrl": { "type": "string", "format": "uri" },
         "transcription": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["active", "done"], "description": "The status of the voice message." }
       },
-      "required": ["id", "communityId", "userId", "userName", "audioUrl", "createdAt"]
+      "required": ["id", "communityId", "userId", "userName", "audioUrl", "createdAt", "status"]
     },
     "VoiceComment": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -391,3 +392,5 @@
     "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities` in a top-level collection, they become publicly queryable, which is essential for search and join features. User-specific data, including stories and assets, is nested under `/users/{userId}` to ensure data privacy and allow for simple, secure queries. Public profiles are in `/community-profiles` to allow discoverability without exposing private user account details. Voice messages are stored in a subcollection under each community to keep them organized and contextual."
   }
 }
+
+    

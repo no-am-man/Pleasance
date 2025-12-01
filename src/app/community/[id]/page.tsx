@@ -8,7 +8,7 @@ import { doc, collection, query, orderBy, serverTimestamp, addDoc, where, update
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mic, Square, MessageSquare, LogIn, Check, X, Hourglass, Volume2, Trash2 } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mic, Square, MessageSquare, LogIn, Check, X, Hourglass, Volume2, CheckCircle, Circle, Undo2 } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +16,7 @@ import { useEffect, useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { getTranscription, deleteVoiceMessage } from '@/app/actions';
+import { getTranscription, updateMessageStatus } from '@/app/actions';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -57,6 +57,7 @@ type VoiceMessage = {
     audioUrl: string;
     transcription?: string;
     createdAt: { seconds: number, nanoseconds: number } | null;
+    status: 'active' | 'done';
 };
 
 type VoiceComment = {
@@ -177,6 +178,7 @@ function RecordAudio({ communityId }: { communityId: string }) {
                                 audioUrl,
                                 transcription: transcriptionResult.transcription,
                                 createdAt: serverTimestamp(),
+                                status: 'active',
                             };
 
                             await addDoc(messagesColRef, newMessage);
@@ -438,11 +440,13 @@ function CommentDialog({ message }: { message: VoiceMessage }) {
     )
 }
 
-function VoiceMessageCard({ message, canDelete }: { message: VoiceMessage; canDelete: boolean; }) {
+function VoiceMessageCard({ message, canManage }: { message: VoiceMessage; canManage: boolean; }) {
     const audioRef = useRef<HTMLAudioElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const { toast } = useToast();
-    const [isDeleting, setIsDeleting] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
+
+    const isDone = message.status === 'done';
 
     const togglePlay = () => {
         if (audioRef.current) {
@@ -464,31 +468,51 @@ function VoiceMessageCard({ message, canDelete }: { message: VoiceMessage; canDe
         }
     }, [])
 
-    const handleDelete = async () => {
-        setIsDeleting(true);
-        const result = await deleteVoiceMessage({
+    const handleToggleStatus = async () => {
+        setIsUpdating(true);
+        const newStatus = isDone ? 'active' : 'done';
+        const result = await updateMessageStatus({
             communityId: message.communityId,
             messageId: message.id,
-            audioUrl: message.audioUrl,
+            status: newStatus,
         });
-        setIsDeleting(false);
+        setIsUpdating(false);
 
         if (result.error) {
             toast({
                 variant: 'destructive',
-                title: 'Delete Failed',
+                title: 'Update Failed',
                 description: result.error,
             });
         } else {
             toast({
-                title: 'Message Deleted',
-                description: 'The voice message has been removed.',
+                title: `Message Marked as ${newStatus}`,
             });
         }
     };
 
+    if (isDone) {
+        return (
+             <div className={cn("p-2 rounded-md flex items-center gap-3 transition-all", isUpdating && "opacity-50")}>
+                <CheckCircle className="h-5 w-5 text-green-500" />
+                 <Avatar className="w-8 h-8">
+                    <AvatarImage src={message.userAvatarUrl} alt={message.userName} />
+                    <AvatarFallback>{message.userName.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                    <span className="font-semibold text-sm text-muted-foreground">{message.userName}'s message marked as done.</span>
+                </div>
+                {canManage && (
+                    <Button variant="ghost" size="icon" onClick={handleToggleStatus} disabled={isUpdating}>
+                         {isUpdating ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Undo2 className="w-4 h-4 text-muted-foreground" />}
+                    </Button>
+                )}
+            </div>
+        )
+    }
+
     return (
-        <Card className={cn("flex flex-col", isDeleting && "opacity-50")}>
+        <Card className={cn("flex flex-col", isUpdating && "opacity-50")}>
             <CardHeader className="flex flex-row items-start gap-4 pb-4">
                 <Avatar>
                     <AvatarImage src={message.userAvatarUrl} alt={message.userName} />
@@ -504,28 +528,10 @@ function VoiceMessageCard({ message, canDelete }: { message: VoiceMessage; canDe
                         </span>
                     </div>
                 </div>
-                 {canDelete && (
-                     <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" disabled={isDeleting}>
-                                <Trash2 className="w-4 h-4 text-muted-foreground" />
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    This action cannot be undone. This will permanently delete the voice message and its audio from the servers.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
-                                    {isDeleting ? <LoaderCircle className="animate-spin" /> : 'Delete'}
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
+                 {canManage && (
+                    <Button variant="ghost" size="icon" onClick={handleToggleStatus} disabled={isUpdating} aria-label="Mark as done">
+                       {isUpdating ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Circle className="w-4 h-4 text-muted-foreground" />}
+                    </Button>
                 )}
             </CardHeader>
             <CardContent className="flex-grow space-y-4">
@@ -569,8 +575,8 @@ function VoiceChat({ communityId, isOwner }: { communityId: string; isOwner: boo
                 {isLoading && <LoaderCircle className="mx-auto animate-spin" />}
                 {error && <p className="text-destructive">Error loading messages.</p>}
                 {messages && messages.length === 0 && <p className="text-muted-foreground text-center py-8">No messages yet. Be the first!</p>}
-                <div className="max-h-96 overflow-y-auto space-y-4 pr-2">
-                    {messages?.map(msg => <VoiceMessageCard key={msg.id} message={msg} canDelete={isOwner || msg.userId === user?.uid}/>)}
+                <div className="max-h-[40rem] overflow-y-auto space-y-4 pr-2">
+                    {messages?.map(msg => <VoiceMessageCard key={msg.id} message={msg} canManage={isOwner || msg.userId === user?.uid}/>)}
                 </div>
             </CardContent>
             {user ? (
@@ -951,5 +957,7 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
+
+    
 
     

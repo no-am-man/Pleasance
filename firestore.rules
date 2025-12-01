@@ -87,6 +87,23 @@ service cloud.firestore {
             && incomingData.status == 'pending';
     }
 
+    function isValidMessageCreate() {
+      let data = request.resource.data;
+      return data.userId == request.auth.uid 
+        && data.status == 'active'
+        && data.keys().hasAll(['id', 'communityId', 'userId', 'userName', 'userAvatarUrl', 'audioUrl', 'transcription', 'createdAt', 'status']);
+    }
+
+    function isValidMessageUpdate() {
+      let data = request.resource.data;
+      // Allow only the 'status' field to be updated.
+      return data.size() == resource.data.size() + 1
+        && data.status != resource.data.status
+        && data.id == resource.data.id
+        && data.userId == resource.data.userId
+        && data.createdAt == resource.data.createdAt;
+    }
+
     //================================================================================
     // Collection Rules
     //================================================================================
@@ -146,13 +163,12 @@ service cloud.firestore {
         /**
          * @description Manages voice messages within a community.
          * @path /communities/{communityId}/messages/{messageId}
-         * @allow Any signed-in user can create/read a message.
          */
         match /messages/{messageId} {
             allow read: if true;
-            allow create: if isSignedIn();
-            allow update: if false;
-            allow delete: if isSignedIn() && (isOwner(resource.data.userId) || isCommunityOwner(communityId));
+            allow create: if isSignedIn() && isValidMessageCreate();
+            allow update: if (isOwner(resource.data.userId) || isCommunityOwner(communityId)) && isValidMessageUpdate();
+            allow delete: if false;
 
 
              /**

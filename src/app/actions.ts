@@ -11,7 +11,7 @@ import { generateSpeech } from '@/ai/flows/generate-speech';
 import { assessPronunciation as assessPronunciationFlow } from '@/ai/flows/assess-pronunciation';
 import { VOICES } from '@/config/languages';
 import { initializeFirebase } from '@/firebase/config-for-actions';
-import { doc, deleteDoc } from 'firebase/firestore';
+import { doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
 
 const storySchema = z.object({
@@ -187,37 +187,32 @@ export async function assessPronunciation(values: z.infer<typeof assessmentSchem
   }
 }
 
-const deleteMessageSchema = z.object({
+const updateMessageStatusSchema = z.object({
     communityId: z.string(),
     messageId: z.string(),
-    audioUrl: z.string(),
+    status: z.enum(['active', 'done']),
 });
 
-export async function deleteVoiceMessage(values: z.infer<typeof deleteMessageSchema>) {
+export async function updateMessageStatus(values: z.infer<typeof updateMessageStatusSchema>) {
     try {
-        const validatedFields = deleteMessageSchema.safeParse(values);
+        const validatedFields = updateMessageStatusSchema.safeParse(values);
         if (!validatedFields.success) {
             return { error: 'Invalid message data.' };
         }
 
-        const { communityId, messageId, audioUrl } = validatedFields.data;
-        const { firestore, storage } = initializeFirebase();
+        const { communityId, messageId, status } = validatedFields.data;
+        const { firestore } = initializeFirebase();
 
-        // 1. Delete Firestore document
         const messageDocRef = doc(firestore, `communities/${communityId}/messages`, messageId);
-        await deleteDoc(messageDocRef);
-
-        // 2. Delete audio file from Storage
-        if (audioUrl) {
-            const storageRef = ref(storage, audioUrl);
-            await deleteObject(storageRef);
-        }
+        await updateDoc(messageDocRef, { status });
 
         return { success: true };
 
     } catch (e) {
-        console.error('Delete Message Error:', e);
+        console.error('Update Message Status Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
-        return { error: `Failed to delete message. ${message}` };
+        return { error: `Failed to update message status. ${message}` };
     }
 }
+
+    
