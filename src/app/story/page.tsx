@@ -278,7 +278,7 @@ export default function StoryPage() {
                                 <SelectContent>
                                 <SelectItem value="beginner">Beginner</SelectItem>
                                 <SelectItem value="intermediate">Intermediate</SelectItem>
-                                <SelectItem value="advanced">Advanced</iem>
+                                <SelectItem value="advanced">Advanced</SelectItem>
                                 </SelectContent>
                             </Select>
                             <FormMessage />
