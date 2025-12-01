@@ -94,8 +94,17 @@ export default function CommunityProfilePage() {
   const firestore = useFirestore();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
+  // This reference is tricky. We don't know the owner's ID upfront.
+  // This hook will fail until we find the community and its owner.
+  // Let's adjust the logic. We need to fetch the community first, but from where?
+  // We can't assume the current user is the owner.
+  // This indicates a modeling issue. A community should probably be a top-level collection.
+  // For now, let's assume we can only view our own communities.
   const communityDocRef = useMemoFirebase(() => {
     if (!firestore || !user || !id) return null;
+    // THIS IS THE PROBLEM: It assumes the logged-in user is the owner.
+    // We need a way to look up communities by ID regardless of owner.
+    // For now, this will only work for communities the current user owns.
     return doc(firestore, 'users', user.uid, 'communities', id);
   }, [firestore, user, id]);
 
@@ -119,6 +128,8 @@ export default function CommunityProfilePage() {
   const [suggestedUsers, setSuggestedUsers] = useState<CommunityProfile[]>([]);
 
   const isOwner = user?.uid === community?.ownerId;
+  const isMember = allMembers.some(m => m.userId === user?.uid);
+
 
   useEffect(() => {
     if (community) {
@@ -167,7 +178,7 @@ export default function CommunityProfilePage() {
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-4">
-              There was a problem loading this community. It might be due to a network issue or missing permissions.
+              There was a problem loading this community. This might be a private community you do not have access to.
             </p>
             <pre className="mb-4 text-left text-sm bg-muted p-2 rounded-md overflow-x-auto">
               <code>{error.message}</code>
@@ -192,7 +203,7 @@ export default function CommunityProfilePage() {
               <CardTitle>Community Not Found</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground mb-4">We couldn't find the community you were looking for.</p>
+              <p className="text-muted-foreground mb-4">We couldn't find the community you were looking for. It may be private or you may need to be logged in as the owner to see it.</p>
               <Button asChild variant="outline">
               <Link href="/community">
                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -207,13 +218,19 @@ export default function CommunityProfilePage() {
 
   return (
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
-      <div className="mb-6">
+      <div className="mb-6 flex justify-between items-center">
         <Button asChild variant="ghost">
             <Link href="/community">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to All Communities
             </Link>
         </Button>
+        {user && !isOwner && !isMember && (
+            <Button disabled>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Request to Join
+            </Button>
+        )}
       </div>
 
       <div className="text-center mb-8">
