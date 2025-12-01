@@ -4,6 +4,9 @@
 
 This project is open source. You can find the repository [here](https://github.com/no-am-man/Pleasance).
 
+## 🎉 Version 1.0.0 is Live!
+We are excited to announce the official release of Pleasance. The federation is now open source and ready for its first wave of sovereign individuals. Thank you for being part of this journey.
+
 ## Core Philosophy
 
 This is a federation, not a platform. It is a loose collection of sovereign individuals and the communities they choose to form. Value is created and exchanged freely. Your data is yours, your assets are yours, your communities are yours. This is a space for radical self-reliance and voluntary cooperation. This guide—this wiki—is not a set of rules, but a map of the tools available to you. Use them as you see fit.
