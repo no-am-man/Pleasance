@@ -40,8 +40,8 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
       targetLanguage: targetLanguage,
     });
 
-    if (!translationResult.translatedText) {
-      throw new Error('Failed to translate the story.');
+    if (!translationResult || !translationResult.translatedText) {
+      throw new Error('Failed to translate the story. The AI may have returned an empty response.');
     }
 
     return {

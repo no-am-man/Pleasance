@@ -41,9 +41,13 @@ const translateStoryFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await translateStoryPrompt(input);
+    
+    // Ensure we always return a valid object, even if the AI returns nothing.
     const translatedText = output?.translatedText || '';
 
     if (translatedText.trim() === '') {
+        // Explicitly return an empty string in the correct schema format.
+        // The calling action will handle this as a failure case.
         return { translatedText: '' };
     }
     
