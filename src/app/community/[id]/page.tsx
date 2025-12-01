@@ -8,7 +8,7 @@ import { doc, collection, query, orderBy, serverTimestamp, where, updateDoc, arr
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mic, Square, MessageSquare, LogIn, Check, X, Hourglass, Volume2, CheckCircle, Circle, Undo2, Trash2, Ban } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mic, Square, MessageSquare, LogIn, Check, X, Hourglass, Volume2, CheckCircle, Circle, Undo2, Ban } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -525,7 +525,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                             <Button variant="ghost" size="icon" disabled={isDeleting} aria-label="Delete message">
-                                                <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                                                <Ban className="w-4 h-4 text-muted-foreground hover:text-destructive" />
                                             </Button>
                                         </AlertDialogTrigger>
                                         <AlertDialogContent>
@@ -881,7 +881,7 @@ export default function CommunityProfilePage() {
         bio: profile.bio,
         role: 'Member',
         type: 'human',
-        avatarUrl: profile.avatarUrl, // Include avatarUrl when inviting
+        avatarUrl: profile.avatarUrl || '', // Ensure avatarUrl is not undefined
     };
 
     updateDocumentNonBlocking(communityDocRef, {
