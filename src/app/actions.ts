@@ -4,10 +4,8 @@ import { z } from 'zod';
 import { generateStory } from '@/ai/flows/generate-story';
 import { translateStory } from '@/ai/flows/translate-story';
 import { generateCommunity } from '@/ai/flows/generate-community';
-import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase';
-import { getApp } from 'firebase/app';
+import { doc, setDoc, collection } from 'firebase/firestore';
 
 
 const storySchema = z.object({
@@ -90,7 +88,6 @@ export async function createCommunity(values: z.infer<typeof communitySchema>) {
             name: communityDetails.name,
             description: communityDetails.description,
             welcomeMessage: communityDetails.welcomeMessage,
-            // In the future, we could also store the generated members
         };
 
         // Save the new community to Firestore

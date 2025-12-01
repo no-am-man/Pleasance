@@ -2,7 +2,7 @@
 export type Member = {
   id: string;
   name: string;
-  role: 'Creator' | 'Founder' | 'Moderator' | 'Member';
+  role: 'Founder' | 'Moderator' | 'Member';
   avatarUrl: string;
   bio: string;
 };
