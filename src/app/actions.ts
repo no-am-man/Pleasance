@@ -7,8 +7,8 @@ import { translateStory } from '@/ai/flows/translate-story';
 import { generateCommunity } from '@/ai/flows/generate-community';
 import { transcribeAudio } from '@/ai/flows/transcribe-audio';
 import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member';
-import { getFirestore, doc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
-import { initializeFirebase } from '@/firebase';
+import { getFirestore, doc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
+import { initializeFirebase } from '@/firebase/config-for-actions'; // Use server-safe initialization
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
@@ -66,7 +66,8 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
         createdAt: serverTimestamp()
     };
     
-    await setDoc(storyRef, newStory);
+    // Temporarily use addDoc instead of setDoc with a generated ref to avoid conflicts
+    await addDoc(storyCollectionRef, newStory);
 
     return {
       originalStory,
