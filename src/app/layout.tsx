@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Header } from '@/components/header';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Pleasance',
@@ -28,10 +29,15 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="font-body antialiased">
+      <body className="font-body antialiased flex flex-col min-h-screen">
         <FirebaseClientProvider>
           <Header />
-          <main className="pt-16">{children}</main>
+          <main className="flex-grow pt-16">{children}</main>
+          <footer className="text-center p-4 border-t">
+            <Link href="https://github.com/no-am-man/Pleasance" target="_blank" rel="noopener noreferrer" className="text-green-500 hover:underline">
+                Open Source
+            </Link>
+          </footer>
           <Toaster />
         </FirebaseClientProvider>
       </body>
