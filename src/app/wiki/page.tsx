@@ -1,8 +1,10 @@
 // src/app/wiki/page.tsx
 'use client';
 
+import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, BookOpen, Warehouse, Banknote, Info } from 'lucide-react';
+import { Users, BookOpen, Warehouse, Banknote, Info, PartyPopper, Github } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const FeatureCard = ({ icon, title, children }: { icon: React.ReactNode, title: string, children: React.ReactNode }) => (
     <Card className="shadow-lg">
@@ -30,6 +32,26 @@ export default function WikiPage() {
       </div>
       
       <div className="space-y-8">
+
+        <Card className="shadow-lg bg-gradient-to-br from-card to-accent/20">
+            <CardHeader>
+                <div className="flex items-center gap-4">
+                    <PartyPopper className="h-8 w-8 text-primary"/>
+                    <CardTitle>Version 1.0.0 is Live!</CardTitle>
+                </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <p className="text-lg">
+                    We are excited to announce the official release of Pleasance. The federation is now open source and ready for its first wave of sovereign individuals. Thank you for being part of this journey.
+                </p>
+                <Button asChild>
+                    <Link href="https://github.com/no-am-man/Pleasance" target="_blank" rel="noopener noreferrer">
+                        <Github className="mr-2" /> View on GitHub
+                    </Link>
+                </Button>
+            </CardContent>
+        </Card>
+
         <Card>
             <CardHeader>
                 <CardTitle>Core Philosophy</CardTitle>
