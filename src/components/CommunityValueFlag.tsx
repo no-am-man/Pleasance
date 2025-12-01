@@ -35,13 +35,12 @@ type Asset = {
 
 export function CommunityValueFlag({ members }: { members: Member[] }) {
   const firestore = useFirestore();
+  const [totalValue, setTotalValue] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   const humanMemberIds = useMemo(() => {
     return members.filter(m => m.type === 'human' && m.userId).map(m => m.userId!);
   }, [members]);
-  
-  const [totalValue, setTotalValue] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!firestore || humanMemberIds.length === 0) {
@@ -54,9 +53,7 @@ export function CommunityValueFlag({ members }: { members: Member[] }) {
     setIsLoading(true);
 
     const fetchAllAssets = async () => {
-        let cumulativeValue = 0;
         try {
-            // Fetch assets for each user and sum their values.
             const assetPromises = humanMemberIds.map(uid => 
                 getDocs(collection(firestore, 'users', uid, 'assets'))
             );
@@ -64,6 +61,7 @@ export function CommunityValueFlag({ members }: { members: Member[] }) {
             const userAssetSnapshots = await Promise.all(assetPromises);
 
             if (isMounted) {
+                let cumulativeValue = 0;
                 userAssetSnapshots.forEach(snapshot => {
                     snapshot.forEach(doc => {
                         cumulativeValue += (doc.data() as Asset).value || 0;
