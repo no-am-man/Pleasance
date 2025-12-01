@@ -3,7 +3,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, useStorage, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, useStorage, setDocumentNonBlocking, updateDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
 import { doc, collection, query, orderBy, serverTimestamp, addDoc, where, updateDoc, arrayUnion } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -136,33 +136,28 @@ function TextMessageForm({ communityId }: { communityId: string }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useUser();
     const firestore = useFirestore();
-    const { toast } = useToast();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!text.trim() || !user || !firestore) return;
 
         setIsSubmitting(true);
-        try {
-            const messagesColRef = collection(firestore, `communities/${communityId}/messages`);
-            const newMessage = {
-                communityId,
-                userId: user.uid,
-                userName: user.displayName || 'Anonymous',
-                userAvatarUrl: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
-                type: 'text',
-                text: text.trim(),
-                status: 'active',
-                createdAt: serverTimestamp(),
-            };
-            await addDoc(messagesColRef, newMessage);
-            setText('');
-        } catch (error) {
-            const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
-            toast({ variant: 'destructive', title: 'Failed to send message', description: message });
-        } finally {
-            setIsSubmitting(false);
-        }
+        
+        const messagesColRef = collection(firestore, `communities/${communityId}/messages`);
+        const newMessage = {
+            communityId,
+            userId: user.uid,
+            userName: user.displayName || 'Anonymous',
+            userAvatarUrl: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
+            type: 'text' as const,
+            text: text.trim(),
+            status: 'active' as const,
+            createdAt: serverTimestamp(),
+        };
+
+        addDocumentNonBlocking(messagesColRef, newMessage);
+        setText('');
+        setIsSubmitting(false);
     };
 
     return (
