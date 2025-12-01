@@ -123,19 +123,21 @@ export default function StoryPage() {
     setError(null);
     setStoryResult(null);
 
+    // 1. Call server action to get generated content
     const result = await generateAndTranslateStory(data);
 
     if (result.error) {
       setError(result.error);
     } else if (result.originalStory && result.translatedText) {
+      // 2. Set client state to display the story
       setStoryResult({
         originalStory: result.originalStory,
         translatedText: result.translatedText,
         audioUrl: result.audioUrl || '',
-        sourceLanguage: result.sourceLanguage || 'English',
+        sourceLanguage: data.sourceLanguage,
       });
-      
-      // Save story to Firestore on the client
+
+      // 3. Save the story to Firestore from the client
       const storyCollectionRef = collection(firestore, 'users', user.uid, 'stories');
       const newStory = {
         userId: user.uid,
@@ -144,7 +146,7 @@ export default function StoryPage() {
         targetLanguage: data.targetLanguage,
         nativeText: result.originalStory,
         translatedText: result.translatedText,
-        audioUrl: '', // Not saving audio URL for now
+        audioUrl: '', // Audio is not saved to history to avoid storage dependency for now
         createdAt: serverTimestamp(),
       };
       
