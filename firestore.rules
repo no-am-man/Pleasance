@@ -89,22 +89,23 @@ service cloud.firestore {
 
     function isValidMessageCreate(communityId) {
         let data = request.resource.data;
-        let baseValidation = data.userId == request.auth.uid
-            && data.status == 'active'
-            && data.communityId == communityId;
-            // The hasAll check was too brittle and checked for server-generated fields.
-            // We now validate fields individually.
-        
+        // Base validation: user must be the author.
+        let baseValidation = data.userId == request.auth.uid;
+
+        if (!baseValidation) {
+            return false;
+        }
+
         if (data.type == 'text') {
-            return baseValidation 
-                && data.text is string 
-                && data.text.size() > 0 && data.text.size() < 500;
+            // For text messages, ensure text is a valid string.
+            return data.text is string && data.text.size() > 0 && data.text.size() < 500;
         }
         if (data.type == 'voice') {
-            return baseValidation 
-                && data.audioUrl is string
-                && data.transcription is string;
+            // For voice messages, ensure audioUrl and transcription are present.
+            return data.audioUrl is string && data.transcription is string;
         }
+        
+        // Deny if type is not 'text' or 'voice'.
         return false;
     }
 
@@ -128,13 +129,17 @@ service cloud.firestore {
         let data = request.resource.data;
         // The `userAvatarUrl` is optional, not required for creation.
         let baseValidation = data.userId == request.auth.uid
-            && data.keys().hasAll(['userId', 'userName', 'type']);
+            && data.userName is string;
+
+        if (!baseValidation) {
+            return false;
+        }
 
         if (data.type == 'text') {
-            return baseValidation && data.text is string && data.text.size() > 0 && data.text.size() < 500;
+            return data.text is string && data.text.size() > 0 && data.text.size() < 500;
         }
         if (data.type == 'voice') {
-            return baseValidation && data.keys().hasAll(['audioUrl', 'transcription']);
+            return data.audioUrl is string && data.transcription is string;
         }
         return false;
     }

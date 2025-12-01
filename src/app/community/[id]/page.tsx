@@ -146,11 +146,12 @@ function TextMessageForm({ communityId }: { communityId: string }) {
         setIsSubmitting(true);
         
         const messagesColRef = collection(firestore, `communities/${communityId}/messages`);
+        
         const newMessage = {
             communityId,
             userId: user.uid,
             userName: user.displayName || 'Anonymous',
-            userAvatarUrl: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
+            userAvatarUrl: user.photoURL || undefined,
             type: 'text' as const,
             text: text.trim(),
             status: 'active' as const,
@@ -313,8 +314,8 @@ function TextCommentForm({ communityId, messageId }: { communityId: string, mess
         const newComment = {
             userId: user.uid,
             userName: user.displayName || 'Anonymous',
-            userAvatarUrl: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
-            type: 'text',
+            userAvatarUrl: user.photoURL || undefined,
+            type: 'text' as const,
             text: text.trim(),
             createdAt: serverTimestamp(),
         };
