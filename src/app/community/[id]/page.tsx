@@ -4,7 +4,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, useStorage, setDocumentNonBlocking, updateDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
-import { doc, collection, query, orderBy, serverTimestamp, where, updateDoc, arrayUnion, setDoc } from 'firebase/firestore';
+import { doc, collection, query, orderBy, serverTimestamp, where, updateDoc, arrayUnion, setDoc, getDoc } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -701,12 +701,18 @@ function JoinRequests({ communityId, communityDocRef }: { communityId: string, c
         
         try {
             if (newStatus === 'approved') {
+                // Fetch the full profile of the user to get their avatar URL
+                const profileRef = doc(firestore, 'community-profiles', request.userId);
+                const profileSnap = await getDoc(profileRef);
+                const profileData = profileSnap.exists() ? profileSnap.data() as CommunityProfile : null;
+
                 const newMember: Member = {
                     userId: request.userId,
                     name: request.userName,
                     bio: request.userBio,
                     role: 'Member',
                     type: 'human',
+                    avatarUrl: profileData?.avatarUrl || '', // Ensure avatarUrl is not undefined
                 };
                 await updateDoc(communityDocRef, {
                     members: arrayUnion(newMember)
