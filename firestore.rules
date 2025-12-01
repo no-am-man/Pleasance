@@ -140,13 +140,13 @@ service cloud.firestore {
     /**
      * @description Manages AI-generated stories for language learning.
      * @path /stories/{storyId}
-     * @allow A user can read their own stories, and create new ones.
+     * @allow A user can read their own stories, and create new ones. List operation is allowed for signed-in users who query by their own user ID.
      * @deny A user cannot read, update, or delete other users' stories.
      * @principle Enforces user-specific ownership for all story data.
      */
     match /stories/{storyId} {
       allow get: if isOwner(resource.data.userId);
-      allow list: if isSignedIn() && request.query.where.size() == 1 && request.query.where[0].field == "userId" && request.query.where[0].value == request.auth.uid;
+      allow list: if isSignedIn() && request.query.where[0][2] == request.auth.uid;
       allow create: if isSignedIn() && hasValidStoryData();
       allow update, delete: if isOwner(resource.data.userId);
     }
