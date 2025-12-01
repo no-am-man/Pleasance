@@ -9,29 +9,31 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { VOICES } from "@/config/languages";
 import { Label } from "@/components/ui/label";
+import { synthesizeSpeech } from "@/app/actions";
 
 type StoryViewerProps = {
   originalStory: string;
   translatedText: string;
-  audioUrl: string;
   sourceLanguage: string;
-  onPlay: (voice: string) => void;
   isLoading: boolean;
+  setIsLoading: (isLoading: boolean) => void;
+  setError: (error: string | null) => void;
 };
 
 export default function StoryViewer({
   originalStory,
   translatedText,
-  audioUrl,
   sourceLanguage,
-  onPlay,
   isLoading,
+  setIsLoading,
+  setError,
 }: StoryViewerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [selectedVoice, setSelectedVoice] = useState(VOICES[0].value);
+  const [audioUrl, setAudioUrl] = useState('');
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
   const hasAudio = audioUrl && audioUrl.length > 0;
@@ -69,17 +71,33 @@ export default function StoryViewer({
     const audio = audioRef.current;
     if (audio && audioUrl) {
       audio.src = audioUrl;
+      audio.load(); // Make sure to load the new source
       audio.play().then(() => setIsPlaying(true)).catch(e => console.error("Autoplay failed", e));
     }
   }, [audioUrl]);
 
+
+  const handlePlay = async () => {
+    setIsLoading(true);
+    setError(null);
+    setAudioUrl(''); // Reset audio URL to force re-render and re-fetch
+
+    const result = await synthesizeSpeech({ text: translatedText, voice: selectedVoice });
+
+    if (result.error) {
+        setError(result.error);
+    } else if (result.audioDataUri) {
+        setAudioUrl(result.audioDataUri);
+    }
+    setIsLoading(false);
+  }
 
   const togglePlayPause = () => {
     const audio = audioRef.current;
     if (!audio) return;
 
     if (!hasAudio) {
-      onPlay(selectedVoice);
+      handlePlay();
       return;
     }
 
@@ -165,7 +183,7 @@ export default function StoryViewer({
         <div className="flex items-center gap-4">
             <div className="grid gap-1.5">
                 <Label htmlFor="voice-select">Speaker Voice</Label>
-                <Select value={selectedVoice} onValueChange={setSelectedVoice}>
+                <Select value={selectedVoice} onValueChange={setSelectedVoice} disabled={isLoading}>
                     <SelectTrigger className="w-[180px]" id="voice-select">
                         <SelectValue placeholder="Select a voice" />
                     </SelectTrigger>

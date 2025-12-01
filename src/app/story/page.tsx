@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LoaderCircle, Sparkles, LogIn, History } from 'lucide-react';
 import { LANGUAGES } from '@/config/languages';
-import { generateAndTranslateStory, synthesizeSpeech } from '@/app/actions';
+import { generateAndTranslateStory } from '@/app/actions';
 import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -34,12 +34,12 @@ type Story = {
     nativeText: string;
     translatedText: string;
     createdAt: { seconds: number; nanoseconds: number; } | null;
+    audioUrl?: string; // audioUrl is now part of the story data
 };
 
 type StoryResult = {
     originalStory: string;
     translatedText: string;
-    audioUrl: string;
     sourceLanguage: string;
 } | null;
 
@@ -131,7 +131,7 @@ export default function StoryPage() {
     } 
     
     if (result.originalStory && result.translatedText) {
-        const newStoryData = {
+        const newStoryData: Omit<Story, 'id'> = {
             userId: user.uid,
             level: data.difficulty,
             sourceLanguage: data.sourceLanguage,
@@ -144,7 +144,6 @@ export default function StoryPage() {
         setStoryResult({
             originalStory: result.originalStory,
             translatedText: result.translatedText,
-            audioUrl: '', 
             sourceLanguage: data.sourceLanguage,
         });
       
@@ -167,26 +166,9 @@ export default function StoryPage() {
     setStoryResult({
         originalStory: story.nativeText,
         translatedText: story.translatedText,
-        audioUrl: '',
-        sourceLanguage: story.sourceLanguage
+        sourceLanguage: story.sourceLanguage,
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  const handlePlay = async (voice: string) => {
-    if (!storyResult) return;
-    
-    setIsLoading(true);
-    setError(null);
-
-    const result = await synthesizeSpeech({ text: storyResult.translatedText, voice: voice });
-
-    if (result.error) {
-        setError(result.error);
-    } else if (result.audioDataUri) {
-        setStoryResult(prev => prev ? { ...prev, audioUrl: result.audioDataUri } : null);
-    }
-    setIsLoading(false);
   }
 
   if (isUserLoading) {
@@ -212,10 +194,10 @@ export default function StoryPage() {
                 key={selectedStory?.id || 'new-story'}
                 originalStory={storyResult.originalStory}
                 translatedText={storyResult.translatedText}
-                audioUrl={storyResult.audioUrl}
                 sourceLanguage={storyResult.sourceLanguage}
-                onPlay={handlePlay}
                 isLoading={isLoading}
+                setIsLoading={setIsLoading}
+                setError={setError}
             />
         </div>
       )}
@@ -324,10 +306,10 @@ export default function StoryPage() {
                         />
                     </div>
                     <Button type="submit" disabled={isLoading}>
-                        {isLoading ? (
-                        <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                        {isLoading && !storyResult ? (
+                            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                         ) : (
-                        <Sparkles className="mr-2 h-4 w-4" />
+                            <Sparkles className="mr-2 h-4 w-4" />
                         )}
                         Generate Story
                     </Button>
