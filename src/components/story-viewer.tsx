@@ -116,20 +116,9 @@ export default function StoryViewer({
             <CardTitle>Original Story ({sourceLanguage})</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="relative isolate">
-              <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                {originalStory}
-              </p>
-              {hasAudio && (
-                 <div
-                  className="absolute inset-0 -z-10 bg-gradient-to-r from-accent/70 to-accent/10"
-                  style={{
-                    width: `${progress}%`,
-                    transition: isPlaying ? 'width 0.1s linear' : 'none',
-                  }}
-                />
-              )}
-            </div>
+            <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
+              {originalStory}
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -137,9 +126,20 @@ export default function StoryViewer({
             <CardTitle>Translated Story</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-foreground whitespace-pre-wrap leading-relaxed">
-              {translatedText}
-            </p>
+            <div className="relative isolate">
+                <p className="text-foreground whitespace-pre-wrap leading-relaxed">
+                {translatedText}
+                </p>
+                {hasAudio && (
+                    <div
+                    className="absolute inset-0 -z-10 bg-gradient-to-r from-accent/70 to-accent/10 pointer-events-none"
+                    style={{
+                        width: `${progress}%`,
+                        transition: isPlaying ? 'width 0.1s linear' : 'none',
+                    }}
+                    />
+                )}
+            </div>
           </CardContent>
         </Card>
       </div>
