@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, BookOpen, Warehouse, ArrowRight, Banknote, Info } from 'lucide-react';
+import { Users, BookOpen, Warehouse, ArrowRight, Banknote } from 'lucide-react';
 import { Logo } from '@/components/icons';
 
 export default function Home() {
@@ -34,7 +34,7 @@ export default function Home() {
             </CardDescription>
           </CardContent>
           <div className="p-6 pt-0">
-             <Button asChild className="w-full">
+             <Button asChild className="w-full text-white bg-gradient-to-r from-fuchsia-600 to-pink-600 hover:from-fuchsia-700 hover:to-pink-700">
                 <Link href="/community">
                   Browse Communities <ArrowRight className="ml-2" />
                 </Link>
