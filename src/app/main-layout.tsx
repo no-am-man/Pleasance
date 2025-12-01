@@ -45,9 +45,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <Link href="/" passHref legacyBehavior>
+              <Link href="/" asChild>
                 <SidebarMenuButton
-                  as="a"
                   isActive={isActive('/')}
                   icon={<Home />}
                   tooltip="Home"
@@ -57,9 +56,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/community" passHref legacyBehavior>
+              <Link href="/community" asChild>
                 <SidebarMenuButton
-                  as="a"
                   isActive={isActive('/community')}
                   icon={<Users />}
                   tooltip="Community"
@@ -69,9 +67,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/story" passHref legacyBehavior>
+              <Link href="/story" asChild>
                 <SidebarMenuButton
-                  as="a"
                   isActive={isActive('/story')}
                   icon={<BookOpen />}
                   tooltip="Burlington Edge"
@@ -81,9 +78,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/fabrication" passHref legacyBehavior>
+              <Link href="/fabrication" asChild>
                 <SidebarMenuButton
-                  as="a"
                   isActive={isActive('/fabrication')}
                   icon={<Warehouse />}
                   tooltip="Fabrication"
@@ -93,9 +89,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/treasury" passHref legacyBehavior>
+              <Link href="/treasury" asChild>
                 <SidebarMenuButton
-                  as="a"
                   isActive={isActive('/treasury')}
                   icon={<Banknote />}
                   tooltip="Treasury"
@@ -105,9 +100,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/wiki" passHref legacyBehavior>
+              <Link href="/wiki" asChild>
                 <SidebarMenuButton
-                  as="a"
                   isActive={isActive('/wiki')}
                   icon={<Info />}
                   tooltip="Wiki"
@@ -121,9 +115,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <SidebarContent className="!flex-grow-0">
           <SidebarMenu>
             <SidebarMenuItem>
-              <Link href="/profile" passHref legacyBehavior>
+              <Link href="/profile" asChild>
                 <SidebarMenuButton
-                  as="a"
                   isActive={isActive('/profile')}
                   icon={<UserCircle />}
                   tooltip="My Profile"
