@@ -46,9 +46,9 @@ export default function RootLayout({
                 </Link>
               </Button>
               <Button asChild variant="ghost">
-                <Link href="/story-creator">
+                <Link href="/burlington-speech-trainer">
                   <BookText className="h-4 w-4 mr-2" />
-                  Story Creator
+                  Burlington Speech Trainer
                 </Link>
               </Button>
             </nav>
