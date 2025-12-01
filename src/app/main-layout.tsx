@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -44,7 +45,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <Link href="/" asChild>
+              <Link href="/">
                 <SidebarMenuButton
                   isActive={isActive('/')}
                   icon={<Home />}
@@ -55,7 +56,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/community" asChild>
+              <Link href="/community">
                 <SidebarMenuButton
                   isActive={isActive('/community')}
                   icon={<Users />}
@@ -66,7 +67,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/story" asChild>
+              <Link href="/story">
                 <SidebarMenuButton
                   isActive={isActive('/story')}
                   icon={<BookOpen />}
@@ -77,7 +78,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/fabrication" asChild>
+              <Link href="/fabrication">
                 <SidebarMenuButton
                   isActive={isActive('/fabrication')}
                   icon={<Warehouse />}
@@ -88,7 +89,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/treasury" asChild>
+              <Link href="/treasury">
                 <SidebarMenuButton
                   isActive={isActive('/treasury')}
                   icon={<Banknote />}
@@ -99,7 +100,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/wiki" asChild>
+              <Link href="/wiki">
                 <SidebarMenuButton
                   isActive={isActive('/wiki')}
                   icon={<Info />}
@@ -114,7 +115,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <SidebarContent className="!flex-grow-0">
           <SidebarMenu>
             <SidebarMenuItem>
-              <Link href="/profile" asChild>
+              <Link href="/profile">
                 <SidebarMenuButton
                   isActive={isActive('/profile')}
                   icon={<UserCircle />}
