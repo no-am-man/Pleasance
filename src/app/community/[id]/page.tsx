@@ -237,7 +237,7 @@ function RecordAudio({ communityId }: { communityId: string }) {
                             };
                             
                             // Use setDoc with the ref that has an ID now
-                            await setDocumentNonBlocking(newMessageRef, newMessage, { merge: false });
+                            setDocumentNonBlocking(newMessageRef, newMessage, { merge: false });
 
                             toast({ title: 'Message sent!' });
                         } catch (error) {
