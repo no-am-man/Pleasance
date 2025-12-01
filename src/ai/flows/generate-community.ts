@@ -22,7 +22,7 @@ const MemberSchema = z.object({
     name: z.string().describe("The AI member's unique name."),
     role: z.string().describe("The member's role in the community (e.g., 'Guide', 'Archivist', 'Explorer')."),
     bio: z.string().describe("A short, one-sentence bio describing the member's personality and purpose."),
-    type: z.literal('AI').describe('The type of member, which is always AI for generated members.'),
+    type: z.enum(['AI']).describe('The type of member, which is always AI for generated members.'),
   });
   
 const GenerateCommunityOutputSchema = z.object({
