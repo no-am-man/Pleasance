@@ -610,8 +610,8 @@ function Chat({ communityId, isOwner, allMembers }: { communityId: string; isOwn
         const aiMembers = allMembers.filter(m => m.type === 'AI');
         if (aiMembers.length === 0) return;
         
-        // Select a random AI member
-        const randomAiMember = aiMembers[Math.floor(Math.random() * aiMembers.length)];
+        // Select an AI member consistently to avoid hydration issues.
+        const aiMemberToRespond = aiMembers[0];
 
         // Get chat history
         const chatHistory = (messages || [])
@@ -624,7 +624,7 @@ function Chat({ communityId, isOwner, allMembers }: { communityId: string; isOwn
             
         // Generate AI response
         const result = await getAiChatResponse({
-            member: randomAiMember,
+            member: aiMemberToRespond,
             userMessage,
             history: chatHistory,
         });
@@ -632,9 +632,9 @@ function Chat({ communityId, isOwner, allMembers }: { communityId: string; isOwn
         if (result.response) {
             const aiMessage = {
                 communityId,
-                userId: `ai_${randomAiMember.name.toLowerCase().replace(/\s/g, '_')}`,
-                userName: randomAiMember.name,
-                userAvatarUrl: `https://i.pravatar.cc/150?u=${randomAiMember.name}`,
+                userId: `ai_${aiMemberToRespond.name.toLowerCase().replace(/\s/g, '_')}`,
+                userName: aiMemberToRespond.name,
+                userAvatarUrl: `https://i.pravatar.cc/150?u=${aiMemberToRespond.name}`,
                 type: 'text' as const,
                 text: result.response,
                 status: 'active' as const,
@@ -1055,4 +1055,3 @@ export default function CommunityProfilePage() {
     
 
     
-
