@@ -57,7 +57,7 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
         targetLanguage,
         nativeText: originalStory,
         translatedText: translationResult.translatedText,
-        audioDataUri: translationResult.audioDataUri,
+        // audioDataUri is intentionally omitted to avoid Firestore document size limits
         createdAt: serverTimestamp()
     };
     

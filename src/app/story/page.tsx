@@ -34,7 +34,7 @@ type Story = {
     targetLanguage: string;
     nativeText: string;
     translatedText: string;
-    audioDataUri: string;
+    audioDataUri?: string; // Audio is now optional
     createdAt: { seconds: number; nanoseconds: number; } | null;
 };
 
@@ -64,7 +64,7 @@ function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void
         <Card className="shadow-lg">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><History /> Your Story History</CardTitle>
-                <CardDescription>Revisit stories you've generated in the past.</CardDescription>
+                <CardDescription>Revisit stories you've generated in the past. Audio playback is not available for saved stories.</CardDescription>
             </CardHeader>
             <CardContent>
                 {isLoading && <LoaderCircle className="animate-spin mx-auto" />}
@@ -136,7 +136,7 @@ export default function StoryPage() {
     setStoryResult({
         originalStory: story.nativeText,
         translatedText: story.translatedText,
-        audioDataUri: story.audioDataUri,
+        audioDataUri: story.audioDataUri || '', // Will be empty string
         sourceLanguage: story.sourceLanguage
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
