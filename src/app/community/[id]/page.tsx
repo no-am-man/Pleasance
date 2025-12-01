@@ -8,7 +8,7 @@ import { doc, collection, query, orderBy, serverTimestamp, where, updateDoc, arr
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mic, Square, MessageSquare, LogIn, Check, X, Hourglass, Volume2, CheckCircle, Circle, Undo2 } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mic, Square, MessageSquare, LogIn, Check, X, Hourglass, Volume2, CheckCircle, Circle, Undo2, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +16,7 @@ import { useEffect, useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { getAiChatResponse, getTranscription, updateMessageStatus } from '@/app/actions';
+import { getAiChatResponse, getTranscription, updateMessageStatus, deleteMessage } from '@/app/actions';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -231,11 +231,11 @@ function RecordAudio({ communityId, onMessageSent }: { communityId: string, onMe
                                 userId: user.uid,
                                 userName: user.displayName || 'Anonymous',
                                 userAvatarUrl: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
-                                type: 'voice',
+                                type: 'voice' as const,
                                 audioUrl,
                                 transcription: transcription,
                                 createdAt: serverTimestamp(),
-                                status: 'active',
+                                status: 'active' as const,
                             };
                             
                             setDocumentNonBlocking(newMessageRef, newMessage, { merge: false });
@@ -396,7 +396,7 @@ function RecordComment({ communityId, messageId }: { communityId: string, messag
                             userId: user.uid,
                             userName: user.displayName || 'Anonymous',
                             userAvatarUrl: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
-                            type: 'voice',
+                            type: 'voice' as const,
                             audioUrl,
                             transcription: transcriptionResult.transcription,
                             createdAt: serverTimestamp(),
@@ -555,6 +555,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
     const [isPlaying, setIsPlaying] = useState(false);
     const { toast } = useToast();
     const [isUpdating, setIsUpdating] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const isDone = message.status === 'done';
 
@@ -601,6 +602,27 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
         }
     };
 
+    const handleDelete = async () => {
+        setIsDeleting(true);
+        const result = await deleteMessage({
+            communityId: message.communityId,
+            messageId: message.id,
+        });
+        setIsDeleting(false);
+
+        if (result.error) {
+            toast({
+                variant: 'destructive',
+                title: 'Delete Failed',
+                description: result.error,
+            });
+        } else {
+            toast({
+                title: 'Message Deleted',
+            });
+        }
+    };
+
     if (isDone) {
         return (
              <div className={cn("p-2 rounded-md flex items-center gap-3 transition-all", isUpdating && "opacity-50")}>
@@ -622,7 +644,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
     }
 
     return (
-        <Card className={cn("flex flex-col", isUpdating && "opacity-50")}>
+        <Card className={cn("flex flex-col", (isUpdating || isDeleting) && "opacity-50")}>
             <CardHeader className="flex flex-row items-start gap-4 pb-4">
                 <Avatar>
                     <AvatarImage src={message.userAvatarUrl} alt={message.userName} />
@@ -638,11 +660,36 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                         </span>
                     </div>
                 </div>
-                 {canManage && (
-                    <Button variant="ghost" size="icon" onClick={handleToggleStatus} disabled={isUpdating} aria-label="Mark as done">
-                       {isUpdating ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Circle className="w-4 h-4 text-muted-foreground" />}
-                    </Button>
-                )}
+                <div className="flex items-center">
+                    {canManage && (
+                        <>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" disabled={isDeleting} aria-label="Delete message">
+                                        <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This action cannot be undone. This will permanently delete the message.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+                                            {isDeleting ? <LoaderCircle className="animate-spin" /> : 'Delete'}
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                            <Button variant="ghost" size="icon" onClick={handleToggleStatus} disabled={isUpdating} aria-label="Mark as done">
+                                {isUpdating ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Circle className="w-4 h-4 text-muted-foreground" />}
+                            </Button>
+                        </>
+                    )}
+                 </div>
             </CardHeader>
             <CardContent className="flex-grow space-y-4">
                 {message.type === 'voice' ? (
@@ -1131,5 +1178,4 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
-
     
