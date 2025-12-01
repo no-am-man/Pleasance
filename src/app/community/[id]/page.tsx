@@ -2,13 +2,13 @@
 // src/app/community/[id]/page.tsx
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, useStorage } from '@/firebase';
 import { doc, collection, query, orderBy, serverTimestamp, addDoc } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mic, Square, MessageSquare } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mic, Square, MessageSquare, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -489,6 +489,7 @@ function VoiceMessageCard({ message }: { message: VoiceMessage }) {
 }
 
 function VoiceChat({ communityId }: { communityId: string }) {
+    const { user } = useUser();
     const firestore = useFirestore();
 
     const messagesQuery = useMemoFirebase(() => {
@@ -513,7 +514,18 @@ function VoiceChat({ communityId }: { communityId: string }) {
                     {messages?.map(msg => <VoiceMessageCard key={msg.id} message={msg} />)}
                 </div>
             </CardContent>
-            <RecordAudio communityId={communityId} />
+            {user ? (
+                <RecordAudio communityId={communityId} />
+            ) : (
+                <div className="border-t p-4 text-center">
+                    <Button asChild>
+                        <Link href="/login">
+                            <LogIn className="mr-2" />
+                            Login to post a message
+                        </Link>
+                    </Button>
+                </div>
+            )}
         </Card>
     )
 }
@@ -521,6 +533,7 @@ function VoiceChat({ communityId }: { communityId: string }) {
 
 export default function CommunityProfilePage() {
   const params = useParams();
+  const router = useRouter();
   const { user } = useUser();
   const firestore = useFirestore();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -638,6 +651,10 @@ export default function CommunityProfilePage() {
       );
   }
 
+  const joinButtonAction = user
+    ? { disabled: true, children: <><PlusCircle className="mr-2 h-4 w-4" />Request to Join</> }
+    : { asChild: true, children: <Link href="/login"><LogIn className="mr-2 h-4 w-4" />Login to Join</Link> };
+
   return (
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
       <div className="mb-6 flex justify-between items-center">
@@ -647,11 +664,8 @@ export default function CommunityProfilePage() {
                 Back to All Communities
             </Link>
         </Button>
-        {user && !isOwner && !isMember && (
-            <Button disabled>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Request to Join
-            </Button>
+        {!isOwner && !isMember && (
+            <Button {...joinButtonAction} />
         )}
       </div>
 

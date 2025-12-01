@@ -230,26 +230,6 @@ export default function CommunityPage() {
     );
   }
 
-  if (!user) {
-    return (
-      <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
-        <Card className="w-full max-w-md text-center shadow-lg">
-          <CardHeader>
-            <CardTitle>Welcome to the Federation</CardTitle>
-            <CardDescription>Log in to create and manage your communities.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild>
-              <Link href="/login">
-                <LogIn className="mr-2 h-4 w-4" /> Login to Continue
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </main>
-    );
-  }
-
   return (
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-8">
@@ -262,14 +242,33 @@ export default function CommunityPage() {
       <div className="space-y-12">
         <CommunitySearch />
         <Separator />
-        <CreateCommunityForm />
-        <Separator />
-        <CommunityList 
-            title="Your Communities"
-            communities={userCommunities}
-            isLoading={isLoading}
-            error={error}
-        />
+        
+        {user ? (
+            <>
+                <CreateCommunityForm />
+                <Separator />
+                <CommunityList 
+                    title="Your Communities"
+                    communities={userCommunities}
+                    isLoading={isLoading}
+                    error={error}
+                />
+            </>
+        ) : (
+            <Card className="w-full text-center shadow-lg">
+                <CardHeader>
+                    <CardTitle>Join the Federation</CardTitle>
+                    <CardDescription>Log in to create your own communities and see the ones you've founded.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button asChild>
+                    <Link href="/login">
+                        <LogIn className="mr-2 h-4 w-4" /> Login to Create & Manage
+                    </Link>
+                    </Button>
+                </CardContent>
+            </Card>
+        )}
       </div>
     </main>
   );
