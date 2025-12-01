@@ -1,18 +1,23 @@
+
 // src/app/community/[id]/page.tsx
 'use client';
 
 import { useParams } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { doc, collection } from 'firebase/firestore';
+import { doc, collection, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mic, Square, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
+import { getTranscription } from '@/app/actions';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 type Member = {
   name: string;
@@ -39,6 +44,17 @@ type CommunityProfile = {
     bio: string;
     nativeLanguage: string;
     learningLanguage: string;
+};
+
+type VoiceMessage = {
+    id: string;
+    communityId: string;
+    userId: string;
+    userName: string;
+    userAvatarUrl: string;
+    audioUrl: string;
+    transcription?: string;
+    createdAt: { seconds: number, nanoseconds: number };
 };
 
 function MemberCard({ member, index, communityId }: { member: Member; index: number; communityId: string;}) {
@@ -88,6 +104,197 @@ function MemberCard({ member, index, communityId }: { member: Member; index: num
     );
 }
 
+function RecordAudio({ communityId }: { communityId: string }) {
+    const [isRecording, setIsRecording] = useState(false);
+    const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const audioChunksRef = useRef<Blob[]>([]);
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const { toast } = useToast();
+
+    useEffect(() => {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                setHasPermission(true);
+            })
+            .catch(err => {
+                console.error("Mic permission denied:", err);
+                setHasPermission(false);
+            });
+    }, []);
+
+    const startRecording = async () => {
+        if (!hasPermission) {
+            toast({ variant: 'destructive', title: 'Microphone access denied.' });
+            return;
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorderRef.current = new MediaRecorder(stream);
+        mediaRecorderRef.current.ondataavailable = (event) => {
+            audioChunksRef.current.push(event.data);
+        };
+        mediaRecorderRef.current.onstop = async () => {
+            setIsProcessing(true);
+            const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+            const reader = new FileReader();
+            reader.readAsDataURL(audioBlob);
+            reader.onloadend = async () => {
+                const base64Audio = reader.result as string;
+                
+                // For now, we will store the base64 audio directly.
+                // In a real app, you'd upload this to Firebase Storage and get a URL.
+                const audioUrl = base64Audio;
+                
+                // Get transcription
+                const transcriptionResult = await getTranscription({ audioDataUri: base64Audio });
+
+                if (transcriptionResult.error || !user || !firestore) {
+                    toast({ variant: 'destructive', title: 'Transcription failed', description: transcriptionResult.error });
+                    setIsProcessing(false);
+                    return;
+                }
+                
+                const messagesColRef = collection(firestore, `communities/${communityId}/messages`);
+                const newMessage = {
+                    communityId,
+                    userId: user.uid,
+                    userName: user.displayName || 'Anonymous',
+                    userAvatarUrl: `https://i.pravatar.cc/150?u=${user.uid}`,
+                    audioUrl,
+                    transcription: transcriptionResult.transcription,
+                    createdAt: serverTimestamp(),
+                };
+
+                await addDocumentNonBlocking(messagesColRef, newMessage);
+
+                toast({ title: 'Message sent!' });
+                audioChunksRef.current = [];
+                setIsProcessing(false);
+            };
+        };
+        mediaRecorderRef.current.start();
+        setIsRecording(true);
+    };
+
+    const stopRecording = () => {
+        mediaRecorderRef.current?.stop();
+        setIsRecording(false);
+    };
+
+    if (hasPermission === null) {
+        return <div className="flex items-center justify-center p-4"><LoaderCircle className="animate-spin"/></div>
+    }
+    
+    if (hasPermission === false) {
+        return (
+             <Alert variant="destructive">
+                <AlertTitle>Microphone Access Required</AlertTitle>
+                <AlertDescription>Please enable microphone permissions in your browser settings to send voice messages.</AlertDescription>
+            </Alert>
+        )
+    }
+
+    return (
+        <div className="flex flex-col items-center gap-4 p-4 border-t">
+            {isProcessing ? (
+                 <div className="flex items-center gap-2 text-muted-foreground">
+                    <LoaderCircle className="animate-spin" />
+                    <span>Processing...</span>
+                </div>
+            ) : (
+                <Button onClick={isRecording ? stopRecording : startRecording} size="lg" className="rounded-full w-16 h-16 shadow-lg">
+                    {isRecording ? <Square /> : <Mic />}
+                </Button>
+            )}
+           
+            <p className="text-sm text-muted-foreground">{isRecording ? "Recording... Click to stop." : "Click to record a voice message."}</p>
+        </div>
+    );
+}
+
+function VoiceMessageCard({ message }: { message: VoiceMessage }) {
+    const audioRef = useRef<HTMLAudioElement>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+
+    const togglePlay = () => {
+        if (audioRef.current) {
+            if (isPlaying) {
+                audioRef.current.pause();
+            } else {
+                audioRef.current.play();
+            }
+            setIsPlaying(!isPlaying);
+        }
+    };
+
+    useEffect(() => {
+        const audio = audioRef.current;
+        if(audio) {
+            const handleEnd = () => setIsPlaying(false);
+            audio.addEventListener('ended', handleEnd);
+            return () => audio.removeEventListener('ended', handleEnd);
+        }
+    }, [])
+
+    return (
+        <Card className="p-4 flex gap-4 items-start">
+             <Avatar>
+                <AvatarImage src={message.userAvatarUrl} alt={message.userName} />
+                <AvatarFallback>{message.userName.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 space-y-2">
+                <div className="flex justify-between items-center">
+                    <span className="font-bold">{message.userName}</span>
+                    <span className="text-xs text-muted-foreground">
+                        {new Date(message.createdAt.seconds * 1000).toLocaleTimeString()}
+                    </span>
+                </div>
+                <audio ref={audioRef} src={message.audioUrl} className="hidden" />
+                <Button onClick={togglePlay} variant="outline" size="sm">
+                    {isPlaying ? 'Pause' : 'Play Message'}
+                </Button>
+                {message.transcription && (
+                    <p className="text-sm text-muted-foreground pt-2 italic">"{message.transcription}"</p>
+                )}
+            </div>
+        </Card>
+    )
+}
+
+function VoiceChat({ communityId }: { communityId: string }) {
+    const firestore = useFirestore();
+
+    const messagesQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        const messagesColRef = collection(firestore, `communities/${communityId}/messages`);
+        return query(messagesColRef, orderBy('createdAt', 'desc'));
+    }, [firestore, communityId]);
+
+    const { data: messages, isLoading, error } = useCollection<VoiceMessage>(messagesQuery);
+
+    return (
+        <Card className="shadow-lg">
+            <CardHeader>
+                <CardTitle>Voice Chat</CardTitle>
+                <CardDescription>Record and listen to voice messages from the community.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                {isLoading && <LoaderCircle className="mx-auto animate-spin" />}
+                {error && <p className="text-destructive">Error loading messages.</p>}
+                {messages && messages.length === 0 && <p className="text-muted-foreground text-center py-8">No messages yet. Be the first!</p>}
+                <div className="max-h-96 overflow-y-auto space-y-4 pr-2">
+                    {messages?.map(msg => <VoiceMessageCard key={msg.id} message={msg} />)}
+                </div>
+            </CardContent>
+            <RecordAudio communityId={communityId} />
+        </Card>
+    )
+}
+
+
 export default function CommunityProfilePage() {
   const params = useParams();
   const { user } = useUser();
@@ -96,7 +303,6 @@ export default function CommunityProfilePage() {
 
   const communityDocRef = useMemoFirebase(() => {
     if (!firestore || !id) return null;
-    // Fetch from the top-level 'communities' collection
     return doc(firestore, 'communities', id);
   }, [firestore, id]);
 
@@ -240,6 +446,10 @@ export default function CommunityProfilePage() {
           <p className="text-lg leading-relaxed whitespace-pre-wrap">{community.welcomeMessage}</p>
         </CardContent>
       </Card>
+      
+       <div className="my-12">
+        <VoiceChat communityId={community.id} />
+       </div>
       
       <div className="mb-12">
         <h2 className="text-3xl font-bold text-center mb-8">Meet the Members</h2>

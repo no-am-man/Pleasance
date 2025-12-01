@@ -169,6 +169,23 @@
         }
       },
       "required": ["name", "role", "bio", "type"]
+    },
+     "VoiceMessage": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "VoiceMessage",
+      "type": "object",
+      "description": "Represents a voice message in a community chat.",
+      "properties": {
+        "id": { "type": "string" },
+        "communityId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userAvatarUrl": { "type": "string", "format": "uri" },
+        "audioUrl": { "type": "string", "format": "uri" },
+        "transcription": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "communityId", "userId", "userName", "audioUrl", "createdAt"]
     }
   },
   "auth": {
@@ -240,8 +257,20 @@
             }
           ]
         }
+      },
+       {
+        "path": "/communities/{communityId}/messages/{messageId}",
+        "definition": {
+          "entityName": "VoiceMessage",
+          "schema": { "$ref": "#/backend/entities/VoiceMessage" },
+          "description": "Stores voice messages for a community.",
+          "params": [
+            { "name": "communityId", "description": "The ID of the community." },
+            { "name": "messageId", "description": "The ID of the message." }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities` in a top-level collection, they become publicly queryable, which is essential for search and join features. User-specific data remains private under `/users/{userId}`. Public profiles are in `/community-profiles` to allow discoverability without exposing private user account details. This separation of concerns simplifies security rules and improves data access patterns."
+    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities` in a top-level collection, they become publicly queryable, which is essential for search and join features. User-specific data remains private under `/users/{userId}`. Public profiles are in `/community-profiles` to allow discoverability without exposing private user account details. Voice messages are stored in a subcollection under each community to keep them organized and contextual."
   }
 }
