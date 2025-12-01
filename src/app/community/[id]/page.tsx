@@ -1,4 +1,3 @@
-
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -704,13 +703,26 @@ export default function CommunityProfilePage() {
   }, [firestore, user]);
   const { data: userProfile } = useDoc<CommunityProfile>(userProfileRef);
 
-  const joinRequestQuery = useMemoFirebase(() => {
-      if (!firestore || !user || !id) return null;
-      const requestsRef = collection(firestore, 'communities', id, 'joinRequests');
-      return query(requestsRef, where('userId', '==', user.uid));
+  // Use a direct doc ref to check for a specific user's join request.
+  // This avoids a collection query which is causing permission issues for non-owners.
+  const userJoinRequestRef = useMemoFirebase(() => {
+    if (!firestore || !user || !id) return null;
+    // We can't know the request ID, so we must query. But the rules block it.
+    // Let's create a predictable ID for the join request.
+    const requestId = user.uid; // Use user's UID as the document ID.
+    return doc(firestore, 'communities', id, 'joinRequests', requestId);
   }, [firestore, user, id]);
-  const { data: userJoinRequests } = useCollection<JoinRequest>(joinRequestQuery);
-  const hasPendingRequest = userJoinRequests?.some(r => r.status === 'pending');
+
+  // We need to query for the join request still because we can't predict the ID.
+  // The rules should allow this if filtered by userId.
+  const joinRequestQuery = useMemoFirebase(() => {
+    if (!firestore || !user || !id) return null;
+    const requestsRef = collection(firestore, 'communities', id, 'joinRequests');
+    return query(requestsRef, where('userId', '==', user.uid), where('status', '==', 'pending'));
+  }, [firestore, user, id]);
+
+  const { data: userJoinRequest, isLoading: isRequestLoading } = useCollection<JoinRequest>(joinRequestQuery);
+  const hasPendingRequest = userJoinRequest && userJoinRequest.length > 0;
 
   useEffect(() => {
     if (community) {
@@ -794,7 +806,7 @@ export default function CommunityProfilePage() {
   };
 
 
-  if (isLoading || profilesLoading) {
+  if (isLoading || profilesLoading || isRequestLoading) {
     return (
       <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
         <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
@@ -957,7 +969,3 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
-
-    
-
-    
