@@ -26,6 +26,7 @@ type Member = {
   type: 'AI' | 'human';
   avatarUrl?: string;
   userId?: string;
+  interactionCount?: number;
 };
 
 type Community = {
@@ -100,7 +101,7 @@ function MemberCard({ member, index, communityId }: { member: Member; index: num
                 <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex-1 space-y-1">
-                <CardTitle className="text-xl">{member.name}</CardTitle>
+                <CardTitle className="text-xl hover:underline">{member.name}</CardTitle>
                 <CardDescription className="text-primary font-medium">{member.role}</CardDescription>
             </div>
             {isHuman ? (
@@ -640,7 +641,6 @@ export default function CommunityProfilePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isOwner = user?.uid === community?.ownerId;
-  const isMember = allMembers.some(m => m.userId === user?.uid);
   
   const userProfileRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -658,24 +658,36 @@ export default function CommunityProfilePage() {
 
   useEffect(() => {
     if (community) {
-      let members: Member[] = [...(community.members || [])];
+      // Create a new array from the community members
+      let members: Member[] = community.members ? [...community.members] : [];
+
+      // Find if the owner is already in the members list as a 'human' type
+      const ownerAsMember = members.find(m => m.userId === community.ownerId);
+
+      // If there's a profile for the owner, create a member object for them
       if (ownerProfile) {
-        const ownerMember: Member = {
+        const ownerMemberObject: Member = {
           userId: ownerProfile.userId,
           name: ownerProfile.name,
           role: 'Founder',
           bio: ownerProfile.bio,
           type: 'human',
         };
-        // Add the owner to the start of the list if not already present
-        if (!members.some(m => m.userId === ownerMember.userId)) {
-          members.unshift(ownerMember);
+
+        if (ownerAsMember) {
+          // If the owner exists as a human member, update their info
+          members = members.map(m => m.userId === community.ownerId ? ownerMemberObject : m);
+        } else {
+          // If the owner is not in the list, add them to the start
+          members.unshift(ownerMemberObject);
         }
       }
       setAllMembers(members);
     }
   }, [community, ownerProfile]);
   
+  const isMember = allMembers.some(m => m.userId === user?.uid);
+
   useEffect(() => {
     if (allProfiles && allMembers.length > 0) {
       const memberUserIds = new Set(allMembers.filter(m => m.userId).map(m => m.userId!));
