@@ -1,7 +1,7 @@
 // src/components/CommunityValueFlag.tsx
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, documentId } from 'firebase/firestore';
 import { LoaderCircle } from 'lucide-react';
