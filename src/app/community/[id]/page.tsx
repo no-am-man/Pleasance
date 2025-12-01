@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, useStorage } from '@/firebase';
 import { doc, collection, query, orderBy, serverTimestamp, addDoc } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mic, Square, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
@@ -453,32 +453,37 @@ function VoiceMessageCard({ message }: { message: VoiceMessage }) {
     }, [])
 
     return (
-        <Card className="p-4 flex gap-4 items-start">
-             <Avatar>
-                <AvatarImage src={message.userAvatarUrl} alt={message.userName} />
-                <AvatarFallback>{message.userName.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 space-y-2">
-                <div className="flex justify-between items-center">
-                    <span className="font-bold">{message.userName}</span>
-                    <span className="text-xs text-muted-foreground">
-                        {message.createdAt
-                            ? new Date(message.createdAt.seconds * 1000).toLocaleTimeString()
-                            : "sending..."}
-                    </span>
+        <Card className="flex flex-col">
+            <CardHeader className="flex flex-row items-start gap-4 pb-4">
+                <Avatar>
+                    <AvatarImage src={message.userAvatarUrl} alt={message.userName} />
+                    <AvatarFallback>{message.userName.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                    <div className="flex justify-between items-center">
+                        <span className="font-bold">{message.userName}</span>
+                        <span className="text-xs text-muted-foreground">
+                            {message.createdAt
+                                ? new Date(message.createdAt.seconds * 1000).toLocaleTimeString()
+                                : "sending..."}
+                        </span>
+                    </div>
                 </div>
-                <audio ref={audioRef} src={message.audioUrl} className="hidden" />
-                
+            </CardHeader>
+            <CardContent className="flex-grow space-y-4">
+                 <audio ref={audioRef} src={message.audioUrl} className="hidden" />
+                {message.transcription && (
+                    <p className="text-sm text-muted-foreground pt-2 italic whitespace-pre-wrap">"{message.transcription}"</p>
+                )}
+            </CardContent>
+            <CardFooter className="bg-muted/50 p-2">
                 <div className="flex items-center gap-2">
                     <Button onClick={togglePlay} variant="outline" size="sm">
                         {isPlaying ? 'Pause' : 'Play Message'}
                     </Button>
                     <CommentDialog message={message} />
                 </div>
-                {message.transcription && (
-                    <p className="text-sm text-muted-foreground pt-2 italic whitespace-pre-wrap">"{message.transcription}"</p>
-                )}
-            </div>
+            </CardFooter>
         </Card>
     )
 }
