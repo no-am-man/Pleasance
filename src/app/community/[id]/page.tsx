@@ -373,7 +373,7 @@ function VoiceCommentCard({ comment }: { comment: VoiceComment }) {
                     {isPlaying ? 'Pause' : 'Play Comment'}
                 </Button>
                 {comment.transcription && (
-                    <p className="text-sm text-muted-foreground italic">"{comment.transcription}"</p>
+                    <p className="text-sm text-muted-foreground italic whitespace-pre-wrap">"{comment.transcription}"</p>
                 )}
             </div>
         </div>
@@ -476,7 +476,7 @@ function VoiceMessageCard({ message }: { message: VoiceMessage }) {
                     <CommentDialog message={message} />
                 </div>
                 {message.transcription && (
-                    <p className="text-sm text-muted-foreground pt-2 italic">"{message.transcription}"</p>
+                    <p className="text-sm text-muted-foreground pt-2 italic whitespace-pre-wrap">"{message.transcription}"</p>
                 )}
             </div>
         </Card>
