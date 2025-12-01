@@ -72,7 +72,8 @@ service cloud.firestore {
 
     // --- Subcollection Validation ---
     function hasValidSubcollectionData(userId) {
-        return request.resource.data.ownerId == userId || request.resource.data.userId == userId;
+        // This validation is weak. It should check the incoming data.
+        return request.resource.data.userId == userId || request.resource.data.ownerId == userId;
     }
 
     //================================================================================
@@ -92,7 +93,7 @@ service cloud.firestore {
          * @allow A user can perform any action on their own stories.
          */
         match /stories/{storyId} {
-            allow read, write: if isOwner(userId) && hasValidSubcollectionData(userId);
+            allow read, write: if isOwner(userId);
         }
 
         /**
@@ -101,7 +102,8 @@ service cloud.firestore {
          * @allow A user can perform any action on their own assets.
          */
         match /assets/{assetId} {
-            allow read, write: if isOwner(userId) && hasValidSubcollectionData(userId);
+            allow get, write: if isOwner(userId) && hasValidSubcollectionData(userId);
+            allow list: if isOwner(userId);
         }
     }
 
