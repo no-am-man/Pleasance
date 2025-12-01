@@ -3,7 +3,7 @@ import Link from 'next/link';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { Button } from '@/components/ui/button';
-import { Home, Users, Sparkles, UserCircle } from 'lucide-react';
+import { Home, Users, Sparkles, UserCircle, BookOpen } from 'lucide-react';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
@@ -43,6 +43,12 @@ export default function RootLayout({
                 <Link href="/genesis">
                   <Sparkles className="h-4 w-4 mr-2" />
                   Genesis
+                </Link>
+              </Button>
+              <Button asChild variant="ghost">
+                <Link href="/story">
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Story Time
                 </Link>
               </Button>
                <Button asChild variant="ghost">
