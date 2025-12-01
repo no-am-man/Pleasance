@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   Banknote,
   BookOpen,
+  ChevronDown,
   Home,
   Info,
   Menu,
@@ -16,6 +17,12 @@ import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const navLinks = [
   { href: '/', label: 'Home', icon: Home },
@@ -31,16 +38,15 @@ function NavLink({
   href,
   label,
   icon: Icon,
-  isMobile,
+  isActive,
+  isDropdown = false,
 }: {
   href: string;
   label: string;
   icon: React.ElementType;
-  isMobile?: boolean;
+  isActive: boolean;
+  isDropdown?: boolean;
 }) {
-  const pathname = usePathname();
-  const isActive = pathname === href;
-
   return (
     <Link
       href={href}
@@ -49,7 +55,7 @@ function NavLink({
         isActive
           ? 'bg-accent text-accent-foreground'
           : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-        isMobile ? 'text-base' : ''
+        isDropdown ? 'w-full' : ''
       )}
     >
       <Icon className="h-5 w-5" />
@@ -59,6 +65,8 @@ function NavLink({
 }
 
 export function Header() {
+  const pathname = usePathname();
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm">
       <Link href="/" className="flex items-center gap-2">
@@ -68,13 +76,32 @@ export function Header() {
 
       {/* Desktop Navigation */}
       <nav className="hidden items-center gap-2 md:flex">
-        {navLinks
-          .filter((link) => !link.isProfile)
-          .map((link) => (
-            <NavLink key={link.href} {...link} />
-          ))}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost">
+              Menu <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            {navLinks
+              .filter((link) => !link.isProfile)
+              .map((link) => (
+                <DropdownMenuItem key={link.href} asChild>
+                  <NavLink
+                    {...link}
+                    isActive={pathname === link.href}
+                    isDropdown
+                  />
+                </DropdownMenuItem>
+              ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         <div className="w-px h-6 bg-border mx-2"></div>
-         <NavLink {...navLinks.find((link) => link.isProfile)!} />
+        <NavLink
+          {...navLinks.find((link) => link.isProfile)!}
+          isActive={pathname === '/profile'}
+        />
       </nav>
 
       {/* Mobile Navigation */}
@@ -96,7 +123,11 @@ export function Header() {
               </Link>
               <nav className="flex flex-col gap-2">
                 {navLinks.map((link) => (
-                  <NavLink key={link.href} {...link} isMobile />
+                  <NavLink
+                    key={link.href}
+                    {...link}
+                    isActive={pathname === link.href}
+                  />
                 ))}
               </nav>
             </div>
