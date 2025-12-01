@@ -250,6 +250,26 @@
         }
       },
       {
+        "path": "/users/{userId}/stories/{storyId}",
+        "definition": {
+          "entityName": "Story",
+          "schema": {
+            "$ref": "#/backend/entities/Story"
+          },
+          "description": "Stores story information for a specific user. A user can only access their own stories.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "storyId",
+              "description": "The unique identifier for the story."
+            }
+          ]
+        }
+      },
+      {
         "path": "/community-profiles/{userId}",
         "definition": {
           "entityName": "CommunityProfile",
@@ -275,22 +295,6 @@
           "description": "Stores all communities in a top-level collection. Communities are publicly readable, but only the owner can update or delete their own community.",
           "params": [
             { "name": "communityId", "description": "The unique ID for the community." }
-          ]
-        }
-      },
-      {
-        "path": "/stories/{storyId}",
-        "definition": {
-          "entityName": "Story",
-          "schema": {
-            "$ref": "#/backend/entities/Story"
-          },
-          "description": "Stores story information. Parameter 'storyId' represents the unique identifier of the story.",
-          "params": [
-            {
-              "name": "storyId",
-              "description": "The unique identifier for the story."
-            }
           ]
         }
       },
@@ -320,6 +324,9 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities` in a top-level collection, they become publicly queryable, which is essential for search and join features. User-specific data remains private under `/users/{userId}`. Public profiles are in `/community-profiles` to allow discoverability without exposing private user account details. Voice messages are stored in a subcollection under each community to keep them organized and contextual."
+    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities` in a top-level collection, they become publicly queryable, which is essential for search and join features. User-specific data, including stories, is nested under `/users/{userId}` to ensure data privacy and allow for simple, secure queries. Public profiles are in `/community-profiles` to allow discoverability without exposing private user account details. Voice messages are stored in a subcollection under each community to keep them organized and contextual."
   }
 }
+
+
+    

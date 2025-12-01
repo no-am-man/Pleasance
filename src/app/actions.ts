@@ -44,10 +44,10 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
       throw new Error('Failed to translate the story.');
     }
     
-    // Save to Firestore
-    // Note: We use firebase/firestore/lite here because it's a server environment.
+    // Save to Firestore in user's subcollection
     const { firestore } = initializeFirebase();
-    const storyRef = doc(collection(firestore, 'stories'));
+    const storyCollectionRef = collection(firestore, 'users', userId, 'stories');
+    const storyRef = doc(storyCollectionRef);
 
     const newStory = {
         id: storyRef.id,
@@ -147,3 +147,5 @@ export async function getAiChatResponse(input: ChatWithMemberInput) {
         return { error: `AI chat failed. ${message}` };
     }
 }
+
+    

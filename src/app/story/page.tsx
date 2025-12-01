@@ -16,7 +16,7 @@ import { generateAndTranslateStory } from '@/app/actions';
 import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 
@@ -51,7 +51,9 @@ function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void
 
     const storiesQuery = useMemoFirebase(() => {
         if (!firestore || !user) return null;
-        return query(collection(firestore, 'stories'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
+        // Query the user-specific subcollection for stories
+        const storiesCollectionRef = collection(firestore, 'users', user.uid, 'stories');
+        return query(storiesCollectionRef, orderBy('createdAt', 'desc'));
     }, [firestore, user]);
 
     const { data: stories, isLoading, error } = useCollection<Story>(storiesQuery);
@@ -303,3 +305,5 @@ export default function StoryPage() {
     </main>
   );
 }
+
+    

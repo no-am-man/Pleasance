@@ -6,13 +6,14 @@
  *
  * Data Structure:
  * - `/users/{userId}`: Strictly private user account data.
+ *   - `/users/{userId}/stories/{storyId}`: Stories are nested and private to the user.
  * - `/community-profiles/{userId}`: Publicly readable profiles, writable only by the owner.
  * - `/communities/{communityId}`: Publicly readable communities, writable only by the owner.
  *   - `/communities/{communityId}/messages/{messageId}`: Messages are readable/writable by any signed-in user.
- * - `/stories/{storyId}`: Publicly readable, admin-only writes.
  *
  * Key Security Decisions:
  * - User data (`/users`) is strictly private.
+ * - User stories are nested under the user document, making them inherently private and easy to secure.
  * - Community Profiles (`/community-profiles`) are public to read, but a user can only write to their own profile.
  * - Communities (`/communities`) are public to read, which is essential for discovery and search.
  *   Writes are restricted to the owner of the community, verified by the `ownerId` field.
@@ -71,8 +72,8 @@ service cloud.firestore {
     }
 
     // --- Story Validation Functions ---
-    function hasValidStoryData() {
-        return request.resource.data.userId == request.auth.uid;
+    function hasValidStoryData(userId) {
+        return request.resource.data.userId == userId;
     }
 
     //================================================================================
@@ -85,6 +86,16 @@ service cloud.firestore {
       allow create: if isOwner(userId) && hasValidUserData(userId);
       allow update: if isExistingOwner(userId) && isImmutableUserId();
       allow delete: if isExistingOwner(userId);
+
+        /**
+         * @description Manages AI-generated stories for a specific user.
+         * @path /users/{userId}/stories/{storyId}
+         * @allow A user can perform any action on their own stories within their own subcollection.
+         * @principle Data is owned by the user and nested, simplifying rules.
+         */
+        match /stories/{storyId} {
+            allow read, write: if isOwner(userId);
+        }
     }
 
      /**
@@ -136,19 +147,7 @@ service cloud.firestore {
             }
         }
     }
-
-    /**
-     * @description Manages AI-generated stories for language learning.
-     * @path /stories/{storyId}
-     * @allow A user can read their own stories, and create new ones. List operation is allowed for signed-in users who query by their own user ID.
-     * @deny A user cannot read, update, or delete other users' stories.
-     * @principle Enforces user-specific ownership for all story data.
-     */
-    match /stories/{storyId} {
-      allow get: if isOwner(resource.data.userId);
-      allow list: if isSignedIn() && request.auth.uid == request.query.where.userId;
-      allow create: if isSignedIn() && hasValidStoryData();
-      allow update, delete: if isOwner(resource.data.userId);
-    }
   }
 }
+
+    
