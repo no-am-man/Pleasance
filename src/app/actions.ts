@@ -7,7 +7,7 @@ import { translateStory } from '@/ai/flows/translate-story';
 import { generateCommunity } from '@/ai/flows/generate-community';
 import { transcribeAudio } from '@/ai/flows/transcribe-audio';
 import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member';
-import { generateSpeech } from '@/aiflows/generate-speech';
+import { generateSpeech } from '@/ai/flows/generate-speech';
 import { VOICES } from '@/config/languages';
 import { initializeFirebase } from '@/firebase/config-for-actions';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
