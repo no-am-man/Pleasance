@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, Pause } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 
 type StoryViewerProps = {
   originalStory: string;
@@ -24,7 +25,6 @@ export default function StoryViewer({
   const [currentTime, setCurrentTime] = useState(0);
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
-
   const hasAudio = audioDataUri && audioDataUri.length > 0;
 
   useEffect(() => {
@@ -76,6 +76,20 @@ export default function StoryViewer({
     }
     setIsPlaying(!isPlaying);
   };
+  
+  const handleSeek = (value: number[]) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const newTime = (value[0] / 100) * duration;
+    audio.currentTime = newTime;
+    setCurrentTime(newTime);
+  };
+
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+  };
 
   return (
     <div className="animate-in fade-in-50 duration-500 space-y-8">
@@ -115,8 +129,21 @@ export default function StoryViewer({
       </div>
       
       {hasAudio && (
-        <div className="flex flex-col items-center space-y-4">
+        <div className="flex flex-col items-center space-y-4 pt-4">
           <audio ref={audioRef} src={audioDataUri} />
+          <div className="w-full max-w-md">
+            <Slider
+                value={[progress]}
+                onValueChange={handleSeek}
+                max={100}
+                step={0.1}
+                aria-label="Audio progress"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                <span>{formatTime(currentTime)}</span>
+                <span>{formatTime(duration)}</span>
+            </div>
+          </div>
           <Button
             onClick={togglePlayPause}
             size="lg"
