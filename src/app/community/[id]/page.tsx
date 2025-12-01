@@ -3,8 +3,9 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { doc, collection, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, useStorage } from '@/firebase';
+import { doc, collection, query, orderBy, serverTimestamp, addDoc } from 'firebase/firestore';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mic, Square, MessageSquare } from 'lucide-react';
@@ -16,7 +17,6 @@ import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { getTranscription } from '@/app/actions';
-import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
@@ -123,69 +123,77 @@ function RecordAudio({ communityId }: { communityId: string }) {
     const audioChunksRef = useRef<Blob[]>([]);
     const { user } = useUser();
     const firestore = useFirestore();
+    const storage = useStorage();
     const { toast } = useToast();
 
     useEffect(() => {
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
                 setHasPermission(true);
+                const recorder = new MediaRecorder(stream);
+                mediaRecorderRef.current = recorder;
+                recorder.ondataavailable = (event) => {
+                    audioChunksRef.current.push(event.data);
+                };
+                recorder.onstop = async () => {
+                    setIsProcessing(true);
+                    const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(audioBlob);
+                    reader.onloadend = async () => {
+                        const base64Audio = reader.result as string;
+                        if (!user || !firestore || !storage) return;
+
+                        try {
+                            const messagesColRef = collection(firestore, `communities/${communityId}/messages`);
+                            const newMessageRef = doc(messagesColRef);
+
+                            const audioPath = `communities/${communityId}/messages/${newMessageRef.id}.wav`;
+                            const storageRef = ref(storage, audioPath);
+                            const uploadResult = await uploadString(storageRef, base64Audio, 'data_url');
+                            const audioUrl = await getDownloadURL(uploadResult.ref);
+                            
+                            const transcriptionResult = await getTranscription({ audioDataUri: base64Audio });
+                             if (transcriptionResult.error) {
+                                throw new Error(transcriptionResult.error);
+                            }
+
+                            const newMessage = {
+                                id: newMessageRef.id,
+                                communityId,
+                                userId: user.uid,
+                                userName: user.displayName || 'Anonymous',
+                                userAvatarUrl: `https://i.pravatar.cc/150?u=${user.uid}`,
+                                audioUrl,
+                                transcription: transcriptionResult.transcription,
+                                createdAt: serverTimestamp(),
+                            };
+
+                            await addDoc(messagesColRef, newMessage);
+
+                            toast({ title: 'Message sent!' });
+                        } catch (error) {
+                             const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
+                             toast({ variant: 'destructive', title: 'Failed to send message', description: message });
+                        } finally {
+                            audioChunksRef.current = [];
+                            setIsProcessing(false);
+                        }
+                    };
+                };
             })
             .catch(err => {
                 console.error("Mic permission denied:", err);
                 setHasPermission(false);
             });
-    }, []);
+    }, [user, firestore, storage, communityId, toast]);
 
-    const startRecording = async () => {
-        if (!hasPermission) {
-            toast({ variant: 'destructive', title: 'Microphone access denied.' });
+    const startRecording = () => {
+        if (!hasPermission || !mediaRecorderRef.current) {
+            toast({ variant: 'destructive', title: 'Microphone access denied or not ready.' });
             return;
         }
-
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorderRef.current = new MediaRecorder(stream);
-        mediaRecorderRef.current.ondataavailable = (event) => {
-            audioChunksRef.current.push(event.data);
-        };
-        mediaRecorderRef.current.onstop = async () => {
-            setIsProcessing(true);
-            const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-            const reader = new FileReader();
-            reader.readAsDataURL(audioBlob);
-            reader.onloadend = async () => {
-                const base64Audio = reader.result as string;
-                
-                // For now, we will store the base64 audio directly.
-                // In a real app, you'd upload this to Firebase Storage and get a URL.
-                const audioUrl = base64Audio;
-                
-                // Get transcription
-                const transcriptionResult = await getTranscription({ audioDataUri: base64Audio });
-
-                if (transcriptionResult.error || !user || !firestore) {
-                    toast({ variant: 'destructive', title: 'Transcription failed', description: transcriptionResult.error });
-                    setIsProcessing(false);
-                    return;
-                }
-                
-                const messagesColRef = collection(firestore, `communities/${communityId}/messages`);
-                const newMessage = {
-                    communityId,
-                    userId: user.uid,
-                    userName: user.displayName || 'Anonymous',
-                    userAvatarUrl: `https://i.pravatar.cc/150?u=${user.uid}`,
-                    audioUrl,
-                    transcription: transcriptionResult.transcription,
-                    createdAt: serverTimestamp(),
-                };
-
-                await addDocumentNonBlocking(messagesColRef, newMessage);
-
-                toast({ title: 'Message sent!' });
-                audioChunksRef.current = [];
-                setIsProcessing(false);
-            };
-        };
+        audioChunksRef.current = [];
         mediaRecorderRef.current.start();
         setIsRecording(true);
     };
@@ -233,6 +241,7 @@ function RecordComment({ communityId, messageId }: { communityId: string, messag
     const audioChunksRef = useRef<Blob[]>([]);
     const { user } = useUser();
     const firestore = useFirestore();
+    const storage = useStorage();
     const { toast } = useToast();
 
     const toggleRecording = async () => {
@@ -244,42 +253,56 @@ function RecordComment({ communityId, messageId }: { communityId: string, messag
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorderRef.current = new MediaRecorder(stream);
-            mediaRecorderRef.current.ondataavailable = (event) => {
+            const recorder = new MediaRecorder(stream);
+            mediaRecorderRef.current = recorder;
+            recorder.ondataavailable = (event) => {
                 audioChunksRef.current.push(event.data);
             };
-            mediaRecorderRef.current.onstop = async () => {
+            recorder.onstop = async () => {
                 setIsProcessing(true);
                 const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
                 const reader = new FileReader();
                 reader.readAsDataURL(audioBlob);
                 reader.onloadend = async () => {
                     const base64Audio = reader.result as string;
-                    const transcriptionResult = await getTranscription({ audioDataUri: base64Audio });
+                    if (!user || !firestore || !storage) return;
 
-                    if (transcriptionResult.error || !user || !firestore) {
-                        toast({ variant: 'destructive', title: 'Transcription failed', description: transcriptionResult.error });
+                    try {
+                        const commentsColRef = collection(firestore, `communities/${communityId}/messages/${messageId}/comments`);
+                        const newCommentRef = doc(commentsColRef);
+
+                        const audioPath = `communities/${communityId}/messages/${messageId}/comments/${newCommentRef.id}.wav`;
+                        const storageRef = ref(storage, audioPath);
+                        const uploadResult = await uploadString(storageRef, base64Audio, 'data_url');
+                        const audioUrl = await getDownloadURL(uploadResult.ref);
+
+                        const transcriptionResult = await getTranscription({ audioDataUri: base64Audio });
+                        if (transcriptionResult.error) {
+                            throw new Error(transcriptionResult.error);
+                        }
+
+                        const newComment = {
+                            id: newCommentRef.id,
+                            userId: user.uid,
+                            userName: user.displayName || 'Anonymous',
+                            userAvatarUrl: `https://i.pravatar.cc/150?u=${user.uid}`,
+                            audioUrl,
+                            transcription: transcriptionResult.transcription,
+                            createdAt: serverTimestamp(),
+                        };
+
+                        await addDoc(commentsColRef, newComment);
+                        toast({ title: 'Comment posted!' });
+                    } catch (error) {
+                        const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
+                        toast({ variant: 'destructive', title: 'Failed to post comment', description: message });
+                    } finally {
+                        audioChunksRef.current = [];
                         setIsProcessing(false);
-                        return;
                     }
-
-                    const commentsColRef = collection(firestore, `communities/${communityId}/messages/${messageId}/comments`);
-                    const newComment = {
-                        userId: user.uid,
-                        userName: user.displayName || 'Anonymous',
-                        userAvatarUrl: `https://i.pravatar.cc/150?u=${user.uid}`,
-                        audioUrl: base64Audio,
-                        transcription: transcriptionResult.transcription,
-                        createdAt: serverTimestamp(),
-                    };
-
-                    await addDocumentNonBlocking(commentsColRef, newComment);
-                    toast({ title: 'Comment posted!' });
-                    audioChunksRef.current = [];
-                    setIsProcessing(false);
                 };
             };
-            mediaRecorderRef.current.start();
+            recorder.start();
             setIsRecording(true);
         } catch (err) {
             toast({ variant: 'destructive', title: 'Microphone access denied.' });
