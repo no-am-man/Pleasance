@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Sparkles, Mic } from 'lucide-react';
+import { Users, BookOpen, Warehouse, ArrowRight } from 'lucide-react';
 import { Logo } from '@/components/icons';
 
 export default function Home() {
@@ -13,56 +13,76 @@ export default function Home() {
           LinguaTune
         </h1>
       </div>
-      <p className="max-w-2xl text-lg sm:text-xl text-muted-foreground mb-8">
-        Welcome to the Community Federation. A place to create, explore, and connect with co-learning communities built around shared interests and voice.
+      <p className="max-w-3xl text-lg sm:text-xl text-muted-foreground mb-12">
+        A federated universe for co-learning, creation, and fabrication. Explore communities, generate AI-powered stories, or bring your digital creations to life.
       </p>
 
-      <Button asChild size="lg">
-        <Link href="/community">
-          <Users className="mr-2 h-5 w-5" />
-          Enter the Federation
-        </Link>
-      </Button>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16 w-full max-w-4xl">
-        <Card className="text-center">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl">
+        <Card className="text-left flex flex-col">
           <CardHeader>
-            <div className="mx-auto bg-primary/10 rounded-full p-3 w-fit">
-              <Sparkles className="h-8 w-8 text-primary" />
+            <div className="flex items-center gap-4">
+               <div className="mx-auto bg-primary/10 rounded-full p-3 w-fit">
+                    <Users className="h-8 w-8 text-primary" />
+                </div>
+                <CardTitle className="text-2xl">Community Federation</CardTitle>
             </div>
-            <CardTitle className="mt-4">Create Your World</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-grow">
             <CardDescription>
-              Use a simple prompt to generate a new community, complete with AI-powered members and a unique welcome message.
+              Discover, join, or create your own co-learning communities. Connect with AI and human members who share your passions.
             </CardDescription>
           </CardContent>
+          <div className="p-6 pt-0">
+             <Button asChild className="w-full">
+                <Link href="/community">
+                  Explore Communities <ArrowRight className="ml-2" />
+                </Link>
+              </Button>
+          </div>
         </Card>
-        <Card className="text-center">
+        <Card className="text-left flex flex-col">
           <CardHeader>
-            <div className="mx-auto bg-primary/10 rounded-full p-3 w-fit">
-              <Mic className="h-8 w-8 text-primary" />
+             <div className="flex items-center gap-4">
+               <div className="mx-auto bg-primary/10 rounded-full p-3 w-fit">
+                    <BookOpen className="h-8 w-8 text-primary" />
+                </div>
+                <CardTitle className="text-2xl">Burlington Edge</CardTitle>
             </div>
-            <CardTitle className="mt-4">Connect with Voice</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-grow">
             <CardDescription>
-              Experience a more personal connection with voice-based welcomes and interactions, moving beyond text-only communication.
+              Enhance your language skills with AI-generated stories and a karaoke-style speech trainer for perfect pronunciation.
             </CardDescription>
           </CardContent>
+           <div className="p-6 pt-0">
+             <Button asChild className="w-full">
+                <Link href="/story">
+                  Start Learning <ArrowRight className="ml-2" />
+                </Link>
+              </Button>
+          </div>
         </Card>
-        <Card className="text-center">
+        <Card className="text-left flex flex-col">
           <CardHeader>
-            <div className="mx-auto bg-primary/10 rounded-full p-3 w-fit">
-              <Users className="h-8 w-8 text-primary" />
+             <div className="flex items-center gap-4">
+               <div className="mx-auto bg-primary/10 rounded-full p-3 w-fit">
+                    <Warehouse className="h-8 w-8 text-primary" />
+                </div>
+                <CardTitle className="text-2xl">Fabrication Service</CardTitle>
             </div>
-            <CardTitle className="mt-4">Build a Federation</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-grow">
             <CardDescription>
-              Each community is a unique entity. As a creator, you can build and manage a federation of multiple communities.
+              Turn digital into physical. Upload CAD files for 3D printing or PDFs for print-on-demand books and objects.
             </CardDescription>
           </CardContent>
+           <div className="p-6 pt-0">
+             <Button asChild className="w-full">
+                <Link href="/fabrication">
+                  Submit a Job <ArrowRight className="ml-2" />
+                </Link>
+              </Button>
+          </div>
         </Card>
       </div>
     </main>
