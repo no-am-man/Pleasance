@@ -96,13 +96,20 @@ service cloud.firestore {
 
     function isValidMessageUpdate() {
       let data = request.resource.data;
-      // Allow only the 'status' field to be updated.
-      return data.size() == resource.data.size() + 1
-        && data.status != resource.data.status
+      // Allow only the 'status' field to be updated to 'done' or 'active'
+      return data.status != resource.data.status
+        && (data.status == 'done' || data.status == 'active')
+        // Ensure other mutable fields are not changed during a status update
         && data.id == resource.data.id
         && data.userId == resource.data.userId
-        && data.createdAt == resource.data.createdAt;
+        && data.createdAt == resource.data.createdAt
+        && data.userName == resource.data.userName
+        && data.userAvatarUrl == resource.data.userAvatarUrl
+        && data.audioUrl == resource.data.audioUrl
+        && data.transcription == resource.data.transcription
+        && data.communityId == resource.data.communityId;
     }
+    
 
     //================================================================================
     // Collection Rules
@@ -157,8 +164,8 @@ service cloud.firestore {
         allow get: if true;
         allow list: if true;
         allow create: if isSignedIn() && hasValidCommunityData();
-        allow update: if isOwner(resource.data.ownerId) && isImmutableCommunityOwnerId();
-        allow delete: if isOwner(resource.data.ownerId);
+        allow update: if isCommunityOwner(communityId) && isImmutableCommunityOwnerId();
+        allow delete: if isCommunityOwner(communityId);
 
         /**
          * @description Manages voice messages within a community.
@@ -168,7 +175,7 @@ service cloud.firestore {
             allow read: if true;
             allow create: if isSignedIn() && isValidMessageCreate();
             allow update: if (isOwner(resource.data.userId) || isCommunityOwner(communityId)) && isValidMessageUpdate();
-            allow delete: if false;
+            allow delete: if isCommunityOwner(communityId) || isOwner(resource.data.userId);
 
 
              /**
@@ -190,12 +197,10 @@ service cloud.firestore {
          */
         match /joinRequests/{requestId} {
             allow get: if isSignedIn() && (isCommunityOwner(communityId) || request.auth.uid == resource.data.userId);
-            allow list: if isCommunityOwner(communityId);
+            allow list: if isCommunityOwner(communityId) || request.query.where.userId == request.auth.uid;
             allow create: if isSignedIn() && isValidJoinRequest();
             allow update, delete: if isCommunityOwner(communityId);
         }
     }
   }
 }
-
-    
