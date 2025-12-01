@@ -8,7 +8,7 @@ import { doc, collection, query, orderBy, serverTimestamp, where, updateDoc, arr
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mic, Square, MessageSquare, LogIn, Check, X, Hourglass, Volume2, CheckCircle, Circle, Undo2, Trash2 } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mic, Square, MessageSquare, LogIn, Check, X, Hourglass, Volume2, CheckCircle, Circle, Undo2, Trash2, Ban } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +16,7 @@ import { useEffect, useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { getAiChatResponse, getTranscription, updateMessageStatus, deleteMessage } from '@/app/actions';
+import { getAiChatResponse, getTranscription, updateMessageStatus, softDeleteMessage } from '@/app/actions';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
@@ -59,11 +59,13 @@ type Message = {
     userName: string;
     userAvatarUrl?: string;
     type: 'text' | 'voice';
-    text?: string;
-    audioUrl?: string;
-    transcription?: string;
+    text?: string | null;
+    audioUrl?: string | null;
+    transcription?: string | null;
     createdAt: { seconds: number, nanoseconds: number } | null;
     status: 'active' | 'done';
+    deleted?: boolean;
+    deletedAt?: { seconds: number, nanoseconds: number } | null;
 };
 
 type Comment = {
@@ -76,6 +78,8 @@ type Comment = {
     audioUrl?: string;
     transcription?: string;
     createdAt: { seconds: number, nanoseconds: number } | null;
+    deleted?: boolean;
+    deletedAt?: { seconds: number, nanoseconds: number } | null;
 }
 
 type JoinRequest = {
@@ -398,6 +402,8 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
     const [isDeleting, setIsDeleting] = useState(false);
 
     const isDone = message.status === 'done';
+    const isDeleted = message.deleted;
+
 
     const togglePlay = () => {
         if (audioRef.current) {
@@ -444,7 +450,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
 
     const handleDelete = async () => {
         setIsDeleting(true);
-        const result = await deleteMessage({
+        const result = await softDeleteMessage({
             communityId: message.communityId,
             messageId: message.id,
         });
@@ -462,6 +468,16 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
             });
         }
     };
+
+     if (isDeleted) {
+        return (
+            <div className="p-4 rounded-md flex items-center gap-3 bg-muted/50">
+                <Ban className="h-5 w-5 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground italic">This message has been deleted.</span>
+            </div>
+        )
+    }
+
 
     if (isDone) {
         return (
@@ -513,9 +529,9 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                                         </AlertDialogTrigger>
                                         <AlertDialogContent>
                                             <AlertDialogHeader>
-                                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                <AlertDialogTitle>Are you sure you want to delete this message?</AlertDialogTitle>
                                                 <AlertDialogDescription>
-                                                    This action cannot be undone. This will permanently delete the message.
+                                                    This will permanently hide the message content. This action cannot be undone.
                                                 </AlertDialogDescription>
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>
@@ -536,7 +552,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                     <CardContent className="flex-grow space-y-4">
                         {message.type === 'voice' ? (
                             <>
-                                <audio ref={audioRef} src={message.audioUrl} className="hidden" />
+                                <audio ref={audioRef} src={message.audioUrl || undefined} className="hidden" />
                                 {message.transcription && (
                                     <p className="text-sm text-muted-foreground pt-2 italic whitespace-pre-wrap">"{message.transcription}"</p>
                                 )}
@@ -547,7 +563,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                     </CardContent>
                     <CardFooter className="bg-muted/50 p-2">
                         <div className="flex items-center gap-2">
-                            {message.type === 'voice' && (
+                            {message.type === 'voice' && message.audioUrl && (
                                 <Button onClick={togglePlay} variant="outline" size="sm">
                                     <Volume2 className="mr-2 h-4 w-4" />
                                     {isPlaying ? 'Pause' : 'Original'}

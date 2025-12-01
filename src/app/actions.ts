@@ -10,8 +10,7 @@ import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member
 import { generateSpeech } from '@/ai/flows/generate-speech';
 import { VOICES } from '@/config/languages';
 import { initializeFirebase } from '@/firebase/config-for-actions';
-import { doc, deleteDoc, updateDoc } from 'firebase/firestore';
-import { ref, deleteObject } from 'firebase/storage';
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
@@ -186,41 +185,30 @@ export async function updateMessageStatus(values: z.infer<typeof updateMessageSt
     }
 }
 
-const deleteMessageSchema = z.object({
+const softDeleteMessageSchema = z.object({
     communityId: z.string(),
     messageId: z.string(),
 });
 
-export async function deleteMessage(values: z.infer<typeof deleteMessageSchema>) {
+export async function softDeleteMessage(values: z.infer<typeof softDeleteMessageSchema>) {
     try {
-        const validatedFields = deleteMessageSchema.safeParse(values);
+        const validatedFields = softDeleteMessageSchema.safeParse(values);
         if (!validatedFields.success) {
             return { error: 'Invalid message data.' };
         }
 
         const { communityId, messageId } = validatedFields.data;
-        const { firestore, storage } = initializeFirebase();
+        const { firestore } = initializeFirebase();
 
         const messageDocRef = doc(firestore, `communities/${communityId}/messages`, messageId);
 
-        // 1. Delete the Firestore document.
-        await deleteDoc(messageDocRef);
-        
-        // 2. Attempt to delete the associated audio file from Storage.
-        const audioPath = `communities/${communityId}/messages/${messageId}.wav`;
-        const storageRef = ref(storage, audioPath);
-        
-        try {
-            await deleteObject(storageRef);
-        } catch (storageError: any) {
-            // It's expected that a text message won't have an audio file.
-            // We can safely ignore the 'object-not-found' error.
-            if (storageError.code !== 'storage/object-not-found') {
-                // If it's a different error, we should log it but not fail the whole operation,
-                // as the primary data (the Firestore doc) has been deleted.
-                console.warn(`Could not delete storage object ${audioPath}, but Firestore doc was deleted.`, storageError);
-            }
-        }
+        await updateDoc(messageDocRef, {
+            deleted: true,
+            deletedAt: serverTimestamp(),
+            text: null, // Clear content for privacy
+            transcription: null,
+            audioUrl: null,
+        });
 
         return { success: true };
 
@@ -230,4 +218,3 @@ export async function deleteMessage(values: z.infer<typeof deleteMessageSchema>)
         return { error: `Failed to delete message. ${message}` };
     }
 }
-    
