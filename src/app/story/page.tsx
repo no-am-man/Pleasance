@@ -1,4 +1,3 @@
-
 // src/app/story/page.tsx
 'use client';
 
@@ -44,8 +43,8 @@ type StoryResult = {
     sourceLanguage: string;
 } | null;
 
-function StoryHistory({ onSelectStory, isUserLoading }: { onSelectStory: (story: Story) => void; isUserLoading: boolean; }) {
-    const { user } = useUser();
+function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void; }) {
+    const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
 
     const storiesQuery = useMemoFirebase(() => {
@@ -56,8 +55,6 @@ function StoryHistory({ onSelectStory, isUserLoading }: { onSelectStory: (story:
 
     const { data: stories, isLoading, error } = useCollection<Story>(storiesQuery);
 
-    if (!user) return null;
-
     if (isUserLoading) {
       return (
           <div className="flex justify-center p-4">
@@ -65,6 +62,8 @@ function StoryHistory({ onSelectStory, isUserLoading }: { onSelectStory: (story:
           </div>
       );
     }
+    
+    if (!user) return null;
 
     return (
         <Card className="shadow-lg">
@@ -339,7 +338,7 @@ export default function StoryPage() {
             
             <Separator />
 
-            <StoryHistory onSelectStory={handleSelectStoryFromHistory} isUserLoading={isUserLoading} />
+            <StoryHistory onSelectStory={handleSelectStoryFromHistory} />
         </div>
       )}
     </main>
