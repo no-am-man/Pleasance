@@ -54,7 +54,7 @@ type VoiceMessage = {
     userAvatarUrl: string;
     audioUrl: string;
     transcription?: string;
-    createdAt: { seconds: number, nanoseconds: number };
+    createdAt: { seconds: number, nanoseconds: number } | null;
 };
 
 function MemberCard({ member, index, communityId }: { member: Member; index: number; communityId: string;}) {
@@ -249,7 +249,9 @@ function VoiceMessageCard({ message }: { message: VoiceMessage }) {
                 <div className="flex justify-between items-center">
                     <span className="font-bold">{message.userName}</span>
                     <span className="text-xs text-muted-foreground">
-                        {new Date(message.createdAt.seconds * 1000).toLocaleTimeString()}
+                        {message.createdAt
+                            ? new Date(message.createdAt.seconds * 1000).toLocaleTimeString()
+                            : "sending..."}
                     </span>
                 </div>
                 <audio ref={audioRef} src={message.audioUrl} className="hidden" />
@@ -496,3 +498,5 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
+
+    
