@@ -9,7 +9,7 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { VOICES } from "@/config/languages";
 import { Label } from "@/components/ui/label";
-import { synthesizeSpeech, assessPronunciation as assessPronunciationAction } from "@/app/actions";
+import { synthesizeSpeech, assessPronunciation } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "./ui/separator";
@@ -114,7 +114,7 @@ function PronunciationAssessment({ storyText }: { storyText: string }) {
 
           setIsAssessing(true);
           setAssessmentResult(null);
-          const result = await assessPronunciationAction({
+          const result = await assessPronunciation({
             audioDataUri: base64Audio,
             text: selectedSentence,
           });
@@ -195,7 +195,7 @@ function PronunciationAssessment({ storyText }: { storyText: string }) {
             <Info className="h-4 w-4" />
             <AlertTitle>Assessment Feedback</AlertTitle>
             <AlertDescription>
-                <p className="whitespace-pre-wrap">{assessmentResult}</p>
+                <div className="prose prose-sm dark:prose-invert" dangerouslySetInnerHTML={{ __html: assessmentResult.replace(/\\n/g, '<br />') }} />
             </AlertDescription>
           </Alert>
         )}
@@ -345,7 +345,7 @@ export default function StoryViewer({
             </Button>
           </CardHeader>
           <CardContent>
-            <div className="relative isolate">
+            <div className="relative">
                 <p className="text-foreground whitespace-pre-wrap leading-relaxed">
                 {translatedText}
                 </p>
