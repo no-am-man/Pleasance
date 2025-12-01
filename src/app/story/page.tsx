@@ -131,7 +131,7 @@ export default function StoryPage() {
     } 
     
     if (result.originalStory && result.translatedText) {
-        const newStoryData: Omit<Story, 'id'> = {
+        const newStoryData: Omit<Story, 'id' | 'audioUrl' | 'createdAt'> & { createdAt: any } = {
             userId: user.uid,
             level: data.difficulty,
             sourceLanguage: data.sourceLanguage,
