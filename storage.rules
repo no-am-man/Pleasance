@@ -3,9 +3,20 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Helper function to check community ownership
+    
+    // Helper function to check community ownership by reading the community document in Firestore.
     function isCommunityOwner(communityId) {
       return request.auth != null && request.auth.uid == get(/databases/(default)/documents/communities/$(communityId)).data.ownerId;
+    }
+
+    // Helper function to get the message document from Firestore to check ownership.
+    function getMessageDoc(communityId, messageId) {
+      return get(/databases/(default)/documents/communities/$(communityId)/messages/$(messageId)).data;
+    }
+    
+    // Helper function to get the comment document from Firestore.
+    function getCommentDoc(communityId, messageId, commentId) {
+        return get(/databases/(default)/documents/communities/$(communityId)/messages/$(messageId)/comments/$(commentId)).data;
     }
 
     //====================================================================
@@ -26,18 +37,17 @@ service firebase.storage {
     }
     
     //====================================================================
-    // Community Voice Messages: Allow any authenticated user to write
-    // voice messages and comments. Deletion is restricted.
+    // Community Voice Messages & Comments: 
+    // Allow any authenticated user to write.
+    // Deletion is restricted to the owner of the content or the community owner.
     //====================================================================
     match /communities/{communityId}/messages/{messageId}.wav {
         allow write: if request.auth != null;
-        // The user who uploaded the file or the community owner can delete it.
-        allow delete: if request.auth != null && (request.auth.uid == resource.data.userId || isCommunityOwner(communityId));
+        allow delete: if request.auth != null && (request.auth.uid == getMessageDoc(communityId, messageId).userId || isCommunityOwner(communityId));
     }
     match /communities/{communityId}/messages/{messageId}/comments/{commentId}.wav {
         allow write: if request.auth != null;
-        // The user who uploaded the comment or the community owner can delete it.
-        allow delete: if request.auth != null && (request.auth.uid == resource.data.userId || isCommunityOwner(communityId));
+        allow delete: if request.auth != null && (request.auth.uid == getCommentDoc(communityId, messageId, commentId).userId || isCommunityOwner(communityId));
     }
   }
 }
