@@ -1,9 +1,10 @@
+
 'use client';
 
 import { useMemo } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
-import { Shield, Gem, Crown, Star, LoaderCircle, QrCode } from 'lucide-react';
+import { LoaderCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import QRCode from 'react-qr-code';
 import { Button } from './ui/button';
+import { BronzeMedal, SilverMedal, GoldMedal, PlatinumMedal } from './icons/medals';
 
 type Asset = {
   id: string;
@@ -23,10 +25,10 @@ type Asset = {
 };
 
 const tiers = [
-  { threshold: 0, name: 'Bronze', icon: Shield, color: 'text-yellow-700' },
-  { threshold: 1000, name: 'Silver', icon: Gem, color: 'text-gray-400' },
-  { threshold: 10000, name: 'Gold', icon: Crown, color: 'text-yellow-500' },
-  { threshold: 100000, name: 'Platinum', icon: Star, color: 'text-cyan-400' },
+  { threshold: 0, name: 'Bronze', Icon: BronzeMedal, color: 'text-yellow-700' },
+  { threshold: 1000, name: 'Silver', Icon: SilverMedal, color: 'text-gray-400' },
+  { threshold: 10000, name: 'Gold', Icon: GoldMedal, color: 'text-yellow-500' },
+  { threshold: 100000, name: 'Platinum', Icon: PlatinumMedal, color: 'text-cyan-400' },
 ];
 
 export function FederationIdentityFlag({ userId }: { userId: string }) {
@@ -52,27 +54,25 @@ export function FederationIdentityFlag({ userId }: { userId: string }) {
     return (
       <div className="flex items-center gap-2 text-muted-foreground">
         <LoaderCircle className="h-4 w-4 animate-spin" />
-        <span className="text-sm">Calculating Identity...</span>
       </div>
     );
   }
 
-  const Icon = tier.icon;
+  const { Icon } = tier;
 
   return (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="ghost" className="h-auto p-1 rounded-md">
             <div className="flex items-center gap-2 text-lg">
-                <Icon className={`h-6 w-6 ${tier.color}`} />
-                <span className={`font-semibold ${tier.color}`}>{tier.name} Contributor</span>
+                <Icon className="h-8 w-8" />
             </div>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Icon className={`h-6 w-6 ${tier.color}`} /> {tier.name} Identity Token
+            <Icon className="h-8 w-8" /> {tier.name} Identity Token
           </DialogTitle>
           <DialogDescription>
             This token represents the total declared value of this user's assets within the federation. Scan the QR code to verify its value.
