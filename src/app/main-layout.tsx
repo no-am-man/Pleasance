@@ -44,7 +44,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <Link href="/" legacyBehavior passHref>
+              <Link href="/" asChild>
                 <SidebarMenuButton
                   isActive={isActive('/')}
                   icon={<Home />}
@@ -55,7 +55,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/community" legacyBehavior passHref>
+              <Link href="/community" asChild>
                 <SidebarMenuButton
                   isActive={isActive('/community')}
                   icon={<Users />}
@@ -66,7 +66,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/story" legacyBehavior passHref>
+              <Link href="/story" asChild>
                 <SidebarMenuButton
                   isActive={isActive('/story')}
                   icon={<BookOpen />}
@@ -77,7 +77,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/fabrication" legacyBehavior passHref>
+              <Link href="/fabrication" asChild>
                 <SidebarMenuButton
                   isActive={isActive('/fabrication')}
                   icon={<Warehouse />}
@@ -88,7 +88,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/treasury" legacyBehavior passHref>
+              <Link href="/treasury" asChild>
                 <SidebarMenuButton
                   isActive={isActive('/treasury')}
                   icon={<Banknote />}
@@ -99,7 +99,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/wiki" legacyBehavior passHref>
+              <Link href="/wiki" asChild>
                 <SidebarMenuButton
                   isActive={isActive('/wiki')}
                   icon={<Info />}
@@ -114,7 +114,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <SidebarContent className="!flex-grow-0">
           <SidebarMenu>
             <SidebarMenuItem>
-              <Link href="/profile" legacyBehavior passHref>
+              <Link href="/profile" asChild>
                 <SidebarMenuButton
                   isActive={isActive('/profile')}
                   icon={<UserCircle />}
