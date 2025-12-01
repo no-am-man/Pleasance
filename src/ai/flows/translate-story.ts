@@ -20,7 +20,7 @@ export type TranslateStoryInput = z.infer<typeof TranslateStoryInputSchema>;
 
 const TranslateStoryOutputSchema = z.object({
   translatedText: z.string().describe('The translated story text.'),
-  audioDataUri: z.string().describe('The audio data URI of the translated story.'),
+  audioWavBase64: z.string().describe('The base64-encoded WAV audio of the translated story.'),
 });
 export type TranslateStoryOutput = z.infer<typeof TranslateStoryOutputSchema>;
 
@@ -70,9 +70,9 @@ const translateStoryFlow = ai.defineFlow(
     const translatedText = output?.translatedText || '';
 
     if (translatedText.trim() === '') {
-        return { translatedText: '', audioDataUri: '' };
+        return { translatedText: '', audioWavBase64: '' };
     }
     const speechResult = await generateSpeech({ text: translatedText });
-    return {translatedText: translatedText, audioDataUri: speechResult.media};
+    return {translatedText: translatedText, audioWavBase64: speechResult.wavBase64};
   }
 );

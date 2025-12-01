@@ -18,7 +18,7 @@ const GenerateSpeechInputSchema = z.object({
 export type GenerateSpeechInput = z.infer<typeof GenerateSpeechInputSchema>;
 
 const GenerateSpeechOutputSchema = z.object({
-  media: z.string().describe('The audio data in WAV format as a data URI.'),
+  wavBase64: z.string().describe('The audio data in WAV format as a base64 string.'),
 });
 export type GenerateSpeechOutput = z.infer<typeof GenerateSpeechOutputSchema>;
 
@@ -73,14 +73,17 @@ const generateSpeechFlow = ai.defineFlow(
       prompt: input.text,
     });
     if (!media) {
-      return { media: '' };
+      return { wavBase64: '' };
     }
-    const audioBuffer = Buffer.from(
-      media.url.substring(media.url.indexOf(',') + 1),
-      'base64'
-    );
+    // The media URL is a data URI: "data:audio/L16;rate=24000;channels=1;base64,..."
+    // We need to extract the base64 part.
+    const pcmBase64 = media.url.substring(media.url.indexOf(',') + 1);
+    const audioBuffer = Buffer.from(pcmBase64, 'base64');
+    
+    const wavBase64 = await toWav(audioBuffer);
+    
     return {
-      media: 'data:audio/wav;base64,' + (await toWav(audioBuffer)),
+      wavBase64: wavBase64,
     };
   }
 );

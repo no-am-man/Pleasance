@@ -3,18 +3,26 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Allow users to read and write to their own 'stories' folder.
-    // The path ensures that a user can only access files under /stories/{userId}/...
-    match /stories/{userId}/{allPaths=**} {
+    //====================================================================
+    // Stories
+    //====================================================================
+    // Allow an authenticated user to read and write audio files to their
+    // own dedicated stories folder. The userId in the path MUST match
+    // the authenticated user's UID.
+    match /stories/{userId}/{storyId}.wav {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Allow any authenticated user to write to the messages or comments folders
-    // but only the owner can read them back.
-    match /communities/{communityId}/messages/{messageId} {
+    //====================================================================
+    // Community Voice Messages
+    //====================================================================
+    // Allow any authenticated user to upload voice messages and comments.
+    // Read access can be more permissive if needed, but for now, any
+    // authenticated user can read any message.
+    match /communities/{communityId}/messages/{messageId}.wav {
         allow read, write: if request.auth != null;
     }
-    match /communities/{communityId}/messages/{messageId}/comments/{commentId} {
+    match /communities/{communityId}/messages/{messageId}/comments/{commentId}.wav {
         allow read, write: if request.auth != null;
     }
   }

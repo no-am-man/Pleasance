@@ -8,7 +8,7 @@ import { generateCommunity } from '@/ai/flows/generate-community';
 import { transcribeAudio } from '@/ai/flows/transcribe-audio';
 import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member';
 import { getFirestore, doc, setDoc, serverTimestamp, collection } from 'firebase/firestore/lite';
-import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { initializeFirebase } from '@/firebase/config-for-actions';
 
 const storySchema = z.object({
@@ -54,11 +54,16 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
     const storyRef = doc(storyCollectionRef);
 
     let audioUrl = '';
-    if (translationResult.audioDataUri) {
+    if (translationResult.audioWavBase64) {
         const audioPath = `stories/${userId}/${storyRef.id}.wav`;
         const storageRef = ref(storage, audioPath);
-        // Upload the base64 data URI to Firebase Storage
-        const uploadResult = await uploadString(storageRef, translationResult.audioDataUri, 'data_url');
+        
+        // Convert base64 to buffer
+        const audioBuffer = Buffer.from(translationResult.audioWavBase64, 'base64');
+        
+        // Upload the buffer to Firebase Storage
+        const uploadResult = await uploadBytes(storageRef, audioBuffer, { contentType: 'audio/wav' });
+        
         // Get the public download URL
         audioUrl = await getDownloadURL(uploadResult.ref);
     }
