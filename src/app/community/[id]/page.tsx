@@ -40,18 +40,23 @@ type CommunityProfile = {
     learningLanguage: string;
 };
 
-function MemberCard({ member, index }: { member: Member; index: number;}) {
+function MemberCard({ member, index, communityId }: { member: Member; index: number; communityId: string;}) {
     const isHuman = member.type === 'human';
     const avatarUrl = `https://i.pravatar.cc/150?u=${member.name}-${index}`;
     
-    const Wrapper = isHuman && member.userId ? Link : 'div';
-    const wrapperProps = isHuman && member.userId ? { href: `/profile/${member.userId}` } : {};
+    const Wrapper = Link;
+    
+    let href = '#';
+    if(isHuman && member.userId) {
+        href = `/profile/${member.userId}`;
+    } else if (!isHuman) {
+        href = `/community/${communityId}/member/${encodeURIComponent(member.name)}`;
+    }
 
     return (
-      <Wrapper {...wrapperProps}>
+      <Wrapper href={href}>
         <Card className={cn(
-            "shadow-md transition-all h-full",
-            isHuman && "hover:shadow-lg hover:-translate-y-1 hover:bg-muted/50 cursor-pointer"
+            "shadow-md transition-all h-full hover:shadow-lg hover:-translate-y-1 hover:bg-muted/50 cursor-pointer"
         )}>
             <CardHeader className="flex flex-row items-start gap-4">
             <Avatar className="w-16 h-16 border-2 border-primary/20">
@@ -208,7 +213,7 @@ export default function CommunityProfilePage() {
         <h2 className="text-3xl font-bold text-center mb-8">Meet the Members</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {allMembers.map((member, index) => (
-            <MemberCard key={`${member.name}-${index}`} member={member} index={index} />
+            <MemberCard key={`${member.name}-${index}`} member={member} index={index} communityId={community.id} />
           ))}
         </div>
       </div>
