@@ -131,7 +131,7 @@ export default function LoginPage() {
                      <Button asChild variant="outline" className="w-full">
                         <Link href="https://accounts.google.com/signup" target="_blank" rel="noopener noreferrer">
                            <MailPlus className="mr-2" />
-                           Create a new Gmail
+                           Create a new Gmail with a virtual self?
                         </Link>
                     </Button>
 
