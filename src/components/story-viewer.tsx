@@ -4,12 +4,13 @@
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, LoaderCircle } from "lucide-react";
+import { Play, Pause, LoaderCircle, Copy } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { VOICES } from "@/config/languages";
 import { Label } from "@/components/ui/label";
 import { synthesizeSpeech } from "@/app/actions";
+import { useToast } from "@/hooks/use-toast";
 
 type StoryViewerProps = {
   originalStory: string;
@@ -34,6 +35,7 @@ export default function StoryViewer({
   const [currentTime, setCurrentTime] = useState(0);
   const [selectedVoice, setSelectedVoice] = useState(VOICES[0].value);
   const [audioUrl, setAudioUrl] = useState('');
+  const { toast } = useToast();
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
   const hasAudio = audioUrl && audioUrl.length > 0;
@@ -127,12 +129,23 @@ export default function StoryViewer({
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const handleCopy = (text: string, type: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Copied to Clipboard",
+      description: `The ${type} story has been copied.`,
+    });
+  };
+
   return (
     <div className="animate-in fade-in-50 duration-500 space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row justify-between items-start">
             <CardTitle>Original Story ({sourceLanguage})</CardTitle>
+            <Button variant="ghost" size="icon" onClick={() => handleCopy(originalStory, 'original')}>
+                <Copy className="w-4 h-4" />
+            </Button>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
@@ -141,8 +154,11 @@ export default function StoryViewer({
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row justify-between items-start">
             <CardTitle>Translated Story</CardTitle>
+            <Button variant="ghost" size="icon" onClick={() => handleCopy(translatedText, 'translated')}>
+                <Copy className="w-4 h-4" />
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="relative isolate">
