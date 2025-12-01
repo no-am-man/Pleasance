@@ -48,7 +48,7 @@ export default function RootLayout({
               <Button asChild variant="ghost">
                 <Link href="/story">
                   <BookOpen className="h-4 w-4 mr-2" />
-                  Burligton Speech Trainer
+                  Burlington Edge
                 </Link>
               </Button>
                <Button asChild variant="ghost">
