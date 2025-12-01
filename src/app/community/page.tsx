@@ -151,11 +151,15 @@ function CommunityList({ title, communities, isLoading, error }: { title: string
               {communities.map((community) => (
                 <li key={community.id} className="rounded-md border transition-colors hover:bg-muted/50">
                    <Link href={`/community/${community.id}`} className="block p-4">
-                    <div className="flex items-center gap-4">
-                      <h3 className="font-semibold text-lg text-primary">{community.name}</h3>
-                      <CommunityValueFlag members={community.members} />
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-lg text-primary">{community.name}</h3>
+                        </div>
+                        <div onClick={(e) => e.stopPropagation()}>
+                            <CommunityValueFlag members={community.members} />
+                        </div>
                     </div>
-                    <p className="text-sm text-muted-foreground">{community.description}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{community.description}</p>
                   </Link>
                 </li>
               ))}
