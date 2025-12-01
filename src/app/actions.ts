@@ -7,11 +7,14 @@ import { translateStory } from '@/ai/flows/translate-story';
 import { generateCommunity } from '@/ai/flows/generate-community';
 import { transcribeAudio } from '@/ai/flows/transcribe-audio';
 import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member';
+import { getFirestore, doc, setDoc, serverTimestamp, collection } from 'firebase/firestore/lite';
+import { initializeFirebase } from '@/firebase/config-for-actions';
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
   sourceLanguage: z.string().min(1),
   targetLanguage: z.string().min(1),
+  userId: z.string().min(1),
 });
 
 export async function generateAndTranslateStory(values: z.infer<typeof storySchema>) {
@@ -21,7 +24,7 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
       return { error: 'Invalid input.' };
     }
     
-    const { difficulty, sourceLanguage, targetLanguage } = validatedFields.data;
+    const { difficulty, sourceLanguage, targetLanguage, userId } = validatedFields.data;
 
     // Generate Story
     const storyResult = await generateStory({ difficultyLevel: difficulty, sourceLanguage });
@@ -40,6 +43,25 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
     if (!translationResult.translatedText) {
       throw new Error('Failed to translate the story.');
     }
+    
+    // Save to Firestore
+    // Note: We use firebase/firestore/lite here because it's a server environment.
+    const { firestore } = initializeFirebase();
+    const storyRef = doc(collection(firestore, 'stories'));
+
+    const newStory = {
+        id: storyRef.id,
+        userId: userId,
+        level: difficulty,
+        sourceLanguage,
+        targetLanguage,
+        nativeText: originalStory,
+        translatedText: translationResult.translatedText,
+        audioDataUri: translationResult.audioDataUri,
+        createdAt: serverTimestamp()
+    };
+    
+    await setDoc(storyRef, newStory);
 
     return {
       originalStory,

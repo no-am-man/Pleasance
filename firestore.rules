@@ -70,6 +70,10 @@ service cloud.firestore {
         return request.resource.data.id == resource.data.id && request.resource.data.userId == resource.data.userId;
     }
 
+    // --- Story Validation Functions ---
+    function hasValidStoryData() {
+        return request.resource.data.userId == request.auth.uid;
+    }
 
     //================================================================================
     // Collection Rules
@@ -134,16 +138,17 @@ service cloud.firestore {
     }
 
     /**
-     * @description Manages publicly readable stories. Writes are currently disabled.
+     * @description Manages AI-generated stories for language learning.
      * @path /stories/{storyId}
-     * @allow Any user, signed in or not, reading a story: `(get)`.
-     * @deny Any user trying to create a story: `(create)`. Denied because the schema lacks an ownership field.
-     * @principle Implements a "Public Read with Owner-Only Writes" pattern. Writes are securely denied pending a schema update.
+     * @allow A user can read their own stories, and create new ones.
+     * @deny A user cannot read, update, or delete other users' stories.
+     * @principle Enforces user-specific ownership for all story data.
      */
     match /stories/{storyId} {
-      allow get: if true;
-      allow list: if true;
-      allow create, update, delete: if false;
+      allow get: if isOwner(resource.data.userId);
+      allow list: if isSignedIn(); // Querying will be filtered by `where('userId', '==', request.auth.uid)`
+      allow create: if isSignedIn() && hasValidStoryData();
+      allow update, delete: if isOwner(resource.data.userId);
     }
   }
 }

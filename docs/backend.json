@@ -82,9 +82,21 @@
           "type": "string",
           "description": "Unique identifier for the Story entity."
         },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who generated the story."
+        },
         "level": {
           "type": "string",
           "description": "The difficulty level of the story (e.g., beginner, intermediate, advanced)."
+        },
+        "sourceLanguage": {
+            "type": "string",
+            "description": "The source language of the story."
+        },
+        "targetLanguage": {
+            "type": "string",
+            "description": "The target language of the story."
         },
         "nativeText": {
           "type": "string",
@@ -94,18 +106,26 @@
           "type": "string",
           "description": "The translated story text in the user's selected foreign language."
         },
-        "audioUrl": {
+        "audioDataUri": {
           "type": "string",
-          "description": "URL of the TTS-generated audio file for the translated story.",
-          "format": "uri"
+          "description": "Data URI of the TTS-generated audio file for the translated story."
+        },
+        "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp when the story was created."
         }
       },
       "required": [
         "id",
+        "userId",
         "level",
+        "sourceLanguage",
+        "targetLanguage",
         "nativeText",
         "translatedText",
-        "audioUrl"
+        "audioDataUri",
+        "createdAt"
       ]
     },
     "Community": {
