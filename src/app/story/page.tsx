@@ -1,4 +1,3 @@
-
 // src/app/story/page.tsx
 'use client';
 
@@ -11,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LoaderCircle, Sparkles, LogIn, History } from 'lucide-react';
-import { LANGUAGES, VOICES } from '@/config/languages';
+import { LANGUAGES } from '@/config/languages';
 import { generateAndTranslateStory, synthesizeSpeech } from '@/app/actions';
 import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -24,7 +23,6 @@ const StoryFormSchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
   sourceLanguage: z.string({ required_error: 'Please select a source language.' }),
   targetLanguage: z.string({ required_error: 'Please select a target language.' }),
-  voice: z.enum(VOICES.map(v => v.value) as [string, ...string[]], { required_error: 'Please select a voice.'}),
 });
 
 type Story = {
@@ -45,8 +43,8 @@ type StoryResult = {
     sourceLanguage: string;
 } | null;
 
-function StoryHistory({ onSelectStory, isUserLoading }: { onSelectStory: (story: Story) => void; isUserLoading: boolean; }) {
-    const { user } = useUser();
+function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void; }) {
+    const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
 
     const storiesQuery = useMemoFirebase(() => {
@@ -61,9 +59,9 @@ function StoryHistory({ onSelectStory, isUserLoading }: { onSelectStory: (story:
 
     if (isUserLoading) {
       return (
-          <main className="container mx-auto flex min-h-[80vh] items-center justify-center">
-              <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
-          </main>
+          <div className="flex justify-center p-4">
+              <LoaderCircle className="w-8 h-8 animate-spin text-primary" />
+          </div>
       );
     }
 
@@ -103,6 +101,7 @@ export default function StoryPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [storyResult, setStoryResult] = useState<StoryResult>(null);
+  const [selectedStory, setSelectedStory] = useState<Story | null>(null);
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
@@ -110,7 +109,6 @@ export default function StoryPage() {
     resolver: zodResolver(StoryFormSchema),
     defaultValues: {
       difficulty: 'beginner',
-      voice: 'Algenib',
     },
   });
 
@@ -128,29 +126,32 @@ export default function StoryPage() {
     if (result.error) {
       setError(result.error);
     } else if (result.originalStory && result.translatedText) {
-      setStoryResult({
-        originalStory: result.originalStory,
-        translatedText: result.translatedText,
-        audioUrl: '', // Audio will be generated on play
-        sourceLanguage: data.sourceLanguage,
-      });
-
-      const storyCollectionRef = collection(firestore, 'users', user.uid, 'stories');
-      const newStory: Omit<Story, 'id' | 'createdAt'> = {
+      
+      const newStoryForHistory = {
         userId: user.uid,
         level: data.difficulty,
         sourceLanguage: data.sourceLanguage,
         targetLanguage: data.targetLanguage,
         nativeText: result.originalStory,
         translatedText: result.translatedText,
+        createdAt: serverTimestamp() 
       };
-      
+
       try {
-        await addDoc(storyCollectionRef, { ...newStory, createdAt: serverTimestamp() });
+        const storyCollectionRef = collection(firestore, 'users', user.uid, 'stories');
+        await addDoc(storyCollectionRef, newStoryForHistory);
       } catch (firestoreError) {
-          console.error("Failed to save story to Firestore:", firestoreError);
-          setError("Story generated, but failed to save to your history.");
+          const message = firestoreError instanceof Error ? firestoreError.message : 'An unknown error occurred';
+          setError("Story generated, but failed to save to your history. " + message);
       }
+      
+      setStoryResult({
+        originalStory: result.originalStory,
+        translatedText: result.translatedText,
+        audioUrl: '', 
+        sourceLanguage: data.sourceLanguage,
+      });
+
     } else {
         setError('An unknown error occurred while generating the story.');
     }
@@ -159,23 +160,23 @@ export default function StoryPage() {
   }
 
   const handleSelectStoryFromHistory = (story: Story) => {
+    setSelectedStory(story);
     setStoryResult({
         originalStory: story.nativeText,
         translatedText: story.translatedText,
-        audioUrl: '', // Audio will be generated on play
+        audioUrl: '',
         sourceLanguage: story.sourceLanguage
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  const handlePlay = async () => {
+  const handlePlay = async (voice: string) => {
     if (!storyResult) return;
     
     setIsLoading(true);
     setError(null);
 
-    const voice = form.getValues('voice');
-    const result = await synthesizeSpeech({ text: storyResult.translatedText, voice });
+    const result = await synthesizeSpeech({ text: storyResult.translatedText, voice: voice });
 
     if (result.error) {
         setError(result.error);
@@ -205,6 +206,7 @@ export default function StoryPage() {
       {storyResult && (
         <div className="mb-8">
             <StoryViewer 
+                key={selectedStory?.id || 'new-story'}
                 originalStory={storyResult.originalStory}
                 translatedText={storyResult.translatedText}
                 audioUrl={storyResult.audioUrl}
@@ -222,7 +224,7 @@ export default function StoryPage() {
          </Alert>
       )}
 
-      {!user && (
+      {!user ? (
          <Card className="w-full max-w-md mx-auto text-center shadow-lg">
           <CardHeader>
             <CardTitle>Welcome to Burlington Edge</CardTitle>
@@ -236,135 +238,104 @@ export default function StoryPage() {
             </Button>
           </CardContent>
         </Card>
-      )}
-      
-      {user && (
+      ) : (
         <div className="space-y-8">
-            {!storyResult && (
-                <Card className="shadow-lg">
-                    <CardHeader>
-                    <CardTitle>Create Your Story</CardTitle>
-                    <CardDescription>Select your languages and difficulty level.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <FormField
-                            control={form.control}
-                            name="sourceLanguage"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Your Language</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select your native language" />
-                                    </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                    {LANGUAGES.map((lang) => (
-                                        <SelectItem key={lang.value} value={lang.value}>
-                                        {lang.label}
-                                        </SelectItem>
-                                    ))}
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField
-                            control={form.control}
-                            name="targetLanguage"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Language to Learn</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select a language to learn" />
-                                    </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                    {LANGUAGES.map((lang) => (
-                                        <SelectItem key={lang.value} value={lang.value}>
-                                        {lang.label}
-                                        </SelectItem>
-                                    ))}
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField
-                            control={form.control}
-                            name="difficulty"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Difficulty</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select difficulty" />
-                                    </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                    <SelectItem value="beginner">Beginner</SelectItem>
-                                    <SelectItem value="intermediate">Intermediate</SelectItem>
-                                    <SelectItem value="advanced">Advanced</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                             <FormField
-                              control={form.control}
-                              name="voice"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Speaker Voice</FormLabel>
-                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select a voice" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      {VOICES.map((voice) => (
-                                        <SelectItem key={voice.value} value={voice.value}>
-                                          {voice.label}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                        </div>
-                        <Button type="submit" disabled={isLoading}>
-                            {isLoading ? (
-                            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                            ) : (
-                            <Sparkles className="mr-2 h-4 w-4" />
-                            )}
-                            Generate Story
-                        </Button>
-                        </form>
-                    </Form>
-                    </CardContent>
-                </Card>
-            )}
-            {storyResult && (
-                <div className="text-center mt-8">
-                    <Button onClick={() => setStoryResult(null)}>Generate a New Story</Button>
-                </div>
-            )}
+            <Card className="shadow-lg">
+                <CardHeader>
+                <CardTitle>Create a New Story</CardTitle>
+                <CardDescription>Select your languages and difficulty level.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                        control={form.control}
+                        name="sourceLanguage"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Your Language</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select your native language" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                {LANGUAGES.map((lang) => (
+                                    <SelectItem key={lang.value} value={lang.value}>
+                                    {lang.label}
+                                    </SelectItem>
+                                ))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="targetLanguage"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Language to Learn</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a language to learn" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                {LANGUAGES.map((lang) => (
+                                    <SelectItem key={lang.value} value={lang.value}>
+                                    {lang.label}
+                                    </SelectItem>
+                                ))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="difficulty"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Difficulty</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select difficulty" />
+                                </Trigger>
+                                </FormControl>
+                                <SelectContent>
+                                <SelectItem value="beginner">Beginner</SelectItem>
+                                <SelectItem value="intermediate">Intermediate</SelectItem>
+                                <SelectItem value="advanced">Advanced</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    </div>
+                    <Button type="submit" disabled={isLoading}>
+                        {isLoading ? (
+                        <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                        <Sparkles className="mr-2 h-4 w-4" />
+                        )}
+                        Generate Story
+                    </Button>
+                    </form>
+                </Form>
+                </CardContent>
+            </Card>
+            
             <Separator />
-            <StoryHistory onSelectStory={handleSelectStoryFromHistory} isUserLoading={isUserLoading} />
+
+            <StoryHistory onSelectStory={handleSelectStoryFromHistory} />
         </div>
       )}
     </main>

@@ -6,13 +6,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, LoaderCircle } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { VOICES } from "@/config/languages";
+import { Label } from "@/components/ui/label";
 
 type StoryViewerProps = {
   originalStory: string;
   translatedText: string;
   audioUrl: string;
   sourceLanguage: string;
-  onPlay: () => void;
+  onPlay: (voice: string) => void;
   isLoading: boolean;
 };
 
@@ -28,11 +31,11 @@ export default function StoryViewer({
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const [selectedVoice, setSelectedVoice] = useState(VOICES[0].value);
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
   const hasAudio = audioUrl && audioUrl.length > 0;
 
-  // Effect for handling audio lifecycle
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -48,14 +51,13 @@ export default function StoryViewer({
 
     const handlePlaybackEnded = () => {
       setIsPlaying(false);
-      setCurrentTime(audio.duration); // Ensure slider goes to the end
+      setCurrentTime(0);
     };
 
     audio.addEventListener("loadeddata", setAudioData);
     audio.addEventListener("timeupdate", setAudioTime);
     audio.addEventListener("ended", handlePlaybackEnded);
     
-    // Cleanup
     return () => {
       audio.removeEventListener("loadeddata", setAudioData);
       audio.removeEventListener("timeupdate", setAudioTime);
@@ -63,7 +65,6 @@ export default function StoryViewer({
     };
   }, []);
 
-  // Effect to play audio when URL changes
   useEffect(() => {
     const audio = audioRef.current;
     if (audio && audioUrl) {
@@ -78,7 +79,7 @@ export default function StoryViewer({
     if (!audio) return;
 
     if (!hasAudio) {
-      onPlay();
+      onPlay(selectedVoice);
       return;
     }
 
@@ -86,7 +87,7 @@ export default function StoryViewer({
       audio.pause();
     } else {
         if (audio.currentTime >= audio.duration) {
-            audio.currentTime = 0; // Restart if at the end
+            audio.currentTime = 0; 
         }
         audio.play();
     }
@@ -160,21 +161,39 @@ export default function StoryViewer({
                 <span>{formatTime(duration)}</span>
             </div>
         </div>
-        <Button
-          onClick={togglePlayPause}
-          size="lg"
-          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-16 h-16 shadow-lg"
-          aria-label={isPlaying ? "Pause" : "Play"}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-             <LoaderCircle className="h-8 w-8 animate-spin" />
-          ) : isPlaying ? (
-            <Pause className="h-8 w-8" />
-          ) : (
-            <Play className="h-8 w-8 ml-1" />
-          )}
-        </Button>
+
+        <div className="flex items-center gap-4">
+            <div className="grid gap-1.5">
+                <Label htmlFor="voice-select">Speaker Voice</Label>
+                <Select value={selectedVoice} onValueChange={setSelectedVoice}>
+                    <SelectTrigger className="w-[180px]" id="voice-select">
+                        <SelectValue placeholder="Select a voice" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {VOICES.map((voice) => (
+                            <SelectItem key={voice.value} value={voice.value}>
+                                {voice.label}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+            <Button
+            onClick={togglePlayPause}
+            size="lg"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-16 h-16 shadow-lg self-end"
+            aria-label={isPlaying ? "Pause" : "Play"}
+            disabled={isLoading}
+            >
+            {isLoading ? (
+                <LoaderCircle className="h-8 w-8 animate-spin" />
+            ) : isPlaying ? (
+                <Pause className="h-8 w-8" />
+            ) : (
+                <Play className="h-8 w-8 ml-1" />
+            )}
+            </Button>
+        </div>
       </div>
     </div>
   );
