@@ -34,10 +34,6 @@ service cloud.firestore {
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
-
-    function isCommunityOwner(communityId) {
-      return isSignedIn() && get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId == request.auth.uid;
-    }
     
     // --- User Validation Functions ---
     function hasValidUserData(userId) {
@@ -132,8 +128,8 @@ service cloud.firestore {
         allow get: if true;
         allow list: if true;
         allow create: if isSignedIn() && hasValidCommunityData();
-        allow update: if isCommunityOwner(communityId) && isImmutableCommunityOwnerId();
-        allow delete: if isCommunityOwner(communityId);
+        allow update: if get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId == request.auth.uid && isImmutableCommunityOwnerId();
+        allow delete: if get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId == request.auth.uid;
 
         /**
          * @description Manages messages within a community.
@@ -142,8 +138,8 @@ service cloud.firestore {
         match /messages/{messageId} {
             allow read: if true;
             allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-            allow update: if (request.auth.uid == resource.data.userId) || isCommunityOwner(communityId);
-            allow delete: if (request.auth.uid == resource.data.userId) || isCommunityOwner(communityId);
+            allow update: if (request.auth.uid == resource.data.userId) || (get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId == request.auth.uid);
+            allow delete: if (request.auth.uid == resource.data.userId) || (get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId == request.auth.uid);
 
              /**
              * @description Manages comments on a specific message.
@@ -154,7 +150,7 @@ service cloud.firestore {
                 allow read: if true;
                 allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
                 allow update: if false;
-                allow delete: if (request.auth.uid == resource.data.userId) || isCommunityOwner(communityId);
+                allow delete: if (request.auth.uid == resource.data.userId) || (get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId == request.auth.uid);
             }
         }
         
@@ -163,13 +159,11 @@ service cloud.firestore {
          * @path /communities/{communityId}/joinRequests/{requestId}
          */
         match /joinRequests/{requestId} {
-            allow get: if isSignedIn() && (isCommunityOwner(communityId) || request.auth.uid == requestId);
-            allow list: if isCommunityOwner(communityId);
+            allow get: if isSignedIn() && (get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId == request.auth.uid || request.auth.uid == requestId);
+            allow list: if get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId == request.auth.uid;
             allow create: if isOwner(requestId) && isValidJoinRequest();
-            allow update, delete: if isCommunityOwner(communityId);
+            allow update, delete: if get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId == request.auth.uid;
         }
     }
   }
 }
-
-    
