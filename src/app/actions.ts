@@ -7,9 +7,9 @@ import { translateStory } from '@/ai/flows/translate-story';
 import { generateCommunity } from '@/ai/flows/generate-community';
 import { transcribeAudio } from '@/ai/flows/transcribe-audio';
 import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member';
-import { getFirestore, doc, setDoc, serverTimestamp, collection } from 'firebase/firestore/lite';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { initializeFirebase } from '@/firebase/config-for-actions';
+import { getFirestore, doc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
+import { getStorage, ref, uploadString, getDownloadURL, uploadBytes } from 'firebase/storage';
+import { initializeFirebase } from '@/firebase/config-for-actions'; // Keep this for now, but we will call it inside the function
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),

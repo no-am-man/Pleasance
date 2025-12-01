@@ -1,17 +1,17 @@
 
 // src/firebase/config-for-actions.ts
-import { initializeApp as initializeAppLite, getApps as getAppsLite, getApp as getAppLite } from 'firebase/app';
-import { getFirestore as getFirestoreLite } from 'firebase/firestore/lite';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { firebaseConfig } from './config';
 
-// This file is specifically for server-side actions where the 'lite' packages are preferred.
+// This file is specifically for server-side actions.
 
 export function initializeFirebase() {
-  const app = getAppsLite().length ? getAppLite() : initializeAppLite(firebaseConfig);
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   return {
       app,
-      firestore: getFirestoreLite(app),
+      firestore: getFirestore(app),
       storage: getStorage(app),
   };
 }
