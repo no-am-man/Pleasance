@@ -1,3 +1,4 @@
+
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -89,7 +90,7 @@ type JoinRequest = {
     createdAt: { seconds: number, nanoseconds: number } | null;
 }
 
-function MemberCard({ member, index, communityId }: { member: Member; index: number; communityId: string;}) {
+function MemberCard({ member, communityId }: { member: Member; communityId: string;}) {
     const isHuman = member.type === 'human';
     
     const Wrapper = Link;
@@ -873,8 +874,8 @@ export default function CommunityProfilePage() {
       <div className="mb-12">
         <h2 className="text-3xl font-bold text-center mb-8">Meet the Members</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {allMembers.map((member, index) => (
-            <MemberCard key={`${member.name}-${index}`} member={member} index={index} communityId={community.id} />
+          {allMembers.map((member) => (
+            <MemberCard key={member.userId || member.name} member={member} communityId={community.id} />
           ))}
         </div>
       </div>
