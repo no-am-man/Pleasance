@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth';
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,6 +41,25 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSigningIn, setIsSigningIn] = useState(false);
 
+  // Handle redirect result on page load
+  useEffect(() => {
+    const processRedirectResult = async () => {
+        setIsSigningIn(true);
+        try {
+            await getRedirectResult(auth);
+            // The onAuthStateChanged listener will handle the user state update.
+        } catch (err: any) {
+            console.error('Redirect sign-in error:', err);
+            if (err.code !== 'auth/no-redirect-operation') {
+                setError('Failed to sign in. Please try again.');
+            }
+        } finally {
+            setIsSigningIn(false);
+        }
+    };
+    processRedirectResult();
+  }, [auth]);
+
   const profileRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return doc(firestore, 'community-profiles', user.uid);
@@ -54,11 +73,16 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-    } catch (err) {
-      console.error(err);
-      setError('Failed to sign in. Please try again.');
-    } finally {
-      setIsSigningIn(false);
+      // Successful popup sign-in, onAuthStateChanged will handle the rest
+    } catch (err: any) {
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
+        // Fallback to redirect if popup is blocked
+        await signInWithRedirect(auth, provider);
+      } else {
+        console.error("Google sign-in error:", err);
+        setError('Failed to sign in. Please try again.');
+        setIsSigningIn(false);
+      }
     }
   };
   
@@ -78,7 +102,7 @@ export default function LoginPage() {
     }
   }, [user, isUserLoading, profile, isProfileLoading, router]);
   
-  if (isUserLoading || isProfileLoading || (user && !isSigningIn)) {
+  if (isUserLoading || isProfileLoading || isSigningIn || (user && !isSigningIn)) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
