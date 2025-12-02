@@ -23,6 +23,7 @@ function toBase64(str: string): string {
 }
 
 // Initialize Firebase Admin SDK only if not already initialized
+// This is the robust way to handle initialization in a serverless environment
 if (!admin.apps.length) {
     try {
         admin.initializeApp({
