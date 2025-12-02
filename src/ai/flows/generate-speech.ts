@@ -36,11 +36,6 @@ const generateSpeechFlow = ai.defineFlow(
     const { media } = await ai.generate({
       model: googleAI.model('text-to-speech-1'),
       prompt: input.text,
-      config: {
-        synthesizeSpeech: {
-          audioEncoding: 'MP3'
-        }
-      }
     });
 
     if (!media) {
