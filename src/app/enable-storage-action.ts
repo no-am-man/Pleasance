@@ -1,9 +1,10 @@
+
 // src/app/enable-storage-action.ts
 'use server';
 
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { firebaseConfig } from '@/firebase/config';
-import { google } from 'googleapis';
+import { Storage } from '@google-cloud/storage';
 import { cookies } from 'next/headers';
 
 export async function enableStorage() {
@@ -22,32 +23,21 @@ export async function enableStorage() {
         const projectId = firebaseConfig.projectId;
         const bucketName = firebaseConfig.storageBucket;
         
-        // This creates a credential from the service account used by firebase-admin
-        const auth = new google.auth.GoogleAuth({
-            credentials: (adminApp.options.credential as any).credential.serviceAccount,
-            scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+        // The Storage client will automatically use the credentials from the initialized adminApp.
+        const storage = new Storage({
+            projectId,
         });
 
-        const storage = google.storage({ version: 'v1', auth });
-
         // Check if the bucket already exists
-        try {
-            const [existingBucket] = await storage.buckets.get({ bucket: bucketName });
-            if (existingBucket) {
-                return { data: `Storage bucket '${bucketName}' already exists. No action needed.` };
-            }
-        } catch (e: any) {
-            if (e.code !== 404) {
-                 throw new Error(`Failed to check for bucket: ${e.message}`);
-            }
-            // If it's a 404, we proceed to create it.
+        const bucket = storage.bucket(bucketName);
+        const [exists] = await bucket.exists();
+
+        if (exists) {
+            return { data: `Storage bucket '${bucketName}' already exists. No action needed.` };
         }
 
         // If it doesn't exist, create it.
-        await storage.buckets.insert({
-            project: projectId,
-            name: bucketName,
-        });
+        await storage.createBucket(bucketName);
         
         // Do not set public access rules, as public access prevention is on.
         // Signed URLs will be used for access.
@@ -58,7 +48,7 @@ export async function enableStorage() {
         console.error('Storage enabling error:', e);
         const message = e.message || 'An unexpected error occurred.';
         // Provide more specific feedback for common issues
-        if (e.code === 403) {
+        if (e.code === 403 || e.code === 7) {
             return { error: `Permission denied. The service account may not have the 'roles/storage.admin' role. Please check IAM settings in Google Cloud Console. Details: ${message}` };
         }
         return { error: `Failed to enable storage: ${message}` };

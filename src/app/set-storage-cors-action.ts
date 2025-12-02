@@ -1,11 +1,11 @@
+
 // src/app/set-storage-cors-action.ts
 'use server';
 
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { firebaseConfig } from '@/firebase/config';
-import { google } from 'googleapis';
-import { cookies } from 'next/headers';
 import { Storage } from '@google-cloud/storage';
+import { cookies } from 'next/headers';
 
 export async function setStorageCors() {
     try {
@@ -25,14 +25,10 @@ export async function setStorageCors() {
             return { error: 'Firebase project configuration is missing the storageBucket name.' };
         }
         
-        // This creates a credential from the service account used by firebase-admin
-        // with the explicit scope needed to modify CORS settings.
-        const auth = new google.auth.GoogleAuth({
-            credentials: (adminApp.options.credential as any).credential.serviceAccount,
-            scopes: ['https://www.googleapis.com/auth/devstorage.full_control'],
+        // The Storage client will automatically use the admin app's credentials.
+        const storage = new Storage({
+            projectId: firebaseConfig.projectId,
         });
-
-        const storage = new Storage({ auth });
         
         const corsConfiguration = [{
             origin: ['*'], // Allow all origins for simplicity in this context.
@@ -48,8 +44,8 @@ export async function setStorageCors() {
     } catch (e: any) {
         console.error('CORS setup error:', e);
         const message = e.message || 'An unexpected error occurred.';
-        if (e.code === 403) {
-            return { error: `Permission denied. The service account may not have the 'roles/storage.admin' role. Please check IAM settings in Google Cloud Console. Details: ${message}` };
+        if (e.code === 403 || e.code === 7) {
+            return { error: `Permission denied. The service account may not have the 'Storage Object Admin' or a similar role. Please check IAM settings in Google Cloud Console. Details: ${message}` };
         }
         return { error: `Failed to set CORS policy: ${message}` };
     }
