@@ -9,34 +9,30 @@ const flagSchema = z.object({
     communityId: z.string(),
     communityName: z.string(),
     communityDescription: z.string(),
+    serviceAccountKey: z.string(),
 });
 
 // Helper to ensure the admin app is initialized only once.
-function initializeAdminApp() {
-    // Check if the default app is already initialized to prevent errors.
+function initializeAdminApp(serviceAccountKey: string) {
     if (admin.apps.length > 0) {
         return admin.app();
     }
 
-    const serviceAccountBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
-
-    if (!serviceAccountBase64) {
-        throw new Error('Server configuration error: FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is not set.');
+    if (!serviceAccountKey) {
+        throw new Error('Server configuration error: Service account key is missing.');
     }
 
     try {
-        const decodedServiceAccount = Buffer.from(serviceAccountBase64, 'base64').toString('utf8');
+        const decodedServiceAccount = Buffer.from(serviceAccountKey, 'base64').toString('utf8');
         try {
             const serviceAccount = JSON.parse(decodedServiceAccount);
             return admin.initializeApp({
                 credential: admin.credential.cert(serviceAccount),
             });
         } catch (e: any) {
-            // Error parsing the JSON
             throw new Error(`Server configuration error: Failed to parse the service account JSON. Please ensure it is a valid JSON object. Details: ${e.message}`);
         }
     } catch (e: any) {
-        // Error decoding from Base64
         throw new Error(`Server configuration error: Failed to decode the service account key from Base64. Please ensure it is a valid Base64 string. Details: ${e.message}`);
     }
 }
@@ -44,14 +40,14 @@ function initializeAdminApp() {
 
 export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) {
     try {
-        const adminApp = initializeAdminApp();
-
         const validatedFields = flagSchema.safeParse(values);
         if (!validatedFields.success) {
             return { error: 'Invalid input for flag generation.' };
         }
         
-        const { communityId, communityName, communityDescription } = validatedFields.data;
+        const { communityId, communityName, communityDescription, serviceAccountKey } = validatedFields.data;
+
+        const adminApp = initializeAdminApp(serviceAccountKey);
 
         // 1. Generate the SVG string using the AI flow
         const flagResult = await generateFlag({ communityName, communityDescription });

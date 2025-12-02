@@ -715,6 +715,12 @@ export default function CommunityProfilePage() {
   const handleGenerateFlag = async () => {
     if (!community || !communityDocRef) return;
 
+    const serviceAccountKey = window.prompt("Please paste your Base64-encoded service account key:");
+    if (!serviceAccountKey) {
+        toast({ variant: 'destructive', title: 'Action Canceled', description: 'Service account key is required to generate a flag.' });
+        return;
+    }
+
     setIsGeneratingFlag(true);
     toast({ title: 'Generating New Flag...', description: 'The AI is painting. This may take a moment.' });
 
@@ -723,6 +729,7 @@ export default function CommunityProfilePage() {
         communityId: community.id,
         communityName: community.name,
         communityDescription: community.description,
+        serviceAccountKey: serviceAccountKey,
       });
 
       if (result.error) {
