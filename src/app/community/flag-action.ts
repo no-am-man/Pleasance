@@ -4,6 +4,9 @@
 import { z } from 'zod';
 import { generateFlag } from '@/ai/flows/generate-flag';
 import * as admin from 'firebase-admin';
+import { config } from 'dotenv';
+
+config(); // Load environment variables from .env file
 
 const flagSchema = z.object({
     communityId: z.string(),
@@ -13,15 +16,16 @@ const flagSchema = z.object({
 
 // Helper to ensure the admin app is initialized only once.
 function initializeAdminApp() {
-    // This is the robust way to initialize: check if apps are already initialized.
-    // If not, initialize the default app. If so, get the default app.
     if (admin.apps.length > 0) {
         return admin.app();
     }
     try {
         // When running in a Google Cloud environment (like App Hosting),
-        // initializeApp() can often be called without arguments.
-        return admin.initializeApp();
+        // it should pick up credentials automatically. Explicitly providing the
+        // projectId can help in some cases.
+        return admin.initializeApp({
+            projectId: process.env.GCLOUD_PROJECT,
+        });
     } catch (e) {
         console.error('Firebase Admin Initialization Error in flag-action:', e);
         throw new Error('Server configuration error. Could not initialize Firebase Admin.');
