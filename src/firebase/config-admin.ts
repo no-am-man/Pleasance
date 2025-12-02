@@ -17,9 +17,16 @@ export function initializeAdminApp() {
   }
 
   const serviceAccountKeyBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
+  
   if (!serviceAccountKeyBase64) {
-    throw new Error('Server configuration error: The FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is not set. This is required for server-side Firebase operations.');
+    throw new Error('Server configuration error: The FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is not set. This is required for server-side Firebase operations. Please add it to your .env file.');
   }
+
+  // Add a check to ensure the variable is not just an empty string
+  if (serviceAccountKeyBase64.trim() === '') {
+      throw new Error('Server configuration error: The FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is empty. Please provide a valid Base64-encoded service account key.');
+  }
+
 
   try {
     const decodedKey = Buffer.from(serviceAccountKeyBase64, 'base64').toString('utf8');
