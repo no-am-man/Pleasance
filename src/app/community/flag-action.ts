@@ -9,17 +9,13 @@ const flagSchema = z.object({
     communityId: z.string(),
     communityName: z.string(),
     communityDescription: z.string(),
-    serviceAccountKey: z.string().min(1, { message: "Service account key cannot be empty." }),
+    serviceAccountKey: z.string().min(1, { message: "Service account key is required and cannot be empty." }),
 });
 
 // Helper to ensure the admin app is initialized only once.
 function initializeAdminApp(serviceAccountKey: string) {
     if (admin.apps.length > 0) {
         return admin.app();
-    }
-
-    if (!serviceAccountKey) {
-        throw new Error('Server configuration error: Service account key is missing.');
     }
 
     try {
@@ -42,12 +38,14 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
     try {
         const validatedFields = flagSchema.safeParse(values);
         if (!validatedFields.success) {
+            // Get the first error message for a more specific response.
             const errorMessage = validatedFields.error.issues[0]?.message || 'Invalid input for flag generation.';
             return { error: errorMessage };
         }
         
         const { communityId, communityName, communityDescription, serviceAccountKey } = validatedFields.data;
 
+        // This will throw an error if initialization fails, which will be caught below.
         const adminApp = initializeAdminApp(serviceAccountKey);
 
         // 1. Generate the SVG string using the AI flow
