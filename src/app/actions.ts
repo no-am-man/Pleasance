@@ -11,12 +11,39 @@ import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
 import { VOICES } from '@/config/languages';
 import * as admin from 'firebase-admin';
+import { getAuth } from 'firebase-admin/auth';
+import { cookies } from 'next/headers';
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
   sourceLanguage: z.string().min(1),
   targetLanguage: z.string().min(1),
 });
+
+function initializeAdminApp() {
+    if (admin.apps.length > 0) {
+        return admin.app();
+    }
+    // This is a placeholder for where you'd securely get your service account.
+    // In a real app, this should come from a secure source like environment variables.
+    // For this context, we will assume it's being handled by the caller.
+    throw new Error('Admin app initialization should be handled by the calling action.');
+}
+
+async function getAuthenticatedUser() {
+    try {
+        const sessionCookie = cookies().get('__session')?.value;
+        if (!sessionCookie) return null;
+        
+        initializeAdminApp(); // Ensure app is initialized
+        const decodedIdToken = await getAuth().verifySessionCookie(sessionCookie, true);
+        return decodedIdToken;
+    } catch (e) {
+        console.error("Authentication error:", e);
+        return null;
+    }
+}
+
 
 export async function generateAndTranslateStory(values: z.infer<typeof storySchema>) {
   try {
@@ -169,25 +196,60 @@ export async function runMemberSync() {
     }
 }
 
-function initializeAdminApp() {
-    if (admin.apps.length > 0) {
-        return admin.app();
+const credentialsSchema = z.object({
+  serviceAccountKey: z.string().min(1, 'Service account key cannot be empty.'),
+});
+
+export async function saveCredentials(values: z.infer<typeof credentialsSchema>) {
+    try {
+        const validatedFields = credentialsSchema.safeParse(values);
+        if (!validatedFields.success) {
+            return { error: 'Invalid input.' };
+        }
+        
+        const app = initializeAdminApp();
+        const firestore = admin.firestore(app);
+        const auth = admin.auth(app);
+
+        const sessionCookie = cookies().get('__session')?.value;
+        if (!sessionCookie) {
+            return { error: 'Unauthorized: No session cookie found.' };
+        }
+
+        const decodedIdToken = await auth.verifySessionCookie(sessionCookie, true);
+
+        if (decodedIdToken.email !== 'gg.el0ai.com@gmail.com') {
+            return { error: 'Unauthorized: Only the founder can save credentials.' };
+        }
+
+        const docRef = firestore.collection('_private_admin_data').doc('credentials');
+        await docRef.set({ serviceAccountKeyBase64: values.serviceAccountKey });
+
+        return { success: true };
+
+    } catch (e) {
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Failed to save credentials: ${message}` };
     }
-    // This is a placeholder for where you'd securely get your service account.
-    // In a real app, this should come from a secure source like environment variables.
-    // For this context, we will assume it's being handled by the caller.
-    throw new Error('Admin app initialization should be handled by the calling action.');
 }
 
 
-export async function getCredentials(userId: string) {
-    if (userId !== 'Ms2g8eAlLnYcSB9eI4ZPU269ijz2') { // Founder's UID
-        return { error: 'Unauthorized' };
-    }
-    
+export async function getCredentials() {
     try {
         const app = initializeAdminApp();
         const firestore = admin.firestore(app);
+        const auth = admin.auth(app);
+        
+        const sessionCookie = cookies().get('__session')?.value;
+        if (!sessionCookie) {
+            return { error: 'Unauthorized: No session cookie found.' };
+        }
+        const decodedIdToken = await auth.verifySessionCookie(sessionCookie, true);
+
+        if (decodedIdToken.email !== 'gg.el0ai.com@gmail.com') {
+            return { error: 'Unauthorized' };
+        }
+        
         const docRef = firestore.collection('_private_admin_data').doc('credentials');
         const docSnap = await docRef.get();
 

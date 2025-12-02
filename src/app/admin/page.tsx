@@ -3,18 +3,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser } from '@/firebase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, ShieldCheck, AlertTriangle, CheckCircle, Bone, KeyRound } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { runMemberSync } from '../actions';
+import { runMemberSync, saveCredentials, getCredentials } from '../actions';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
-import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 
@@ -34,17 +33,32 @@ const credentialsSchema = z.object({
 
 function AdminDashboard() {
     const { toast } = useToast();
-    const firestore = useFirestore();
     const [syncIsLoading, setSyncIsLoading] = useState(false);
     const [syncError, setSyncError] = useState<string | null>(null);
     const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
     const [keyIsLoading, setKeyIsLoading] = useState(false);
-    const [credentialsLoading, setCredentialsLoading] = useState(false);
+    const [credentialsLoading, setCredentialsLoading] = useState(true);
 
     const form = useForm<z.infer<typeof credentialsSchema>>({
         resolver: zodResolver(credentialsSchema),
         defaultValues: { serviceAccountKey: '' },
     });
+    
+    useEffect(() => {
+        const fetchCredentials = async () => {
+            setCredentialsLoading(true);
+            const result = await getCredentials();
+            if (result.data?.serviceAccountKeyBase64) {
+                form.setValue('serviceAccountKey', result.data.serviceAccountKeyBase64);
+            }
+            if (result.error) {
+                 toast({ variant: 'destructive', title: 'Could not load key', description: result.error });
+            }
+            setCredentialsLoading(false);
+        };
+        fetchCredentials();
+    }, [form, toast]);
+
 
     const handleSync = async () => {
         setSyncIsLoading(true);
@@ -67,14 +81,12 @@ function AdminDashboard() {
     };
 
     const onSaveKey = async (values: z.infer<typeof credentialsSchema>) => {
-        if (!firestore) {
-            toast({ variant: 'destructive', title: 'Firestore not available' });
-            return;
-        }
         setKeyIsLoading(true);
         try {
-            const docRef = doc(firestore, '_private_admin_data', 'credentials');
-            await setDoc(docRef, { serviceAccountKeyBase64: values.serviceAccountKey });
+            const result = await saveCredentials(values);
+            if(result.error) {
+                throw new Error(result.error);
+            }
             toast({ title: 'Credentials Saved!', description: 'The service account key has been securely stored.' });
         } catch (e) {
             const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
