@@ -1,15 +1,16 @@
+
 'use client';
 
 import { motion } from 'framer-motion';
-import { Users, User, Shield, Bot, Package, BookOpen, Banknote } from 'lucide-react';
+import { Users, BookOpen, Warehouse, Banknote, Globe, ArrowRight } from 'lucide-react';
 
 const itemVariants = {
-  hidden: { opacity: 0, scale: 0.8 },
+  hidden: { opacity: 0, y: 20 },
   visible: (i: number) => ({
     opacity: 1,
-    scale: 1,
+    y: 0,
     transition: {
-      delay: i * 0.1,
+      delay: i * 0.2,
       type: 'spring',
       stiffness: 300,
       damping: 20,
@@ -17,93 +18,94 @@ const itemVariants = {
   }),
 };
 
-const lineVariants = {
-    hidden: { pathLength: 0 },
-    visible: (i: number) => ({
-      pathLength: 1,
-      transition: {
-        delay: i * 0.1 + 0.5,
-        duration: 0.5,
-        ease: "easeInOut",
-      },
-    }),
-  };
+const pathVariants = {
+  hidden: { pathLength: 0, opacity: 0 },
+  visible: (i: number) => ({
+    pathLength: 1,
+    opacity: 1,
+    transition: {
+      delay: i * 0.2 + 0.8,
+      duration: 1.5,
+      ease: 'easeInOut',
+    },
+  }),
+};
 
-const Node = ({ icon, label, x, y, custom, color = "text-primary" }: { icon: React.ReactNode, label: string, x: number, y: number, custom: number, color?: string }) => (
+const Node = ({ icon, label, x, y, custom, color = "text-primary", description }: { icon: React.ReactNode, label: string, x: number, y: number, custom: number, color?: string, description: string }) => (
     <motion.g initial="hidden" animate="visible" variants={itemVariants} custom={custom}>
-        <foreignObject x={x - 40} y={y - 40} width="80" height="80">
+        <foreignObject x={x - 60} y={y - 45} width="120" height="90">
             <div className="flex flex-col items-center justify-center text-center w-full h-full">
                 <div className={`p-3 rounded-full bg-card border-2 border-border ${color}`}>
                     {icon}
                 </div>
-                <p className="text-xs font-semibold text-foreground mt-1">{label}</p>
+                <p className="text-sm font-semibold text-foreground mt-2">{label}</p>
+                <p className="text-xs text-muted-foreground mt-1">{description}</p>
             </div>
         </foreignObject>
     </motion.g>
-);
-
-const Line = ({ x1, y1, x2, y2, custom }: { x1: number, y1: number, x2: number, y2: number, custom: number }) => (
-    <motion.line
-        x1={x1}
-        y1={y1}
-        x2={x2}
-        y2={y2}
-        stroke="hsl(var(--border))"
-        strokeWidth="1.5"
-        variants={lineVariants}
-        initial="hidden"
-        animate="visible"
-        custom={custom}
-    />
 );
 
 
 export function FederationDiagram() {
   return (
     <div className="my-16 w-full flex justify-center">
-        <svg viewBox="0 0 400 300" className="w-full max-w-2xl h-auto">
+        <svg viewBox="0 0 400 400" className="w-full max-w-3xl h-auto">
             <defs>
-                <motion.path
-                    id="curve1"
-                    d="M 120 70 Q 150 110, 200 120"
-                    fill="transparent"
-                />
                  <motion.path
-                    id="curve2"
-                    d="M 280 70 Q 250 110, 200 120"
-                    fill="transparent"
-                />
+                    id="flowPath"
+                    d="M 200, 80 A 120,120 0 1,1 199,80"
+                    fill="none"
+                 />
+                 <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="hsl(var(--border))" />
+                </marker>
             </defs>
 
-            {/* Lines */}
-            <Line x1={200} y1={50} x2={200} y2={120} custom={1} />
-            <Line x1={80} y1={230} x2={200} y2={120} custom={2} />
-            <Line x1={320} y1={230} x2={200} y2={120} custom={3} />
+            {/* The circular path */}
+            <motion.path
+                d="M 200, 80 A 120,120 0 1,1 199.9,80"
+                stroke="hsl(var(--border))"
+                strokeWidth="1.5"
+                strokeDasharray="4 4"
+                fill="none"
+                variants={pathVariants}
+                initial="hidden"
+                animate="visible"
+                custom={1}
+                markerEnd="url(#arrowhead)"
+                markerMid="url(#arrowhead)"
+            />
 
             {/* Nodes */}
-            <Node icon={<Shield className="w-6 h-6" />} label="Federation" x={200} y={50} custom={0} color="text-yellow-400" />
+            <Node icon={<Users className="w-6 h-6" />} label="Community" description="Join & form groups" x={200} y={50} custom={0} />
+            <Node icon={<BookOpen className="w-6 h-6" />} label="Nuncy Lingua" description="Learn languages" x={340} y={150} custom={1} color="text-yellow-400" />
+            <Node icon={<Warehouse className="w-6 h-6" />} label="Fabrication" description="Create products" x={60} y={150} custom={3} />
+            <Node icon={<Banknote className="w-6 h-6" />} label="Treasury" description="Build wealth" x={200} y={350} custom={4} />
             
-            <Node icon={<Users className="w-6 h-6" />} label="Communities" x={200} y={150} custom={1} />
+            {/* International Markets Node */}
+             <motion.g initial="hidden" animate="visible" variants={itemVariants} custom={2}>
+                <foreignObject x={290} y={260} width="120" height="90">
+                    <div className="flex flex-col items-center justify-center text-center w-full h-full">
+                        <div className="p-3 rounded-full bg-card border-2 border-yellow-400/50 text-yellow-400">
+                           <Globe className="w-6 h-6" />
+                        </div>
+                        <p className="text-sm font-semibold text-foreground mt-2">Global Markets</p>
+                         <p className="text-xs text-muted-foreground mt-1">Access new opportunities</p>
+                    </div>
+                </foreignObject>
+            </motion.g>
 
-            <Node icon={<User className="w-6 h-6" />} label="Individuals" x={80} y={230} custom={2} />
-            <Node icon={<Bot className="w-6 h-6" />} label="AI Agents" x={140} y={230} custom={3} />
+            {/* Arrow from Lingua to Markets */}
+             <motion.line
+                x1="320" y1="190"
+                x2="310" y2="250"
+                stroke="hsl(var(--yellow-400))"
+                strokeWidth="2"
+                variants={pathVariants}
+                custom={2.5}
+                markerEnd="url(#arrowhead)"
+            />
             
-            <g transform="translate(140, 0)">
-                <Node icon={<BookOpen className="w-5 h-5" />} label="Nuncy Lingua" x={180} y={200} custom={4} />
-                <Node icon={<Package className="w-5 h-5" />} label="Fabrication" x={220} y M="250" custom={5} />
-                <Node icon={<Banknote className="w-5 h-5" />} label="Treasury" x={260} y="200" custom={6} />
-                <text x={220} y={170} textAnchor="middle" className="text-xs font-semibold fill-muted-foreground">Tools</text>
-
-                {/* Lines to Tools */}
-                <Line x1={200} y1={150} x2={180} y2={190} custom={4.5} />
-                <Line x1={200} y1={150} x2={220} y2={190} custom={5.5} />
-                <Line x1={200} y1={150} x2={260} y2={190} custom={6.5} />
-            </g>
-
-             {/* Text Labels */}
-            <text x="110" y="150" className="text-[10px] fill-muted-foreground" transform="rotate(-35, 110, 150)">forms</text>
-            <text x="270" y="160" className="text-[10px] fill-muted-foreground" transform="rotate(25, 270, 160)">owns</text>
-            <text x="200" y="95" textAnchor="middle" className="text-[10px] fill-muted-foreground">is composed of</text>
         </svg>
     </div>
   );
