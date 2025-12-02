@@ -22,16 +22,17 @@ function toBase64(str: string): string {
     }
 }
 
+const APP_NAME = 'pleasance-admin';
+
 export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) {
     // Robust Initialization: Initialize inside the action to guarantee it runs before use.
-    if (!admin.apps.length) {
+    if (!admin.apps.some(app => app?.name === APP_NAME)) {
         try {
             admin.initializeApp({
                 credential: admin.credential.applicationDefault(),
-            });
+            }, APP_NAME);
         } catch (e) {
             console.error('Firebase Admin Initialization Error in flag-action:', e);
-            // If initialization fails, we cannot proceed.
             return { error: 'Server configuration error. Could not initialize Firebase Admin.' };
         }
     }
@@ -55,7 +56,7 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
         const svgDataUri = `data:image/svg+xml;base64,${svgBase64}`;
 
         // 3. Update the community document in Firestore using the Admin SDK
-        const firestore = admin.firestore();
+        const firestore = admin.app(APP_NAME).firestore();
         const communityDocRef = firestore.collection('communities').doc(communityId);
         await communityDocRef.update({ flagUrl: svgDataUri });
 
@@ -71,3 +72,4 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
         return { error: `Flag generation failed: ${message}` };
     }
 }
+
