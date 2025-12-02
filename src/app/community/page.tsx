@@ -1,3 +1,4 @@
+
 // src/app/community/page.tsx
 "use client";
 
@@ -164,8 +165,8 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
                         </div>
                         <p className="text-sm text-muted-foreground mt-1">{community.description}</p>
                         {owner && (
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
-                                <User className="w-3 h-3" />
+                            <div className="flex items-center gap-2 text-sm text-accent-foreground font-medium mt-2">
+                                <User className="w-4 h-4" />
                                 <span>Founded by {owner.name}</span>
                             </div>
                         )}
