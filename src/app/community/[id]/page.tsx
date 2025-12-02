@@ -454,7 +454,7 @@ function Chat({ communityId, isOwner, allMembers }: { communityId: string; isOwn
             const aiMessage = {
                 communityId,
                 userId: `ai_${aiMemberToRespond.name.toLowerCase().replace(/\s/g, '_')}`,
-                userName: aiMemberTorespond.name,
+                userName: aiMemberToRespond.name,
                 userAvatarUrl: `https://i.pravatar.cc/150?u=${aiMemberToRespond.name}`,
                 type: 'text' as const,
                 text: result.response,
@@ -714,47 +714,46 @@ export default function CommunityProfilePage() {
   };
 
   const handleGenerateFlag = async () => {
-    if (!community || !storage || !firestore) return;
-    
+    if (!community || !storage || !firestore || !communityDocRef) return;
+
     setIsGeneratingFlag(true);
     try {
-        toast({ title: 'Generating New Flag...', description: 'This may take a moment. The AI is painting.' });
+      toast({ title: 'Generating New Flag...', description: 'This may take a moment. The AI is painting.' });
 
-        const result = await generateCommunityFlag({
-            communityName: community.name,
-            communityDescription: community.description,
-        });
+      const result = await generateCommunityFlag({
+        communityName: community.name,
+        communityDescription: community.description,
+      });
 
-        if (result.error || !result.flagUrl) {
-            throw new Error(result.error || 'AI did not return a flag image.');
-        }
+      if (result.error || !result.flagUrl) {
+        throw new Error(result.error || 'AI did not return a flag image.');
+      }
 
-        toast({ title: 'Uploading Flag...', description: 'Saving the new flag to the federation archives.' });
-        
-        const storagePath = `communities/${community.id}/flag.png`;
-        const storageRef = ref(storage, storagePath);
-        const base64Data = result.flagUrl.split(',')[1];
-        
-        if (!base64Data) {
-            throw new Error('Invalid data URI format received from AI.');
-        }
+      toast({ title: 'Uploading Flag...', description: 'Saving the new flag to the federation archives.' });
 
-        await uploadString(storageRef, base64Data, 'base64', { contentType: 'image/png' });
-        
-        const downloadURL = await getDownloadURL(storageRef);
+      const storagePath = `communities/${community.id}/flag.png`;
+      const storageRef = ref(storage, storagePath);
+      const base64Data = result.flagUrl.split(',')[1];
+      
+      if (!base64Data) {
+        throw new Error('Invalid data URI format received from AI.');
+      }
 
-        toast({ title: 'Finalizing...', description: 'Updating the community records.' });
+      await uploadString(storageRef, base64Data, 'base64', { contentType: 'image/png' });
+      
+      const downloadURL = await getDownloadURL(storageRef);
 
-        const communityDocRef = doc(firestore, 'communities', community.id);
-        await updateDoc(communityDocRef, { flagUrl: downloadURL });
+      toast({ title: 'Finalizing...', description: 'Updating the community records.' });
 
-        toast({ title: 'New Flag Hoisted!', description: 'Your community has a new look.' });
+      updateDocumentNonBlocking(communityDocRef, { flagUrl: downloadURL });
+
+      toast({ title: 'New Flag Hoisted!', description: 'Your community has a new look.' });
 
     } catch (e) {
-        const message = e instanceof Error ? e.message : 'An unknown error occurred';
-        toast({ variant: 'destructive', title: 'Flag Generation Failed', description: message });
+      const message = e instanceof Error ? e.message : 'An unknown error occurred';
+      toast({ variant: 'destructive', title: 'Flag Generation Failed', description: message });
     } finally {
-        setIsGeneratingFlag(false);
+      setIsGeneratingFlag(false);
     }
   };
 
