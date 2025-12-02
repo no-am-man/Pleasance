@@ -13,7 +13,6 @@ import admin from 'firebase-admin';
 import { generateCommunity } from '@/ai/flows/generate-community';
 import { getStorage } from 'firebase-admin/storage';
 import { getFirestore } from 'firebase-admin/firestore';
-import wav from 'wav';
 
 
 const storyTextSchema = z.object({
@@ -89,46 +88,65 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
   }
 }
 
-async function toWav(pcmData: Buffer, channels = 1, rate = 24000, sampleWidth = 2): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const writer = new wav.Writer({
-      channels,
-      sampleRate: rate,
-      bitDepth: sampleWidth * 8,
-    });
+/**
+ * Creates a valid WAV buffer from raw PCM audio data.
+ * @param pcmData The raw L16 PCM audio data.
+ * @param sampleRate The sample rate of the audio (e.g., 24000).
+ * @param channels The number of audio channels (e.g., 1 for mono).
+ * @param bitDepth The bit depth of the audio (e.g., 16).
+ * @returns A Buffer containing the complete WAV file data.
+ */
+function createWavBuffer(pcmData: Buffer, sampleRate: number, channels: number, bitDepth: number): Buffer {
+    const byteRate = sampleRate * channels * (bitDepth / 8);
+    const blockAlign = channels * (bitDepth / 8);
+    const dataSize = pcmData.length;
+    const fileSize = dataSize + 44; // 44 bytes for the header
 
-    let bufs: any[] = [];
-    writer.on('error', reject);
-    writer.on('data', function (d) {
-      bufs.push(d);
-    });
-    writer.on('end', function () {
-      resolve(Buffer.concat(bufs));
-    });
+    const header = Buffer.alloc(44);
 
-    writer.write(pcmData);
-    writer.end();
-  });
+    // RIFF chunk descriptor
+    header.write('RIFF', 0);
+    header.writeUInt32LE(fileSize - 8, 4);
+    header.write('WAVE', 8);
+
+    // "fmt " sub-chunk
+    header.write('fmt ', 12);
+    header.writeUInt32LE(16, 16); // Sub-chunk size (16 for PCM)
+    header.writeUInt16LE(1, 20); // Audio format (1 for PCM)
+    header.writeUInt16LE(channels, 22);
+    header.writeUInt32LE(sampleRate, 24);
+    header.writeUInt32LE(byteRate, 28);
+    header.writeUInt16LE(blockAlign, 32);
+    header.writeUInt16LE(bitDepth, 34);
+
+    // "data" sub-chunk
+    header.write('data', 36);
+    header.writeUInt32LE(dataSize, 40);
+
+    return Buffer.concat([header, pcmData]);
 }
 
 
 async function processAudioInBackground(storyId: string, userId: string, textToSpeak: string) {
+    const adminApp = initializeAdminApp();
+    const firestore = getFirestore(adminApp);
+    const storyDocRef = firestore.collection('users').doc(userId).collection('stories').doc(storyId);
+
     try {
         const speechResult = await generateSpeech({ text: textToSpeak });
         if (!speechResult.audioBase64) {
             throw new Error('Speech synthesis failed to produce audio.');
         }
 
-        const adminApp = initializeAdminApp();
         const storage = getStorage(adminApp);
-        const firestore = getFirestore(adminApp);
         
         const storagePath = `stories/${userId}/${storyId}.wav`;
         const file = storage.bucket().file(storagePath);
         
         const pcmBuffer = Buffer.from(speechResult.audioBase64, 'base64');
-        const wavBuffer = await toWav(pcmBuffer);
-
+        
+        // Convert raw PCM to a valid WAV file buffer
+        const wavBuffer = createWavBuffer(pcmBuffer, 24000, 1, 16);
 
         await file.save(wavBuffer, {
             metadata: {
@@ -141,19 +159,16 @@ async function processAudioInBackground(storyId: string, userId: string, textToS
             expires: '03-09-2491' // A very long expiration date
         });
 
-        const storyDocRef = firestore.collection('users').doc(userId).collection('stories').doc(storyId);
         await storyDocRef.update({ 
             audioUrl: downloadURL,
             status: 'complete',
         });
 
     } catch (e) {
-        console.error(`Background audio processing failed for story ${storyId}:`, JSON.stringify(e, null, 2));
-        // Optionally update the story doc to indicate failure
-        const adminApp = initializeAdminApp();
-        const firestore = getFirestore(adminApp);
-        const storyDocRef = firestore.collection('users').doc(userId).collection('stories').doc(storyId);
-        await storyDocRef.update({ status: 'failed', error: e instanceof Error ? e.message : String(e) });
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        console.error(`Background audio processing failed for story ${storyId}:`, errorMessage, e);
+        // Update the story doc to indicate failure
+        await storyDocRef.update({ status: 'failed', error: errorMessage });
     }
 }
 
