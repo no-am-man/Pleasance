@@ -218,52 +218,11 @@ function TimeMachine() {
     )
 }
 
-function ActiveStoryController({ activeStoryId }: { activeStoryId: string | null }) {
-    const { user } = useUser();
-    const storyViewerRef = useRef<HTMLDivElement>(null);
-
-    const storyDocRef = useMemo(() => {
-        if (user && activeStoryId) {
-            return doc(firestore, 'users', user.uid, 'stories', activeStoryId);
-        }
-        return null;
-    }, [user, activeStoryId]);
-
-    const [story, isLoading, error] = useDocumentData<Story>(storyDocRef);
-
-    useEffect(() => {
-        if (story && storyViewerRef.current) {
-            storyViewerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    }, [story]);
-
-    if (!activeStoryId) return null;
-
-    return (
-        <div ref={storyViewerRef} className="scroll-mt-4">
-            <div className="mb-8">
-                {isLoading && (
-                    <div className="flex justify-center p-8">
-                        <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
-                    </div>
-                )}
-                {error && <Alert variant="destructive"><AlertTitle>Error Loading Story</AlertTitle><AlertDescription>{error.message}</AlertDescription></Alert>}
-                {story && (
-                    <StoryViewer 
-                        key={story.id}
-                        story={story}
-                        autoplay={true}
-                    />
-                )}
-            </div>
-        </div>
-    );
-}
-
 export default function StoryPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeStoryId, setActiveStoryId] = useState<string | null>(null);
+  const [activeStory, setActiveStory] = useState<Story | null>(null);
+  const storyViewerRef = useRef<HTMLDivElement>(null);
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   
@@ -287,6 +246,13 @@ export default function StoryPage() {
     }
   }, [profile, form]);
 
+  useEffect(() => {
+    if (activeStory && storyViewerRef.current) {
+      storyViewerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [activeStory]);
+
+
   async function onSubmit(data: z.infer<typeof StoryFormSchema>) {
     if (!user) {
         setError("You must be logged in to generate a story.");
@@ -294,7 +260,7 @@ export default function StoryPage() {
     }
     setIsLoading(true);
     setError(null);
-    setActiveStoryId(null);
+    setActiveStory(null);
 
     const result = await generateStoryAndSpeech({ ...data, userId: user.uid });
 
@@ -305,15 +271,15 @@ export default function StoryPage() {
     }
     
     if (result.storyData) {
-        setActiveStoryId(result.storyData.id);
-        toast({ title: "Story Generation Started!", description: "Your new story is being created. Audio will be available shortly."});
+        setActiveStory(result.storyData as Story);
+        toast({ title: "Story Generated!", description: "Your new story is ready."});
     } else {
       setError('An unknown error occurred while generating the story.');
     }
   }
 
   const handleSelectStoryFromHistory = (story: Story) => {
-    setActiveStoryId(story.id);
+    setActiveStory(story);
   }
 
   if (isUserLoading || isProfileLoading) {
@@ -341,14 +307,29 @@ export default function StoryPage() {
         </p>
       </div>
       
-      <ActiveStoryController activeStoryId={activeStoryId} />
-
-      {error && (
-         <Alert variant="destructive" className="my-8">
-            <AlertTitle>Action Failed</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-         </Alert>
-      )}
+      <div ref={storyViewerRef} className="scroll-mt-8">
+        {isLoading && (
+            <div className="flex justify-center p-8">
+                <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
+                <p className="ml-4 text-muted-foreground self-center">Generating your story and audio...</p>
+            </div>
+        )}
+        {error && (
+            <Alert variant="destructive" className="my-8">
+                <AlertTitle>Action Failed</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+            </Alert>
+        )}
+        {activeStory && (
+            <div className="mb-8">
+                <StoryViewer 
+                    key={activeStory.id}
+                    story={activeStory}
+                    autoplay={true}
+                />
+            </div>
+        )}
+      </div>
 
       {!user ? (
          <Card className="w-full max-w-md mx-auto text-center shadow-lg bg-background/80 backdrop-blur-sm">
