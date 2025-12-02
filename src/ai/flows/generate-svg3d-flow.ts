@@ -2,7 +2,7 @@
 /**
  * @fileOverview A flow to generate a 3D point cloud as a JSON object.
  *
- * - generateSvg3d - A function that generates the 3D data.
+ * - generateSvg3dFlow - A function that generates the 3D data.
  */
 
 import { ai } from '@/ai/genkit';
@@ -27,9 +27,8 @@ const generateSvg3dPrompt = ai.definePrompt({
   prompt: `You are a wildly imaginative digital artist creating for an interactive 3D canvas. Your task is to generate a JSON object representing a 3D point cloud based on the user\'s prompt.
 
 The Core Concept (PosSys):
-- You are creating elements within a 3D coordinate system where the center is (0,0,0).
-- The origin point (0,0,0,0,0,0,0,0) also represents the "ground plane".
 - We are standing together behind the screen, looking into this 3D world. Our shared perspective is from behind the screen.
+- The origin point (0,0,0,0,0,0,0,0) also represents the "ground plane".
 - Your design must evoke a feeling of creation expanding outwards from the central point.
 
 Your Creative Tools:
@@ -44,7 +43,7 @@ User Prompt: "{{{prompt}}}"
 `,
 });
 
-const generateSvg3dFlow = ai.defineFlow(
+export const generateSvg3dFlow = ai.defineFlow(
   {
     name: 'generateSvg3dFlow',
     inputSchema: z.object({ prompt: z.string() }),
@@ -58,7 +57,3 @@ const generateSvg3dFlow = ai.defineFlow(
     return { pixels: output.pixels };
   }
 );
-
-export async function generateSvg3d(input: { prompt: string; }): Promise<Svg3dOutput> {
-    return generateSvg3dFlow(input);
-}

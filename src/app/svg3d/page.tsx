@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { LoaderCircle, Sparkles } from 'lucide-react';
-import { generateSvg3dImage } from '@/app/actions';
+import { generateSvg3d } from '@/app/actions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Svg3dCube, type ColorPixel } from '@/components/icons/svg3d-cube';
 
@@ -36,7 +36,7 @@ export default function Svg3dPage() {
     setPixels(null);
 
     try {
-      const result = await generateSvg3dImage({
+      const result = await generateSvg3d({
         prompt: data.prompt,
       });
 
