@@ -10,7 +10,6 @@ import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member
 import { generateSpeech } from '@/ai/flows/generate-speech';
 import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
-import { VOICES } from '@/config/languages';
 import { initializeAdminApp } from '@/firebase/config-admin';
 
 
@@ -109,7 +108,6 @@ export async function getAiChatResponse(input: ChatWithMemberInput) {
 
 const speechSchema = z.object({
     text: z.string(),
-    voice: z.enum(VOICES.map(v => v.value) as [string, ...string[]]),
 });
 
 export async function synthesizeSpeech(values: z.infer<typeof speechSchema>) {
@@ -119,8 +117,8 @@ export async function synthesizeSpeech(values: z.infer<typeof speechSchema>) {
             return { error: 'Invalid input for speech synthesis.' };
         }
         
-        const { text, voice } = validatedFields.data;
-        const speechResult = await generateSpeech({ text, voiceName: voice });
+        const { text } = validatedFields.data;
+        const speechResult = await generateSpeech({ text });
         
         if (!speechResult.wavBase64) {
             return { error: 'Speech synthesis failed.' };

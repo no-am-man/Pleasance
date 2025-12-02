@@ -5,9 +5,6 @@ import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, LoaderCircle, Copy } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { VOICES } from "@/config/languages";
-import { Label } from "@/components/ui/label";
 import { synthesizeSpeech } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 
@@ -33,7 +30,6 @@ export default function StoryViewer({
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  const [selectedVoice, setSelectedVoice] = useState(VOICES[0].value);
   const [audioUrl, setAudioUrl] = useState('');
   const { toast } = useToast();
 
@@ -94,7 +90,7 @@ export default function StoryViewer({
     setError(null);
     setAudioUrl(''); // Reset audio URL to force re-render and re-fetch
 
-    const result = await synthesizeSpeech({ text: translatedText, voice: selectedVoice });
+    const result = await synthesizeSpeech({ text: translatedText });
 
     if (result.error) {
         setError(result.error);
@@ -176,21 +172,6 @@ export default function StoryViewer({
         <audio ref={audioRef} crossOrigin="anonymous" />
         
         <div className="flex items-center gap-4">
-            <div className="grid gap-1.5">
-                <Label htmlFor="voice-select">Speaker Voice</Label>
-                <Select value={selectedVoice} onValueChange={setSelectedVoice} disabled={isLoading}>
-                    <SelectTrigger className="w-[180px]" id="voice-select">
-                        <SelectValue placeholder="Select a voice" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {VOICES.map((voice) => (
-                            <SelectItem key={voice.value} value={voice.value}>
-                                {voice.label}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
             <div className="flex flex-col items-center gap-2 self-end">
                  <Button
                     onClick={togglePlayPause}
