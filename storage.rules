@@ -6,7 +6,7 @@ service firebase.storage {
     
     //====================================================================
     // Generic rule: Allow read access to all files.
-    // This is useful for public assets like story audio.
+    // This is useful for public assets like story audio and community flags.
     //====================================================================
     match /{allPaths=**} {
       allow read;
@@ -20,7 +20,13 @@ service firebase.storage {
     match /stories/{userId}/{storyId}.wav {
       allow write: if request.auth != null && request.auth.uid == userId;
     }
+
+    //====================================================================
+    // Community Flags: Allow a community owner to write a flag image
+    // for their own community.
+    //====================================================================
+    match /communities/{communityId}/flag.png {
+      allow write: if request.auth != null && get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId == request.auth.uid;
+    }
   }
 }
-
-    
