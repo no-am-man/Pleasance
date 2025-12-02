@@ -1,36 +1,19 @@
-
 // src/app/api/auth/session/route.ts
+import 'dotenv/config';
 import { NextResponse, type NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
 import * as admin from 'firebase-admin';
 
-// This is a simplified, temporary way to initialize admin for this route.
-// In a larger app, you might share initialization logic.
-async function initializeTempAdmin() {
-    // Avoid re-initializing a named app.
+async function initializeAdminApp() {
     const appName = 'session-management';
     const existingApp = admin.apps.find(app => app?.name === appName);
     if (existingApp) {
         return existingApp;
     }
-    
-    // We need to read the service account key from where we stored it.
-    // This creates a temporary default app to read Firestore.
-    if (admin.apps.length === 0) {
-        admin.initializeApp();
-    }
-    const tempFirestore = admin.firestore();
-    const credentialsDoc = await tempFirestore.collection('_private_admin_data').doc('credentials').get();
 
-    if (!credentialsDoc.exists) {
-        // This can happen if the app is starting for the very first time.
-        // We can't create sessions until the key is saved.
-        console.warn("Service account key not found in Firestore. Session creation will fail until it's set via the Admin Panel.");
-        return null; // Return null to indicate failure
-    }
-    const serviceAccountKeyBase64 = credentialsDoc.data()?.serviceAccountKeyBase64;
+    const serviceAccountKeyBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
     if (!serviceAccountKeyBase64) {
-        console.warn("Service account key is empty in Firestore. Session creation will fail.");
+        console.warn("Server not configured: FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is not set. Session creation will fail until it's set in the .env file.");
         return null;
     }
 
@@ -39,7 +22,7 @@ async function initializeTempAdmin() {
         const decodedKey = Buffer.from(serviceAccountKeyBase64, 'base64').toString('utf8');
         serviceAccount = JSON.parse(decodedKey);
     } catch (e) {
-        console.error("Failed to parse the service account key from Firestore for session management.", e);
+        console.error("Failed to parse the service account key from environment variable.", e);
         return null;
     }
 
@@ -56,9 +39,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'ID token is required.' }, { status: 400 });
   }
 
-  const adminApp = await initializeTempAdmin();
+  const adminApp = await initializeAdminApp();
   if (!adminApp) {
-      return NextResponse.json({ error: 'Server not configured for authentication. Please save credentials on the Admin page.' }, { status: 500 });
+      return NextResponse.json({ error: 'Server not configured for authentication. Please set the FIREBASE_SERVICE_ACCOUNT_BASE64 in your .env file.' }, { status: 500 });
   }
 
   try {

@@ -1,21 +1,13 @@
-
 // src/app/admin/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useUser } from '@/firebase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, ShieldCheck, AlertTriangle, CheckCircle, Bone, KeyRound } from 'lucide-react';
+import { LoaderCircle, ShieldCheck, AlertTriangle, CheckCircle, Bone } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { runMemberSync, saveCredentials, getCredentials } from '../actions';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
-
+import { runMemberSync } from '../actions';
 
 // This is a simple check. In a real-world app, this should be a secure custom claim.
 export const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com';
@@ -26,39 +18,10 @@ type SyncResult = {
     issuesFixed: number;
 };
 
-const credentialsSchema = z.object({
-  serviceAccountKey: z.string().min(1, 'Service account key cannot be empty.'),
-});
-
-
 function AdminDashboard() {
-    const { toast } = useToast();
     const [syncIsLoading, setSyncIsLoading] = useState(false);
     const [syncError, setSyncError] = useState<string | null>(null);
     const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
-    const [keyIsLoading, setKeyIsLoading] = useState(false);
-    const [credentialsLoading, setCredentialsLoading] = useState(true);
-
-    const form = useForm<z.infer<typeof credentialsSchema>>({
-        resolver: zodResolver(credentialsSchema),
-        defaultValues: { serviceAccountKey: '' },
-    });
-    
-    useEffect(() => {
-        const fetchCredentials = async () => {
-            setCredentialsLoading(true);
-            const result = await getCredentials();
-            if (result.data?.serviceAccountKey) {
-                form.setValue('serviceAccountKey', result.data.serviceAccountKey);
-            }
-            if (result.error) {
-                 toast({ variant: 'destructive', title: 'Could not load key', description: result.error });
-            }
-            setCredentialsLoading(false);
-        };
-        fetchCredentials();
-    }, [form, toast]);
-
 
     const handleSync = async () => {
         setSyncIsLoading(true);
@@ -80,21 +43,6 @@ function AdminDashboard() {
         setSyncIsLoading(false);
     };
 
-    const onSaveKey = async (values: z.infer<typeof credentialsSchema>) => {
-        setKeyIsLoading(true);
-        try {
-            const result = await saveCredentials(values);
-            if(result.error) {
-                throw new Error(result.error);
-            }
-            toast({ title: 'Credentials Saved!', description: 'The service account key has been securely stored. You may need to refresh the page for all features to work.' });
-        } catch (e) {
-            const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
-            toast({ variant: 'destructive', title: 'Failed to Save Key', description: message });
-        }
-        setKeyIsLoading(false);
-    };
-
     return (
         <Card className="shadow-lg">
             <CardHeader>
@@ -102,46 +50,6 @@ function AdminDashboard() {
                 <CardDescription>Run maintenance tasks to ensure data integrity across the federation.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                <Card className="bg-muted/50">
-                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                           <KeyRound /> Service Account Credentials
-                        </CardTitle>
-                        <CardDescription>
-                            Securely store the service account JSON key required for server-side AI actions. This only needs to be set once. Paste the entire JSON file content here.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSaveKey)} className="space-y-4">
-                                <FormField
-                                    control={form.control}
-                                    name="serviceAccountKey"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Service Account JSON Key</FormLabel>
-                                            <FormControl>
-                                                <Textarea 
-                                                    placeholder={credentialsLoading ? "Loading existing key..." : "Paste your service account JSON here..."} 
-                                                    {...field}
-                                                    rows={8}
-                                                    disabled={credentialsLoading || keyIsLoading}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <Button type="submit" disabled={keyIsLoading || credentialsLoading}>
-                                    {keyIsLoading ? <LoaderCircle className="mr-2 animate-spin" /> : <ShieldCheck className="mr-2"/>}
-                                    Save Key
-                                </Button>
-                            </form>
-                        </Form>
-                    </CardContent>
-                </Card>
-
-
                 <Card className="bg-muted/50">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -152,6 +60,9 @@ function AdminDashboard() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
+                        <p className="text-sm text-muted-foreground mb-4">
+                            Note: This requires the `FIREBASE_SERVICE_ACCOUNT_BASE64` variable to be set in your `.env` file.
+                        </p>
                         <Button onClick={handleSync} disabled={syncIsLoading}>
                             {syncIsLoading ? (
                                 <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
