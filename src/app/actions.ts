@@ -109,6 +109,57 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>
   }
 }
 
+const snapshotSchema = z.object({
+  userId: z.string(),
+});
+
+export async function createHistorySnapshot(values: z.infer<typeof snapshotSchema>) {
+    try {
+        const validatedFields = snapshotSchema.safeParse(values);
+        if (!validatedFields.success) {
+            return { error: 'Invalid user ID.' };
+        }
+        const { userId } = validatedFields.data;
+        
+        const adminApp = initializeAdminApp();
+        const firestore = adminApp.firestore();
+
+        // 1. Fetch all stories for the user
+        const storiesRef = firestore.collection('users').doc(userId).collection('stories');
+        const storiesSnapshot = await storiesRef.orderBy('createdAt', 'desc').get();
+
+        if (storiesSnapshot.empty) {
+            return { error: "No stories found to create a snapshot." };
+        }
+
+        const stories = storiesSnapshot.docs.map(doc => doc.data());
+
+        // 2. Create the snapshot object
+        const snapshotRef = firestore.collection('users').doc(userId).collection('historySnapshots').doc();
+        const snapshotData = {
+            id: snapshotRef.id,
+            userId: userId,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            storyCount: stories.length,
+            stories: stories,
+        };
+
+        // 3. Save the new snapshot
+        await snapshotRef.set(snapshotData);
+
+        return {
+            success: true,
+            snapshotId: snapshotRef.id,
+            storyCount: stories.length,
+        };
+
+    } catch (e) {
+        console.error('Snapshot Creation Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Snapshot creation failed. ${message}` };
+    }
+}
+
 
 const communitySchema = z.object({
     prompt: z.string().min(10),

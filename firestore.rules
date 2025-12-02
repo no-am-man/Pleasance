@@ -99,6 +99,15 @@ service cloud.firestore {
         match /stories/{storyId} {
             allow read, write: if isOwner(userId);
         }
+        
+        /**
+         * @description Manages snapshots of a user's story history.
+         * @path /users/{userId}/historySnapshots/{snapshotId}
+         * @allow A user can perform any action on their own history snapshots.
+         */
+        match /historySnapshots/{snapshotId} {
+            allow read, write, delete: if isOwner(userId);
+        }
 
         /**
          * @description Manages personal assets for a specific user.

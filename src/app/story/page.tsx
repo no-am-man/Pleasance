@@ -10,17 +10,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { LoaderCircle, Sparkles, LogIn, History, BookOpen, PencilRuler } from 'lucide-react';
+import { LoaderCircle, Sparkles, LogIn, History, BookOpen, PencilRuler, Camera, Clock } from 'lucide-react';
 import { LANGUAGES } from '@/config/languages';
-import { generateStoryAndSpeech } from '@/app/actions';
+import { generateStoryAndSpeech, createHistorySnapshot } from '@/app/actions';
 import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose
+} from '@/components/ui/dialog';
 
 const StoryFormSchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
@@ -38,6 +48,14 @@ type Story = {
     translatedText: string;
     createdAt: { seconds: number; nanoseconds: number; } | null;
     audioUrl?: string; // audioUrl is now part of the story data
+};
+
+type HistorySnapshot = {
+    id: string;
+    userId: string;
+    createdAt: { seconds: number; nanoseconds: number; } | null;
+    storyCount: number;
+    stories: Story[];
 };
 
 function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void; }) {
@@ -88,6 +106,109 @@ function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void
             </CardContent>
         </Card>
     );
+}
+
+function SnapshotViewer({ snapshot }: { snapshot: HistorySnapshot }) {
+  return (
+    <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
+      <DialogHeader>
+        <DialogTitle>Snapshot from {snapshot.createdAt ? new Date(snapshot.createdAt.seconds * 1000).toLocaleString() : 'a past time'}</DialogTitle>
+        <DialogDescription>
+          A view of your {snapshot.storyCount} stories from this point in time.
+        </DialogDescription>
+      </DialogHeader>
+      <div className="flex-grow overflow-y-auto pr-4 space-y-4">
+        {snapshot.stories.map((story, index) => (
+          <Card key={`${story.id}-${index}`} className="bg-muted/50">
+            <CardHeader>
+                <CardTitle className="text-base">{story.nativeText.substring(0, 100)}...</CardTitle>
+                <CardDescription className="text-xs">
+                    {story.level} &middot; {story.sourceLanguage} to {story.targetLanguage}
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <p className="text-sm text-muted-foreground italic whitespace-pre-wrap">{story.translatedText}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+       <DialogClose asChild>
+          <Button type="button" variant="secondary">
+            Close
+          </Button>
+        </DialogClose>
+    </DialogContent>
+  );
+}
+
+function TimeMachine() {
+    const { user, isUserLoading } = useUser();
+    const { toast } = useToast();
+    const [isCreating, setIsCreating] = useState(false);
+
+    const snapshotsQuery = useMemo(() => user ? query(collection(firestore, 'users', user.uid, 'historySnapshots'), orderBy('createdAt', 'desc')) : null, [user]);
+    const [snapshots, isLoading, error] = useCollectionData<HistorySnapshot>(snapshotsQuery, {
+      idField: 'id'
+    });
+
+    const handleCreateSnapshot = async () => {
+        if (!user) return;
+        setIsCreating(true);
+        const result = await createHistorySnapshot({ userId: user.uid });
+        if (result.error) {
+            toast({ variant: 'destructive', title: 'Snapshot Failed', description: result.error });
+        } else {
+            toast({ title: 'Snapshot Created!', description: `Saved ${result.storyCount} stories to your Time Machine.` });
+        }
+        setIsCreating(false);
+    };
+    
+    const handleDeleteSnapshot = async (snapshotId: string) => {
+        if (!user) return;
+        const docRef = doc(firestore, `users/${user.uid}/historySnapshots/${snapshotId}`);
+        await deleteDoc(docRef);
+        toast({ title: 'Snapshot Deleted' });
+    }
+
+    if (isUserLoading) return <LoaderCircle className="w-8 h-8 animate-spin text-primary" />;
+    if (!user) return null;
+
+    return (
+        <Card className="shadow-lg">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Clock /> Time Machine</CardTitle>
+                <CardDescription>Create and view snapshots of your story history.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                 <Button onClick={handleCreateSnapshot} disabled={isCreating}>
+                    {isCreating ? <LoaderCircle className="mr-2 animate-spin" /> : <Camera className="mr-2" />}
+                    Create Snapshot
+                </Button>
+                <Separator />
+                 {isLoading && <LoaderCircle className="animate-spin mx-auto" />}
+                 {error && <p className="text-destructive">Error loading snapshots: {error.message}</p>}
+                 {snapshots && snapshots.length === 0 && <p className="text-muted-foreground text-center">No snapshots created yet.</p>}
+                 {snapshots && snapshots.length > 0 && (
+                    <div className="space-y-2 max-h-80 overflow-y-auto">
+                        {snapshots.map(snapshot => (
+                            <Dialog key={snapshot.id}>
+                                <div className="flex items-center gap-2 p-2 rounded-md hover:bg-muted">
+                                    <DialogTrigger asChild>
+                                        <button className="flex-grow text-left">
+                                            <p className="font-semibold">{snapshot.createdAt ? new Date(snapshot.createdAt.seconds * 1000).toLocaleString() : 'Snapshot'}</p>
+                                            <p className="text-sm text-muted-foreground">{snapshot.storyCount} stories captured</p>
+                                        </button>
+                                    </DialogTrigger>
+                                    <Button variant="ghost" size="sm" onClick={() => handleDeleteSnapshot(snapshot.id)}>Delete</Button>
+                                </div>
+                                <SnapshotViewer snapshot={snapshot} />
+                            </Dialog>
+                        ))}
+                    </div>
+                 )}
+            </CardContent>
+        </Card>
+    )
 }
 
 export default function StoryPage() {
@@ -291,6 +412,10 @@ export default function StoryPage() {
             <Separator />
 
             <StoryHistory onSelectStory={handleSelectStoryFromHistory} />
+            
+            <Separator />
+
+            <TimeMachine />
         </div>
       )}
     </main>

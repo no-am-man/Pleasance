@@ -128,6 +128,39 @@
         "createdAt"
       ]
     },
+    "HistorySnapshot": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "HistorySnapshot",
+        "type": "object",
+        "description": "A snapshot of a user's entire story history at a specific point in time.",
+        "properties": {
+            "id": {
+                "type": "string",
+                "description": "Unique identifier for the snapshot."
+            },
+            "userId": {
+                "type": "string",
+                "description": "The ID of the user who owns this snapshot."
+            },
+            "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The timestamp when the snapshot was created."
+            },
+            "storyCount": {
+                "type": "number",
+                "description": "The number of stories in this snapshot."
+            },
+            "stories": {
+                "type": "array",
+                "description": "An array containing copies of all stories at the time of the snapshot.",
+                "items": {
+                    "$ref": "#/backend/entities/Story"
+                }
+            }
+        },
+        "required": ["id", "userId", "createdAt", "storyCount", "stories"]
+    },
     "Community": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Community",
@@ -327,6 +360,18 @@
               "name": "assetId",
               "description": "The unique identifier for the asset."
             }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/historySnapshots/{snapshotId}",
+        "definition": {
+          "entityName": "HistorySnapshot",
+          "schema": { "$ref": "#/backend/entities/HistorySnapshot" },
+          "description": "Stores snapshots of a user's story history. A user can only access their own snapshots.",
+          "params": [
+            { "name": "userId", "description": "The unique identifier for the user." },
+            { "name": "snapshotId", "description": "The unique identifier for the history snapshot." }
           ]
         }
       },
