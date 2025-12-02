@@ -34,12 +34,10 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
   const isProcessing = story.status === 'processing';
   const hasAudio = story.audioUrl && story.audioUrl.length > 0;
 
-  // Consolidated useEffect for all audio handling
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    // --- Event Listeners Setup ---
     const setAudioData = () => {
       setDuration(audio.duration);
       setCurrentTime(audio.currentTime);
@@ -47,7 +45,7 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
     const setAudioTime = () => setCurrentTime(audio.currentTime);
     const handlePlaybackEnded = () => {
       setIsPlaying(false);
-      setCurrentTime(0); // Reset on end
+      setCurrentTime(0);
     };
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
@@ -57,31 +55,28 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
     audio.addEventListener("ended", handlePlaybackEnded);
     audio.addEventListener("play", handlePlay);
     audio.addEventListener("pause", handlePause);
-    
-    // --- Source and Autoplay Logic ---
+
     if (story.audioUrl && audio.src !== story.audioUrl) {
-      audio.src = story.audioUrl;
-      audio.load();
-      if (autoplay) {
-        // The 'play' event listener will set isPlaying to true.
-        audio.play().catch(e => console.error("Autoplay failed:", e));
-      }
+        audio.src = story.audioUrl;
+        audio.load();
+        if (autoplay) {
+            audio.play().catch(e => console.error("Autoplay failed:", e));
+        }
     } else if (!story.audioUrl) {
         audio.pause();
+        audio.currentTime = 0;
     }
-    
-    // --- Cleanup function ---
+
     return () => {
-      // Pause and reset time when component unmounts or story changes
       audio.pause();
-      // Remove all listeners
       audio.removeEventListener("loadeddata", setAudioData);
       audio.removeEventListener("timeupdate", setAudioTime);
       audio.removeEventListener("ended", handlePlaybackEnded);
       audio.removeEventListener("play", handlePlay);
       audio.removeEventListener("pause", handlePause);
     };
-  }, [story.id, story.audioUrl, autoplay]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [story.id, story.audioUrl]);
 
 
   const togglePlayPause = () => {
