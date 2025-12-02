@@ -30,7 +30,6 @@ Your task is to generate the array of pixels.
 - Your entire response MUST be only the JSON array. Do not include any other text, explanations, or markdown.`;
 
     const { output } = await ai.generate({
-        model: 'googleai/gemini-1.5-flash-preview',
         prompt: prompt,
         output: {
             schema: Svg3dOutputSchema,
