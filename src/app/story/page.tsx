@@ -269,11 +269,6 @@ export default function StoryPage() {
     if (result.storyData) {
         setActiveStoryId(result.storyData.id);
         toast({ title: "Story Generated!", description: "Your new story text is ready. Audio is processing in the background."});
-        
-        // Scroll to the story viewer.
-        setTimeout(() => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }, 100);
     } else {
       setError('An unknown error occurred while generating the story text.');
     }
@@ -281,9 +276,6 @@ export default function StoryPage() {
 
   const handleSelectStoryFromHistory = (story: Story) => {
     setActiveStoryId(story.id);
-    setTimeout(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 100);
   }
 
   if (isUserLoading || isProfileLoading) {
