@@ -11,8 +11,8 @@ import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
 import { initializeFirebase } from '@/firebase/config-for-actions';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { serverTimestamp } from 'firebase/firestore';
 import { initializeAdminApp } from '@/firebase/config-admin';
+import admin from 'firebase-admin';
 
 
 const storySchema = z.object({
@@ -181,5 +181,19 @@ export async function generateProfileAvatars(values: z.infer<typeof generateAvat
         console.error('Avatar Generation Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
         return { error: `Avatar generation failed. ${message}` };
+    }
+}
+
+
+export async function runMemberSync() {
+    try {
+        // This requires the Admin SDK, so we ensure it's initialized.
+        initializeAdminApp();
+        const result = await syncAllMembers();
+        return { data: result };
+    } catch (e) {
+        console.error('Member Sync Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Member synchronization failed. ${message}` };
     }
 }
