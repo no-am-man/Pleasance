@@ -9,9 +9,12 @@ import { synthesizeSpeech } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 
 type StoryViewerProps = {
+  storyId: string;
+  userId: string;
   originalStory: string;
   translatedText: string;
   sourceLanguage: string;
+  initialAudioUrl?: string;
   isLoading: boolean;
   setIsLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
@@ -19,9 +22,12 @@ type StoryViewerProps = {
 
 
 export default function StoryViewer({
+  storyId,
+  userId,
   originalStory,
   translatedText,
   sourceLanguage,
+  initialAudioUrl,
   isLoading,
   setIsLoading,
   setError,
@@ -30,7 +36,7 @@ export default function StoryViewer({
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  const [audioUrl, setAudioUrl] = useState('');
+  const [audioUrl, setAudioUrl] = useState(initialAudioUrl || '');
   const { toast } = useToast();
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
@@ -68,55 +74,47 @@ export default function StoryViewer({
   useEffect(() => {
     const audio = audioRef.current;
     if (audio && audioUrl) {
-      audio.src = audioUrl;
-      audio.load();
-      audio.play().then(() => {
-        setIsPlaying(true);
-      }).catch(e => {
-        console.error("Autoplay was prevented.", e);
-        setIsPlaying(false); // Update state to reflect that it's not playing
-        toast({
-          variant: 'destructive',
-          title: 'Playback Error',
-          description: 'Audio could not be played automatically. Please click play again.',
+      if (audio.src !== audioUrl) {
+        audio.src = audioUrl;
+        audio.load();
+      }
+      if (isPlaying) {
+        audio.play().catch(e => {
+          console.error("Playback error:", e);
+          setIsPlaying(false);
         });
-      });
+      } else {
+        audio.pause();
+      }
     }
-  }, [audioUrl, toast]);
+  }, [audioUrl, isPlaying]);
 
 
   const handlePlay = async () => {
+    if (hasAudio) {
+      togglePlayPause();
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
-    setAudioUrl(''); // Reset audio URL to force re-render and re-fetch
 
-    const result = await synthesizeSpeech({ text: translatedText });
+    const result = await synthesizeSpeech({ 
+      text: translatedText,
+      userId: userId,
+      storyId: storyId
+    });
 
     if (result.error) {
         setError(result.error);
-    } else if (result.audioDataUri) {
-        setAudioUrl(result.audioDataUri);
+    } else if (result.audioUrl) {
+        setAudioUrl(result.audioUrl);
+        setIsPlaying(true); // Autoplay after successful generation
     }
     setIsLoading(false);
   }
 
   const togglePlayPause = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (!hasAudio) {
-      handlePlay();
-      return;
-    }
-
-    if (isPlaying) {
-      audio.pause();
-    } else {
-        if (audio.currentTime >= audio.duration) {
-            audio.currentTime = 0; 
-        }
-        audio.play();
-    }
     setIsPlaying(!isPlaying);
   };
 
@@ -174,22 +172,21 @@ export default function StoryViewer({
         <div className="flex items-center gap-4">
             <div className="flex flex-col items-center gap-2 self-end">
                  <Button
-                    onClick={togglePlayPause}
+                    onClick={handlePlay}
                     size="icon"
-                    variant="ghost"
-                    className="rounded-full w-12 h-12"
+                    className="rounded-full w-12 h-12 bg-red-600 hover:bg-red-700"
                     aria-label={isPlaying ? "Pause" : "Play"}
                     disabled={isLoading}
                     >
                     {isLoading ? (
                         <LoaderCircle className="h-6 w-6 animate-spin" />
                     ) : isPlaying ? (
-                        <Pause className="h-6 w-6 fill-primary" />
+                        <Pause className="h-6 w-6 fill-white text-white" />
                     ) : (
-                        <Play className="h-6 w-6 fill-primary" />
+                        <Play className="h-6 w-6 fill-white text-white" />
                     )}
                 </Button>
-                {!hasAudio && !isLoading && <p className="text-xs text-muted-foreground">Click to Play</p>}
+                {!hasAudio && !isLoading && <p className="text-xs text-muted-foreground">Click to Generate Audio</p>}
             </div>
         </div>
       </div>

@@ -18,7 +18,7 @@ const GenerateSpeechInputSchema = z.object({
 export type GenerateSpeechInput = z.infer<typeof GenerateSpeechInputSchema>;
 
 const GenerateSpeechOutputSchema = z.object({
-  wavBase64: z.string().describe('The audio data in WAV format as a base64 string.'),
+  wavBuffer: z.instanceof(Buffer).describe('The audio data in WAV format as a Buffer.'),
 });
 export type GenerateSpeechOutput = z.infer<typeof GenerateSpeechOutputSchema>;
 
@@ -31,7 +31,7 @@ async function toWav(
   channels = 1,
   rate = 24000,
   sampleWidth = 2
-): Promise<string> {
+): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const writer = new wav.Writer({
       channels,
@@ -45,7 +45,7 @@ async function toWav(
       bufs.push(d);
     });
     writer.on('end', function () {
-      resolve(Buffer.concat(bufs).toString('base64'));
+      resolve(Buffer.concat(bufs));
     });
 
     writer.write(pcmData);
@@ -72,21 +72,20 @@ const generateSpeechFlow = ai.defineFlow(
       },
       prompt: input.text,
     });
+
     if (!media) {
-      return { wavBase64: '' };
+      throw new Error('AI did not return any media for speech generation.');
     }
-    // The media URL is a data URI: "data:audio/L16;rate=24000;channels=1;base64,..."
-    // We need to extract the base64 part and the sample rate.
+
     const pcmBase64 = media.url.substring(media.url.indexOf(',') + 1);
     const audioBuffer = Buffer.from(pcmBase64, 'base64');
     
-    // The model returns audio at a 24000 Hz sample rate.
     const sampleRate = 24000;
     
-    const wavBase64 = await toWav(audioBuffer, 1, sampleRate);
+    const wavBuffer = await toWav(audioBuffer, 1, sampleRate);
     
     return {
-      wavBase64: wavBase64,
+      wavBuffer,
     };
   }
 );

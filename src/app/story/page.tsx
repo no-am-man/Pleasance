@@ -44,6 +44,7 @@ type StoryResult = {
     originalStory: string;
     translatedText: string;
     sourceLanguage: string;
+    storyId?: string; // Add storyId to link to the document
 } | null;
 
 function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void; }) {
@@ -129,6 +130,9 @@ export default function StoryPage() {
     } 
     
     if (result.originalStory && result.translatedText) {
+        const storyCollectionRef = collection(firestore, 'users', user.uid, 'stories');
+        const newStoryDocRef = doc(storyCollectionRef); // Create a reference with a new ID
+
         const newStoryData: Omit<Story, 'id' | 'audioUrl' | 'createdAt'> & { createdAt: any } = {
             userId: user.uid,
             level: data.difficulty,
@@ -143,10 +147,10 @@ export default function StoryPage() {
             originalStory: result.originalStory,
             translatedText: result.translatedText,
             sourceLanguage: data.sourceLanguage,
+            storyId: newStoryDocRef.id,
         });
       
         try {
-            const storyCollectionRef = collection(firestore, 'users', user.uid, 'stories');
             await addDoc(storyCollectionRef, newStoryData);
         } catch (firestoreError) {
             const message = firestoreError instanceof Error ? firestoreError.message : 'An unknown error occurred';
@@ -165,6 +169,7 @@ export default function StoryPage() {
         originalStory: story.nativeText,
         translatedText: story.translatedText,
         sourceLanguage: story.sourceLanguage,
+        storyId: story.id, // Pass the existing storyId
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -194,13 +199,16 @@ export default function StoryPage() {
         </p>
       </div>
       
-      {storyResult && (
+      {storyResult && user && (
         <div className="mb-8">
             <StoryViewer 
-                key={selectedStory?.id || 'new-story'}
+                key={selectedStory?.id || storyResult.storyId || 'new-story'}
+                storyId={selectedStory?.id || storyResult.storyId!}
+                userId={user.uid}
                 originalStory={storyResult.originalStory}
                 translatedText={storyResult.translatedText}
                 sourceLanguage={storyResult.sourceLanguage}
+                initialAudioUrl={selectedStory?.audioUrl}
                 isLoading={isLoading}
                 setIsLoading={setIsLoading}
                 setError={setError}

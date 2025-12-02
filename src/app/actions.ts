@@ -11,6 +11,8 @@ import { generateSpeech } from '@/ai/flows/generate-speech';
 import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
 import { initializeAdminApp } from '@/firebase/config-admin';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { doc, updateDoc } from 'firebase/firestore';
 
 
 const storySchema = z.object({
@@ -108,6 +110,8 @@ export async function getAiChatResponse(input: ChatWithMemberInput) {
 
 const speechSchema = z.object({
     text: z.string(),
+    userId: z.string(),
+    storyId: z.string(),
 });
 
 export async function synthesizeSpeech(values: z.infer<typeof speechSchema>) {
@@ -117,17 +121,38 @@ export async function synthesizeSpeech(values: z.infer<typeof speechSchema>) {
             return { error: 'Invalid input for speech synthesis.' };
         }
         
-        const { text } = validatedFields.data;
+        const { text, userId, storyId } = validatedFields.data;
+
+        // 1. Generate speech buffer
         const speechResult = await generateSpeech({ text });
-        
-        if (!speechResult.wavBase64) {
-            return { error: 'Speech synthesis failed.' };
+        if (!speechResult.wavBuffer) {
+            return { error: 'Speech synthesis failed to produce audio.' };
         }
 
-        return { audioDataUri: `data:audio/wav;base64,${speechResult.wavBase64}` };
+        // 2. Upload to Firebase Storage
+        const adminApp = initializeAdminApp();
+        const storage = getStorage(adminApp);
+        const firestore = adminApp.firestore();
+
+        const storagePath = `stories/${userId}/${storyId}.wav`;
+        const storageRef = ref(storage, storagePath);
+        
+        await uploadBytes(storageRef, speechResult.wavBuffer, {
+            contentType: 'audio/wav',
+        });
+
+        // 3. Get public download URL
+        const downloadURL = await getDownloadURL(storageRef);
+
+        // 4. Update the story document in Firestore
+        const storyDocRef = doc(firestore, 'users', userId, 'stories', storyId);
+        await updateDoc(storyDocRef, { audioUrl: downloadURL });
+
+        // 5. Return the public URL to the client
+        return { audioUrl: downloadURL };
 
     } catch (e) {
-        console.error('Speech Synthesis Error:', e);
+        console.error('Speech Synthesis & Caching Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
         return { error: `Speech synthesis failed. ${message}` };
     }
