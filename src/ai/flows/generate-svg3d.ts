@@ -5,7 +5,7 @@
  * - generateSvg3d - A function that generates the point cloud data.
  */
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 import {
   GenerateSvg3dInputSchema,
   ColorPixelSchema
@@ -14,25 +14,11 @@ import {
 const Svg3dOutputSchema = z.array(ColorPixelSchema);
 
 export async function generateSvg3d(values: z.infer<typeof GenerateSvg3dInputSchema>) {
-    const { output } = await generateSvg3dPrompt(values);
-    
-    if (!output) {
-        throw new Error('Could not generate SVG3D image from the AI.');
-    }
-    return { pixels: output };
-}
+    const prompt = `You are a digital artist who creates 3D point clouds. Generate a JSON array of 'ColorPixel' objects based on the user's request.
 
-
-const generateSvg3dPrompt = ai.definePrompt(
-  {
-    name: 'generateSvg3dPrompt',
-    input: { schema: GenerateSvg3dInputSchema },
-    output: { schema: Svg3dOutputSchema },
-    prompt: `You are a digital artist who creates 3D point clouds. Generate a JSON array of 'ColorPixel' objects based on the user's request.
-
-- The user wants to create a point cloud representing: "{{prompt}}"
-- The conceptual cube size is {{cubeSize}}mm.
-- The requested pixel density is {{density}}.
+- The user wants to create a point cloud representing: "${values.prompt}"
+- The conceptual cube size is ${values.cubeSize}mm.
+- The requested pixel density is ${values.density}.
 
 Your task is to generate the array of pixels.
 - The number of points should reflect the requested density:
@@ -41,6 +27,18 @@ Your task is to generate the array of pixels.
   - High: ~2000-3000 points
 - All coordinates (x, y, z) must be within a -50 to 50 range.
 - Use the prompt to inspire the shape, color, and structure of the point cloud.
-- Your entire response MUST be only the JSON array. Do not include any other text, explanations, or markdown.`,
-  },
-);
+- Your entire response MUST be only the JSON array. Do not include any other text, explanations, or markdown.`;
+
+    const { output } = await ai.generate({
+        model: 'gemini-1.5-pro-preview-0514',
+        prompt: prompt,
+        output: {
+            schema: Svg3dOutputSchema,
+        },
+    });
+    
+    if (!output) {
+        throw new Error('Could not generate SVG3D image from the AI.');
+    }
+    return { pixels: output };
+}
