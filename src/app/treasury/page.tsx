@@ -24,7 +24,7 @@ import { useCollectionData } from 'react-firebase-hooks/firestore';
 const AssetSchema = z.object({
   name: z.string().min(2, 'Asset name must be at least 2 characters.'),
   description: z.string().min(10, 'Description must be at least 10 characters.').max(500, 'Description cannot exceed 500 characters.'),
-  type: z.enum(['physical', 'ip'], { required_error: 'Please select an asset type.' }),
+  type: z.enum(['physical', 'virtual', 'ip'], { required_error: 'Please select an asset type.' }),
   value: z.coerce.number().min(0, 'Value must be a positive number.'),
 });
 
@@ -144,6 +144,7 @@ function AddAssetForm() {
                                     </FormControl>
                                     <SelectContent>
                                     <SelectItem value="physical">Physical</SelectItem>
+                                    <SelectItem value="virtual">Virtual</SelectItem>
                                     <SelectItem value="ip">Intellectual Property</SelectItem>
                                     </SelectContent>
                                 </Select>
