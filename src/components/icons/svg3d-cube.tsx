@@ -2,6 +2,8 @@
 
 import * as React from 'react';
 import { motion } from 'framer-motion';
+import { SVGProps } from 'react';
+import { cn } from '@/lib/utils';
 
 // 3D Point
 interface Point3D {
@@ -42,7 +44,7 @@ const pyramidVariants = {
     })
 };
 
-export function Svg3dCube() {
+export function Svg3dCube(props: SVGProps<SVGSVGElement>) {
   const size = 50;
   const perspective = 200;
   const viewWidth = 400;
@@ -92,7 +94,7 @@ export function Svg3dCube() {
   const projectedApexes = pyramidApexes.map(p => project(p, perspective));
 
   return (
-    <svg viewBox={`0 0 ${viewWidth} ${viewHeight}`} width="100%" height="100%">
+    <svg viewBox={`0 0 ${viewWidth} ${viewHeight}`} {...props}>
       <g transform={`translate(${center.x}, ${center.y})`}>
         {/* Render Cube Faces */}
         {faces.map((face, i) => (
