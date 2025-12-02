@@ -16,7 +16,7 @@ import { generateCommunity } from '@/ai/flows/generate-community';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
-import { generateSvg3dFlow } from '@/ai/flows/generate-svg3d-flow';
+import { generateSvg3d } from '@/ai/flows/generate-svg3d-flow';
 
 
 // Schema for chat input, as it's used across client and server
@@ -319,7 +319,7 @@ export async function generateSvg3dImage(values: z.infer<typeof GenerateSvg3dInp
             return { error: 'Invalid input for SVG3D generation.' };
         }
 
-        const result = await generateSvg3dFlow(validatedFields.data);
+        const result = await generateSvg3d(validatedFields.data);
 
         if (!result.pixels) {
             return { error: 'Could not generate SVG3D image.' };
