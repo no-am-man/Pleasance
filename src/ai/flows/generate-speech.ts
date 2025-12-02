@@ -10,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 
 const GenerateSpeechInputSchema = z.object({
   text: z.string().describe('The text to convert to speech.'),
@@ -33,11 +34,11 @@ const generateSpeechFlow = ai.defineFlow(
   },
   async (input) => {
     const { media } = await ai.generate({
-      model: 'googleai/text-to-speech-1',
+      model: googleAI.model('text-to-speech-1'),
       prompt: input.text,
       config: {
-        output: {
-          format: 'mp3', // Specify MP3 output
+        synthesizeSpeech: {
+          audioEncoding: 'MP3'
         }
       }
     });
