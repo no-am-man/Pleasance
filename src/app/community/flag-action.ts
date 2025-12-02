@@ -18,17 +18,29 @@ function initializeAdminApp() {
         return admin.app();
     }
 
-    // In a deployed Firebase/Google Cloud environment (like App Hosting),
-    // initializeApp() automatically discovers credentials.
-    // This is the standard and recommended practice.
+    const serviceAccountBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
+
+    if (!serviceAccountBase64) {
+        throw new Error('Server configuration error: FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is not set.');
+    }
+
     try {
-        return admin.initializeApp();
-    } catch (e) {
-        console.error('Firebase Admin Initialization Error in flag-action.ts:', e);
-        // This error will be caught by the calling function and returned to the client.
-        throw new Error('Server configuration error: Could not initialize Firebase Admin. The server environment may not be set up with the correct credentials.');
+        const decodedServiceAccount = Buffer.from(serviceAccountBase64, 'base64').toString('utf8');
+        try {
+            const serviceAccount = JSON.parse(decodedServiceAccount);
+            return admin.initializeApp({
+                credential: admin.credential.cert(serviceAccount),
+            });
+        } catch (e: any) {
+            // Error parsing the JSON
+            throw new Error(`Server configuration error: Failed to parse the service account JSON. Please ensure it is a valid JSON object. Details: ${e.message}`);
+        }
+    } catch (e: any) {
+        // Error decoding from Base64
+        throw new Error(`Server configuration error: Failed to decode the service account key from Base64. Please ensure it is a valid Base64 string. Details: ${e.message}`);
     }
 }
+
 
 export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) {
     try {
