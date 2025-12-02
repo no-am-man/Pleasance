@@ -11,10 +11,11 @@ import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
 import { VOICES } from '@/config/languages';
 import * as admin from 'firebase-admin';
-import { getAuth } from 'firebase-admin/auth';
 import { cookies } from 'next/headers';
+import { getAuth } from 'firebase/auth';
 import { initializeFirebase as initializeClientFirebase } from '@/firebase/config-for-actions';
-import { collection, doc, getDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, setDoc } from 'firebase/firestore';
+
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
@@ -22,48 +23,62 @@ const storySchema = z.object({
   targetLanguage: z.string().min(1),
 });
 
-function initializeAdminApp(serviceAccount?: admin.ServiceAccount) {
-    const appName = 'pleasance-admin';
-    const existingApp = admin.apps.find(app => app?.name === appName);
-    if (existingApp) {
-        return existingApp;
-    }
-
-    if (!serviceAccount) {
-        throw new Error("Service account is required for Admin App initialization.");
+async function getFounderVerifiedAdminApp() {
+    const sessionCookie = cookies().get('__session')?.value;
+    if (!sessionCookie) {
+        throw new Error('Unauthorized: No session cookie found. Please log in again.');
     }
     
-    return admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-    }, appName);
-}
-
-async function getAdminAppWithKey() {
-    // This function initializes a temporary, client-like firebase instance
-    // to fetch the service account key securely from Firestore.
-    // This is a necessary step because we can't use the Admin SDK to fetch its own credentials.
-    const { firestore: clientFirestore } = initializeClientFirebase();
-    
-    const credentialsDocRef = doc(collection(clientFirestore, '_private_admin_data'), 'credentials');
-    const credentialsDoc = await getDoc(credentialsDocRef);
-
-    if (!credentialsDoc.exists()) {
-        throw new Error("Service account key not found in Firestore. Please set it in the Admin Panel.");
+    // Temporarily initialize to get credentials, if no apps exist.
+    if (admin.apps.length === 0) {
+        admin.initializeApp();
     }
+    
+    const tempFirestore = admin.firestore();
+    const credentialsDoc = await tempFirestore.collection('_private_admin_data').doc('credentials').get();
+
+    if (!credentialsDoc.exists) {
+        throw new Error("Service account key not found in Firestore. Please set it on the Admin Panel.");
+    }
+
     const serviceAccountKeyBase64 = credentialsDoc.data()?.serviceAccountKeyBase64;
     if (!serviceAccountKeyBase64) {
-        throw new Error("Service account key is empty in Firestore. Please set it in the Admin Panel.");
+        throw new Error("Service account key is empty in Firestore. Please check the Admin Panel.");
     }
-    
+
     let serviceAccount;
     try {
         const decodedKey = Buffer.from(serviceAccountKeyBase64, 'base64').toString('utf8');
         serviceAccount = JSON.parse(decodedKey);
     } catch (e) {
-        throw new Error("Failed to parse the service account key from Firestore. Please ensure it is a valid Base64-encoded JSON object.");
+        throw new Error("Failed to parse the service account key from Firestore. It may be malformed.");
+    }
+    
+    const appName = 'pleasance-admin-actions';
+    const existingApp = admin.apps.find(app => app?.name === appName);
+    if (existingApp) {
+        // Quick check to see if the user is still the founder
+        const auth = admin.auth(existingApp);
+        const decodedIdToken = await auth.verifySessionCookie(sessionCookie, true);
+        if (decodedIdToken.email !== 'gg.el0ai.com@gmail.com') {
+            throw new Error('Unauthorized: You are not the founder.');
+        }
+        return existingApp;
     }
 
-    return initializeAdminApp(serviceAccount);
+    const newApp = admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+    }, appName);
+    
+    const auth = admin.auth(newApp);
+    const decodedIdToken = await auth.verifySessionCookie(sessionCookie, true);
+    if (decodedIdToken.email !== 'gg.el0ai.com@gmail.com') {
+        // Clean up the newly created app if the user is not the founder
+        await newApp.delete();
+        throw new Error('Unauthorized: You are not the founder.');
+    }
+
+    return newApp;
 }
 
 
@@ -229,27 +244,29 @@ export async function saveCredentials(values: z.infer<typeof credentialsSchema>)
             return { error: 'Invalid input.' };
         }
         
-        const adminApp = await getAdminAppWithKey();
-        const firestore = admin.firestore(adminApp);
-        const auth = admin.auth(adminApp);
-
         const sessionCookie = cookies().get('__session')?.value;
         if (!sessionCookie) {
             return { error: 'Unauthorized: No session cookie found.' };
         }
 
-        const decodedIdToken = await auth.verifySessionCookie(sessionCookie, true);
+        if (admin.apps.length === 0) {
+             admin.initializeApp();
+        }
+        
+        const decodedIdToken = await admin.auth().verifySessionCookie(sessionCookie, true);
 
         if (decodedIdToken.email !== 'gg.el0ai.com@gmail.com') {
             return { error: 'Unauthorized: Only the founder can save credentials.' };
         }
-
+        
+        const firestore = admin.firestore();
         const docRef = firestore.collection('_private_admin_data').doc('credentials');
         await docRef.set({ serviceAccountKeyBase64: values.serviceAccountKey });
 
         return { success: true };
 
     } catch (e) {
+        console.error('Save Credentials Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
         return { error: `Failed to save credentials: ${message}` };
     }
@@ -258,19 +275,8 @@ export async function saveCredentials(values: z.infer<typeof credentialsSchema>)
 
 export async function getCredentials() {
     try {
-        const adminApp = await getAdminAppWithKey();
+        const adminApp = await getFounderVerifiedAdminApp();
         const firestore = admin.firestore(adminApp);
-        const auth = admin.auth(adminApp);
-        
-        const sessionCookie = cookies().get('__session')?.value;
-        if (!sessionCookie) {
-            return { error: 'Unauthorized: No session cookie found.' };
-        }
-        const decodedIdToken = await auth.verifySessionCookie(sessionCookie, true);
-
-        if (decodedIdToken.email !== 'gg.el0ai.com@gmail.com') {
-            return { error: 'Unauthorized' };
-        }
         
         const docRef = firestore.collection('_private_admin_data').doc('credentials');
         const docSnap = await docRef.get();
@@ -281,6 +287,7 @@ export async function getCredentials() {
             return { data: null };
         }
     } catch (e) {
+        console.error('Get Credentials Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
         return { error: `Failed to get credentials: ${message}` };
     }

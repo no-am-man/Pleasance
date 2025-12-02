@@ -11,9 +11,23 @@ const flagSchema = z.object({
     communityDescription: z.string(),
 });
 
-function initializeAdminApp(serviceAccountKey: string) {
-    const appName = 'pleasance-flag-generator'; // Use a unique name for this app instance
-    // Check if the app is already initialized
+async function getAdminAppWithKey() {
+    // This temporary init is to allow reading the credentials doc.
+    if (admin.apps.length === 0) {
+        admin.initializeApp();
+    }
+    const tempFirestore = admin.firestore();
+    
+    const credentialsDoc = await tempFirestore.collection('_private_admin_data').doc('credentials').get();
+    if (!credentialsDoc.exists) {
+        throw new Error("Service account key not found. Please set it in the Admin Panel.");
+    }
+    const serviceAccountKeyBase64 = credentialsDoc.data()?.serviceAccountKeyBase64;
+    if (!serviceAccountKeyBase64) {
+        throw new Error("Service account key is empty. Please set it in the Admin Panel.");
+    }
+    
+    const appName = 'pleasance-flag-generator';
     const existingApp = admin.apps.find(app => app?.name === appName);
     if (existingApp) {
         return existingApp;
@@ -21,17 +35,16 @@ function initializeAdminApp(serviceAccountKey: string) {
 
     let serviceAccount: admin.ServiceAccount;
     try {
-        const decodedServiceAccount = Buffer.from(serviceAccountKey, 'base64').toString('utf8');
-        serviceAccount = JSON.parse(decodedServiceAccount);
-    } catch (e: any) {
+        const decodedKey = Buffer.from(serviceAccountKeyBase64, 'base64').toString('utf8');
+        serviceAccount = JSON.parse(decodedKey);
+    } catch (e) {
         if (e instanceof SyntaxError) {
-             throw new Error(`Server configuration error: Failed to parse the service account JSON. Please ensure it is a valid JSON object. Details: ${e.message}`);
+             throw new Error(`Server configuration error: Failed to parse the service account JSON. Details: ${e.message}`);
         } else {
-            throw new Error(`Server configuration error: Failed to decode the service account key from Base64. Please ensure it is a valid Base64 string. Details: ${e.message}`);
+            throw new Error(`Server configuration error: Failed to decode the service account key from Base64. Details: ${e.message}`);
         }
     }
 
-    // Initialize the app with the parsed credentials
     return admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
     }, appName);
@@ -39,27 +52,8 @@ function initializeAdminApp(serviceAccountKey: string) {
 
 
 export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) {
-    let tempFirestore: admin.firestore.Firestore;
-
     try {
-        // Since we need to read from Firestore to get the key, and we can't use the client SDK
-        // in a server action that also uses the admin SDK easily, we do a temporary minimal init
-        // of the admin SDK *if it has not been initialized at all*.
-        if (admin.apps.length === 0) {
-            admin.initializeApp();
-        }
-        tempFirestore = admin.firestore();
-
-        const credentialsDoc = await tempFirestore.collection('_private_admin_data').doc('credentials').get();
-        if (!credentialsDoc.exists) {
-            throw new Error("Service account key not found. Please set it in the Admin Panel.");
-        }
-        const serviceAccountKey = credentialsDoc.data()?.serviceAccountKeyBase64;
-        if (!serviceAccountKey) {
-            throw new Error("Service account key is empty. Please set it in the Admin Panel.");
-        }
-        
-        const adminApp = initializeAdminApp(serviceAccountKey);
+        const adminApp = await getAdminAppWithKey();
         const firestore = adminApp.firestore();
 
         const validatedFields = flagSchema.safeParse(values);
