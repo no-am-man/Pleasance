@@ -13,7 +13,7 @@ type Story = {
     nativeText: string;
     translatedText: string;
     sourceLanguage: string;
-    audioDataUri?: string; // Changed from audioUrl
+    audioUrl?: string;
     status?: 'processing' | 'complete' | 'failed';
 };
 
@@ -32,21 +32,21 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
   const isProcessing = story.status === 'processing';
-  const hasAudio = story.audioDataUri && story.audioDataUri.length > 0;
+  const hasAudio = story.audioUrl && story.audioUrl.length > 0;
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     // When a new story with a new audio source comes in
-    if (story.audioDataUri && audio.src !== story.audioDataUri) {
-      audio.src = story.audioDataUri;
+    if (story.audioUrl && audio.src !== story.audioUrl) {
+      audio.src = story.audioUrl;
       audio.load();
       if (autoplay) {
         audio.play().catch(e => console.error("Autoplay failed:", e));
         setIsPlaying(true);
       }
-    } else if (!story.audioDataUri) {
+    } else if (!story.audioUrl) {
         // If the new story has no audio, stop playback.
         audio.pause();
         setIsPlaying(false);
@@ -75,7 +75,7 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
       audio.removeEventListener("timeupdate", setAudioTime);
       audio.removeEventListener("ended", handlePlaybackEnded);
     };
-  }, [story.audioDataUri, story.id, autoplay]);
+  }, [story.audioUrl, story.id, autoplay]);
 
   // This separate effect handles manual play/pause and ensures correct state
   useEffect(() => {
@@ -109,7 +109,7 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
 
   return (
     <div className="animate-in fade-in-50 duration-500">
-        <audio ref={audioRef} />
+        <audio ref={audioRef} crossOrigin="anonymous"/>
         <div className="flex flex-col md:flex-row items-start justify-center gap-8">
             {/* Original Story Panel */}
             <div className="w-full md:w-5/12">
@@ -176,5 +176,3 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
     </div>
   );
 }
-
-    

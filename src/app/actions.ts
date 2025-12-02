@@ -12,6 +12,7 @@ import { initializeAdminApp } from '@/firebase/config-admin';
 import admin from 'firebase-admin';
 import { generateCommunity } from '@/ai/flows/generate-community';
 import { getFirestore } from 'firebase-admin/firestore';
+import { getStorage } from 'firebase-admin/storage';
 
 
 const storyTextSchema = z.object({
@@ -59,6 +60,62 @@ function createWavBuffer(pcmData: Buffer, sampleRate: number, channels: number, 
     return Buffer.concat([header, pcmData]);
 }
 
+async function processAudioInBackground(storyId: string, userId: string, textToSpeak: string) {
+    try {
+        const adminApp = initializeAdminApp();
+        const firestore = getFirestore(adminApp);
+        const storage = getStorage(adminApp);
+        const storyDocRef = firestore.collection('users').doc(userId).collection('stories').doc(storyId);
+
+        // 1. Generate Speech (raw audio data)
+        const speechResult = await generateSpeech({ text: textToSpeak });
+        if (!speechResult.audioBase64) {
+            throw new Error('Speech synthesis failed to produce audio.');
+        }
+
+        // 2. Convert raw L16 audio to a valid WAV buffer
+        const pcmBuffer = Buffer.from(speechResult.audioBase64, 'base64');
+        const wavBuffer = createWavBuffer(pcmBuffer, 24000, 1, 16);
+
+        // 3. Upload WAV to Firebase Storage
+        const storagePath = `stories/${userId}/${storyId}.wav`;
+        const file = storage.bucket().file(storagePath);
+        
+        await file.save(wavBuffer, {
+            metadata: {
+                contentType: 'audio/wav',
+            },
+        });
+
+        // 4. Get the public URL
+        const [url] = await file.getSignedUrl({
+            action: 'read',
+            expires: '03-09-2491', // A very long expiration date
+        });
+
+        // 5. Update Firestore document with the URL and final status
+        await storyDocRef.update({
+            audioUrl: url,
+            status: 'complete',
+        });
+
+    } catch (e) {
+        console.error(`Background audio processing failed for story ${storyId}:`, e);
+        // Update the document to reflect the failure
+        const adminApp = initializeAdminApp();
+        const firestore = getFirestore(adminApp);
+        const storyDocRef = firestore.collection('users').doc(userId).collection('stories').doc(storyId);
+        try {
+            await storyDocRef.update({
+                status: 'failed',
+                error: e instanceof Error ? e.message : 'Unknown error during audio processing.',
+            });
+        } catch (updateError) {
+            console.error(`Failed to update story document with error status for story ${storyId}:`, updateError);
+        }
+    }
+}
+
 
 export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSchema>) {
   try {
@@ -69,7 +126,7 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
     
     const { userId, difficulty, sourceLanguage, targetLanguage } = validatedFields.data;
     
-    // --- Step 1: Generate and Translate Story ---
+    // --- Step 1: Generate Story Text ---
     const storyResult = await generateStory({ difficultyLevel: difficulty, sourceLanguage });
     if (!storyResult.story) {
       throw new Error('Failed to generate a story.');
@@ -87,17 +144,7 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
     }
     const translatedText = translationResult.translatedText;
 
-    // --- Step 2: Generate Speech and Convert to WAV Data URI ---
-    const speechResult = await generateSpeech({ text: translatedText });
-    if (!speechResult.audioBase64) {
-        throw new Error('Speech synthesis failed to produce audio.');
-    }
-    const pcmBuffer = Buffer.from(speechResult.audioBase64, 'base64');
-    const wavBuffer = createWavBuffer(pcmBuffer, 24000, 1, 16);
-    const audioDataUri = `data:audio/wav;base64,${wavBuffer.toString('base64')}`;
-
-
-    // --- Step 3: Save Story with Audio to Firestore ---
+    // --- Step 2: Save Initial Story to Firestore ---
     const adminApp = initializeAdminApp();
     const firestore = getFirestore(adminApp);
     const storyDocRef = firestore.collection('users').doc(userId).collection('stories').doc();
@@ -112,12 +159,15 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
         nativeText: originalStory,
         translatedText: translatedText,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        status: 'complete',
-        audioDataUri: audioDataUri, // Store the Data URI directly
+        status: 'processing', // Initial status
+        audioUrl: '', // Initially empty
     };
     
     await storyDocRef.set(storyData);
     
+    // --- Step 3: Trigger background audio processing (DO NOT AWAIT) ---
+    processAudioInBackground(storyId, userId, translatedText);
+
     // --- Step 4: Return immediately to the client ---
     return {
         storyData: {
@@ -280,5 +330,3 @@ export async function runMemberSync() {
         return { error: `Member synchronization failed. ${message}` };
     }
 }
-
-    

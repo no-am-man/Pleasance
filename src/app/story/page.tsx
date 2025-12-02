@@ -47,7 +47,7 @@ type Story = {
     nativeText: string;
     translatedText: string;
     createdAt: { seconds: number; nanoseconds: number; } | null;
-    audioDataUri?: string; // Changed from audioUrl
+    audioUrl?: string; 
     status?: 'processing' | 'complete' | 'failed';
 };
 
@@ -218,13 +218,54 @@ function TimeMachine() {
     )
 }
 
+function ActiveStoryController({ activeStoryId }: { activeStoryId: string | null }) {
+    const { user } = useUser();
+    const storyViewerRef = useRef<HTMLDivElement>(null);
+
+    const storyDocRef = useMemo(() => {
+        if (user && activeStoryId) {
+            return doc(firestore, 'users', user.uid, 'stories', activeStoryId);
+        }
+        return null;
+    }, [user, activeStoryId]);
+
+    const [story, isLoading, error] = useDocumentData<Story>(storyDocRef);
+
+    useEffect(() => {
+        if (story && storyViewerRef.current) {
+            storyViewerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, [story]);
+
+    if (!activeStoryId) return null;
+
+    return (
+        <div ref={storyViewerRef} className="scroll-mt-4">
+            <div className="mb-8">
+                {isLoading && (
+                    <div className="flex justify-center p-8">
+                        <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
+                    </div>
+                )}
+                {error && <Alert variant="destructive"><AlertTitle>Error Loading Story</AlertTitle><AlertDescription>{error.message}</AlertDescription></Alert>}
+                {story && (
+                    <StoryViewer 
+                        key={story.id}
+                        story={story}
+                        autoplay={true}
+                    />
+                )}
+            </div>
+        </div>
+    );
+}
+
 export default function StoryPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeStory, setActiveStory] = useState<Story | null>(null);
+  const [activeStoryId, setActiveStoryId] = useState<string | null>(null);
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
-  const storyViewerRef = useRef<HTMLDivElement>(null);
   
   const form = useForm<z.infer<typeof StoryFormSchema>>({
     resolver: zodResolver(StoryFormSchema),
@@ -246,13 +287,6 @@ export default function StoryPage() {
     }
   }, [profile, form]);
 
-  useEffect(() => {
-    if (activeStory && storyViewerRef.current) {
-      storyViewerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [activeStory]);
-
-
   async function onSubmit(data: z.infer<typeof StoryFormSchema>) {
     if (!user) {
         setError("You must be logged in to generate a story.");
@@ -260,7 +294,7 @@ export default function StoryPage() {
     }
     setIsLoading(true);
     setError(null);
-    setActiveStory(null);
+    setActiveStoryId(null);
 
     const result = await generateStoryAndSpeech({ ...data, userId: user.uid });
 
@@ -271,15 +305,15 @@ export default function StoryPage() {
     }
     
     if (result.storyData) {
-        setActiveStory(result.storyData as Story);
-        toast({ title: "Story Generated!", description: "Your new story and audio are ready."});
+        setActiveStoryId(result.storyData.id);
+        toast({ title: "Story Generation Started!", description: "Your new story is being created. Audio will be available shortly."});
     } else {
       setError('An unknown error occurred while generating the story.');
     }
   }
 
   const handleSelectStoryFromHistory = (story: Story) => {
-    setActiveStory(story);
+    setActiveStoryId(story.id);
   }
 
   if (isUserLoading || isProfileLoading) {
@@ -307,17 +341,7 @@ export default function StoryPage() {
         </p>
       </div>
       
-      <div ref={storyViewerRef} className="scroll-mt-4">
-        {activeStory && (
-            <div className="mb-8">
-                <StoryViewer 
-                    key={activeStory.id}
-                    story={activeStory}
-                    autoplay={true}
-                />
-            </div>
-        )}
-      </div>
+      <ActiveStoryController activeStoryId={activeStoryId} />
 
       {error && (
          <Alert variant="destructive" className="my-8">
@@ -454,5 +478,3 @@ export default function StoryPage() {
     </main>
   );
 }
-
-    
