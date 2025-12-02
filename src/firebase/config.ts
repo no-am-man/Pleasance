@@ -1,5 +1,8 @@
-
+// src/firebase/config.ts
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
+import { getAuth, type Auth } from 'firebase/auth';
+import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
 export const firebaseConfig = {
   "apiKey": "AIzaSyCMDygvQZnjbVLtr9RQn0IT2p4-STcHRk8",
@@ -10,14 +13,16 @@ export const firebaseConfig = {
   "storageBucket": "studio-2441219031-242ae.appspot.com"
 };
 
-
-/**
- * Gets the Firebase app instance. Initializes it if it doesn't exist.
- * This is safe to call on both server and client.
- */
-export function getFirebaseApp(): FirebaseApp {
-  if (getApps().length) {
-    return getApp();
-  }
-  return initializeApp(firebaseConfig);
+// Initialize Firebase and export the services
+let firebaseApp: FirebaseApp;
+if (!getApps().length) {
+  firebaseApp = initializeApp(firebaseConfig);
+} else {
+  firebaseApp = getApp();
 }
+
+const auth: Auth = getAuth(firebaseApp);
+const firestore: Firestore = getFirestore(firebaseApp);
+const storage: FirebaseStorage = getStorage(firebaseApp);
+
+export { firebaseApp, auth, firestore, storage };

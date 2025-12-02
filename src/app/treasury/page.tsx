@@ -5,7 +5,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { firestore } from '@/firebase/config';
 import { collection, query, serverTimestamp, doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
@@ -33,7 +34,6 @@ type Asset = z.infer<typeof AssetSchema> & {
 
 function AddAssetForm() {
     const { user } = useUser();
-    const firestore = useFirestore();
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
 
@@ -165,12 +165,11 @@ function AddAssetForm() {
 
 function AssetList() {
     const { user } = useUser();
-    const firestore = useFirestore();
 
     const assetsQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
         return query(collection(firestore, 'users', user.uid, 'assets'));
-    }, [user, firestore]);
+    }, [user]);
 
     const { data: assets, isLoading, error } = useCollection<Asset>(assetsQuery);
 

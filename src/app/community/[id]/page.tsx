@@ -1,9 +1,9 @@
-
 // src/app/community/[id]/page.tsx
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
+import { useUser, useDoc, useMemoFirebase, useCollection, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
+import { firestore } from '@/firebase/config';
 import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, setDoc, getDoc, deleteField, updateDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -141,7 +141,6 @@ function TextMessageForm({ communityId, onMessageSent }: { communityId: string, 
     const [text, setText] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useUser();
-    const firestore = useFirestore();
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -187,7 +186,6 @@ function TextCommentForm({ communityId, messageId }: { communityId: string, mess
     const [text, setText] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useUser();
-    const firestore = useFirestore();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -263,7 +261,6 @@ function CommentThread({ message, comments, isLoading }: { message: Message, com
 function MessageCard({ message, canManage }: { message: Message; canManage: boolean; }) {
     const { toast } = useToast();
     const [isUpdating, setIsUpdating] = useState(false);
-    const firestore = useFirestore();
 
     const isDone = message.status === 'done';
     const isDeleted = message.deleted;
@@ -272,7 +269,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
         if (!firestore) return null;
         const commentsColRef = collection(firestore, `communities/${message.communityId}/messages/${message.id}/comments`);
         return query(commentsColRef, orderBy('createdAt', 'asc'));
-    }, [firestore, message.communityId, message.id]);
+    }, [message.communityId, message.id]);
 
     const { data: comments, isLoading: isLoadingComments } = useCollection<Comment>(commentsQuery);
     const commentCount = comments?.length || 0;
@@ -414,13 +411,12 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
 
 function Chat({ communityId, isOwner, allMembers }: { communityId: string; isOwner: boolean, allMembers: Member[] }) {
     const { user } = useUser();
-    const firestore = useFirestore();
 
     const messagesQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         const messagesColRef = collection(firestore, `communities/${communityId}/messages`);
         return query(messagesColRef, orderBy('createdAt', 'desc'));
-    }, [firestore, communityId]);
+    }, [communityId]);
 
     const { data: messages, isLoading, error } = useCollection<Message>(messagesQuery);
     
@@ -499,14 +495,13 @@ function Chat({ communityId, isOwner, allMembers }: { communityId: string; isOwn
 }
 
 function JoinRequests({ communityId, communityDocRef }: { communityId: string, communityDocRef: any }) {
-    const firestore = useFirestore();
     const { toast } = useToast();
 
     const requestsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         const requestsColRef = collection(firestore, `communities/${communityId}/joinRequests`);
         return query(requestsColRef, where('status', '==', 'pending'));
-    }, [firestore, communityId]);
+    }, [communityId]);
 
     const { data: requests, isLoading } = useCollection<JoinRequest>(requestsQuery);
 
@@ -576,7 +571,6 @@ export default function CommunityProfilePage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useUser();
-  const firestore = useFirestore();
   const { toast } = useToast();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const [isGeneratingFlag, setIsGeneratingFlag] = useState(false);
@@ -584,14 +578,14 @@ export default function CommunityProfilePage() {
   const communityDocRef = useMemoFirebase(() => {
     if (!firestore || !id) return null;
     return doc(firestore, 'communities', id);
-  }, [firestore, id]);
+  }, [id]);
 
   const { data: community, isLoading, error } = useDoc<Community>(communityDocRef);
   
   const allProfilesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'community-profiles');
-  }, [firestore]);
+  }, []);
 
   const { data: allProfiles, isLoading: profilesLoading } = useCollection<CommunityProfile>(allProfilesQuery);
 
@@ -604,13 +598,13 @@ export default function CommunityProfilePage() {
   const userProfileRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, 'community-profiles', user.uid);
-  }, [firestore, user]);
+  }, [user]);
   const { data: userProfile } = useDoc<CommunityProfile>(userProfileRef);
 
   const userJoinRequestRef = useMemoFirebase(() => {
     if (!firestore || !user || !id) return null;
     return doc(firestore, 'communities', id, 'joinRequests', user.uid);
-  }, [firestore, user, id]);
+  }, [user, id]);
   
   const { data: userJoinRequest, isLoading: isRequestLoading } = useDoc<JoinRequest>(userJoinRequestRef);
 

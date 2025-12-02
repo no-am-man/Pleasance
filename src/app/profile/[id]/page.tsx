@@ -2,7 +2,8 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useFirestore, useDoc, useMemoFirebase, useUser } from '@/firebase';
+import { useDoc, useMemoFirebase, useUser } from '@/firebase';
+import { firestore } from '@/firebase/config';
 import { doc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -24,13 +25,12 @@ export default function UserProfilePage() {
   const params = useParams();
   const router = useRouter();
   const { user: currentUser } = useUser();
-  const firestore = useFirestore();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const profileDocRef = useMemoFirebase(() => {
     if (!firestore || !id) return null;
     return doc(firestore, 'community-profiles', id);
-  }, [firestore, id]);
+  }, [id]);
 
   const { data: profile, isLoading, error } = useDoc<CommunityProfile>(profileDocRef);
 

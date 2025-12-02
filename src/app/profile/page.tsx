@@ -1,4 +1,3 @@
-
 // src/app/profile/page.tsx
 'use client';
 
@@ -6,7 +5,8 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { firestore } from '@/firebase/config';
 import { doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Button } from '@/components/ui/button';
@@ -131,7 +131,6 @@ function AvatarSelectionDialog({ name, onSelectAvatar }: { name: string; onSelec
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
-  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast()
 
@@ -143,7 +142,7 @@ export default function ProfilePage() {
   const profileDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return doc(firestore, 'community-profiles', user.uid);
-  }, [user, firestore]);
+  }, [user]);
 
   const { data: existingProfile, isLoading: isProfileLoading } = useDoc<CommunityProfile>(profileDocRef);
 

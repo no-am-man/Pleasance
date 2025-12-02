@@ -1,6 +1,5 @@
-
 // src/firebase/config-for-actions.ts
-import { getFirebaseApp } from './config';
+import { firebaseApp } from './config';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
@@ -8,7 +7,7 @@ import { getStorage } from 'firebase/storage';
 // It does not include 'use client' and can be safely imported in server components.
 
 export function initializeFirebase() {
-  const app = getFirebaseApp();
+  const app = firebaseApp;
   return {
       app,
       firestore: getFirestore(app),

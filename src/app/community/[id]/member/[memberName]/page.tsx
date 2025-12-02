@@ -1,9 +1,9 @@
-
 // src/app/community/[id]/member/[memberName]/page.tsx
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { firestore } from '@/firebase/config';
 import { doc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -146,7 +146,6 @@ function ChatInterface({ member }: { member: Member }) {
 export default function AiMemberProfilePage() {
   const params = useParams();
   const router = useRouter();
-  const firestore = useFirestore();
 
   const communityId = Array.isArray(params.id) ? params.id[0] : params.id;
   const memberName = Array.isArray(params.memberName) ? params.memberName[0] : params.memberName;
@@ -154,7 +153,7 @@ export default function AiMemberProfilePage() {
   const communityDocRef = useMemoFirebase(() => {
     if (!firestore || !communityId) return null;
     return doc(firestore, 'communities', communityId);
-  }, [firestore, communityId]);
+  }, [communityId]);
 
   const { data: community, isLoading, error } = useDoc<Community>(communityDocRef);
 

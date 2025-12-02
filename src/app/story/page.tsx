@@ -1,4 +1,3 @@
-
 // src/app/story/page.tsx
 'use client';
 
@@ -15,7 +14,8 @@ import { LANGUAGES } from '@/config/languages';
 import { generateAndTranslateStory } from '@/app/actions';
 import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { firestore } from '@/firebase/config';
 import { collection, query, orderBy, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
@@ -46,13 +46,12 @@ type StoryResult = {
 
 function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void; }) {
     const { user, isUserLoading } = useUser();
-    const firestore = useFirestore();
 
     const storiesQuery = useMemoFirebase(() => {
         if (!firestore || !user) return null;
         const storiesCollectionRef = collection(firestore, 'users', user.uid, 'stories');
         return query(storiesCollectionRef, orderBy('createdAt', 'desc'));
-    }, [firestore, user]);
+    }, [user]);
 
     const { data: stories, isLoading, error } = useCollection<Story>(storiesQuery);
 
@@ -104,7 +103,6 @@ export default function StoryPage() {
   const [storyResult, setStoryResult] = useState<StoryResult>(null);
   const [selectedStory, setSelectedStory] = useState<Story | null>(null);
   const { user, isUserLoading } = useUser();
-  const firestore = useFirestore();
 
   const form = useForm<z.infer<typeof StoryFormSchema>>({
     resolver: zodResolver(StoryFormSchema),

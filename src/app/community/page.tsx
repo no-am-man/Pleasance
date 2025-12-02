@@ -6,7 +6,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
-import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useUser, useCollection, useMemoFirebase } from "@/firebase";
+import { firestore } from "@/firebase/config";
 import { collection, doc, query, where, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,7 +41,6 @@ function CreateCommunityForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
-  const firestore = useFirestore();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -166,14 +166,12 @@ function CommunityList({ title, communities, isLoading, error }: { title: string
 }
 
 function CommunitySearchResults({ searchTerm }: { searchTerm: string }) {
-    const firestore = useFirestore();
-
     const searchCommunitiesQuery = useMemoFirebase(() => {
       if (!firestore || !searchTerm) return null;
       const communitiesRef = collection(firestore, 'communities');
       // A simple "startsWith" search. For full-text search, an external service like Algolia is better.
       return query(communitiesRef, where('name', '>=', searchTerm), where('name', '<=', searchTerm + '\uf8ff'));
-    }, [firestore, searchTerm]);
+    }, [searchTerm]);
   
     const { data: communities, isLoading, error } = useCollection<Community>(searchCommunitiesQuery);
 
@@ -188,12 +186,10 @@ function CommunitySearchResults({ searchTerm }: { searchTerm: string }) {
 }
 
 function PublicCommunityList() {
-    const firestore = useFirestore();
-
     const publicCommunitiesQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return query(collection(firestore, 'communities'), orderBy('name', 'asc'));
-    }, [firestore]);
+    }, []);
 
     const { data: communities, isLoading, error } = useCollection<Community>(publicCommunitiesQuery);
 
@@ -210,13 +206,12 @@ function PublicCommunityList() {
 
 export default function CommunityPage() {
   const { user, isUserLoading } = useUser();
-  const firestore = useFirestore();
   const [searchTerm, setSearchTerm] = useState('');
 
   const userCommunitiesQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(collection(firestore, 'communities'), where('ownerId', '==', user.uid));
-  }, [firestore, user]);
+  }, [user]);
 
   const { data: userCommunities, isLoading, error } = useCollection<Community>(userCommunitiesQuery);
 

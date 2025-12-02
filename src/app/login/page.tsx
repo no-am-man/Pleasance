@@ -4,7 +4,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth';
-import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { auth, firestore } from '@/firebase/config';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoaderCircle, LogIn, LogOut, MailPlus } from 'lucide-react';
@@ -34,8 +35,6 @@ const GoogleIcon = () => (
 );
 
 export default function LoginPage() {
-  const auth = useAuth();
-  const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -58,12 +57,12 @@ export default function LoginPage() {
         }
     };
     processRedirectResult();
-  }, [auth]);
+  }, []);
 
   const profileRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return doc(firestore, 'community-profiles', user.uid);
-  }, [user, firestore]);
+  }, [user]);
 
   const { data: profile, isLoading: isProfileLoading } = useDoc(profileRef);
 

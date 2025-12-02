@@ -34,7 +34,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { useAuth, useUser } from '@/firebase';
+import { useUser, auth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import useIsMobile from '@/hooks/use-is-mobile';
@@ -84,7 +84,6 @@ function NavLink({
 
 function UserNav() {
   const { user } = useUser();
-  const auth = useAuth();
   const isFounder = user?.email === FOUNDER_EMAIL;
 
   const handleSignOut = async () => {
@@ -136,7 +135,6 @@ function UserNav() {
 
 export function Header() {
   const pathname = usePathname();
-  const auth = useAuth();
   const { user } = useUser();
   const isMobile = useIsMobile();
   const isFounder = user?.email === FOUNDER_EMAIL;

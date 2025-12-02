@@ -1,6 +1,9 @@
-
 'use client';
 
+// Export config and services directly for use in hooks and components
+export { firebaseApp, auth, firestore, storage } from './config';
+
+// Export provider and user-related hooks
 export * from './client-provider';
 export * from './firestore/use-collection';
 export * from './firestore/use-doc';
