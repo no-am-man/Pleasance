@@ -24,6 +24,7 @@ const Svg3dSchema = z.object({
 
 const SaveAssetSchema = z.object({
     assetName: z.string().min(2, 'Asset name must be at least 2 characters.'),
+    value: z.coerce.number().min(0, 'Value must be a positive number.'),
 });
 
 function SaveToTreasuryForm({ pixels }: { pixels: ColorPixel[] }) {
@@ -33,7 +34,7 @@ function SaveToTreasuryForm({ pixels }: { pixels: ColorPixel[] }) {
 
     const form = useForm<z.infer<typeof SaveAssetSchema>>({
         resolver: zodResolver(SaveAssetSchema),
-        defaultValues: { assetName: '' },
+        defaultValues: { assetName: '', value: 0 },
     });
 
     async function onSubmit(data: z.infer<typeof SaveAssetSchema>) {
@@ -46,6 +47,7 @@ function SaveToTreasuryForm({ pixels }: { pixels: ColorPixel[] }) {
             const result = await saveSvgAsset({
                 userId: user.uid,
                 assetName: data.assetName,
+                value: data.value,
                 pixels: pixels,
             });
 
@@ -82,6 +84,19 @@ function SaveToTreasuryForm({ pixels }: { pixels: ColorPixel[] }) {
                                     <FormLabel>Artwork Name</FormLabel>
                                     <FormControl>
                                         <Input placeholder="e.g., 'Digital Sunrise'" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="value"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Artwork Value (USD)</FormLabel>
+                                    <FormControl>
+                                        <Input type="number" placeholder="100.00" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -258,5 +273,3 @@ export default function Svg3dPage() {
     </main>
   );
 }
-
-    

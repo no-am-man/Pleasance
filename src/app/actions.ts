@@ -12,7 +12,7 @@ import { syncAllMembers } from '@/ai/flows/sync-members';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { firebaseConfig } from '@/firebase/config';
 import admin from 'firebase-admin';
-import { generateCommunity } from '@/aiflows/generate-community';
+import { generateCommunity } from '@/ai/flows/generate-community';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
@@ -337,6 +337,7 @@ export async function generateSvg3d(values: z.infer<typeof GenerateSvg3dInputSch
 const saveSvgAssetSchema = z.object({
     userId: z.string(),
     assetName: z.string(),
+    value: z.coerce.number().min(0),
     pixels: z.array(z.object({
         x: z.number(),
         y: z.number(),
@@ -352,7 +353,7 @@ export async function saveSvgAsset(values: z.infer<typeof saveSvgAssetSchema>) {
             return { error: 'Invalid input for saving asset.' };
         }
         
-        const { userId, assetName, pixels } = validatedFields.data;
+        const { userId, assetName, value, pixels } = validatedFields.data;
 
         const adminApp = initializeAdminApp();
         const firestore = getFirestore(adminApp);
@@ -383,7 +384,7 @@ export async function saveSvgAsset(values: z.infer<typeof saveSvgAssetSchema>) {
             name: assetName,
             description: `A generative 3D artwork. Stored at: ${signedUrl}`,
             type: 'ip',
-            value: 0, 
+            value: value, 
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             fileUrl: signedUrl, // Storing the direct file URL for easier access
         };
@@ -398,5 +399,3 @@ export async function saveSvgAsset(values: z.infer<typeof saveSvgAssetSchema>) {
         return { error: `Failed to save asset: ${message}` };
     }
 }
-
-    
