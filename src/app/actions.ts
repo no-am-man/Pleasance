@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -12,22 +13,22 @@ import admin from 'firebase-admin';
 import { generateCommunity } from '@/ai/flows/generate-community';
 
 
-const storySchema = z.object({
+const storyTextSchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
   sourceLanguage: z.string().min(1),
   targetLanguage: z.string().min(1),
 });
 
-export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>) {
+export async function generateTextPortionOfStory(values: z.infer<typeof storyTextSchema>) {
   try {
-    const validatedFields = storySchema.safeParse(values);
+    const validatedFields = storyTextSchema.safeParse(values);
     if (!validatedFields.success) {
       return { error: 'Invalid input.' };
     }
     
     const { difficulty, sourceLanguage, targetLanguage } = validatedFields.data;
     
-    // --- Step 1: Generate and Translate Story ---
+    // --- Generate and Translate Story ---
     const storyResult = await generateStory({ difficultyLevel: difficulty, sourceLanguage });
     if (!storyResult.story) {
       throw new Error('Failed to generate a story.');
@@ -44,14 +45,7 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>
       throw new Error('Failed to translate the story.');
     }
     const translatedText = translationResult.translatedText;
-
-    // --- Step 2: Generate Speech Buffer ---
-    const speechResult = await generateSpeech({ text: translatedText });
-    if (!speechResult.audioBase64) {
-        throw new Error('Speech synthesis failed to produce audio.');
-    }
     
-    // Return story data and audio buffer to the client
     return {
       storyData: {
         level: difficulty,
@@ -59,16 +53,43 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>
         targetLanguage: targetLanguage,
         nativeText: originalStory,
         translatedText: translatedText,
-      },
-      audioBase64: speechResult.audioBase64,
+      }
     };
 
   } catch (e) {
     console.error('Action Error:', e);
     const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
-    return { error: `Story creation failed. ${message}` };
+    return { error: `Story text creation failed. ${message}` };
   }
 }
+
+const speechSchema = z.object({
+  text: z.string(),
+});
+
+export async function generateSpeechForStory(values: z.infer<typeof speechSchema>) {
+    try {
+        const validatedFields = speechSchema.safeParse(values);
+        if (!validatedFields.success) {
+            return { error: 'Invalid input for speech generation.' };
+        }
+        const { text } = validatedFields.data;
+
+        const speechResult = await generateSpeech({ text });
+        if (!speechResult.audioBase64) {
+            throw new Error('Speech synthesis failed to produce audio.');
+        }
+        
+        return {
+            audioBase64: speechResult.audioBase64,
+        };
+    } catch (e) {
+        console.error('Speech Generation Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Speech generation failed. ${message}` };
+    }
+}
+
 
 const snapshotSchema = z.object({
   userId: z.string(),

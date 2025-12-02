@@ -1,7 +1,8 @@
+
 // src/app/story/page.tsx
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -11,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LoaderCircle, Sparkles, LogIn, History, BookOpen, PencilRuler, Camera, Clock } from 'lucide-react';
 import { LANGUAGES } from '@/config/languages';
-import { generateStoryAndSpeech, createHistorySnapshot } from '@/app/actions';
+import { generateTextPortionOfStory, generateSpeechForStory, createHistorySnapshot } from '@/app/actions';
 import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useUser, setDocumentNonBlocking } from '@/firebase';
@@ -225,6 +226,40 @@ export default function StoryPage() {
     },
   });
 
+  const generateAndUploadAudio = async (textToSpeak: string, storyData: Omit<Story, 'audioUrl' | 'createdAt'>) => {
+      if (!user) return;
+      try {
+        const speechResult = await generateSpeechForStory({ text: textToSpeak });
+        if (speechResult.error || !speechResult.audioBase64) {
+            throw new Error(speechResult.error || 'Speech synthesis failed to produce audio.');
+        }
+
+        const storagePath = `stories/${user.uid}/${storyData.id}.l16`;
+        const storageRef = ref(storage, storagePath);
+        const uploadResult = await uploadString(storageRef, speechResult.audioBase64, 'base64', {
+            contentType: 'audio/l16;rate=24000',
+        });
+        const downloadURL = await getDownloadURL(uploadResult.ref);
+
+        const finalStoryData = {
+          ...storyData,
+          audioUrl: downloadURL,
+          createdAt: serverTimestamp(),
+        };
+        
+        const storyDocRef = doc(firestore, 'users', user.uid, 'stories', storyData.id);
+        setDocumentNonBlocking(storyDocRef, finalStoryData, { merge: false });
+
+        // Update active story with the audioUrl for immediate playback
+        setActiveStory(currentStory => currentStory ? { ...currentStory, audioUrl: downloadURL } : null);
+        toast({ title: "Speech Ready!", description: "Your story audio is now available."});
+
+      } catch (e) {
+          const message = e instanceof Error ? e.message : 'An unknown error occurred during audio processing.';
+          setError(`Audio generation failed: ${message}`);
+      }
+  };
+
   async function onSubmit(data: z.infer<typeof StoryFormSchema>) {
     if (!user) {
         setError("You must be logged in to generate a story.");
@@ -234,52 +269,36 @@ export default function StoryPage() {
     setError(null);
     setActiveStory(null);
 
-    const result = await generateStoryAndSpeech(data);
+    const textResult = await generateTextPortionOfStory(data);
 
-    if (result.error) {
-      setError(result.error);
+    if (textResult.error) {
+      setError(textResult.error);
       setIsLoading(false);
       return;
     }
     
-    if (result.storyData && result.audioBase64) {
-        try {
-            const storyCollectionRef = collection(firestore, 'users', user.uid, 'stories');
-            const newDocRef = doc(storyCollectionRef);
-            const storyId = newDocRef.id;
+    if (textResult.storyData) {
+        const storyCollectionRef = collection(firestore, 'users', user.uid, 'stories');
+        const newDocRef = doc(storyCollectionRef);
+        const storyId = newDocRef.id;
 
-            // Upload audio to Firebase Storage from client
-            const storagePath = `stories/${user.uid}/${storyId}.l16`;
-            const storageRef = ref(storage, storagePath);
-            const uploadResult = await uploadString(storageRef, result.audioBase64, 'base64', {
-                contentType: 'audio/l16;rate=24000',
-            });
-            const downloadURL = await getDownloadURL(uploadResult.ref);
+        const newStoryData: Omit<Story, 'audioUrl' | 'createdAt'> = {
+            id: storyId,
+            userId: user.uid,
+            ...textResult.storyData,
+        };
 
-            const newStoryData: Omit<Story, 'createdAt'> & { createdAt: any } = {
-                id: storyId,
-                userId: user.uid,
-                ...result.storyData,
-                createdAt: serverTimestamp(),
-                audioUrl: downloadURL,
-            };
-
-            // Non-blocking write to Firestore
-            setDocumentNonBlocking(newDocRef, newStoryData, { merge: false });
-            
-            // Set the active story for immediate viewing
-            setActiveStory({
-                ...newStoryData,
-                createdAt: null, // set to null because serverTimestamp hasn't resolved
-            });
-
-            toast({ title: "Story and Speech Ready!", description: "Your new story is ready to be played."});
-        } catch (e) {
-            const message = e instanceof Error ? e.message : 'An unknown error occurred during upload.';
-            setError(`Story creation failed after generation: ${message}`);
-        }
+        const temporaryActiveStory: Story = {
+          ...newStoryData,
+          createdAt: null, // set to null because it's not saved yet
+        };
+        setActiveStory(temporaryActiveStory);
+        toast({ title: "Story Generated!", description: "Your new story text is ready. Generating audio..."});
+        
+        // Now, generate and upload audio in the background
+        generateAndUploadAudio(textResult.storyData.translatedText, newStoryData);
     } else {
-      setError('An unknown error occurred while generating the story.');
+      setError('An unknown error occurred while generating the story text.');
     }
 
     setIsLoading(false);
