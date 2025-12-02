@@ -75,19 +75,21 @@ function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void
                 {stories && stories.length === 0 && <p className="text-muted-foreground text-center">You haven't generated any stories yet.</p>}
                 {stories && stories.length > 0 && (
                     <ul className="space-y-2 max-h-60 overflow-y-auto">
-                        {stories.map(story => (
-                            <li key={story.id}>
-                                <button 
-                                    onClick={() => onSelectStory(story)}
-                                    className="w-full text-left p-3 rounded-md hover:bg-accent transition-colors"
-                                >
-                                    <p className="font-semibold truncate">{story.nativeText}</p>
-                                    <p className="text-sm text-muted-foreground">
-                                        {story.level} &middot; {story.sourceLanguage} to {story.targetLanguage} &middot; {story.createdAt ? new Date(story.createdAt.seconds * 1000).toLocaleDateString() : ''}
-                                    </p>
-                                </button>
-                            </li>
-                        ))}
+                        {stories.map(story => {
+                            return (
+                                <li key={story.id}>
+                                    <button 
+                                        onClick={() => onSelectStory(story)}
+                                        className="w-full text-left p-3 rounded-md hover:bg-accent transition-colors"
+                                    >
+                                        <p className="font-semibold truncate">{story.nativeText}</p>
+                                        <p className="text-sm text-muted-foreground">
+                                            {story.level} &middot; {story.sourceLanguage} to {story.targetLanguage} &middot; {story.createdAt ? new Date(story.createdAt.seconds * 1000).toLocaleDateString() : ''}
+                                        </p>
+                                    </button>
+                                </li>
+                            )
+                        })}
                     </ul>
                 )}
             </CardContent>
