@@ -1,3 +1,4 @@
+
 // src/app/admin/page.tsx
 'use client';
 
@@ -5,9 +6,9 @@ import { useState } from 'react';
 import { useUser } from '@/firebase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, ShieldCheck, AlertTriangle, CheckCircle, Bone, Database } from 'lucide-react';
+import { LoaderCircle, ShieldCheck, AlertTriangle, CheckCircle, Bone, Database, CloudCog } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { runMemberSync } from '../actions';
+import { runMemberSync, setStorageCors } from '../actions';
 import { enableStorage } from '../enable-storage-action';
 
 // This is a simple check. In a real-world app, this should be a secure custom claim.
@@ -27,6 +28,10 @@ function AdminDashboard() {
     const [storageIsLoading, setStorageIsLoading] = useState(false);
     const [storageError, setStorageError] = useState<string | null>(null);
     const [storageResult, setStorageResult] = useState<string | null>(null);
+    
+    const [corsIsLoading, setCorsIsLoading] = useState(false);
+    const [corsError, setCorsError] = useState<string | null>(null);
+    const [corsResult, setCorsResult] = useState<string | null>(null);
 
     const handleSync = async () => {
         setSyncIsLoading(true);
@@ -68,6 +73,26 @@ function AdminDashboard() {
         setStorageIsLoading(false);
     };
 
+    const handleSetCors = async () => {
+        setCorsIsLoading(true);
+        setCorsError(null);
+        setCorsResult(null);
+        
+        try {
+            const result = await setStorageCors();
+            if (result.error) {
+                setCorsError(result.error);
+            } else if (result.data) {
+                setCorsResult(result.data);
+            }
+        } catch(e) {
+             const message = e instanceof Error ? e.message : 'An unknown error occurred.';
+            setCorsError(`Setting the CORS policy failed: ${message}`);
+        }
+        
+        setCorsIsLoading(false);
+    }
+
     return (
         <Card className="shadow-lg">
             <CardHeader>
@@ -105,6 +130,41 @@ function AdminDashboard() {
                                 <CheckCircle className="h-4 w-4 text-green-500" />
                                 <AlertTitle className="text-green-500">Storage Setup Complete</AlertTitle>
                                 <AlertDescription className="text-green-500/80">{storageResult}</AlertDescription>
+                            </Alert>
+                        )}
+                    </CardContent>
+                </Card>
+
+                 <Card className="bg-muted/50">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                           <CloudCog /> Set Storage CORS Policy
+                        </CardTitle>
+                        <CardDescription>
+                            This action is required to allow audio playback from Firebase Storage. It configures Cross-Origin Resource Sharing (CORS) to permit your app's domain to request audio files. If audio is not playing, run this action.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Button onClick={handleSetCors} disabled={corsIsLoading}>
+                            {corsIsLoading ? (
+                                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <ShieldCheck className="mr-2 h-4 w-4" />
+                            )}
+                            Set CORS Policy
+                        </Button>
+                        {corsError && (
+                            <Alert variant="destructive" className="mt-4">
+                                <AlertTriangle className="h-4 w-4" />
+                                <AlertTitle>CORS Setup Error</AlertTitle>
+                                <AlertDescription>{corsError}</AlertDescription>
+                            </Alert>
+                        )}
+                        {corsResult && (
+                            <Alert variant="default" className="mt-4 bg-green-500/10 border-green-500/50">
+                                <CheckCircle className="h-4 w-4 text-green-500" />
+                                <AlertTitle className="text-green-500">CORS Policy Updated</AlertTitle>
+                                <AlertDescription className="text-green-500/80">{corsResult}</AlertDescription>
                             </Alert>
                         )}
                     </CardContent>

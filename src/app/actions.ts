@@ -13,6 +13,7 @@ import admin from 'firebase-admin';
 import { generateCommunity } from '@/ai/flows/generate-community';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
+import { setStorageCors } from './set-storage-cors-action';
 
 
 const storyTextSchema = z.object({
@@ -264,3 +265,5 @@ export async function runMemberSync() {
         return { error: `Member synchronization failed. ${message}` };
     }
 }
+
+export { setStorageCors };
