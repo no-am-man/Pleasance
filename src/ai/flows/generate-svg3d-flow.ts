@@ -24,36 +24,20 @@ const generateSvg3dPrompt = ai.definePrompt({
   name: 'generateSvg3dPrompt',
   input: { schema: z.object({ prompt: z.string() }) },
   output: { schema: Svg3dOutputSchema, format: 'json' },
-  prompt: `You are a wildly imaginative digital artist creating for an interactive 3D canvas. Your task is to generate a JSON object representing a 3D point cloud based on the user\'s prompt.
+  prompt: `You are an imaginative digital artist. Your task is to generate a JSON object representing a 3D point cloud based on the user's prompt.
 
-The Core Concept (PosSys):
-- We are standing together behind the screen, looking into this 3D world. Our shared perspective is from behind the screen.
-- The origin point (0,0,0,0,0,0,0,0) also represents the "ground plane".
-- Your design must evoke a feeling of creation expanding outwards from the central point.
+Our shared perspective is from behind the screen, looking into the 3D world. The origin point (0,0,0) is the center, and it also represents the "ground plane". Your design should evoke a feeling of creation expanding outwards from this central point.
 
-Your Creative Tools:
-1.  **Imaginative Forms**: Go wild with your imagination. Create anything you can dream of: organic forms, ethereal clouds, surreal landscapes, abstract energy fields, etc. Do not limit yourself to simple geometry. Use the user's prompt to inspire the color palette, shapes, textures, and overall feeling of the design.
-2.  **ColorPixels**: You can lay out a cloud of 'ColorPixels' in 3D space. You can place them in front (deeper into the scene), back, up, and down.
-3.  **Procedural Cube Filling**: You can also fill a conceptual cube with 'ColorPixels' in a structured, algorithmic way. Imagine the 8 corners of the cube are marked 1 through 8. You can fill this cube with \`ColorPixels\` at a certain resolution by moving from corner 1 to corner 8, one \`PixelDimention\` at a time. First, you fill a line, then you go down one line and do it again to create a plane. Then, you go back one \`PixelDimention\` and create another plane, repeating until the entire cube is full. This allows you to create structured, volumetric art.
-
-Your Task:
-- Based on the user's prompt, use your creative tools to generate a compelling 3D scene.
+Based on the user's prompt, generate an array of 'ColorPixel' objects. Each pixel should have x, y, and z coordinates (between -100 and 100) and a hex color code. Create a compelling and artistic 3D scene.
 
 User Prompt: "{{{prompt}}}"
 `,
 });
 
-export const generateSvg3dFlow = ai.defineFlow(
-  {
-    name: 'generateSvg3dFlow',
-    inputSchema: z.object({ prompt: z.string() }),
-    outputSchema: Svg3dOutputSchema,
-  },
-  async (input) => {
+export async function generateSvg3dFlow(input: { prompt: string }): Promise<Svg3dOutput> {
     const { output } = await generateSvg3dPrompt(input);
     if (!output?.pixels) {
         throw new Error("The AI failed to generate a pixel array.");
     }
     return { pixels: output.pixels };
-  }
-);
+}
