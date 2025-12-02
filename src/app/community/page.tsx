@@ -12,12 +12,13 @@ import { firestore } from "@/firebase/config";
 import { collection, doc, query, where, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LogIn, PlusCircle, LoaderCircle, Search, User } from "lucide-react";
+import { LogIn, PlusCircle, LoaderCircle, Search, User, Flag } from "lucide-react";
 import { createCommunityDetails } from "../actions";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useCollectionData } from "react-firebase-hooks/firestore";
+import Image from "next/image";
 
 const FormSchema = z.object({
   prompt: z.string().min(10, "Please enter a prompt of at least 10 characters."),
@@ -38,6 +39,7 @@ type Community = {
   welcomeMessage: string;
   ownerId: string;
   members: Member[];
+  flagUrl?: string;
 };
 
 type CommunityProfile = {
@@ -159,18 +161,25 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
                 const owner = profiles?.find(p => p.userId === community.ownerId);
                 return (
                     <li key={community.id} className="rounded-md border transition-colors hover:bg-muted/50">
-                    <Link href={`/community/${community.id}`} className="block p-4">
-                        <div className="flex items-center justify-between">
-                            <h3 className="font-semibold text-lg text-primary underline">{community.name}</h3>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">{community.description}</p>
-                        {owner && (
-                            <div className="flex items-center gap-2 text-sm text-accent-foreground font-medium mt-2">
-                                <User className="w-4 h-4" />
-                                <span>Founded by {owner.name}</span>
+                        <Link href={`/community/${community.id}`} className="flex items-start gap-4 p-4">
+                            <div className="relative h-20 w-36 flex-shrink-0 rounded-md border bg-muted flex items-center justify-center">
+                                {community.flagUrl ? (
+                                    <Image src={community.flagUrl} alt={`${community.name} Flag`} layout="fill" objectFit="cover" className="rounded-md" />
+                                ) : (
+                                    <Flag className="h-8 w-8 text-muted-foreground" />
+                                )}
                             </div>
-                        )}
-                    </Link>
+                            <div className="flex-1">
+                                <h3 className="font-semibold text-lg text-primary underline">{community.name}</h3>
+                                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{community.description}</p>
+                                {owner && (
+                                    <div className="flex items-center gap-2 text-base text-accent-foreground font-medium mt-2">
+                                        <User className="w-4 h-4" />
+                                        <span>Founded by {owner.name}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </Link>
                     </li>
                 );
               })}
