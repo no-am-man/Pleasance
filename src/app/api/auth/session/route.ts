@@ -1,8 +1,7 @@
 // src/app/api/auth/session/route.ts
-import 'dotenv/config';
-import { NextResponse, type NextRequest } from 'next/server';
-import { cookies } from 'next/headers';
 import { initializeAdminApp } from '@/firebase/config-admin';
+import { cookies } from 'next/headers';
+import { NextResponse, type NextRequest } from 'next/server';
 
 
 export async function POST(request: NextRequest) {
