@@ -60,7 +60,9 @@ Your response must be concise, engaging, and directly related to the user's mess
         prompt: input.userMessage,
         history: input.history,
     });
+    
+    const responseText = output?.text || '';
 
-    return { response: output.candidates[0].message.content[0].text };
+    return { response: responseText };
   }
 );
