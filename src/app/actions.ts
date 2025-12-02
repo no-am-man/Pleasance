@@ -22,6 +22,7 @@ import {
     type GenerateSvg3dInput,
     ColorPixelSchema
 } from '@/lib/types';
+import { googleAI } from '@genkit-ai/google-genai';
 
 
 // Schema for chat input, as it's used across client and server
@@ -319,6 +320,7 @@ const generateSvg3dPrompt = ai.definePrompt({
   name: 'generateSvg3dPrompt',
   input: { schema: GenerateSvg3dInputSchema },
   output: { schema: Svg3dOutputSchema },
+  model: googleAI.model('gemini-pro'),
   prompt: `You are a digital artist who creates 3D point clouds. Generate a JSON array of 'ColorPixel' objects based on the user's request.
 
 - The user wants to create a point cloud representing: "{{{prompt}}}"
