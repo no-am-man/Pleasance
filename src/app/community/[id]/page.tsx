@@ -4,7 +4,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, useStorage, setDocumentNonBlocking, updateDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
-import { doc, collection, query, orderBy, serverTimestamp, where, updateDoc, arrayUnion, setDoc, getDoc } from 'firebase/firestore';
+import { doc, collection, query, orderBy, serverTimestamp, where, updateDoc, arrayUnion, setDoc, getDoc, deleteField } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ import { useEffect, useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { getAiChatResponse, updateMessageStatus, softDeleteMessage } from '@/app/actions';
+import { getAiChatResponse } from '@/app/actions';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
@@ -278,47 +278,31 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
     const commentCount = comments?.length || 0;
 
     const handleToggleStatus = async () => {
+        if (!firestore) return;
         setIsUpdating(true);
         const newStatus = isDone ? 'active' : 'done';
-        const result = await updateMessageStatus({
-            communityId: message.communityId,
-            messageId: message.id,
-            status: newStatus,
-        });
+        const messageDocRef = doc(firestore, 'communities', message.communityId, 'messages', message.id);
+        
+        updateDocumentNonBlocking(messageDocRef, { status: newStatus });
+        
+        toast({ title: `Message Marked as ${newStatus}` });
         setIsUpdating(false);
-
-        if (result.error) {
-            toast({
-                variant: 'destructive',
-                title: 'Update Failed',
-                description: result.error,
-            });
-        } else {
-            toast({
-                title: `Message Marked as ${newStatus}`,
-            });
-        }
     };
 
     const handleDelete = async () => {
+        if (!firestore) return;
         setIsDeleting(true);
-        const result = await softDeleteMessage({
-            communityId: message.communityId,
-            messageId: message.id,
-        });
-        setIsDeleting(false);
+        const messageDocRef = doc(firestore, `communities/${message.communityId}/messages`, message.id);
 
-        if (result.error) {
-            toast({
-                variant: 'destructive',
-                title: 'Delete Failed',
-                description: result.error,
-            });
-        } else {
-            toast({
-                title: 'Message Deleted',
-            });
-        }
+        const updatePayload = {
+            deleted: true,
+            deletedAt: serverTimestamp(),
+            text: deleteField(),
+        };
+
+        updateDocumentNonBlocking(messageDocRef, updatePayload);
+        toast({ title: 'Message Deleted' });
+        setIsDeleting(false);
     };
 
      if (isDeleted) {
