@@ -14,10 +14,10 @@ service firebase.storage {
     
     //====================================================================
     // Stories: Allow any authenticated user to write their own story audio.
-    // This rule is permissive to ensure the server-side background action
-    // can successfully upload the generated WAV file.
+    // The server-side action needs to be able to save the generated MP3.
+    // Restricting to the user's own path provides basic security.
     //====================================================================
-    match /stories/{userId}/{storyId}.wav {
+    match /stories/{userId}/{storyId}.mp3 {
       allow write: if request.auth != null && request.auth.uid == userId;
     }
 
@@ -30,5 +30,3 @@ service firebase.storage {
     }
   }
 }
-
-    

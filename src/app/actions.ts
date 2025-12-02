@@ -23,42 +23,6 @@ const storyTextSchema = z.object({
 });
 
 
-async function processAudioInBackground(storyId: string, userId: string, textToSpeak: string) {
-    try {
-        const adminApp = initializeAdminApp();
-        const firestore = getFirestore(adminApp);
-        const storyDocRef = firestore.collection('users').doc(userId).collection('stories').doc(storyId);
-
-        // 1. Generate Speech (returns a Data URI with MP3)
-        const speechResult = await generateSpeech({ text: textToSpeak });
-        if (!speechResult.audioUrl) {
-            throw new Error('Speech synthesis failed to produce audio.');
-        }
-
-        // 2. Update Firestore document with the Data URI and final status
-        await storyDocRef.update({
-            audioUrl: speechResult.audioUrl,
-            status: 'complete',
-        });
-
-    } catch (e) {
-        console.error(`Background audio processing failed for story ${storyId}:`, e);
-        // Update the document to reflect the failure
-        const adminApp = initializeAdminApp();
-        const firestore = getFirestore(adminApp);
-        const storyDocRef = firestore.collection('users').doc(userId).collection('stories').doc(storyId);
-        try {
-            await storyDocRef.update({
-                status: 'failed',
-                error: e instanceof Error ? e.message : 'Unknown error during audio processing.',
-            });
-        } catch (updateError) {
-            console.error(`Failed to update story document with error status for story ${storyId}:`, updateError);
-        }
-    }
-}
-
-
 export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSchema>) {
   try {
     const validatedFields = storyTextSchema.safeParse(values);
@@ -75,6 +39,7 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
     }
     const originalStory = storyResult.story;
     
+    // --- Step 2: Translate Story ---
     const translationResult = await translateStory({
       storyText: originalStory,
       sourceLanguage: sourceLanguage,
@@ -86,12 +51,39 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
     }
     const translatedText = translationResult.translatedText;
 
-    // --- Step 2: Save Initial Story to Firestore ---
+    // --- Step 3: Generate Speech (MP3 Data URI) ---
+    const speechResult = await generateSpeech({ text: translatedText });
+    if (!speechResult.audioUrl) {
+        throw new Error('Speech synthesis failed to produce audio.');
+    }
+
+    // --- Step 4: Upload Audio to Firebase Storage ---
     const adminApp = initializeAdminApp();
+    const storage = getStorage(adminApp);
     const firestore = getFirestore(adminApp);
+
     const storyDocRef = firestore.collection('users').doc(userId).collection('stories').doc();
     const storyId = storyDocRef.id;
 
+    // Extract Base64 data from the Data URI
+    const audioDataUri = speechResult.audioUrl;
+    const base64Data = audioDataUri.split(',')[1];
+    const audioBuffer = Buffer.from(base64Data, 'base64');
+    
+    const storagePath = `stories/${userId}/${storyId}.mp3`;
+    const file = storage.bucket().file(storagePath);
+    
+    await file.save(audioBuffer, {
+        metadata: {
+            contentType: 'audio/mpeg',
+        },
+    });
+
+    // Make the file public and get its URL
+    await file.makePublic();
+    const publicUrl = file.publicUrl();
+
+    // --- Step 5: Save Final Story to Firestore ---
     const storyData = {
         id: storyId,
         userId: userId,
@@ -101,16 +93,13 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
         nativeText: originalStory,
         translatedText: translatedText,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        status: 'processing', // Initial status
-        audioUrl: '', // Initially empty
+        status: 'complete',
+        audioUrl: publicUrl, // Save the public URL
     };
     
     await storyDocRef.set(storyData);
     
-    // --- Step 3: Trigger background audio processing (DO NOT AWAIT) ---
-    processAudioInBackground(storyId, userId, translatedText);
-
-    // --- Step 4: Return immediately to the client ---
+    // --- Step 6: Return immediately to the client ---
     return {
         storyData: {
             ...storyData,
