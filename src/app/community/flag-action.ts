@@ -22,20 +22,20 @@ function toBase64(str: string): string {
     }
 }
 
-// Initialize Firebase Admin SDK only if not already initialized
-// This is the robust way to handle initialization in a serverless environment
-if (!admin.apps.length) {
-    try {
-        admin.initializeApp({
-            credential: admin.credential.applicationDefault(),
-        });
-    } catch (e) {
-        console.error('Firebase Admin Initialization Error in flag-action:', e);
-    }
-}
-
-
 export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) {
+    // Robust Initialization: Initialize inside the action to guarantee it runs before use.
+    if (!admin.apps.length) {
+        try {
+            admin.initializeApp({
+                credential: admin.credential.applicationDefault(),
+            });
+        } catch (e) {
+            console.error('Firebase Admin Initialization Error in flag-action:', e);
+            // If initialization fails, we cannot proceed.
+            return { error: 'Server configuration error. Could not initialize Firebase Admin.' };
+        }
+    }
+
     try {
         const validatedFields = flagSchema.safeParse(values);
         if (!validatedFields.success) {
@@ -71,4 +71,3 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
         return { error: `Flag generation failed: ${message}` };
     }
 }
-
