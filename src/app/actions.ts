@@ -12,32 +12,32 @@ import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
   sourceLanguage: z.string().min(1),
   targetLanguage: z.string().min(1),
+  userId: z.string(),
 });
 
-export async function generateAndTranslateStory(values: z.infer<typeof storySchema>) {
+export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>) {
   try {
     const validatedFields = storySchema.safeParse(values);
     if (!validatedFields.success) {
       return { error: 'Invalid input.' };
     }
     
-    const { difficulty, sourceLanguage, targetLanguage } = validatedFields.data;
+    const { difficulty, sourceLanguage, targetLanguage, userId } = validatedFields.data;
 
-    // Generate Story
+    // --- Step 1: Generate and Translate Story ---
     const storyResult = await generateStory({ difficultyLevel: difficulty, sourceLanguage });
     if (!storyResult.story) {
       throw new Error('Failed to generate a story.');
     }
     const originalStory = storyResult.story;
     
-    // Translate Story
     const translationResult = await translateStory({
       storyText: originalStory,
       sourceLanguage: sourceLanguage,
@@ -45,20 +45,68 @@ export async function generateAndTranslateStory(values: z.infer<typeof storySche
     });
 
     if (!translationResult || !translationResult.translatedText) {
-      throw new Error('Failed to translate the story. The AI may have returned an empty response.');
+      throw new Error('Failed to translate the story.');
+    }
+    const translatedText = translationResult.translatedText;
+
+    // --- Step 2: Initialize Firebase Admin ---
+    const adminApp = initializeAdminApp();
+    const firestore = adminApp.firestore();
+    const storage = getStorage(adminApp);
+
+    // --- Step 3: Save Initial Story to Firestore ---
+    const storyCollectionRef = collection(firestore, 'users', userId, 'stories');
+    const newStoryData = {
+        userId: userId,
+        level: difficulty,
+        sourceLanguage: sourceLanguage,
+        targetLanguage: targetLanguage,
+        nativeText: originalStory,
+        translatedText: translatedText,
+        createdAt: serverTimestamp(),
+        audioUrl: '', // Initialize with empty audioUrl
+    };
+    const newDocRef = await addDoc(storyCollectionRef, newStoryData);
+    const storyId = newDocRef.id;
+
+    // --- Step 4: Generate Speech ---
+    const speechResult = await generateSpeech({ text: translatedText });
+    if (!speechResult.wavBuffer) {
+        throw new Error('Speech synthesis failed to produce audio.');
     }
 
+    // --- Step 5: Upload Audio and Get URL ---
+    const storagePath = `stories/${userId}/${storyId}.wav`;
+    const storageRef = ref(storage, storagePath);
+    await uploadBytes(storageRef, speechResult.wavBuffer, { contentType: 'audio/wav' });
+    const downloadURL = await getDownloadURL(storageRef);
+
+    // --- Step 6: Update Story with Audio URL ---
+    const storyDocRef = doc(firestore, 'users', userId, 'stories', storyId);
+    await updateDoc(storyDocRef, { audioUrl: downloadURL });
+
+    // --- Step 7: Return Complete Story Object ---
     return {
-      originalStory,
-      translatedText: translationResult.translatedText,
-      sourceLanguage: sourceLanguage,
+      story: {
+        id: storyId,
+        userId,
+        level: difficulty,
+        sourceLanguage,
+        targetLanguage,
+        nativeText: originalStory,
+        translatedText,
+        audioUrl: downloadURL,
+        createdAt: null, // This can be null for the client, it's set on the server
+      }
     };
+
   } catch (e) {
     console.error('Action Error:', e);
     const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
     return { error: `Story creation failed. ${message}` };
   }
 }
+
 
 const communitySchema = z.object({
     prompt: z.string().min(10),
@@ -105,56 +153,6 @@ export async function getAiChatResponse(input: ChatWithMemberInput) {
         console.error('AI Chat Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
         return { error: `AI chat failed. ${message}` };
-    }
-}
-
-const speechSchema = z.object({
-    text: z.string(),
-    userId: z.string(),
-    storyId: z.string(),
-});
-
-export async function synthesizeSpeech(values: z.infer<typeof speechSchema>) {
-    try {
-        const validatedFields = speechSchema.safeParse(values);
-        if (!validatedFields.success) {
-            return { error: 'Invalid input for speech synthesis.' };
-        }
-        
-        const { text, userId, storyId } = validatedFields.data;
-
-        // 1. Generate speech buffer
-        const speechResult = await generateSpeech({ text });
-        if (!speechResult.wavBuffer) {
-            return { error: 'Speech synthesis failed to produce audio.' };
-        }
-
-        // 2. Upload to Firebase Storage
-        const adminApp = initializeAdminApp();
-        const storage = getStorage(adminApp);
-        const firestore = adminApp.firestore();
-
-        const storagePath = `stories/${userId}/${storyId}.wav`;
-        const storageRef = ref(storage, storagePath);
-        
-        await uploadBytes(storageRef, speechResult.wavBuffer, {
-            contentType: 'audio/wav',
-        });
-
-        // 3. Get public download URL
-        const downloadURL = await getDownloadURL(storageRef);
-
-        // 4. Update the story document in Firestore
-        const storyDocRef = doc(firestore, 'users', userId, 'stories', storyId);
-        await updateDoc(storyDocRef, { audioUrl: downloadURL });
-
-        // 5. Return the public URL to the client
-        return { audioUrl: downloadURL };
-
-    } catch (e) {
-        console.error('Speech Synthesis & Caching Error:', e);
-        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
-        return { error: `Speech synthesis failed. ${message}` };
     }
 }
 

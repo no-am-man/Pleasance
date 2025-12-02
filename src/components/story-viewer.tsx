@@ -2,49 +2,47 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, LoaderCircle, Copy } from "lucide-react";
-import { synthesizeSpeech } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 
+type Story = {
+    id: string;
+    userId: string;
+    nativeText: string;
+    translatedText: string;
+    sourceLanguage: string;
+    audioUrl?: string;
+};
+
 type StoryViewerProps = {
-  storyId: string;
-  userId: string;
-  originalStory: string;
-  translatedText: string;
-  sourceLanguage: string;
-  initialAudioUrl?: string;
-  isLoading: boolean;
-  setIsLoading: (isLoading: boolean) => void;
-  setError: (error: string | null) => void;
+  story: Story;
+  autoplay?: boolean;
 };
 
 
-export default function StoryViewer({
-  storyId,
-  userId,
-  originalStory,
-  translatedText,
-  sourceLanguage,
-  initialAudioUrl,
-  isLoading,
-  setIsLoading,
-  setError,
-}: StoryViewerProps) {
+export default function StoryViewer({ story, autoplay = false }: StoryViewerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(autoplay);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  const [audioUrl, setAudioUrl] = useState(initialAudioUrl || '');
   const { toast } = useToast();
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
-  const hasAudio = audioUrl && audioUrl.length > 0;
+  const hasAudio = story.audioUrl && story.audioUrl.length > 0;
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
+
+    // Autoplay when audioUrl is available and autoplay is true
+    if (story.audioUrl && autoplay) {
+        audio.play().catch(e => {
+            console.error("Autoplay failed:", e);
+            setIsPlaying(false); // If autoplay fails, update the state
+        });
+    }
 
     const setAudioData = () => {
       setDuration(audio.duration);
@@ -69,15 +67,11 @@ export default function StoryViewer({
       audio.removeEventListener("timeupdate", setAudioTime);
       audio.removeEventListener("ended", handlePlaybackEnded);
     };
-  }, []);
+  }, [story.audioUrl, autoplay]);
 
   useEffect(() => {
     const audio = audioRef.current;
-    if (audio && audioUrl) {
-      if (audio.src !== audioUrl) {
-        audio.src = audioUrl;
-        audio.load();
-      }
+    if (audio) {
       if (isPlaying) {
         audio.play().catch(e => {
           console.error("Playback error:", e);
@@ -87,35 +81,15 @@ export default function StoryViewer({
         audio.pause();
       }
     }
-  }, [audioUrl, isPlaying]);
+  }, [isPlaying]);
 
-
-  const handlePlay = async () => {
-    if (hasAudio) {
-      togglePlayPause();
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    const result = await synthesizeSpeech({ 
-      text: translatedText,
-      userId: userId,
-      storyId: storyId
-    });
-
-    if (result.error) {
-        setError(result.error);
-    } else if (result.audioUrl) {
-        setAudioUrl(result.audioUrl);
-        setIsPlaying(true); // Autoplay after successful generation
-    }
-    setIsLoading(false);
-  }
 
   const togglePlayPause = () => {
-    setIsPlaying(!isPlaying);
+    if (hasAudio) {
+      setIsPlaying(!isPlaying);
+    }
+    // If there's no audio, this button should ideally not be active,
+    // but the logic for generation is handled on the page level now.
   };
 
   const handleCopy = (text: string, type: string) => {
@@ -131,21 +105,21 @@ export default function StoryViewer({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card>
           <CardHeader className="flex flex-row justify-between items-start">
-            <CardTitle>Original Story ({sourceLanguage})</CardTitle>
-            <Button variant="ghost" size="icon" onClick={() => handleCopy(originalStory, 'original')}>
+            <CardTitle>Original Story ({story.sourceLanguage})</CardTitle>
+            <Button variant="ghost" size="icon" onClick={() => handleCopy(story.nativeText, 'original')}>
                 <Copy className="w-4 h-4" />
             </Button>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
-              {originalStory}
+              {story.nativeText}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row justify-between items-start">
             <CardTitle>Translated Story</CardTitle>
-            <Button variant="ghost" size="icon" onClick={() => handleCopy(translatedText, 'translated')}>
+            <Button variant="ghost" size="icon" onClick={() => handleCopy(story.translatedText, 'translated')}>
                 <Copy className="w-4 h-4" />
             </Button>
           </CardHeader>
@@ -160,33 +134,31 @@ export default function StoryViewer({
                         }}
                     />
                 )}
-                <span className="relative z-0">{translatedText}</span>
+                <span className="relative z-0">{story.translatedText}</span>
             </div>
           </CardContent>
         </Card>
       </div>
       
       <div className="flex flex-col items-center space-y-4 pt-4">
-        <audio ref={audioRef} crossOrigin="anonymous" />
+        <audio ref={audioRef} src={story.audioUrl} crossOrigin="anonymous" />
         
         <div className="flex items-center gap-4">
             <div className="flex flex-col items-center gap-2 self-end">
                  <Button
-                    onClick={handlePlay}
+                    onClick={togglePlayPause}
                     size="icon"
-                    className="rounded-full w-12 h-12 bg-red-600 hover:bg-red-700"
+                    className="rounded-full w-12 h-12 bg-red-600 hover:bg-red-700 disabled:bg-gray-400"
                     aria-label={isPlaying ? "Pause" : "Play"}
-                    disabled={isLoading}
+                    disabled={!hasAudio}
                     >
-                    {isLoading ? (
-                        <LoaderCircle className="h-6 w-6 animate-spin" />
-                    ) : isPlaying ? (
+                    {isPlaying ? (
                         <Pause className="h-6 w-6 fill-white text-white" />
                     ) : (
                         <Play className="h-6 w-6 fill-white text-white" />
                     )}
                 </Button>
-                {!hasAudio && !isLoading && <p className="text-xs text-muted-foreground">Click to Generate Audio</p>}
+                {!hasAudio && <LoaderCircle className="w-6 h-6 animate-spin text-primary" />}
             </div>
         </div>
       </div>

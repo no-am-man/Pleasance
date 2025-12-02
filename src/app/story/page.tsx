@@ -12,12 +12,12 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LoaderCircle, Sparkles, LogIn, History, BookOpen, PencilRuler } from 'lucide-react';
 import { LANGUAGES } from '@/config/languages';
-import { generateAndTranslateStory } from '@/app/actions';
+import { generateStoryAndSpeech } from '@/app/actions';
 import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useUser, addDocument } from '@/firebase';
+import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { collection, query, orderBy, serverTimestamp, doc } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
@@ -39,13 +39,6 @@ type Story = {
     createdAt: { seconds: number; nanoseconds: number; } | null;
     audioUrl?: string; // audioUrl is now part of the story data
 };
-
-type StoryResult = {
-    originalStory: string;
-    translatedText: string;
-    sourceLanguage: string;
-    storyId?: string; // Add storyId to link to the document
-} | null;
 
 function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void; }) {
     const { user, isUserLoading } = useUser();
@@ -100,8 +93,7 @@ function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void
 export default function StoryPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [storyResult, setStoryResult] = useState<StoryResult>(null);
-  const [selectedStory, setSelectedStory] = useState<Story | null>(null);
+  const [activeStory, setActiveStory] = useState<Story | null>(null);
   const { user, isUserLoading } = useUser();
 
   const form = useForm<z.infer<typeof StoryFormSchema>>({
@@ -118,42 +110,14 @@ export default function StoryPage() {
     }
     setIsLoading(true);
     setError(null);
-    setStoryResult(null);
-    setSelectedStory(null);
+    setActiveStory(null);
 
-    const result = await generateAndTranslateStory(data);
+    const result = await generateStoryAndSpeech({ ...data, userId: user.uid });
 
     if (result.error) {
       setError(result.error);
-      setIsLoading(false);
-      return;
-    } 
-    
-    if (result.originalStory && result.translatedText) {
-        const storyCollectionRef = collection(firestore, 'users', user.uid, 'stories');
-        
-        const newStoryData: Omit<Story, 'id' | 'audioUrl' | 'createdAt'> & { createdAt: any } = {
-            userId: user.uid,
-            level: data.difficulty,
-            sourceLanguage: data.sourceLanguage,
-            targetLanguage: data.targetLanguage,
-            nativeText: result.originalStory,
-            translatedText: result.translatedText,
-            createdAt: serverTimestamp() 
-        };
-      
-        try {
-            const newDocRef = await addDocument(storyCollectionRef, newStoryData);
-            setStoryResult({
-                originalStory: result.originalStory,
-                translatedText: result.translatedText,
-                sourceLanguage: data.sourceLanguage,
-                storyId: newDocRef.id,
-            });
-        } catch (firestoreError) {
-            const message = firestoreError instanceof Error ? firestoreError.message : 'An unknown error occurred';
-            setError("Story generated, but failed to save to your history. " + message);
-        }
+    } else if (result.story) {
+        setActiveStory(result.story);
     } else {
         setError('An unknown error occurred while generating the story.');
     }
@@ -162,13 +126,7 @@ export default function StoryPage() {
   }
 
   const handleSelectStoryFromHistory = (story: Story) => {
-    setSelectedStory(story);
-    setStoryResult({
-        originalStory: story.nativeText,
-        translatedText: story.translatedText,
-        sourceLanguage: story.sourceLanguage,
-        storyId: story.id, // Pass the existing storyId
-    });
+    setActiveStory(story);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -197,19 +155,12 @@ export default function StoryPage() {
         </p>
       </div>
       
-      {storyResult && user && (
+      {activeStory && (
         <div className="mb-8">
             <StoryViewer 
-                key={selectedStory?.id || storyResult.storyId || 'new-story'}
-                storyId={selectedStory?.id || storyResult.storyId!}
-                userId={user.uid}
-                originalStory={storyResult.originalStory}
-                translatedText={storyResult.translatedText}
-                sourceLanguage={storyResult.sourceLanguage}
-                initialAudioUrl={selectedStory?.audioUrl}
-                isLoading={isLoading}
-                setIsLoading={setIsLoading}
-                setError={setError}
+                key={activeStory.id}
+                story={activeStory}
+                autoplay={!activeStory.createdAt} // Autoplay only if it's a new story
             />
         </div>
       )}
@@ -325,7 +276,7 @@ export default function StoryPage() {
                         />
                     </div>
                     <Button type="submit" disabled={isLoading} size="lg" className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold font-sans">
-                        {isLoading && !storyResult ? (
+                        {isLoading ? (
                             <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                         ) : (
                             <Sparkles className="mr-2 h-4 w-4" />
