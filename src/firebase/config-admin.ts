@@ -1,6 +1,7 @@
 
 // src/firebase/config-admin.ts
 import admin from 'firebase-admin';
+import { firebaseConfig } from './config';
 
 const appName = 'pleasance-admin';
 
@@ -31,6 +32,7 @@ export function initializeAdminApp() {
     // Initialize the Firebase Admin SDK
     return admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
+      storageBucket: firebaseConfig.storageBucket,
     }, appName);
 
   } catch (e: any) {
@@ -38,5 +40,3 @@ export function initializeAdminApp() {
     throw new Error(`Server configuration error: Failed to parse or initialize the service account key. Please ensure it is a valid, non-malformed Base64 string. Original error: ${e.message}`);
   }
 }
-
-    
