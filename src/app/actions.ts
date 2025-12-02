@@ -9,7 +9,7 @@ import type { ChatHistory } from 'genkit';
 import { generateSpeech } from '@/ai/flows/generate-speech';
 import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
-import { generateSvg3d as generateSvg3dFlow } from '@/ai/flows/generate-svg3d';
+import { generateSvg3d } from '@/ai/flows/generate-svg3d';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { firebaseConfig } from '@/firebase/config';
 import admin from 'firebase-admin';
@@ -18,7 +18,6 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
 import { ai } from '@/ai/genkit';
-import { listModels } from 'genkit';
 import {
     GenerateSvg3dInputSchema,
     type GenerateSvg3dInput,
@@ -400,7 +399,7 @@ export async function saveSvgAsset(values: z.infer<typeof saveSvgAssetSchema>) {
  */
 export async function listAvailableModels() {
     try {
-        const availableModels = await listModels();
+        const availableModels = await ai.listModels();
         const modelNames = availableModels.map(model => model.name);
         return { data: modelNames };
     } catch (e) {
@@ -409,6 +408,8 @@ export async function listAvailableModels() {
         return { error: `Failed to list available models: ${message}` };
     }
 }
+    
+
     
 
     
