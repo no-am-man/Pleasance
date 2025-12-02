@@ -15,7 +15,6 @@ import { initializeFirebase } from '@/firebase/config-for-actions';
 import { getStorage } from 'firebase/storage';
 import { getDownloadURL, ref } from 'firebase/storage';
 import * as admin from 'firebase-admin';
-import { firebaseConfig } from '@/firebase/config';
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
@@ -26,7 +25,7 @@ const storySchema = z.object({
 if (!admin.apps.length) {
     admin.initializeApp({
       credential: admin.credential.applicationDefault(),
-      storageBucket: firebaseConfig.storageBucket,
+      storageBucket: 'studio-2441219031-242ae.appspot.com',
     });
 }
 
