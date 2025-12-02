@@ -11,7 +11,7 @@ import { firestore } from "@/firebase/config";
 import { collection, doc, query, where, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LogIn, PlusCircle, LoaderCircle, Search } from "lucide-react";
+import { LogIn, PlusCircle, LoaderCircle, Search, User } from "lucide-react";
 import { createCommunityDetails } from "../actions";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,7 @@ type Member = {
   role: string;
   bio: string;
   type: 'AI' | 'human';
+  userId?: string;
 };
 
 type Community = {
@@ -36,6 +37,12 @@ type Community = {
   welcomeMessage: string;
   ownerId: string;
   members: Member[];
+};
+
+type CommunityProfile = {
+  id: string;
+  userId: string;
+  name: string;
 };
 
 function CreateCommunityForm() {
@@ -130,7 +137,7 @@ function CreateCommunityForm() {
   );
 }
 
-function CommunityList({ title, communities, isLoading, error }: { title: string, communities: Community[] | undefined, isLoading: boolean, error: Error | undefined }) {
+function CommunityList({ title, communities, profiles, isLoading, error }: { title: string, communities: Community[] | undefined, profiles: CommunityProfile[] | undefined, isLoading: boolean, error: Error | undefined }) {
     if (isLoading) {
       return <div className="flex justify-center"><LoaderCircle className="w-8 h-8 animate-spin text-primary" /></div>;
     }
@@ -147,16 +154,25 @@ function CommunityList({ title, communities, isLoading, error }: { title: string
         <CardContent>
           {communities && communities.length > 0 ? (
             <ul className="space-y-4">
-              {communities.map((community) => (
-                <li key={community.id} className="rounded-md border transition-colors hover:bg-muted/50">
-                   <Link href={`/community/${community.id}`} className="block p-4">
-                    <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-lg text-primary underline">{community.name}</h3>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">{community.description}</p>
-                  </Link>
-                </li>
-              ))}
+              {communities.map((community) => {
+                const owner = profiles?.find(p => p.userId === community.ownerId);
+                return (
+                    <li key={community.id} className="rounded-md border transition-colors hover:bg-muted/50">
+                    <Link href={`/community/${community.id}`} className="block p-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="font-semibold text-lg text-primary underline">{community.name}</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">{community.description}</p>
+                        {owner && (
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
+                                <User className="w-3 h-3" />
+                                <span>Founded by {owner.name}</span>
+                            </div>
+                        )}
+                    </Link>
+                    </li>
+                );
+              })}
             </ul>
           ) : (
             <p className="text-muted-foreground text-center py-4">No communities found.</p>
@@ -166,7 +182,7 @@ function CommunityList({ title, communities, isLoading, error }: { title: string
     );
 }
 
-function CommunitySearchResults({ searchTerm }: { searchTerm: string }) {
+function CommunitySearchResults({ searchTerm, profiles }: { searchTerm: string, profiles: CommunityProfile[] | undefined }) {
     const searchCommunitiesQuery = useMemo(() => searchTerm 
       ? query(collection(firestore, 'communities'), where('name', '>=', searchTerm), where('name', '<=', searchTerm + '\uf8ff'))
       : null, [searchTerm]);
@@ -179,13 +195,14 @@ function CommunitySearchResults({ searchTerm }: { searchTerm: string }) {
         <CommunityList 
             title="Search Results"
             communities={communities}
+            profiles={profiles}
             isLoading={isLoading}
             error={error}
         />
     )
 }
 
-function PublicCommunityList() {
+function PublicCommunityList({ profiles }: { profiles: CommunityProfile[] | undefined }) {
     const publicCommunitiesQuery = useMemo(() => query(collection(firestore, 'communities'), orderBy('name', 'asc')), []);
 
     const [communities, isLoading, error] = useCollectionData<Community>(publicCommunitiesQuery, {
@@ -196,6 +213,7 @@ function PublicCommunityList() {
         <CommunityList
             title="All Communities"
             communities={communities}
+            profiles={profiles}
             isLoading={isLoading}
             error={error}
         />
@@ -208,12 +226,17 @@ export default function CommunityPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const userCommunitiesQuery = useMemo(() => user ? query(collection(firestore, 'communities'), where('ownerId', '==', user.uid)) : null, [user]);
-
-  const [userCommunities, isLoading, error] = useCollectionData<Community>(userCommunitiesQuery, {
+  const [userCommunities, isLoadingUserCommunities, userCommunitiesError] = useCollectionData<Community>(userCommunitiesQuery, {
     idField: 'id',
   });
 
-  if (isUserLoading) {
+  const allProfilesQuery = useMemo(() => query(collection(firestore, 'community-profiles')), []);
+  const [allProfiles, isLoadingProfiles] = useCollectionData<CommunityProfile>(allProfilesQuery, {
+    idField: 'id'
+  });
+
+
+  if (isUserLoading || isLoadingProfiles) {
     return (
       <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
         <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
@@ -250,9 +273,9 @@ export default function CommunityPage() {
         </Card>
 
         {searchTerm ? (
-            <CommunitySearchResults searchTerm={searchTerm} />
+            <CommunitySearchResults searchTerm={searchTerm} profiles={allProfiles} />
         ) : (
-            <PublicCommunityList />
+            <PublicCommunityList profiles={allProfiles} />
         )}
         
         <Separator />
@@ -264,8 +287,9 @@ export default function CommunityPage() {
                 <CommunityList 
                     title="Your Communities"
                     communities={userCommunities}
-                    isLoading={isLoading}
-                    error={error}
+                    profiles={allProfiles}
+                    isLoading={isLoadingUserCommunities}
+                    error={userCommunitiesError}
                 />
             </>
         ) : (
