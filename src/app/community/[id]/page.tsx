@@ -745,7 +745,7 @@ export default function CommunityProfilePage() {
 
       toast({ title: 'Finalizing...', description: 'Updating the community records.' });
 
-      updateDocumentNonBlocking(communityDocRef, { flagUrl: downloadURL });
+      await updateDoc(communityDocRef, { flagUrl: downloadURL });
 
       toast({ title: 'New Flag Hoisted!', description: 'Your community has a new look.' });
 
