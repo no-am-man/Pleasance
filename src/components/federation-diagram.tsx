@@ -2,7 +2,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Users, BookOpen, Warehouse, Banknote, Globe, ArrowRight } from 'lucide-react';
+import { Users, BookOpen, Warehouse, Banknote, Globe } from 'lucide-react';
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -51,40 +51,39 @@ export function FederationDiagram() {
     <div className="my-16 w-full flex justify-center">
         <svg viewBox="0 0 400 400" className="w-full max-w-3xl h-auto">
             <defs>
-                 <motion.path
-                    id="flowPath"
-                    d="M 200, 80 A 120,120 0 1,1 199,80"
-                    fill="none"
-                 />
-                 <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-                    <polygon points="0 0, 10 3.5, 0 7" fill="hsl(var(--border))" />
+                 <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="5" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" className="fill-border" />
                 </marker>
             </defs>
 
-            {/* The circular path */}
+            {/* Paths */}
             <motion.path
-                d="M 200, 80 A 120,120 0 1,1 199.9,80"
-                stroke="hsl(var(--border))"
-                strokeWidth="1.5"
-                strokeDasharray="4 4"
-                fill="none"
-                variants={pathVariants}
-                initial="hidden"
-                animate="visible"
-                custom={1}
-                markerEnd="url(#arrowhead)"
-                markerMid="url(#arrowhead)"
-            />
+                d="M 200, 100 Q 270, 125 315, 150"
+                stroke="hsl(var(--border))" strokeWidth="1.5" fill="none"
+                variants={pathVariants} custom={1} markerEnd="url(#arrowhead)" />
+            <motion.path
+                d="M 310, 200 Q 270, 240 230, 295"
+                stroke="hsl(var(--border))" strokeWidth="1.5" fill="none"
+                variants={pathVariants} custom={1.5} markerEnd="url(#arrowhead)" />
+            <motion.path
+                d="M 170, 295 Q 130, 240 90, 200"
+                stroke="hsl(var(--border))" strokeWidth="1.5" fill="none"
+                variants={pathVariants} custom={2} markerEnd="url(#arrowhead)" />
+             <motion.path
+                d="M 85, 150 Q 130, 125 200, 100"
+                stroke="hsl(var(--border))" strokeWidth="1.5" fill="none"
+                variants={pathVariants} custom={2.5} markerEnd="url(#arrowhead)" />
+
 
             {/* Nodes */}
-            <Node icon={<Users className="w-6 h-6" />} label="Community" description="Join & form groups" x={200} y={50} custom={0} />
-            <Node icon={<BookOpen className="w-6 h-6" />} label="Nuncy Lingua" description="Learn languages" x={340} y={150} custom={1} color="text-yellow-400" />
-            <Node icon={<Warehouse className="w-6 h-6" />} label="Fabrication" description="Create products" x={60} y={150} custom={3} />
-            <Node icon={<Banknote className="w-6 h-6" />} label="Treasury" description="Build wealth" x={200} y={350} custom={4} />
-            
-            {/* International Markets Node */}
+            <Node icon={<Users className="w-6 h-6" />} label="Community" description="Join & form groups" x={200} y={60} custom={0} />
+            <Node icon={<BookOpen className="w-6 h-6" />} label="Nuncy Lingua" description="Learn languages" x={340} y={175} custom={1} />
+            <Node icon={<Warehouse className="w-6 h-6" />} label="Fabrication" description="Create products" x={60} y={175} custom={3} />
+            <Node icon={<Banknote className="w-6 h-6" />} label="Treasury" description="Build wealth" x={200} y={340} custom={4} />
+
+            {/* Special node for Global Markets */}
              <motion.g initial="hidden" animate="visible" variants={itemVariants} custom={2}>
-                <foreignObject x={290} y={260} width="120" height="90">
+                <foreignObject x={280} y={240} width="120" height="90">
                     <div className="flex flex-col items-center justify-center text-center w-full h-full">
                         <div className="p-3 rounded-full bg-card border-2 border-yellow-400/50 text-yellow-400">
                            <Globe className="w-6 h-6" />
@@ -96,16 +95,15 @@ export function FederationDiagram() {
             </motion.g>
 
             {/* Arrow from Lingua to Markets */}
-             <motion.line
-                x1="320" y1="190"
-                x2="310" y2="250"
+             <motion.path
+                d="M 340, 225 Q 330, 235 320, 245"
                 stroke="hsl(var(--yellow-400))"
                 strokeWidth="2"
+                fill="none"
                 variants={pathVariants}
-                custom={2.5}
+                custom={3}
                 markerEnd="url(#arrowhead)"
             />
-            
         </svg>
     </div>
   );
