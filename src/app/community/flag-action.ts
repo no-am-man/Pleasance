@@ -11,15 +11,17 @@ const flagSchema = z.object({
     communityDescription: z.string(),
 });
 
-// Helper function to ensure the admin app is initialized only once.
+// Helper to ensure the admin app is initialized only once.
 function initializeAdminApp() {
+    // This is the robust way to initialize: check if apps are already initialized.
+    // If not, initialize the default app. If so, get the default app.
     if (admin.apps.length > 0) {
         return admin.app();
     }
     try {
-        return admin.initializeApp({
-            credential: admin.credential.applicationDefault(),
-        });
+        // When running in a Google Cloud environment (like App Hosting),
+        // initializeApp() can often be called without arguments.
+        return admin.initializeApp();
     } catch (e) {
         console.error('Firebase Admin Initialization Error in flag-action:', e);
         throw new Error('Server configuration error. Could not initialize Firebase Admin.');
@@ -28,7 +30,7 @@ function initializeAdminApp() {
 
 export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) {
     try {
-        initializeAdminApp();
+        const adminApp = initializeAdminApp();
 
         const validatedFields = flagSchema.safeParse(values);
         if (!validatedFields.success) {
@@ -48,7 +50,7 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
         const svgDataUri = `data:image/svg+xml;base64,${svgBase64}`;
 
         // 3. Update the community document in Firestore using the Admin SDK
-        const firestore = admin.firestore();
+        const firestore = adminApp.firestore();
         const communityDocRef = firestore.collection('communities').doc(communityId);
         await communityDocRef.update({ flagUrl: svgDataUri });
 
