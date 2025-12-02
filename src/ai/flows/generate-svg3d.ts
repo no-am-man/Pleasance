@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A flow to generate a 3D point cloud for an SVG.
@@ -22,18 +23,15 @@ export async function generateSvg3d(input: GenerateSvg3dInput): Promise<Svg3dOut
   return generateSvg3dFlow(input);
 }
 
-const generateSvg3dFlow = ai.defineFlow(
-  {
-    name: 'generateSvg3dFlow',
-    inputSchema: GenerateSvg3dInputSchema,
-    outputSchema: Svg3dOutputSchema,
-  },
-  async (input) => {
-    const prompt = `You are a digital artist who creates 3D point clouds. Generate a JSON object with a 'pixels' property containing an array of 'ColorPixel' objects based on the user's request.
+const generateSvg3dPrompt = ai.definePrompt({
+    name: 'generateSvg3dPrompt',
+    input: { schema: GenerateSvg3dInputSchema },
+    output: { schema: Svg3dOutputSchema },
+    prompt: `You are a digital artist who creates 3D point clouds. Generate a JSON object with a 'pixels' property containing an array of 'ColorPixel' objects based on the user's request.
 
-- The user wants to create a point cloud representing: "${input.prompt}"
-- The conceptual cube size is ${input.cubeSize}mm.
-- The requested pixel density is ${input.density}.
+- The user wants to create a point cloud representing: "{{prompt}}"
+- The conceptual cube size is {{cubeSize}}mm.
+- The requested pixel density is {{density}}.
 
 Your task is to generate the array of pixels.
 - The number of points should reflect the requested density:
@@ -42,32 +40,21 @@ Your task is to generate the array of pixels.
   - High: ~2000-3000 points
 - All coordinates (x, y, z) must be within a -50 to 50 range.
 - Use the prompt to inspire the shape, color, and structure of the point cloud.
-- Your entire response MUST be only the raw JSON object adhering to the schema. Do not include any other text, explanations, or markdown formatting like \`\`\`json.`;
+- Your entire response MUST be only the raw JSON object adhering to the schema. Do not include any other text, explanations, or markdown formatting like \`\`\`json.`,
+});
 
-    const { output } = await ai.generate({
-        model: 'googleai/gemini-1.5-flash',
-        prompt: prompt,
-    });
 
+const generateSvg3dFlow = ai.defineFlow(
+  {
+    name: 'generateSvg3dFlow',
+    inputSchema: GenerateSvg3dInputSchema,
+    outputSchema: Svg3dOutputSchema,
+  },
+  async (input) => {
+    const { output } = await generateSvg3dPrompt(input);
     if (!output) {
-      throw new Error('Could not generate SVG3D image from the AI.');
+        throw new Error("The AI failed to generate a response.");
     }
-    
-    // The model should return a JSON string, so we parse it.
-    const responseText = output.text;
-    if (!responseText) {
-        throw new Error('AI returned an empty response.');
-    }
-
-    try {
-        const parsedJson = JSON.parse(responseText);
-        // Validate the parsed JSON against our Zod schema
-        const validatedOutput = Svg3dOutputSchema.parse(parsedJson);
-        return validatedOutput;
-    } catch (e) {
-        console.error("Failed to parse or validate AI's JSON response:", e);
-        console.error("Raw AI Response:", responseText);
-        throw new Error("The AI returned invalid JSON. Please try again.");
-    }
+    return output;
   }
 );
