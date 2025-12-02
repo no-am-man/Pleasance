@@ -18,36 +18,15 @@ function initializeAdminApp() {
         return admin.app();
     }
 
-    const serviceAccountBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
-
-    if (!serviceAccountBase64) {
-        throw new Error('Server configuration error: The FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is not set. Please ensure it is set in your deployment environment or .env file.');
-    }
-
-    let serviceAccountJson;
+    // In a deployed Firebase/Google Cloud environment (like App Hosting),
+    // initializeApp() automatically discovers credentials.
+    // This is the standard and recommended practice.
     try {
-        serviceAccountJson = Buffer.from(serviceAccountBase64, 'base64').toString('utf8');
+        return admin.initializeApp();
     } catch (e) {
-        console.error('Firebase Admin Initialization Error: Failed to decode Base64 service account key.', e);
-        throw new Error('Server configuration error: The provided service account key is not a valid Base64 string.');
-    }
-
-    let serviceAccount;
-    try {
-        serviceAccount = JSON.parse(serviceAccountJson);
-    } catch (e) {
-        console.error('Firebase Admin Initialization Error: Failed to parse service account JSON.', e);
-        throw new Error('Server configuration error: The decoded service account key is not valid JSON. Please check for formatting errors. You can verify the decoded output by pasting your key at https://www.base64decode.org/ and checking if the result is valid JSON.');
-    }
-
-    try {
-        return admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
-            projectId: serviceAccount.project_id,
-        });
-    } catch (e) {
-        console.error('Firebase Admin Initialization Error in flag-action:', e);
-        throw new Error('Server configuration error: Could not initialize Firebase Admin. The service account key may be invalid or malformed.');
+        console.error('Firebase Admin Initialization Error in flag-action.ts:', e);
+        // This error will be caught by the calling function and returned to the client.
+        throw new Error('Server configuration error: Could not initialize Firebase Admin. The server environment may not be set up with the correct credentials.');
     }
 }
 
