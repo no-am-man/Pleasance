@@ -16,7 +16,7 @@ import { generateCommunity } from '@/ai/flows/generate-community';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
-import { generateSvg3dFlow } from '@/ai/flows/generate-svg3d-flow';
+import { ai } from '@/ai/genkit';
 
 // Schemas and Types for SVG3D Generation
 const ColorPixelSchema = z.object({
@@ -326,6 +326,25 @@ export async function runMemberSync() {
     }
 }
 
+const generateSvg3dPrompt = ai.definePrompt({
+  name: 'generateSvg3dPrompt',
+  input: { schema: GenerateSvg3dInputSchema },
+  output: { schema: Svg3dOutputSchema, format: 'json' },
+  prompt: `You are a digital artist who creates 3D point clouds. Generate a JSON array of 'ColorPixel' objects based on the user's request.
+
+User Prompt: "{{{prompt}}}"
+Conceptual Cube Size: {{cubeSize}}mm
+Pixel Density: {{density}}
+
+- Generate points within a coordinate space from -50 to 50 on all axes.
+- The number of points should reflect the requested density:
+  - Low: ~300-500 points
+  - Medium: ~800-1500 points
+  - High: ~2000-3000 points
+- Use the prompt to inspire the shape, color, and structure of the point cloud.
+`,
+});
+
 export async function generateSvg3d(values: GenerateSvg3dInput) {
     try {
         const validatedFields = GenerateSvg3dInputSchema.safeParse(values);
@@ -333,13 +352,13 @@ export async function generateSvg3d(values: GenerateSvg3dInput) {
             return { error: 'Invalid input for SVG3D generation.' };
         }
 
-        const result = await generateSvg3dFlow(validatedFields.data);
+        const { output } = await generateSvg3dPrompt(validatedFields.data);
 
-        if (!result) {
+        if (!output) {
             return { error: 'Could not generate SVG3D image.' };
         }
 
-        return { pixels: result };
+        return { pixels: output };
     } catch (e) {
         console.error('SVG3D Generation Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
@@ -412,3 +431,5 @@ export async function saveSvgAsset(values: z.infer<typeof saveSvgAssetSchema>) {
         return { error: `Failed to save asset: ${message}` };
     }
 }
+
+    
