@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react"
-import { useToast, toast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import {
   Toast,
   ToastClose,
@@ -38,25 +38,9 @@ export function Toaster() {
     const textToCopy = [titleText, descriptionText].filter(Boolean).join('\n');
 
     if (textToCopy) {
-        navigator.clipboard.writeText(textToCopy).then(() => {
-            // Use the toast function directly to show a success message without disrupting the current toasts
-            toast({
-                title: 'Copied to clipboard!',
-            })
-        }).catch(err => {
+        navigator.clipboard.writeText(textToCopy).catch(err => {
             console.error('Failed to copy text: ', err);
-            toast({
-                variant: 'destructive',
-                title: 'Copy Failed',
-                description: 'Could not copy message to clipboard.',
-            })
         });
-    } else {
-        toast({
-            variant: 'destructive',
-            title: 'Copy Failed',
-            description: 'There was no text content to copy.',
-        })
     }
   };
 
