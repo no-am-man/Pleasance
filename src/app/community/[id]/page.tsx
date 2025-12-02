@@ -578,6 +578,7 @@ export default function CommunityProfilePage() {
   const router = useRouter();
   const { user } = useUser();
   const firestore = useFirestore();
+  const storage = useStorage();
   const { toast } = useToast();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const [isPending, startTransition] = useTransition();
@@ -713,14 +714,14 @@ export default function CommunityProfilePage() {
   };
 
   const handleGenerateFlag = () => {
-    if (!community) return;
+    if (!community || !storage || !firestore) return;
 
     startTransition(async () => {
         try {
             toast({ title: 'Generating New Flag...', description: 'This may take a moment.' });
             
+            // 1. Call server action to get the image data URI
             const result = await generateCommunityFlag({
-                communityId: community.id,
                 communityName: community.name,
                 communityDescription: community.description,
             });
@@ -728,6 +729,26 @@ export default function CommunityProfilePage() {
             if (result.error) {
                 throw new Error(result.error);
             }
+            if (!result.flagUrl) {
+                throw new Error('AI did not return a flag image.');
+            }
+            
+            // 2. Upload from the client
+            const storagePath = `communities/${community.id}/flag.png`;
+            const storageRef = ref(storage, storagePath);
+            const base64Data = result.flagUrl.split(',')[1];
+            if (!base64Data) {
+                throw new Error('Invalid data URI format received.');
+            }
+
+            await uploadString(storageRef, base64Data, 'base64', { contentType: 'image/png' });
+            
+            // 3. Get download URL
+            const downloadURL = await getDownloadURL(storageRef);
+
+            // 4. Update Firestore with the permanent URL
+            const communityDocRef = doc(firestore, 'communities', community.id);
+            await updateDoc(communityDocRef, { flagUrl: downloadURL });
 
             toast({ title: 'New Flag Generated!', description: 'Your community has a new look.' });
         } catch (e) {
