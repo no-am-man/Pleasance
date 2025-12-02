@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 
 
 export function Svg3dCube(props: SVGProps<SVGSVGElement>) {
-  const { className, ...rest } = props;
+  const { className, children, ...rest } = props;
   const viewWidth = 400;
   const viewHeight = 400;
 
@@ -51,11 +51,10 @@ export function Svg3dCube(props: SVGProps<SVGSVGElement>) {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
-        className={cn(className, isDragging ? 'cursor-grabbing' : 'cursor-grab')}
+        className={cn("w-full h-full", className, isDragging ? 'cursor-grabbing' : 'cursor-grab')}
         {...rest}>
       <g style={{ transform: `translateX(${viewWidth/2}px) translateY(${viewHeight/2}px) rotateX(${rotation.x}rad) rotateY(${rotation.y}rad)` }}>
-         {/* The AI-generated SVG content will be rendered here by the parent component */}
-         {/* This component now only provides the interactive rotation wrapper. */}
+         {children}
 
         {/* Heart */}
          <motion.circle 
