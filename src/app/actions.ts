@@ -21,7 +21,9 @@ const storySchema = z.object({
 
 /**
  * Gets a Firebase Admin app instance that has been verified to be used by the founder.
- * This function bootstraps the admin app by first reading credentials from Firestore.
+ * This is a critical function for actions that require elevated privileges.
+ * It initializes a temporary app to fetch credentials from Firestore, then initializes
+ * a named, fully-credentialed app for the actual operation.
  */
 async function getFounderVerifiedAdminApp() {
     const sessionCookie = cookies().get('__session')?.value;
@@ -34,6 +36,15 @@ async function getFounderVerifiedAdminApp() {
         admin.initializeApp();
     }
     
+    // First, verify the user is the founder using the default app.
+    // This doesn't require special credentials.
+    const defaultAuth = admin.auth();
+    const decodedIdToken = await defaultAuth.verifySessionCookie(sessionCookie, true);
+    if (decodedIdToken.email !== 'gg.el0ai.com@gmail.com') {
+        throw new Error('Unauthorized: You are not the founder.');
+    }
+
+    // Now that the user is verified, fetch the service account key.
     const tempFirestore = admin.firestore();
     const credentialsDoc = await tempFirestore.collection('_private_admin_data').doc('credentials').get();
 
@@ -54,38 +65,18 @@ async function getFounderVerifiedAdminApp() {
         throw new Error("Server not configured: Failed to parse the service account key from Firestore. It may be malformed.");
     }
     
-    // Use a named app to avoid conflicts.
+    // Use a named app to avoid re-initialization errors.
     const appName = 'pleasance-admin-actions';
     const existingApp = admin.apps.find(app => app?.name === appName);
     
-    // Verify the session cookie using the app that has the correct credentials.
-    const verifyUser = async (app: admin.app.App) => {
-        const auth = admin.auth(app);
-        const decodedIdToken = await auth.verifySessionCookie(sessionCookie, true);
-        if (decodedIdToken.email !== 'gg.el0ai.com@gmail.com') {
-            throw new Error('Unauthorized: You are not the founder.');
-        }
-    };
-    
     if (existingApp) {
-        await verifyUser(existingApp);
         return existingApp;
     }
 
-    // Initialize the named app with credentials and verify the user.
-    const newApp = admin.initializeApp({
+    // Initialize the named app with the fetched credentials.
+    return admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
     }, appName);
-    
-    try {
-        await verifyUser(newApp);
-    } catch (error) {
-        // Clean up the newly created app if the user is not the founder
-        await newApp.delete();
-        throw error; // Re-throw the authorization error
-    }
-
-    return newApp;
 }
 
 
