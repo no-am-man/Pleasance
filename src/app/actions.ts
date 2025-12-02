@@ -9,7 +9,7 @@ import type { ChatHistory } from 'genkit';
 import { generateSpeech } from '@/ai/flows/generate-speech';
 import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
-import { generateSvg3dFlow } from '@/ai/flows/generate-svg3d';
+import { generateSvg3d } from '@/ai/flows/generate-svg3d';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { firebaseConfig } from '@/firebase/config';
 import admin from 'firebase-admin';
@@ -313,7 +313,7 @@ export async function generateSvg3d(values: GenerateSvg3dInput) {
             return { error: 'Invalid input for SVG3D generation.' };
         }
 
-        const result = await generateSvg3dFlow(validatedFields.data);
+        const result = await generateSvg3d(validatedFields.data);
 
         if (!result.pixels) {
             return { error: 'Could not generate SVG3D image.' };
