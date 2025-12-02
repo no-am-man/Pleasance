@@ -47,7 +47,7 @@ type Story = {
     nativeText: string;
     translatedText: string;
     createdAt: { seconds: number; nanoseconds: number; } | null;
-    audioUrl?: string;
+    audioDataUri?: string; // Changed from audioUrl
     status?: 'processing' | 'complete' | 'failed';
 };
 
@@ -221,14 +221,11 @@ function TimeMachine() {
 export default function StoryPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeStoryId, setActiveStoryId] = useState<string | null>(null);
+  const [activeStory, setActiveStory] = useState<Story | null>(null);
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const storyViewerRef = useRef<HTMLDivElement>(null);
-
-  const storyDocRef = useMemo(() => (user && activeStoryId) ? doc(firestore, 'users', user.uid, 'stories', activeStoryId) : null, [user, activeStoryId]);
-  const [activeStory] = useDocumentData<Story>(storyDocRef);
-
+  
   const form = useForm<z.infer<typeof StoryFormSchema>>({
     resolver: zodResolver(StoryFormSchema),
     defaultValues: {
@@ -250,10 +247,10 @@ export default function StoryPage() {
   }, [profile, form]);
 
   useEffect(() => {
-    if (activeStoryId && storyViewerRef.current) {
+    if (activeStory && storyViewerRef.current) {
       storyViewerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [activeStoryId]);
+  }, [activeStory]);
 
 
   async function onSubmit(data: z.infer<typeof StoryFormSchema>) {
@@ -263,7 +260,7 @@ export default function StoryPage() {
     }
     setIsLoading(true);
     setError(null);
-    setActiveStoryId(null);
+    setActiveStory(null);
 
     const result = await generateStoryAndSpeech({ ...data, userId: user.uid });
 
@@ -274,15 +271,15 @@ export default function StoryPage() {
     }
     
     if (result.storyData) {
-        setActiveStoryId(result.storyData.id);
-        toast({ title: "Story Generated!", description: "Your new story text is ready. Audio is processing in the background."});
+        setActiveStory(result.storyData as Story);
+        toast({ title: "Story Generated!", description: "Your new story and audio are ready."});
     } else {
-      setError('An unknown error occurred while generating the story text.');
+      setError('An unknown error occurred while generating the story.');
     }
   }
 
   const handleSelectStoryFromHistory = (story: Story) => {
-    setActiveStoryId(story.id);
+    setActiveStory(story);
   }
 
   if (isUserLoading || isProfileLoading) {
@@ -316,8 +313,7 @@ export default function StoryPage() {
                 <StoryViewer 
                     key={activeStory.id}
                     story={activeStory}
-                    // Autoplay if the story is newly created and just finished processing
-                    autoplay={activeStory.status === 'processing'}
+                    autoplay={true}
                 />
             </div>
         )}
@@ -458,3 +454,5 @@ export default function StoryPage() {
     </main>
   );
 }
+
+    
