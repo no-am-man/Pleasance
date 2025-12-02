@@ -14,7 +14,7 @@ import { generateCommunity } from '@/ai/flows/generate-community';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import { setStorageCors } from './set-storage-cors-action';
-
+import wav from 'wav';
 
 const storyTextSchema = z.object({
   userId: z.string(),
@@ -22,6 +22,29 @@ const storyTextSchema = z.object({
   sourceLanguage: z.string().min(1),
   targetLanguage: z.string().min(1),
 });
+
+/**
+ * Encodes raw PCM audio data into a WAV format buffer, then returns it as a Base64 string.
+ * @param pcmData The raw PCM audio data buffer.
+ * @returns A Promise that resolves to a Base64 encoded string of the WAV file.
+ */
+async function toWav(pcmData: Buffer): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const writer = new wav.Writer({
+      channels: 1,       // Mono audio
+      sampleRate: 24000,   // Sample rate returned by the TTS model
+      bitDepth: 16,      // 16-bit audio
+    });
+
+    const buffers: any[] = [];
+    writer.on('data', (chunk) => buffers.push(chunk));
+    writer.on('end', () => resolve(Buffer.concat(buffers).toString('base64')));
+    writer.on('error', reject);
+
+    writer.write(pcmData);
+    writer.end();
+  });
+}
 
 
 export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSchema>) {
@@ -52,7 +75,7 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
     }
     const translatedText = translationResult.translatedText;
 
-    // --- Step 3: Generate Speech (MP3 Data URI) ---
+    // --- Step 3: Generate Speech (Raw PCM Data) ---
     const speechResult = await generateSpeech({ text: translatedText });
     if (!speechResult.audioUrl) {
         throw new Error('Speech synthesis failed to produce audio.');
@@ -66,18 +89,20 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
     const storyDocRef = firestore.collection('users').doc(userId).collection('stories').doc();
     const storyId = storyDocRef.id;
 
-    // Extract Base64 data from the Data URI
-    const audioDataUri = speechResult.audioUrl;
-    const base64Data = audioDataUri.split(',')[1];
-    const audioBuffer = Buffer.from(base64Data, 'base64');
+    // Extract raw PCM data and encode to WAV
+    const pcmDataUri = speechResult.audioUrl;
+    const pcmBase64 = pcmDataUri.split(',')[1];
+    const pcmBuffer = Buffer.from(pcmBase64, 'base64');
+    const wavBase64 = await toWav(pcmBuffer);
+    const wavBuffer = Buffer.from(wavBase64, 'base64');
     
-    const storagePath = `stories/${userId}/${storyId}.mp3`;
+    const storagePath = `stories/${userId}/${storyId}.wav`;
     const bucketName = 'pleasance_bucket';
     const file = storage.bucket(bucketName).file(storagePath);
     
-    await file.save(audioBuffer, {
+    await file.save(wavBuffer, {
         metadata: {
-            contentType: 'audio/mpeg',
+            contentType: 'audio/wav',
         },
     });
 

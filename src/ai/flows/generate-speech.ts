@@ -18,7 +18,7 @@ const GenerateSpeechInputSchema = z.object({
 export type GenerateSpeechInput = z.infer<typeof GenerateSpeechInputSchema>;
 
 const GenerateSpeechOutputSchema = z.object({
-  audioUrl: z.string().describe('A data URI of the generated MP3 audio.'),
+  audioUrl: z.string().describe('A data URI of the generated raw PCM audio data.'),
 });
 export type GenerateSpeechOutput = z.infer<typeof GenerateSpeechOutputSchema>;
 
@@ -46,7 +46,7 @@ const generateSpeechFlow = ai.defineFlow(
     }
     
     return {
-      audioUrl: media.url, // The model returns a data:audio/mp3;base64,... URI directly
+      audioUrl: media.url, // The model returns a data:audio/pcm;base64,... URI directly
     };
   }
 );

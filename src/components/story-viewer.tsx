@@ -13,7 +13,7 @@ type Story = {
     nativeText: string;
     translatedText: string;
     sourceLanguage: string;
-    audioUrl?: string;
+    audioUrl?: string; 
     status?: 'processing' | 'complete' | 'failed';
 };
 
