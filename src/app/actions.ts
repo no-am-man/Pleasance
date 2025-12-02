@@ -71,7 +71,8 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
     const audioBuffer = Buffer.from(base64Data, 'base64');
     
     const storagePath = `stories/${userId}/${storyId}.mp3`;
-    const file = storage.bucket().file(storagePath);
+    const bucketName = 'pleasance_bucket';
+    const file = storage.bucket(bucketName).file(storagePath);
     
     await file.save(audioBuffer, {
         metadata: {
