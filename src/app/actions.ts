@@ -17,6 +17,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
 import { generateSvg3dFlow } from '@/ai/flows/generate-svg3d-flow';
+import type { ColorPixel } from '@/components/icons/svg3d-cube';
 
 
 // Schema for chat input, as it's used across client and server
@@ -330,5 +331,91 @@ export async function generateSvg3d(values: z.infer<typeof GenerateSvg3dInputSch
         console.error('SVG3D Generation Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
         return { error: `SVG3D generation failed. ${message}` };
+    }
+}
+
+
+function pixelsToSvg(pixels: ColorPixel[]): string {
+    const viewWidth = 400;
+    const viewHeight = 400;
+
+    const circles = pixels.map(p => {
+        // Just use the raw coordinates for the SVG, as it's a static representation
+        return `<circle cx="${p.x}" cy="${p.y}" r="1" fill="${p.color}" />`;
+    }).join('\n');
+
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-100 -100 200 200" width="${viewWidth}" height="${viewHeight}">
+    <g transform="translate(0,0)">
+        ${circles}
+    </g>
+</svg>`;
+}
+
+const saveSvgAssetSchema = z.object({
+    userId: z.string(),
+    assetName: z.string(),
+    pixels: z.array(z.object({
+        x: z.number(),
+        y: z.number(),
+        z: z.number(),
+        color: z.string(),
+    })),
+});
+
+export async function saveSvgAsset(values: z.infer<typeof saveSvgAssetSchema>) {
+    try {
+        const validatedFields = saveSvgAssetSchema.safeParse(values);
+        if (!validatedFields.success) {
+            return { error: 'Invalid input for saving asset.' };
+        }
+        
+        const { userId, assetName, pixels } = validatedFields.data;
+
+        const adminApp = initializeAdminApp();
+        const firestore = getFirestore(adminApp);
+        const storage = getStorage(adminApp);
+
+        // 1. Create a new asset document reference to get an ID
+        const assetDocRef = firestore.collection('users').doc(userId).collection('assets').doc();
+        const assetId = assetDocRef.id;
+
+        // 2. Convert pixel data to an SVG string
+        const svgString = pixelsToSvg(pixels);
+        const svgBuffer = Buffer.from(svgString, 'utf-8');
+        
+        // 3. Upload the SVG to Firebase Storage
+        const storagePath = `users/${userId}/svg3d-assets/${assetId}.svg`;
+        const bucketName = firebaseConfig.storageBucket;
+        const file = storage.bucket(bucketName).file(storagePath);
+        
+        await file.save(svgBuffer, {
+            metadata: { contentType: 'image/svg+xml' },
+        });
+
+        // 4. Get a long-lived signed URL for the SVG
+        const [signedUrl] = await file.getSignedUrl({
+            action: 'read',
+            expires: '01-01-2030', // Long-lived URL
+        });
+
+        // 5. Create the asset document in Firestore
+        const assetData = {
+            id: assetId,
+            ownerId: userId,
+            name: assetName,
+            description: `A generative 3D SVG artwork. Stored at: ${signedUrl}`,
+            type: 'ip',
+            value: 0, // Default value, user can change later
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
+
+        await assetDocRef.set(assetData);
+
+        return { success: true, assetId: assetId };
+
+    } catch (e) {
+        console.error('Save Asset Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Failed to save asset: ${message}` };
     }
 }

@@ -9,14 +9,93 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { LoaderCircle, Sparkles } from 'lucide-react';
-import { generateSvg3d } from '@/app/actions';
+import { LoaderCircle, Sparkles, Save } from 'lucide-react';
+import { generateSvg3d, saveSvgAsset } from '@/app/actions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Svg3dCube, type ColorPixel } from '@/components/icons/svg3d-cube';
+import { useToast } from '@/hooks/use-toast';
+import { useUser } from '@/firebase';
 
 const Svg3dSchema = z.object({
   prompt: z.string().min(3, 'Prompt must be at least 3 characters.'),
 });
+
+const SaveAssetSchema = z.object({
+    assetName: z.string().min(2, 'Asset name must be at least 2 characters.'),
+});
+
+function SaveToTreasuryForm({ pixels }: { pixels: ColorPixel[] }) {
+    const { user } = useUser();
+    const { toast } = useToast();
+    const [isSaving, setIsSaving] = useState(false);
+
+    const form = useForm<z.infer<typeof SaveAssetSchema>>({
+        resolver: zodResolver(SaveAssetSchema),
+        defaultValues: { assetName: '' },
+    });
+
+    async function onSubmit(data: z.infer<typeof SaveAssetSchema>) {
+        if (!user) {
+            toast({ variant: 'destructive', title: 'You must be logged in to save an asset.' });
+            return;
+        }
+        setIsSaving(true);
+        try {
+            const result = await saveSvgAsset({
+                userId: user.uid,
+                assetName: data.assetName,
+                pixels: pixels,
+            });
+
+            if (result.error) {
+                throw new Error(result.error);
+            }
+            toast({
+                title: 'Asset Saved!',
+                description: `"${data.assetName}" has been added to your Treasury.`,
+            });
+            form.reset();
+        } catch (e) {
+            const message = e instanceof Error ? e.message : 'An unknown error occurred.';
+            toast({ variant: 'destructive', title: 'Failed to Save Asset', description: message });
+        } finally {
+            setIsSaving(false);
+        }
+    }
+
+    return (
+        <Card className="mt-4 bg-muted/50">
+            <CardHeader>
+                <CardTitle className="text-lg">Save to Treasury</CardTitle>
+                <CardDescription>Declare this artwork as an intellectual property asset.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="assetName"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Artwork Name</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g., 'Digital Sunrise'" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <Button type="submit" disabled={isSaving}>
+                            {isSaving ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                            Save Asset
+                        </Button>
+                    </form>
+                </Form>
+            </CardContent>
+        </Card>
+    );
+}
+
 
 export default function Svg3dPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -63,45 +142,49 @@ export default function Svg3dPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-        <Card className="shadow-lg">
-            <CardHeader>
-            <CardTitle>Create Your Vision</CardTitle>
-            <CardDescription>
-                Enter a prompt and watch the AI bring your idea to life in a rotatable 3D space. Go wild.
-            </CardDescription>
-            </CardHeader>
-            <CardContent>
-            <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                    control={form.control}
-                    name="prompt"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Your Prompt</FormLabel>
-                        <FormControl>
-                        <Input placeholder="e.g., 'The birth of a star', 'Silent forest morning', 'Quantum entanglement'" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
+        <div className="space-y-8">
+            <Card className="shadow-lg">
+                <CardHeader>
+                <CardTitle>Create Your Vision</CardTitle>
+                <CardDescription>
+                    Enter a prompt and watch the AI bring your idea to life in a rotatable 3D space. Go wild.
+                </CardDescription>
+                </CardHeader>
+                <CardContent>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <FormField
+                        control={form.control}
+                        name="prompt"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Your Prompt</FormLabel>
+                            <FormControl>
+                            <Input placeholder="e.g., 'The birth of a star', 'Silent forest morning', 'Quantum entanglement'" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
 
-                <Button type="submit" disabled={isLoading} className="w-full">
-                    {isLoading ? (
-                    <>
-                        <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> Generating...
-                    </>
-                    ) : (
-                    <>
-                        <Sparkles className="mr-2 h-4 w-4" /> Generate
-                    </>
-                    )}
-                </Button>
-                </form>
-            </Form>
-            </CardContent>
-        </Card>
+                    <Button type="submit" disabled={isLoading} className="w-full">
+                        {isLoading ? (
+                        <>
+                            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> Generating...
+                        </>
+                        ) : (
+                        <>
+                            <Sparkles className="mr-2 h-4 w-4" /> Generate
+                        </>
+                        )}
+                    </Button>
+                    </form>
+                </Form>
+                </CardContent>
+            </Card>
+            
+            {pixels && pixels.length > 0 && <SaveToTreasuryForm pixels={pixels} />}
+        </div>
         
         <div className="lg:sticky lg:top-24">
             <Card className="shadow-lg aspect-square">
