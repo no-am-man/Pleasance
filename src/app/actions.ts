@@ -9,6 +9,7 @@ import { generateSpeech } from '@/ai/flows/generate-speech';
 import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
 import { initializeAdminApp } from '@/firebase/config-admin';
+import { firebaseConfig } from '@/firebase/config';
 import admin from 'firebase-admin';
 import { generateCommunity } from '@/ai/flows/generate-community';
 import { getFirestore } from 'firebase-admin/firestore';
@@ -97,7 +98,7 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
     const wavBuffer = Buffer.from(wavBase64, 'base64');
     
     const storagePath = `stories/${userId}/${storyId}.wav`;
-    const bucketName = 'pleasance_bucket';
+    const bucketName = firebaseConfig.storageBucket; // Use the correct bucket name from config
     const file = storage.bucket(bucketName).file(storagePath);
     
     await file.save(wavBuffer, {
