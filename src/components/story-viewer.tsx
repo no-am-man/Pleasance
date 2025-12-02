@@ -14,6 +14,7 @@ type Story = {
     translatedText: string;
     sourceLanguage: string;
     audioUrl?: string;
+    status?: 'processing' | 'complete' | 'failed';
 };
 
 type StoryViewerProps = {
@@ -30,18 +31,25 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
   const { toast } = useToast();
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const isProcessing = story.status === 'processing';
   const hasAudio = story.audioUrl && story.audioUrl.length > 0;
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    // Autoplay when audioUrl is available and autoplay is true
-    if (story.audioUrl && autoplay) {
+    if (story.audioUrl && audio.src !== story.audioUrl) {
+      audio.src = story.audioUrl;
+      audio.load();
+    }
+
+    // Autoplay when audioUrl becomes available and autoplay is true
+    if (story.audioUrl && autoplay && !isPlaying) {
         audio.play().catch(e => {
             console.error("Autoplay failed:", e);
             setIsPlaying(false); // If autoplay fails, update the state
         });
+        setIsPlaying(true);
     }
 
     const setAudioData = () => {
@@ -67,7 +75,7 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
       audio.removeEventListener("timeupdate", setAudioTime);
       audio.removeEventListener("ended", handlePlaybackEnded);
     };
-  }, [story.audioUrl, autoplay]);
+  }, [story.audioUrl, autoplay, isPlaying]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -88,8 +96,6 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
     if (hasAudio) {
       setIsPlaying(!isPlaying);
     }
-    // If there's no audio, this button should ideally not be active,
-    // but the logic for generation is handled on the page level now.
   };
 
   const handleCopy = (text: string, type: string) => {
@@ -101,29 +107,27 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
   };
 
   return (
-    <div className="animate-in fade-in-50 duration-500 space-y-8">
-       <div className="flex flex-col items-center space-y-4 pt-4">
-        <audio ref={audioRef} src={story.audioUrl} crossOrigin="anonymous" />
+    <div className="animate-in fade-in-50 duration-500 space-y-4">
+      <div className="flex flex-col items-center space-y-4">
+        <audio ref={audioRef} crossOrigin="anonymous" />
         
-        <div className="flex items-center gap-4">
-            <div className="flex flex-col items-center gap-2 self-end">
-                 <Button
-                    onClick={togglePlayPause}
-                    size="icon"
-                    className="rounded-full w-12 h-12 bg-red-600 hover:bg-red-700 disabled:bg-gray-400"
-                    aria-label={isPlaying ? "Pause" : "Play"}
-                    disabled={!hasAudio}
-                    >
-                    {isPlaying ? (
-                        <Pause className="h-6 w-6 fill-white text-white" />
-                    ) : (
-                        <Play className="h-6 w-6 fill-white text-white" />
-                    )}
-                </Button>
-                {!hasAudio && <LoaderCircle className="w-6 h-6 animate-spin text-primary" />}
-            </div>
-        </div>
+        <Button
+            onClick={togglePlayPause}
+            size="icon"
+            className="rounded-full w-16 h-16 bg-red-600 hover:bg-red-700 disabled:bg-gray-400"
+            aria-label={isPlaying ? "Pause" : "Play"}
+            disabled={!hasAudio || isProcessing}
+            >
+            {isProcessing ? (
+                <LoaderCircle className="w-8 h-8 animate-spin fill-white text-white" />
+            ) : isPlaying ? (
+                <Pause className="h-8 w-8 fill-white text-white" />
+            ) : (
+                <Play className="h-8 w-8 fill-white text-white ml-1" />
+            )}
+        </Button>
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card>
           <CardHeader className="flex flex-row justify-between items-start">

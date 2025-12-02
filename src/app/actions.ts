@@ -11,24 +11,27 @@ import { syncAllMembers } from '@/ai/flows/sync-members';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import admin from 'firebase-admin';
 import { generateCommunity } from '@/ai/flows/generate-community';
+import { getStorage } from 'firebase-admin/storage';
+import { getFirestore } from 'firebase-admin/firestore';
 
 
 const storyTextSchema = z.object({
+  userId: z.string(),
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
   sourceLanguage: z.string().min(1),
   targetLanguage: z.string().min(1),
 });
 
-export async function generateTextPortionOfStory(values: z.infer<typeof storyTextSchema>) {
+export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSchema>) {
   try {
     const validatedFields = storyTextSchema.safeParse(values);
     if (!validatedFields.success) {
       return { error: 'Invalid input.' };
     }
     
-    const { difficulty, sourceLanguage, targetLanguage } = validatedFields.data;
+    const { userId, difficulty, sourceLanguage, targetLanguage } = validatedFields.data;
     
-    // --- Generate and Translate Story ---
+    // --- Step 1: Generate and Translate Story ---
     const storyResult = await generateStory({ difficultyLevel: difficulty, sourceLanguage });
     if (!storyResult.story) {
       throw new Error('Failed to generate a story.');
@@ -45,48 +48,86 @@ export async function generateTextPortionOfStory(values: z.infer<typeof storyTex
       throw new Error('Failed to translate the story.');
     }
     const translatedText = translationResult.translatedText;
-    
-    return {
-      storyData: {
+
+    // --- Step 2: Save Initial Story to Firestore ---
+    const adminApp = initializeAdminApp();
+    const firestore = getFirestore(adminApp);
+    const storyDocRef = firestore.collection('users').doc(userId).collection('stories').doc();
+    const storyId = storyDocRef.id;
+
+    const initialStoryData = {
+        id: storyId,
+        userId: userId,
         level: difficulty,
         sourceLanguage: sourceLanguage,
         targetLanguage: targetLanguage,
         nativeText: originalStory,
         translatedText: translatedText,
-      }
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        status: 'processing', // Initial status
+    };
+    
+    await storyDocRef.set(initialStoryData);
+    
+    // --- Step 3: Trigger background audio processing (don't await this function) ---
+    processAudioInBackground(storyId, userId, translatedText);
+    
+    // --- Step 4: Return immediately to the client ---
+    return {
+        storyData: {
+            ...initialStoryData,
+            // Convert server timestamp to a client-compatible format
+            createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 },
+        }
     };
 
   } catch (e) {
     console.error('Action Error:', e);
     const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
-    return { error: `Story text creation failed. ${message}` };
+    return { error: `Story creation failed. ${message}` };
   }
 }
 
-const speechSchema = z.object({
-  text: z.string(),
-});
-
-export async function generateSpeechForStory(values: z.infer<typeof speechSchema>) {
+async function processAudioInBackground(storyId: string, userId: string, textToSpeak: string) {
     try {
-        const validatedFields = speechSchema.safeParse(values);
-        if (!validatedFields.success) {
-            return { error: 'Invalid input for speech generation.' };
-        }
-        const { text } = validatedFields.data;
-
-        const speechResult = await generateSpeech({ text });
+        const speechResult = await generateSpeech({ text: textToSpeak });
         if (!speechResult.audioBase64) {
             throw new Error('Speech synthesis failed to produce audio.');
         }
+
+        const adminApp = initializeAdminApp();
+        const storage = getStorage(adminApp);
+        const firestore = getFirestore(adminApp);
         
-        return {
-            audioBase64: speechResult.audioBase64,
-        };
+        const storagePath = `stories/${userId}/${storyId}.l16`;
+        const file = storage.bucket().file(storagePath);
+        
+        const buffer = Buffer.from(speechResult.audioBase64, 'base64');
+
+        await file.save(buffer, {
+            metadata: {
+                contentType: 'audio/l16;rate=24000',
+            },
+        });
+        
+        const [downloadURL] = await file.getSignedUrl({
+            action: 'read',
+            expires: '03-09-2491' // A very long expiration date
+        });
+
+        const storyDocRef = firestore.collection('users').doc(userId).collection('stories').doc(storyId);
+        await storyDocRef.update({ 
+            audioUrl: downloadURL,
+            status: 'complete',
+        });
+
     } catch (e) {
-        console.error('Speech Generation Error:', e);
-        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
-        return { error: `Speech generation failed. ${message}` };
+        console.error(`Background audio processing failed for story ${storyId}:`, e);
+        // Optionally update the story doc to indicate failure
+        const adminApp = initializeAdminApp();
+        const firestore = getFirestore(adminApp);
+        const storyDocRef = firestore.collection('users').doc(userId).collection('stories').doc(storyId);
+        await storyDocRef.update({ status: 'failed' });
     }
 }
 
