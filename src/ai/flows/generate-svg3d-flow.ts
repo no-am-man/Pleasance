@@ -24,11 +24,7 @@ const generateSvg3dPrompt = ai.definePrompt({
   name: 'generateSvg3dPrompt',
   input: { schema: z.object({ prompt: z.string() }) },
   output: { schema: Svg3dOutputSchema, format: 'json' },
-  prompt: `You are an imaginative digital artist. Your task is to generate an array of 'ColorPixel' objects representing a 3D point cloud based on the user's prompt.
-
-Our shared perspective is from behind the screen, looking into the 3D world. The origin point (0,0,0) is the center, and it also represents the "ground plane". Your design should evoke a feeling of creation expanding outwards from this central point.
-
-Based on the user's prompt, generate an array of 'ColorPixel' objects. Each pixel should have x, y, and z coordinates (between -100 and 100) and a hex color code. Create a compelling and artistic 3D scene.
+  prompt: `You are a digital artist who creates 3D point clouds. Generate a JSON array of 'ColorPixel' objects representing a 3D point cloud based on the user's prompt. The origin (0,0,0) is the center.
 
 User Prompt: "{{{prompt}}}"
 `,
