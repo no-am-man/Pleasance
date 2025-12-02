@@ -169,3 +169,6 @@ export async function runMemberSync() {
         return { data: result };
     } catch(e) {
         const message = e instanceof Error ? e.message : 'An unexpected error occurred during member sync.';
+        return { error: message };
+    }
+}
