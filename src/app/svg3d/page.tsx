@@ -11,18 +11,14 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { LoaderCircle, Sparkles, Save } from 'lucide-react';
-import { generateSvg3d, saveSvgAsset } from '@/app/actions';
+import { generateSvg3d, saveSvgAsset, GenerateSvg3dInputSchema, type ColorPixel } from '@/app/actions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Svg3dCube, type ColorPixel } from '@/components/icons/svg3d-cube';
+import { Svg3dCube } from '@/components/icons/svg3d-cube';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
-const Svg3dSchema = z.object({
-  prompt: z.string().min(3, 'Prompt must be at least 3 characters.'),
-  cubeSize: z.coerce.number().min(1, 'Size must be at least 1mm.'),
-  density: z.enum(['low', 'medium', 'high']),
-});
+const Svg3dSchema = GenerateSvg3dInputSchema;
 
 const SaveAssetSchema = z.object({
     assetName: z.string().min(2, 'Asset name must be at least 2 characters.'),
@@ -174,7 +170,7 @@ export default function Svg3dPage() {
         setPixels(result.pixels);
       }
     } catch (e) {
-      const message = e instanceof Error ? e.message : 'An unknown error occurred.';
+      const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
       setError(`Generation failed: ${message}`);
     }
 

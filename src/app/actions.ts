@@ -17,7 +17,24 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
 import { generateSvg3dFlow } from '@/ai/flows/generate-svg3d-flow';
-import type { ColorPixel, GenerateSvg3dInput } from '@/ai/flows/generate-svg3d-flow';
+
+// Schemas and Types for SVG3D Generation
+const ColorPixelSchema = z.object({
+    x: z.number().describe('The X coordinate, from -50 to 50.'),
+    y: z.number().describe('The Y coordinate, from -50 to 50.'),
+    z: z.number().describe('The Z coordinate, from -50 to 50.'),
+    color: z.string().describe('The hexadecimal color code (e.g., "#FF5733").')
+});
+export type ColorPixel = z.infer<typeof ColorPixelSchema>;
+
+export const GenerateSvg3dInputSchema = z.object({
+  prompt: z.string(),
+  cubeSize: z.number(),
+  density: z.enum(['low', 'medium', 'high']),
+});
+export type GenerateSvg3dInput = z.infer<typeof GenerateSvg3dInputSchema>;
+export type Svg3dOutput = z.infer<typeof Svg3dOutputSchema>;
+const Svg3dOutputSchema = z.array(ColorPixelSchema);
 
 
 // Schema for chat input, as it's used across client and server
@@ -309,14 +326,7 @@ export async function runMemberSync() {
     }
 }
 
-const GenerateSvg3dInputSchema = z.object({
-  prompt: z.string().describe('The user prompt to inspire the SVG design.'),
-  cubeSize: z.number().describe('The conceptual size of the cube in millimeters.'),
-  density: z.enum(['low', 'medium', 'high']).describe('The desired pixel density.'),
-});
-
-
-export async function generateSvg3d(values: z.infer<typeof GenerateSvg3dInputSchema>) {
+export async function generateSvg3d(values: GenerateSvg3dInput) {
     try {
         const validatedFields = GenerateSvg3dInputSchema.safeParse(values);
         if (!validatedFields.success) {
@@ -333,7 +343,7 @@ export async function generateSvg3d(values: z.infer<typeof GenerateSvg3dInputSch
     } catch (e) {
         console.error('SVG3D Generation Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
-        return { error: `SVG3D generation failed. ${message}` };
+        return { error: `SVG3D generation failed: ${message}` };
     }
 }
 

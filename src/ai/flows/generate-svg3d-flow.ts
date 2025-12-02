@@ -7,6 +7,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import type { GenerateSvg3dInput, Svg3dOutput } from '@/app/actions';
 
 const ColorPixelSchema = z.object({
     x: z.number().describe('The X coordinate, from -50 to 50.'),
@@ -14,17 +15,14 @@ const ColorPixelSchema = z.object({
     z: z.number().describe('The Z coordinate, from -50 to 50.'),
     color: z.string().describe('The hexadecimal color code (e.g., "#FF5733").')
 });
-export type ColorPixel = z.infer<typeof ColorPixelSchema>;
 
 const Svg3dOutputSchema = z.array(ColorPixelSchema).describe('An array of ColorPixel objects representing the 3D scene.');
-export type Svg3dOutput = z.infer<typeof Svg3dOutputSchema>;
 
-export const GenerateSvg3dInputSchema = z.object({
+const GenerateSvg3dInputSchema = z.object({
   prompt: z.string(),
   cubeSize: z.number(),
   density: z.enum(['low', 'medium', 'high']),
 });
-export type GenerateSvg3dInput = z.infer<typeof GenerateSvg3dInputSchema>;
 
 
 const generateSvg3dPrompt = ai.definePrompt({
