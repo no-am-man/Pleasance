@@ -17,7 +17,7 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
         if (!admin.apps.length) {
             admin.initializeApp({
                 credential: admin.credential.applicationDefault(),
-                storageBucket: 'studio-2441219031-242ae.firebasestorage.app',
+                storageBucket: 'studio-2441219031-242ae.appspot.com',
             });
         }
         
