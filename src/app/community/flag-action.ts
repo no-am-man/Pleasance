@@ -1,7 +1,6 @@
 
 'use server';
 
-import 'dotenv/config';
 import { z } from 'zod';
 import { generateFlag } from '@/ai/flows/generate-flag';
 import { initializeAdminApp } from '@/firebase/config-admin';

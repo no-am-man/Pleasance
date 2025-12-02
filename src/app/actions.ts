@@ -9,9 +9,10 @@ import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member
 import { generateSpeech } from '@/ai/flows/generate-speech';
 import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
-import { initializeAdminApp } from '@/firebase/config-admin';
+import { initializeFirebase } from '@/firebase/config-for-actions';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { doc, updateDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { initializeAdminApp } from '@/firebase/config-admin';
 
 
 const storySchema = z.object({
@@ -48,10 +49,8 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>
     }
     const translatedText = translationResult.translatedText;
 
-    // --- Step 2: Initialize Firebase Admin ---
-    const adminApp = initializeAdminApp();
-    const firestore = adminApp.firestore();
-    const storage = getStorage(adminApp);
+    // --- Step 2: Initialize Firebase ---
+    const { firestore, storage } = initializeFirebase();
 
     // --- Step 3: Save Initial Story to Firestore ---
     const storyCollectionRef = collection(firestore, 'users', userId, 'stories');
