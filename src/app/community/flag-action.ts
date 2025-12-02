@@ -1,9 +1,9 @@
+
 'use server';
 
 import { z } from 'zod';
 import { generateFlag } from '@/ai/flows/generate-flag';
-import { initializeFirebase } from '@/firebase/config-for-actions';
-import { doc, updateDoc } from 'firebase/firestore';
+import * as admin from 'firebase-admin';
 
 const flagSchema = z.object({
     communityId: z.string(),
@@ -12,13 +12,27 @@ const flagSchema = z.object({
 });
 
 function toBase64(str: string): string {
+    // This function can run in Node.js or browser environments.
     if (typeof Buffer !== 'undefined') {
-      return Buffer.from(str).toString('base64');
+      // Node.js environment
+      return Buffer.from(str, 'utf-8').toString('base64');
     } else {
-      // Browser environment
+      // Browser environment (fallback, though this action is server-only)
       return btoa(unescape(encodeURIComponent(str)));
     }
 }
+
+// Initialize Firebase Admin SDK only if not already initialized
+if (!admin.apps.length) {
+    try {
+        admin.initializeApp({
+            credential: admin.credential.applicationDefault(),
+        });
+    } catch (e) {
+        console.error('Firebase Admin Initialization Error in flag-action:', e);
+    }
+}
+
 
 export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) {
     try {
@@ -39,10 +53,10 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
         const svgBase64 = toBase64(flagResult.svg);
         const svgDataUri = `data:image/svg+xml;base64,${svgBase64}`;
 
-        // 3. Update the community document in Firestore
-        const { firestore } = initializeFirebase();
-        const communityDocRef = doc(firestore, 'communities', communityId);
-        await updateDoc(communityDocRef, { flagUrl: svgDataUri });
+        // 3. Update the community document in Firestore using the Admin SDK
+        const firestore = admin.firestore();
+        const communityDocRef = firestore.collection('communities').doc(communityId);
+        await communityDocRef.update({ flagUrl: svgDataUri });
 
         return {
             data: {
@@ -56,3 +70,4 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
         return { error: `Flag generation failed: ${message}` };
     }
 }
+

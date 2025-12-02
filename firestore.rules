@@ -128,7 +128,7 @@ service cloud.firestore {
         allow get: if true;
         allow list: if true;
         allow create: if isSignedIn() && hasValidCommunityData();
-        allow update: if isCommunityOwner(communityId);
+        allow update: if isCommunityOwner(communityId) && (!('ownerId' in request.resource.data) || request.resource.data.ownerId == resource.data.ownerId);
         allow delete: if isCommunityOwner(communityId);
 
         /**
@@ -170,3 +170,4 @@ service cloud.firestore {
     }
   }
 }
+
