@@ -107,64 +107,71 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
   };
 
   return (
-    <div className="animate-in fade-in-50 duration-500 space-y-4">
-      <div className="flex flex-col items-center space-y-4">
+    <div className="animate-in fade-in-50 duration-500">
         <audio ref={audioRef} crossOrigin="anonymous" />
-        
-        <Button
-            onClick={togglePlayPause}
-            size="icon"
-            className="rounded-full w-16 h-16 bg-red-600 hover:bg-red-700 disabled:bg-gray-400"
-            aria-label={isPlaying ? "Pause" : "Play"}
-            disabled={!hasAudio || isProcessing}
-            >
-            {isProcessing ? (
-                <LoaderCircle className="w-8 h-8 animate-spin fill-white text-white" />
-            ) : isPlaying ? (
-                <Pause className="h-8 w-8 fill-white text-white" />
-            ) : (
-                <Play className="h-8 w-8 fill-white text-white ml-1" />
-            )}
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Card>
-          <CardHeader className="flex flex-row justify-between items-start">
-            <CardTitle>Original Story ({story.sourceLanguage})</CardTitle>
-            <Button variant="ghost" size="icon" onClick={() => handleCopy(story.nativeText, 'original')}>
-                <Copy className="w-4 h-4" />
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
-              {story.nativeText}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row justify-between items-start">
-            <CardTitle>Translated Story</CardTitle>
-            <Button variant="ghost" size="icon" onClick={() => handleCopy(story.translatedText, 'translated')}>
-                <Copy className="w-4 h-4" />
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="relative text-foreground whitespace-pre-wrap leading-relaxed">
-                {hasAudio && (
-                    <div
-                        className="absolute inset-0 bg-gradient-to-r from-accent/70 to-accent/10 pointer-events-none -z-10"
-                        style={{
-                            width: `${progress}%`,
-                            transition: isPlaying ? 'width 0.1s linear' : 'none',
-                        }}
-                    />
-                )}
-                <span className="relative z-0">{story.translatedText}</span>
+        <div className="flex flex-col md:flex-row items-center justify-center gap-8">
+            {/* Original Story Panel */}
+            <div className="w-full md:w-5/12">
+                <Card>
+                    <CardHeader className="flex flex-row justify-between items-start">
+                        <CardTitle>Original Story ({story.sourceLanguage})</CardTitle>
+                        <Button variant="ghost" size="icon" onClick={() => handleCopy(story.nativeText, 'original')}>
+                            <Copy className="w-4 h-4" />
+                        </Button>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                        {story.nativeText}
+                        </p>
+                    </CardContent>
+                </Card>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            
+            {/* Play Button */}
+            <div className="w-full md:w-auto flex justify-center order-first md:order-none">
+                 <Button
+                    onClick={togglePlayPause}
+                    size="icon"
+                    className="rounded-full w-20 h-20 bg-red-600 hover:bg-red-700 disabled:bg-gray-400"
+                    aria-label={isPlaying ? "Pause" : "Play"}
+                    disabled={!hasAudio || isProcessing}
+                    >
+                    {isProcessing ? (
+                        <LoaderCircle className="w-8 h-8 animate-spin fill-white text-white" />
+                    ) : isPlaying ? (
+                        <Pause className="h-10 w-10 fill-white text-white" />
+                    ) : (
+                        <Play className="h-10 w-10 fill-white text-white ml-1" />
+                    )}
+                </Button>
+            </div>
+
+            {/* Translated Story Panel */}
+            <div className="w-full md:w-5/12">
+                <Card>
+                <CardHeader className="flex flex-row justify-between items-start">
+                    <CardTitle>Translated Story</CardTitle>
+                    <Button variant="ghost" size="icon" onClick={() => handleCopy(story.translatedText, 'translated')}>
+                        <Copy className="w-4 h-4" />
+                    </Button>
+                </CardHeader>
+                <CardContent>
+                    <div className="relative text-foreground whitespace-pre-wrap leading-relaxed">
+                        {hasAudio && (
+                            <div
+                                className="absolute inset-0 bg-gradient-to-r from-accent/70 to-accent/10 pointer-events-none -z-10"
+                                style={{
+                                    width: `${progress}%`,
+                                    transition: isPlaying ? 'width 0.1s linear' : 'none',
+                                }}
+                            />
+                        )}
+                        <span className="relative z-0">{story.translatedText}</span>
+                    </div>
+                </CardContent>
+                </Card>
+            </div>
+        </div>
     </div>
   );
 }
