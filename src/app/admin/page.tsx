@@ -5,9 +5,10 @@ import { useState } from 'react';
 import { useUser } from '@/firebase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, ShieldCheck, AlertTriangle, CheckCircle, Bone } from 'lucide-react';
+import { LoaderCircle, ShieldCheck, AlertTriangle, CheckCircle, Bone, Database } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { runMemberSync } from '../actions';
+import { enableStorage } from '../enable-storage-action';
 
 // This is a simple check. In a real-world app, this should be a secure custom claim.
 export const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com';
@@ -22,6 +23,10 @@ function AdminDashboard() {
     const [syncIsLoading, setSyncIsLoading] = useState(false);
     const [syncError, setSyncError] = useState<string | null>(null);
     const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
+    
+    const [storageIsLoading, setStorageIsLoading] = useState(false);
+    const [storageError, setStorageError] = useState<string | null>(null);
+    const [storageResult, setStorageResult] = useState<string | null>(null);
 
     const handleSync = async () => {
         setSyncIsLoading(true);
@@ -43,26 +48,78 @@ function AdminDashboard() {
         setSyncIsLoading(false);
     };
 
+    const handleEnableStorage = async () => {
+        setStorageIsLoading(true);
+        setStorageError(null);
+        setStorageResult(null);
+
+        try {
+            const result = await enableStorage();
+            if (result.error) {
+                setStorageError(result.error);
+            } else if (result.data) {
+                setStorageResult(result.data);
+            }
+        } catch (e) {
+            const message = e instanceof Error ? e.message : 'An unknown error occurred.';
+            setStorageError(`The storage enabling process failed: ${message}`);
+        }
+        
+        setStorageIsLoading(false);
+    };
+
     return (
         <Card className="shadow-lg">
             <CardHeader>
-                <CardTitle>Database Maintenance</CardTitle>
-                <CardDescription>Run maintenance tasks to ensure data integrity across the federation.</CardDescription>
+                <CardTitle>Admin Actions</CardTitle>
+                <CardDescription>Run maintenance and setup tasks for the federation.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+                <Card className="bg-muted/50">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                           <Database /> Enable Firebase Storage
+                        </CardTitle>
+                        <CardDescription>
+                            This is a one-time action to create the default Cloud Storage bucket for your Firebase project. This is required for file uploads (e.g., story audio) to work. If uploads are failing with a "bucket does not exist" error, run this action.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Button onClick={handleEnableStorage} disabled={storageIsLoading}>
+                            {storageIsLoading ? (
+                                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <ShieldCheck className="mr-2 h-4 w-4" />
+                            )}
+                            Enable Storage
+                        </Button>
+                        {storageError && (
+                            <Alert variant="destructive" className="mt-4">
+                                <AlertTriangle className="h-4 w-4" />
+                                <AlertTitle>Storage Setup Error</AlertTitle>
+                                <AlertDescription>{storageError}</AlertDescription>
+                            </Alert>
+                        )}
+                        {storageResult && (
+                            <Alert variant="default" className="mt-4 bg-green-500/10 border-green-500/50">
+                                <CheckCircle className="h-4 w-4 text-green-500" />
+                                <AlertTitle className="text-green-500">Storage Setup Complete</AlertTitle>
+                                <AlertDescription className="text-green-500/80">{storageResult}</AlertDescription>
+                            </Alert>
+                        )}
+                    </CardContent>
+                </Card>
+
                 <Card className="bg-muted/50">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                            <Bone /> Synchronize Community Members
                         </CardTitle>
                         <CardDescription>
-                            This action scans all communities and synchronizes each human member's name, bio, and avatar with their master community profile. This fixes inconsistencies that can cause errors.
+                            This action scans all communities and synchronizes each human member's name, bio, and avatar with their master community profile. This fixes data inconsistencies.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-sm text-muted-foreground mb-4">
-                            Note: This requires the `FIREBASE_SERVICE_ACCOUNT_BASE64` variable to be set in your `.env` file.
-                        </p>
                         <Button onClick={handleSync} disabled={syncIsLoading}>
                             {syncIsLoading ? (
                                 <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
@@ -71,29 +128,28 @@ function AdminDashboard() {
                             )}
                             Run Member Sync
                         </Button>
+                         {syncError && (
+                            <Alert variant="destructive" className="mt-4">
+                                <AlertTriangle className="h-4 w-4" />
+                                <AlertTitle>Synchronization Error</AlertTitle>
+                                <AlertDescription>{syncError}</AlertDescription>
+                            </Alert>
+                        )}
+                        {syncResult && (
+                            <Alert variant="default" className="mt-4 bg-green-500/10 border-green-500/50">
+                                <CheckCircle className="h-4 w-4 text-green-500" />
+                                <AlertTitle className="text-green-500">Synchronization Complete</AlertTitle>
+                                <AlertDescription className="text-green-500/80">
+                                    <ul className="list-disc pl-5">
+                                        <li>Communities Scanned: {syncResult.communitiesScanned}</li>
+                                        <li>Total Members Synced: {syncResult.membersSynced}</li>
+                                        <li>Data Issues Fixed: {syncResult.issuesFixed}</li>
+                                    </ul>
+                                </AlertDescription>
+                            </Alert>
+                        )}
                     </CardContent>
                 </Card>
-
-                {syncError && (
-                    <Alert variant="destructive">
-                        <AlertTriangle className="h-4 w-4" />
-                        <AlertTitle>Synchronization Error</AlertTitle>
-                        <AlertDescription>{syncError}</AlertDescription>
-                    </Alert>
-                )}
-                {syncResult && (
-                    <Alert variant="default" className="bg-green-500/10 border-green-500/50">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        <AlertTitle className="text-green-500">Synchronization Complete</AlertTitle>
-                        <AlertDescription className="text-green-500/80">
-                            <ul className="list-disc pl-5">
-                                <li>Communities Scanned: {syncResult.communitiesScanned}</li>
-                                <li>Total Members Synced: {syncResult.membersSynced}</li>
-                                <li>Data Issues Fixed: {syncResult.issuesFixed}</li>
-                            </ul>
-                        </AlertDescription>
-                    </Alert>
-                )}
             </CardContent>
         </Card>
     );
