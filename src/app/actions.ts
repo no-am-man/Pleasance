@@ -13,6 +13,7 @@ import { VOICES } from '@/config/languages';
 import * as admin from 'firebase-admin';
 import { getAuth } from 'firebase-admin/auth';
 import { cookies } from 'next/headers';
+import { initializeFirebase as initializeClientFirebase } from '@/firebase/config-for-actions';
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
@@ -20,28 +21,47 @@ const storySchema = z.object({
   targetLanguage: z.string().min(1),
 });
 
-function initializeAdminApp() {
-    if (admin.apps.length > 0) {
-        return admin.app();
+function initializeAdminApp(serviceAccount?: admin.ServiceAccount) {
+    const appName = 'pleasance-admin';
+    const existingApp = admin.apps.find(app => app?.name === appName);
+    if (existingApp) {
+        return existingApp;
     }
-    // This is a placeholder for where you'd securely get your service account.
-    // In a real app, this should come from a secure source like environment variables.
-    // For this context, we will assume it's being handled by the caller.
-    throw new Error('Admin app initialization should be handled by the calling action.');
+
+    if (!serviceAccount) {
+        throw new Error("Service account is required for Admin App initialization.");
+    }
+    
+    return admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+    }, appName);
 }
 
-async function getAuthenticatedUser() {
-    try {
-        const sessionCookie = cookies().get('__session')?.value;
-        if (!sessionCookie) return null;
-        
-        initializeAdminApp(); // Ensure app is initialized
-        const decodedIdToken = await getAuth().verifySessionCookie(sessionCookie, true);
-        return decodedIdToken;
-    } catch (e) {
-        console.error("Authentication error:", e);
-        return null;
+async function getAdminAppWithKey() {
+    // This function initializes a temporary, client-like firebase instance
+    // to fetch the service account key securely from Firestore.
+    // This is a necessary step because we can't use the Admin SDK to fetch its own credentials.
+    const { firestore: clientFirestore } = initializeClientFirebase();
+    
+    const credentialsDoc = await clientFirestore.collection('_private_admin_data').doc('credentials').get();
+
+    if (!credentialsDoc.exists) {
+        throw new Error("Service account key not found in Firestore. Please set it in the Admin Panel.");
     }
+    const serviceAccountKeyBase64 = credentialsDoc.data()?.serviceAccountKeyBase64;
+    if (!serviceAccountKeyBase64) {
+        throw new Error("Service account key is empty in Firestore. Please set it in the Admin Panel.");
+    }
+    
+    let serviceAccount;
+    try {
+        const decodedKey = Buffer.from(serviceAccountKeyBase64, 'base64').toString('utf8');
+        serviceAccount = JSON.parse(decodedKey);
+    } catch (e) {
+        throw new Error("Failed to parse the service account key from Firestore. Please ensure it is a valid Base64-encoded JSON object.");
+    }
+
+    return initializeAdminApp(serviceAccount);
 }
 
 
@@ -207,9 +227,9 @@ export async function saveCredentials(values: z.infer<typeof credentialsSchema>)
             return { error: 'Invalid input.' };
         }
         
-        const app = initializeAdminApp();
-        const firestore = admin.firestore(app);
-        const auth = admin.auth(app);
+        const adminApp = await getAdminAppWithKey();
+        const firestore = admin.firestore(adminApp);
+        const auth = admin.auth(adminApp);
 
         const sessionCookie = cookies().get('__session')?.value;
         if (!sessionCookie) {
@@ -236,9 +256,9 @@ export async function saveCredentials(values: z.infer<typeof credentialsSchema>)
 
 export async function getCredentials() {
     try {
-        const app = initializeAdminApp();
-        const firestore = admin.firestore(app);
-        const auth = admin.auth(app);
+        const adminApp = await getAdminAppWithKey();
+        const firestore = admin.firestore(adminApp);
+        const auth = admin.auth(adminApp);
         
         const sessionCookie = cookies().get('__session')?.value;
         if (!sessionCookie) {

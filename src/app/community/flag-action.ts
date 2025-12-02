@@ -12,42 +12,43 @@ const flagSchema = z.object({
 });
 
 function initializeAdminApp(serviceAccountKey: string) {
-    if (admin.apps.length > 0) {
-        return admin.app();
+    const appName = 'pleasance-flag-generator'; // Use a unique name for this app instance
+    // Check if the app is already initialized
+    const existingApp = admin.apps.find(app => app?.name === appName);
+    if (existingApp) {
+        return existingApp;
     }
 
     let serviceAccount: admin.ServiceAccount;
     try {
         const decodedServiceAccount = Buffer.from(serviceAccountKey, 'base64').toString('utf8');
-        try {
-            serviceAccount = JSON.parse(decodedServiceAccount);
-        } catch (e: any) {
-            throw new Error(`Server configuration error: Failed to parse the service account JSON. Please ensure it is a valid JSON object. Details: ${e.message}`);
-        }
+        serviceAccount = JSON.parse(decodedServiceAccount);
     } catch (e: any) {
-        throw new Error(`Server configuration error: Failed to decode the service account key from Base64. Please ensure it is a valid Base64 string. Details: ${e.message}`);
+        if (e instanceof SyntaxError) {
+             throw new Error(`Server configuration error: Failed to parse the service account JSON. Please ensure it is a valid JSON object. Details: ${e.message}`);
+        } else {
+            throw new Error(`Server configuration error: Failed to decode the service account key from Base64. Please ensure it is a valid Base64 string. Details: ${e.message}`);
+        }
     }
 
+    // Initialize the app with the parsed credentials
     return admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
-    });
+    }, appName);
 }
 
 
 export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) {
-    try {
-        const validatedFields = flagSchema.safeParse(values);
-        if (!validatedFields.success) {
-            const errorMessage = validatedFields.error.issues[0]?.message || 'Invalid input for flag generation.';
-            return { error: errorMessage };
-        }
-        
-        const { communityId, communityName, communityDescription } = validatedFields.data;
+    let tempFirestore: admin.firestore.Firestore;
 
-        // Initialize a temporary firestore instance to fetch the key
-        const tempFirestore = admin.firestore(initializeApp({
-             // The config is not strictly needed here if default app exists, but helps consistency
-        }, 'temp-key-fetch-' + Date.now()));
+    try {
+        // Since we need to read from Firestore to get the key, and we can't use the client SDK
+        // in a server action that also uses the admin SDK easily, we do a temporary minimal init
+        // of the admin SDK *if it has not been initialized at all*.
+        if (admin.apps.length === 0) {
+            admin.initializeApp();
+        }
+        tempFirestore = admin.firestore();
 
         const credentialsDoc = await tempFirestore.collection('_private_admin_data').doc('credentials').get();
         if (!credentialsDoc.exists) {
@@ -58,9 +59,16 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
             throw new Error("Service account key is empty. Please set it in the Admin Panel.");
         }
         
-        // Now initialize the main app with the fetched key
         const adminApp = initializeAdminApp(serviceAccountKey);
         const firestore = adminApp.firestore();
+
+        const validatedFields = flagSchema.safeParse(values);
+        if (!validatedFields.success) {
+            const errorMessage = validatedFields.error.issues[0]?.message || 'Invalid input for flag generation.';
+            return { error: errorMessage };
+        }
+        
+        const { communityId, communityName, communityDescription } = validatedFields.data;
 
         const flagResult = await generateFlag({ communityName, communityDescription });
         if (!flagResult.svg) {
