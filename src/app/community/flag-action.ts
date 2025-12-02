@@ -24,10 +24,23 @@ function initializeAdminApp() {
         throw new Error('Server configuration error: The FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is not set. Please ensure it is set in your deployment environment or .env.local file.');
     }
 
+    let serviceAccountJson;
     try {
-        const serviceAccountJson = Buffer.from(serviceAccountBase64, 'base64').toString('utf8');
-        const serviceAccount = JSON.parse(serviceAccountJson);
+        serviceAccountJson = Buffer.from(serviceAccountBase64, 'base64').toString('utf8');
+    } catch (e) {
+        console.error('Firebase Admin Initialization Error: Failed to decode Base64 service account key.', e);
+        throw new Error('Server configuration error: The provided service account key is not a valid Base64 string.');
+    }
 
+    let serviceAccount;
+    try {
+        serviceAccount = JSON.parse(serviceAccountJson);
+    } catch (e) {
+        console.error('Firebase Admin Initialization Error: Failed to parse service account JSON.', e);
+        throw new Error('Server configuration error: The decoded service account key is not valid JSON. Please check for formatting errors.');
+    }
+
+    try {
         return admin.initializeApp({
             credential: admin.credential.cert(serviceAccount),
             projectId: serviceAccount.project_id,
