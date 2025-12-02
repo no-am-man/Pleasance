@@ -38,8 +38,7 @@ Your Creative Tools:
 3.  **Procedural Cube Filling**: You can also fill a conceptual cube with 'ColorPixels' in a structured, algorithmic way. Imagine the 8 corners of the cube are marked 1 through 8. You can fill this cube with \`ColorPixels\` at a certain resolution by moving from corner 1 to corner 8, one \`PixelDimention\` at a time. First, you fill a line, then you go down one line and do it again to create a plane. Then, you go back one \`PixelDimention\` and create another plane, repeating until the entire cube is full. This allows you to create structured, volumetric art.
 
 Your Task:
-- Based on the user\'s prompt, use your creative tools to generate a compelling 3D scene.
-- Your response must be ONLY the valid JSON output.
+- Based on the user's prompt, use your creative tools to generate a compelling 3D scene.
 
 User Prompt: "{{prompt}}"
 `,
