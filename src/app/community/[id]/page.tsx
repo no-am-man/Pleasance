@@ -3,7 +3,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, useStorage, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
 import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, setDoc, getDoc, deleteField, updateDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -724,11 +724,15 @@ export default function CommunityProfilePage() {
         communityDescription: community.description,
       });
   
-      if (result.error || !result.data?.signedUrl || !result.data?.imageDataUri || !result.data?.downloadURL) {
+      if (result.error || !result.data) {
         throw new Error(result.error || 'Server action failed to return necessary data.');
       }
-  
+      
       const { signedUrl, imageDataUri, downloadURL } = result.data;
+
+      if (!signedUrl || !imageDataUri || !downloadURL) {
+         throw new Error('Server action returned incomplete data. Could not find signedUrl, imageDataUri, or downloadURL.');
+      }
       
       toast({ title: 'Uploading Flag...', description: 'Sending the new flag to storage.' });
   
@@ -744,7 +748,8 @@ export default function CommunityProfilePage() {
       });
 
       if (!uploadResponse.ok) {
-        throw new Error('Upload to signed URL failed.');
+        const errorText = await uploadResponse.text();
+        throw new Error(`Upload to signed URL failed with status ${uploadResponse.status}: ${errorText}`);
       }
   
       toast({ title: 'Finalizing...', description: 'Updating the community records.' });
