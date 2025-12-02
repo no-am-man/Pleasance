@@ -4,40 +4,36 @@
 import { z } from 'zod';
 import { generateFlag } from '@/ai/flows/generate-flag';
 import * as admin from 'firebase-admin';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 const flagSchema = z.object({
     communityId: z.string(),
     communityName: z.string(),
     communityDescription: z.string(),
+    serviceAccountKey: z.string().min(1, { message: "Service account key is required and cannot be empty." }),
 });
 
-// Helper to ensure the admin app is initialized only once.
-function initializeAdminApp() {
+function initializeAdminApp(serviceAccountKey: string) {
+    // Prevent re-initialization
     if (admin.apps.length > 0) {
         return admin.app();
     }
 
-    const serviceAccountBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
-    if (!serviceAccountBase64) {
-        throw new Error('Server configuration error: The FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is not set.');
-    }
+    let serviceAccount: admin.ServiceAccount;
 
     try {
-        const decodedServiceAccount = Buffer.from(serviceAccountBase64, 'base64').toString('utf8');
+        const decodedServiceAccount = Buffer.from(serviceAccountKey, 'base64').toString('utf8');
         try {
-            const serviceAccount = JSON.parse(decodedServiceAccount);
-            return admin.initializeApp({
-                credential: admin.credential.cert(serviceAccount),
-            });
+            serviceAccount = JSON.parse(decodedServiceAccount);
         } catch (e: any) {
             throw new Error(`Server configuration error: Failed to parse the service account JSON. Please ensure it is a valid JSON object. Details: ${e.message}`);
         }
     } catch (e: any) {
         throw new Error(`Server configuration error: Failed to decode the service account key from Base64. Please ensure it is a valid Base64 string. Details: ${e.message}`);
     }
+
+    return admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+    });
 }
 
 
@@ -49,22 +45,18 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
             return { error: errorMessage };
         }
         
-        const { communityId, communityName, communityDescription } = validatedFields.data;
+        const { communityId, communityName, communityDescription, serviceAccountKey } = validatedFields.data;
 
-        // This will throw an error if initialization fails, which will be caught below.
-        const adminApp = initializeAdminApp();
+        const adminApp = initializeAdminApp(serviceAccountKey);
 
-        // 1. Generate the SVG string using the AI flow
         const flagResult = await generateFlag({ communityName, communityDescription });
         if (!flagResult.svg) {
             throw new Error('Failed to generate a flag SVG from the AI flow.');
         }
 
-        // 2. Convert the SVG string to a Base64 data URI
         const svgBase64 = Buffer.from(flagResult.svg, 'utf-8').toString('base64');
         const svgDataUri = `data:image/svg+xml;base64,${svgBase64}`;
 
-        // 3. Update the community document in Firestore using the Admin SDK
         const firestore = adminApp.firestore();
         const communityDocRef = firestore.collection('communities').doc(communityId);
         await communityDocRef.update({ flagUrl: svgDataUri });

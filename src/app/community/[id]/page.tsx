@@ -19,6 +19,8 @@ import { generateCommunityFlag } from '../flag-action';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { HumanIcon } from '@/components/icons/human-icon';
 import { AiIcon } from '@/components/icons/ai-icon';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -581,6 +583,7 @@ export default function CommunityProfilePage() {
   const { toast } = useToast();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const [isGeneratingFlag, setIsGeneratingFlag] = useState(false);
+  const [serviceAccountKey, setServiceAccountKey] = useState('');
 
   const communityDocRef = useMemoFirebase(() => {
     if (!firestore || !id) return null;
@@ -713,7 +716,10 @@ export default function CommunityProfilePage() {
   };
 
   const handleGenerateFlag = async () => {
-    if (!community || !communityDocRef) return;
+    if (!community || !communityDocRef || !serviceAccountKey) {
+        toast({ variant: 'destructive', title: 'Missing Information', description: 'Service account key is required.' });
+        return;
+    }
 
     setIsGeneratingFlag(true);
     toast({ title: 'Generating New Flag...', description: 'The AI is painting. This may take a moment.' });
@@ -723,6 +729,7 @@ export default function CommunityProfilePage() {
         communityId: community.id,
         communityName: community.name,
         communityDescription: community.description,
+        serviceAccountKey: serviceAccountKey,
       });
 
       if (result.error) {
@@ -730,6 +737,7 @@ export default function CommunityProfilePage() {
       }
       
       toast({ title: 'New Flag Hoisted!', description: 'Your community has a new look.' });
+      setServiceAccountKey(''); // Clear the key after use
 
     } catch (e) {
       const message = e instanceof Error ? e.message : 'An unknown error occurred';
@@ -832,14 +840,42 @@ export default function CommunityProfilePage() {
             )}
             {isOwner && (
                 <div className="absolute top-2 right-2">
-                    <Button onClick={handleGenerateFlag} disabled={isGeneratingFlag} variant="secondary" size="sm">
-                        {isGeneratingFlag ? (
-                            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <RefreshCw className="mr-2 h-4 w-4" />
-                        )}
-                        Regenerate Flag
-                    </Button>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="secondary" size="sm" disabled={isGeneratingFlag}>
+                                {isGeneratingFlag ? (
+                                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                    <RefreshCw className="mr-2 h-4 w-4" />
+                                )}
+                                Regenerate Flag
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Provide Service Account Key</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    To generate a flag, the server needs credentials. Please paste the Base64-encoded content of your Firebase service account JSON key below. This key will not be stored.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <div className="grid w-full gap-1.5">
+                                <Label htmlFor="service-account-key">Base64 Service Account Key</Label>
+                                <Textarea 
+                                    id="service-account-key" 
+                                    placeholder="Paste your Base64 encoded key here..."
+                                    value={serviceAccountKey}
+                                    onChange={(e) => setServiceAccountKey(e.target.value)}
+                                    rows={6}
+                                />
+                            </div>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleGenerateFlag} disabled={isGeneratingFlag || !serviceAccountKey}>
+                                    {isGeneratingFlag ? <LoaderCircle className="animate-spin" /> : 'Generate'}
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
             )}
         </div>
