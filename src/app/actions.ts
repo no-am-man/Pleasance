@@ -274,7 +274,9 @@ export async function saveCredentials(values: z.infer<typeof credentialsSchema>)
         // which will have elevated privileges to write to the protected collection.
         const firestore = admin.firestore();
         const docRef = firestore.collection('_private_admin_data').doc('credentials');
-        await docRef.set({ serviceAccountKeyBase64: values.serviceAccountKey });
+        
+        const keyBase64 = Buffer.from(values.serviceAccountKey).toString('base64');
+        await docRef.set({ serviceAccountKeyBase64: keyBase64 });
 
         return { success: true };
 
@@ -295,10 +297,14 @@ export async function getCredentials() {
         const docSnap = await docRef.get();
 
         if (docSnap.exists) {
-            return { data: docSnap.data() };
-        } else {
-            return { data: null };
+             const data = docSnap.data();
+             if (data?.serviceAccountKeyBase64) {
+                // Decode the key from Base64 back to a string for display in the textarea
+                const decodedKey = Buffer.from(data.serviceAccountKeyBase64, 'base64').toString('utf8');
+                return { data: { serviceAccountKey: decodedKey } };
+             }
         }
+        return { data: null };
     } catch (e) {
         console.error('Get Credentials Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';

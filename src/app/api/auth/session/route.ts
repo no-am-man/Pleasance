@@ -7,8 +7,11 @@ import * as admin from 'firebase-admin';
 // This is a simplified, temporary way to initialize admin for this route.
 // In a larger app, you might share initialization logic.
 async function initializeTempAdmin() {
-    if (admin.apps.find(app => app?.name === 'session-management')) {
-        return admin.app('session-management');
+    // Avoid re-initializing a named app.
+    const appName = 'session-management';
+    const existingApp = admin.apps.find(app => app?.name === appName);
+    if (existingApp) {
+        return existingApp;
     }
     
     // We need to read the service account key from where we stored it.
@@ -42,7 +45,7 @@ async function initializeTempAdmin() {
 
     return admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
-    }, 'session-management');
+    }, appName);
 }
 
 

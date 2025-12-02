@@ -48,8 +48,8 @@ function AdminDashboard() {
         const fetchCredentials = async () => {
             setCredentialsLoading(true);
             const result = await getCredentials();
-            if (result.data?.serviceAccountKeyBase64) {
-                form.setValue('serviceAccountKey', result.data.serviceAccountKeyBase64);
+            if (result.data?.serviceAccountKey) {
+                form.setValue('serviceAccountKey', result.data.serviceAccountKey);
             }
             if (result.error) {
                  toast({ variant: 'destructive', title: 'Could not load key', description: result.error });
@@ -87,7 +87,7 @@ function AdminDashboard() {
             if(result.error) {
                 throw new Error(result.error);
             }
-            toast({ title: 'Credentials Saved!', description: 'The service account key has been securely stored.' });
+            toast({ title: 'Credentials Saved!', description: 'The service account key has been securely stored. You may need to refresh the page for all features to work.' });
         } catch (e) {
             const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
             toast({ variant: 'destructive', title: 'Failed to Save Key', description: message });
@@ -108,7 +108,7 @@ function AdminDashboard() {
                            <KeyRound /> Service Account Credentials
                         </CardTitle>
                         <CardDescription>
-                            Securely store the Base64-encoded service account key required for server-side AI actions like flag generation. This only needs to be set once. This form writes to a Firestore document that is only writable by you.
+                            Securely store the service account JSON key required for server-side AI actions. This only needs to be set once. Paste the entire JSON file content here.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -119,12 +119,12 @@ function AdminDashboard() {
                                     name="serviceAccountKey"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Base64 Encoded Service Account Key</FormLabel>
+                                            <FormLabel>Service Account JSON Key</FormLabel>
                                             <FormControl>
                                                 <Textarea 
-                                                    placeholder={credentialsLoading ? "Loading existing key..." : "Paste your Base64 encoded key here..."} 
+                                                    placeholder={credentialsLoading ? "Loading existing key..." : "Paste your service account JSON here..."} 
                                                     {...field}
-                                                    rows={4}
+                                                    rows={8}
                                                     disabled={credentialsLoading || keyIsLoading}
                                                 />
                                             </FormControl>
