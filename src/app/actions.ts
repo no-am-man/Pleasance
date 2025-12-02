@@ -18,6 +18,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
 import { ai } from '@/ai/genkit';
+import { listModels } from 'genkit';
 import {
     GenerateSvg3dInputSchema,
     type GenerateSvg3dInput,
@@ -399,7 +400,7 @@ export async function saveSvgAsset(values: z.infer<typeof saveSvgAssetSchema>) {
  */
 export async function listAvailableModels() {
     try {
-        const availableModels = await ai.listModels();
+        const availableModels = await listModels();
         const modelNames = availableModels.map(model => model.name);
         return { data: modelNames };
     } catch (e) {
@@ -413,3 +414,4 @@ export async function listAvailableModels() {
     
 
     
+
