@@ -1,0 +1,28 @@
+{
+  "placeholderImages": [
+    {
+      "id": "wiki-community",
+      "description": "A diverse group of people collaborating.",
+      "imageUrl": "https://picsum.photos/seed/101/600/400",
+      "imageHint": "community people"
+    },
+    {
+      "id": "wiki-lingua",
+      "description": "A stack of old books about languages.",
+      "imageUrl": "https://picsum.photos/seed/102/600/400",
+      "imageHint": "language books"
+    },
+    {
+      "id": "wiki-fabrication",
+      "description": "A 3D printer in the middle of a fabrication job.",
+      "imageUrl": "https://picsum.photos/seed/103/600/400",
+      "imageHint": "3d printer"
+    },
+    {
+      "id": "wiki-treasury",
+      "description": "A pile of gold coins, representing wealth.",
+      "imageUrl": "https://picsum.photos/seed/104/600/400",
+      "imageHint": "gold coins"
+    }
+  ]
+}
