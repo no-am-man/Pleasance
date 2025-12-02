@@ -9,7 +9,7 @@ import { cookies } from 'next/headers';
 export async function enableStorage() {
     try {
         const adminApp = initializeAdminApp();
-        const sessionCookie = cookies().get('__session')?.value;
+        const sessionCookie = cookies().get('__session')?.value || '';
         if (!sessionCookie) {
             return { error: "Unauthorized: You must be logged in." };
         }
@@ -48,8 +48,26 @@ export async function enableStorage() {
             project: projectId,
             name: bucketName,
         });
+        
+        // Set public access for allUsers (for read) and the service account (for write)
+        await storage.buckets.setIamPolicy({
+            bucket: bucketName,
+            requestBody: {
+                bindings: [
+                    {
+                        role: "roles/storage.objectViewer",
+                        members: ["allUsers"]
+                    },
+                    {
+                        role: "roles/storage.objectAdmin",
+                        members: [`serviceAccount:${(adminApp.options.credential as any).credential.serviceAccount.client_email}`]
+                    }
+                ]
+            }
+        });
 
-        return { data: `Successfully created storage bucket '${bucketName}'. File uploads should now work.` };
+
+        return { data: `Successfully created storage bucket '${bucketName}' and set public read access. File uploads should now work.` };
 
     } catch (e: any) {
         console.error('Storage enabling error:', e);
