@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { LoaderCircle, Sparkles } from 'lucide-react';
 import { generateSvg3dImage } from '@/app/actions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Svg3dCube } from '@/components/icons';
+import { Svg3dCube } from '@/components/icons/svg3d-cube';
 
 const Svg3dSchema = z.object({
   prompt: z.string().min(3, 'Prompt must be at least 3 characters.'),
