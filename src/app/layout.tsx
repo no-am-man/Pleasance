@@ -5,6 +5,7 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Header } from '@/components/header';
 import Link from 'next/link';
 import { ScrollIndicator } from '@/components/ui/scroll-indicator';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 export const metadata: Metadata = {
   title: 'Pleasance',
@@ -32,6 +33,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased flex flex-col min-h-screen">
         <FirebaseClientProvider>
+          <FirebaseErrorListener />
           <Header />
           <main className="flex-grow pt-16">{children}</main>
           <footer className="text-center p-4 border-t">
