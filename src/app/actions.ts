@@ -395,9 +395,9 @@ export async function saveSvgAsset(values: z.infer<typeof saveSvgAssetSchema>) {
 
 /**
  * Lists available Genkit models by executing the Genkit CLI command.
- * @returns An object containing a list of model data or an error.
+ * @returns An object containing the raw CLI output or an error.
  */
-export async function listAvailableModels() {
+export async function listAvailableModels(): Promise<{ data?: string; error?: string }> {
     return new Promise((resolve) => {
         // Execute the Genkit CLI command to list models.
         exec('npx genkit list models', (error, stdout, stderr) => {
@@ -406,34 +406,16 @@ export async function listAvailableModels() {
                 resolve({ error: `Failed to execute Genkit CLI: ${stderr || error.message}` });
                 return;
             }
-            if (stderr) {
+            if (stderr && !stdout) {
+                // Sometimes stderr contains warnings but stdout has the data.
+                // Only treat stderr as a primary error if stdout is empty.
                 console.warn(`CLI Stderr: ${stderr}`);
+                resolve({ error: `Genkit CLI reported an error: ${stderr}` });
+                return;
             }
 
-            try {
-                // Parse the CLI output to extract model names.
-                // This assumes a simple line-by-line output of model names.
-                const lines = stdout.trim().split('\n');
-                // The actual model names start after the header, let's find the header.
-                const headerIndex = lines.findIndex(line => line.includes('NAME') && line.includes('LABEL'));
-                
-                if (headerIndex === -1) {
-                    throw new Error("Could not parse CLI output. Header not found.");
-                }
-
-                const modelData = lines.slice(headerIndex + 1).map(line => {
-                    const parts = line.trim().split(/\s+/);
-                    const name = parts[0];
-                    return { name: name || 'unknown' };
-                }).filter(model => model.name && model.name !== 'unknown');
-
-                resolve({ data: modelData });
-
-            } catch (parseError) {
-                const message = parseError instanceof Error ? parseError.message : 'An unknown parsing error occurred.';
-                console.error('Parsing Error:', parseError);
-                resolve({ error: `Failed to parse model list from CLI output: ${message}` });
-            }
+            // Return the raw stdout string.
+            resolve({ data: stdout });
         });
     });
 }
@@ -445,5 +427,7 @@ export async function listAvailableModels() {
 
 
 
+
+    
 
     

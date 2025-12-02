@@ -20,28 +20,23 @@ type SyncResult = {
     issuesFixed: number;
 };
 
-type ModelData = {
-    name: string;
-};
-
-
 function ModelLister() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [models, setModels] = useState<ModelData[] | null>(null);
+    const [cliOutput, setCliOutput] = useState<string | null>(null);
     const { toast } = useToast();
 
     const handleListModels = async () => {
         setIsLoading(true);
         setError(null);
-        setModels(null);
+        setCliOutput(null);
         
-        const result: any = await listAvailableModels();
+        const result = await listAvailableModels();
         
         if (result.error) {
             setError(result.error);
         } else if (result.data) {
-            setModels(result.data);
+            setCliOutput(result.data);
         }
         
         setIsLoading(false);
@@ -51,7 +46,7 @@ function ModelLister() {
         navigator.clipboard.writeText(text);
         toast({
           title: "Copied to Clipboard!",
-          description: `The model name "${text}" has been copied.`,
+          description: `The output has been copied.`,
         });
       };
 
@@ -81,19 +76,17 @@ function ModelLister() {
                         <AlertDescription>{error}</AlertDescription>
                     </Alert>
                 )}
-                {models && (
+                {cliOutput && (
                     <div className="mt-4">
-                        <h4 className="font-semibold mb-2">Available Models:</h4>
-                        <div className="space-y-2 rounded-md border p-4 bg-background">
-                            {models.map(model => (
-                                <div key={model.name} className="flex items-center justify-between text-sm font-mono bg-muted/50 p-2 rounded">
-                                    <span>{model.name}</span>
-                                    <Button size="icon" variant="ghost" onClick={() => handleCopy(model.name)}>
-                                        <Copy className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            ))}
+                        <div className="flex justify-between items-center mb-2">
+                             <h4 className="font-semibold">CLI Output:</h4>
+                             <Button size="icon" variant="ghost" onClick={() => handleCopy(cliOutput)}>
+                                <Copy className="h-4 w-4" />
+                            </Button>
                         </div>
+                        <pre className="space-y-2 rounded-md border p-4 bg-background text-sm font-mono overflow-x-auto">
+                            <code>{cliOutput}</code>
+                        </pre>
                     </div>
                 )}
             </CardContent>
@@ -213,6 +206,8 @@ export default function AdminPage() {
         </main>
     );
 }
+
+    
 
     
 
