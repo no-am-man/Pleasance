@@ -17,12 +17,12 @@ import { generateCommunity } from '@/ai/flows/generate-community';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
-import { listModels as listModelsFlow } from '@/ai/flows/list-models';
 import {
     GenerateSvg3dInputSchema,
     type GenerateSvg3dInput,
     MemberSchema
 } from '@/lib/types';
+import { exec } from 'child_process';
 
 
 export type ChatWithMemberInput = {
@@ -394,18 +394,48 @@ export async function saveSvgAsset(values: z.infer<typeof saveSvgAssetSchema>) {
 }
 
 /**
- * Lists available models from the configured Genkit AI plugin by calling a dedicated flow.
+ * Lists available Genkit models by executing the Genkit CLI command.
  * @returns An object containing a list of model data or an error.
  */
 export async function listAvailableModels() {
-    try {
-        const result = await listModelsFlow();
-        return { data: result.models };
-    } catch (e) {
-        console.error('List Models Error:', e);
-        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
-        return { error: `Failed to list available models: ${message}` };
-    }
+    return new Promise((resolve) => {
+        // Execute the Genkit CLI command to list models.
+        exec('npx genkit list models', (error, stdout, stderr) => {
+            if (error) {
+                console.error(`CLI Execution Error: ${error.message}`);
+                resolve({ error: `Failed to execute Genkit CLI: ${stderr || error.message}` });
+                return;
+            }
+            if (stderr) {
+                console.warn(`CLI Stderr: ${stderr}`);
+            }
+
+            try {
+                // Parse the CLI output to extract model names.
+                // This assumes a simple line-by-line output of model names.
+                const lines = stdout.trim().split('\n');
+                // The actual model names start after the header, let's find the header.
+                const headerIndex = lines.findIndex(line => line.includes('NAME') && line.includes('LABEL'));
+                
+                if (headerIndex === -1) {
+                    throw new Error("Could not parse CLI output. Header not found.");
+                }
+
+                const modelData = lines.slice(headerIndex + 1).map(line => {
+                    const parts = line.trim().split(/\s+/);
+                    const name = parts[0];
+                    return { name: name || 'unknown' };
+                }).filter(model => model.name && model.name !== 'unknown');
+
+                resolve({ data: modelData });
+
+            } catch (parseError) {
+                const message = parseError instanceof Error ? parseError.message : 'An unknown parsing error occurred.';
+                console.error('Parsing Error:', parseError);
+                resolve({ error: `Failed to parse model list from CLI output: ${message}` });
+            }
+        });
+    });
 }
     
 
@@ -414,3 +444,6 @@ export async function listAvailableModels() {
     
 
 
+
+
+    
