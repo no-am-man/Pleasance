@@ -80,9 +80,11 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
         },
     });
 
-    // Make the file public and get its URL
-    await file.makePublic();
-    const publicUrl = file.publicUrl();
+    // Generate a signed URL instead of making the file public
+    const [signedUrl] = await file.getSignedUrl({
+        action: 'read',
+        expires: '03-17-2025', // Set a long expiration date
+    });
 
     // --- Step 5: Save Final Story to Firestore ---
     const storyData = {
@@ -95,7 +97,7 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
         translatedText: translatedText,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         status: 'complete',
-        audioUrl: publicUrl, // Save the public URL
+        audioUrl: signedUrl, // Save the signed URL
     };
     
     await storyDocRef.set(storyData);

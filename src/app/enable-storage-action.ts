@@ -49,25 +49,10 @@ export async function enableStorage() {
             name: bucketName,
         });
         
-        // Set public access for allUsers (for read) and the service account (for write)
-        await storage.buckets.setIamPolicy({
-            bucket: bucketName,
-            requestBody: {
-                bindings: [
-                    {
-                        role: "roles/storage.objectViewer",
-                        members: ["allUsers"]
-                    },
-                    {
-                        role: "roles/storage.objectAdmin",
-                        members: [`serviceAccount:${(adminApp.options.credential as any).credential.serviceAccount.client_email}`]
-                    }
-                ]
-            }
-        });
+        // Do not set public access rules, as public access prevention is on.
+        // Signed URLs will be used for access.
 
-
-        return { data: `Successfully created storage bucket '${bucketName}' and set public read access. File uploads should now work.` };
+        return { data: `Successfully created storage bucket '${bucketName}'. File uploads should now work.` };
 
     } catch (e: any) {
         console.error('Storage enabling error:', e);
