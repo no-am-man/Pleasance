@@ -11,28 +11,32 @@ const flagSchema = z.object({
     communityDescription: z.string(),
 });
 
+/**
+ * Gets a Firebase Admin app instance.
+ * This function bootstraps the admin app by first reading credentials from Firestore.
+ */
 async function getAdminAppWithKey() {
-    // This temporary init is to allow reading the credentials doc.
-    if (admin.apps.length === 0) {
-        admin.initializeApp();
-    }
-    const tempFirestore = admin.firestore();
-    
-    const credentialsDoc = await tempFirestore.collection('_private_admin_data').doc('credentials').get();
-    if (!credentialsDoc.exists) {
-        throw new Error("Service account key not found. Please set it in the Admin Panel.");
-    }
-    const serviceAccountKeyBase64 = credentialsDoc.data()?.serviceAccountKeyBase64;
-    if (!serviceAccountKeyBase64) {
-        throw new Error("Service account key is empty. Please set it in the Admin Panel.");
-    }
-    
     const appName = 'pleasance-flag-generator';
     const existingApp = admin.apps.find(app => app?.name === appName);
     if (existingApp) {
         return existingApp;
     }
 
+    // Initialize a temporary default app instance if none exist, to allow reading from Firestore.
+    if (admin.apps.length === 0) {
+        admin.initializeApp();
+    }
+    
+    const tempFirestore = admin.firestore();
+    const credentialsDoc = await tempFirestore.collection('_private_admin_data').doc('credentials').get();
+    if (!credentialsDoc.exists) {
+        throw new Error("Server not configured: Service account key not found. Please set it in the Admin Panel.");
+    }
+    const serviceAccountKeyBase64 = credentialsDoc.data()?.serviceAccountKeyBase64;
+    if (!serviceAccountKeyBase64) {
+        throw new Error("Server not configured: Service account key is empty. Please set it in the Admin Panel.");
+    }
+    
     let serviceAccount: admin.ServiceAccount;
     try {
         const decodedKey = Buffer.from(serviceAccountKeyBase64, 'base64').toString('utf8');
@@ -45,6 +49,7 @@ async function getAdminAppWithKey() {
         }
     }
 
+    // Initialize the named app with the fetched credentials.
     return admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
     }, appName);

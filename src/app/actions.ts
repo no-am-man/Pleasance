@@ -12,10 +12,6 @@ import { syncAllMembers } from '@/ai/flows/sync-members';
 import { VOICES } from '@/config/languages';
 import * as admin from 'firebase-admin';
 import { cookies } from 'next/headers';
-import { getAuth } from 'firebase/auth';
-import { initializeFirebase as initializeClientFirebase } from '@/firebase/config-for-actions';
-import { collection, doc, getDoc, setDoc } from 'firebase/firestore';
-
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
@@ -23,13 +19,17 @@ const storySchema = z.object({
   targetLanguage: z.string().min(1),
 });
 
+/**
+ * Gets a Firebase Admin app instance that has been verified to be used by the founder.
+ * This function bootstraps the admin app by first reading credentials from Firestore.
+ */
 async function getFounderVerifiedAdminApp() {
     const sessionCookie = cookies().get('__session')?.value;
     if (!sessionCookie) {
         throw new Error('Unauthorized: No session cookie found. Please log in again.');
     }
     
-    // Temporarily initialize to get credentials, if no apps exist.
+    // Initialize a temporary default app instance if none exist, to allow reading from Firestore.
     if (admin.apps.length === 0) {
         admin.initializeApp();
     }
@@ -38,12 +38,12 @@ async function getFounderVerifiedAdminApp() {
     const credentialsDoc = await tempFirestore.collection('_private_admin_data').doc('credentials').get();
 
     if (!credentialsDoc.exists) {
-        throw new Error("Service account key not found in Firestore. Please set it on the Admin Panel.");
+        throw new Error("Server not configured: Service account key not found in Firestore. Please set it on the Admin Panel.");
     }
 
     const serviceAccountKeyBase64 = credentialsDoc.data()?.serviceAccountKeyBase64;
     if (!serviceAccountKeyBase64) {
-        throw new Error("Service account key is empty in Firestore. Please check the Admin Panel.");
+        throw new Error("Server not configured: Service account key is empty in Firestore. Please check the Admin Panel.");
     }
 
     let serviceAccount;
@@ -51,31 +51,38 @@ async function getFounderVerifiedAdminApp() {
         const decodedKey = Buffer.from(serviceAccountKeyBase64, 'base64').toString('utf8');
         serviceAccount = JSON.parse(decodedKey);
     } catch (e) {
-        throw new Error("Failed to parse the service account key from Firestore. It may be malformed.");
+        throw new Error("Server not configured: Failed to parse the service account key from Firestore. It may be malformed.");
     }
     
+    // Use a named app to avoid conflicts.
     const appName = 'pleasance-admin-actions';
     const existingApp = admin.apps.find(app => app?.name === appName);
-    if (existingApp) {
-        // Quick check to see if the user is still the founder
-        const auth = admin.auth(existingApp);
+    
+    // Verify the session cookie using the app that has the correct credentials.
+    const verifyUser = async (app: admin.app.App) => {
+        const auth = admin.auth(app);
         const decodedIdToken = await auth.verifySessionCookie(sessionCookie, true);
         if (decodedIdToken.email !== 'gg.el0ai.com@gmail.com') {
             throw new Error('Unauthorized: You are not the founder.');
         }
+    };
+    
+    if (existingApp) {
+        await verifyUser(existingApp);
         return existingApp;
     }
 
+    // Initialize the named app with credentials and verify the user.
     const newApp = admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
     }, appName);
     
-    const auth = admin.auth(newApp);
-    const decodedIdToken = await auth.verifySessionCookie(sessionCookie, true);
-    if (decodedIdToken.email !== 'gg.el0ai.com@gmail.com') {
+    try {
+        await verifyUser(newApp);
+    } catch (error) {
         // Clean up the newly created app if the user is not the founder
         await newApp.delete();
-        throw new Error('Unauthorized: You are not the founder.');
+        throw error; // Re-throw the authorization error
     }
 
     return newApp;
@@ -225,6 +232,8 @@ export async function generateProfileAvatars(values: z.infer<typeof generateAvat
 
 export async function runMemberSync() {
     try {
+        // Ensure the admin app is ready and user is verified before running sensitive operations.
+        await getFounderVerifiedAdminApp();
         const result = await syncAllMembers();
         return { data: result };
     } catch(e) {
@@ -246,9 +255,11 @@ export async function saveCredentials(values: z.infer<typeof credentialsSchema>)
         
         const sessionCookie = cookies().get('__session')?.value;
         if (!sessionCookie) {
-            return { error: 'Unauthorized: No session cookie found.' };
+            return { error: 'Unauthorized: No session cookie found. Please log in.' };
         }
 
+        // Initialize a default admin app if one doesn't exist. This doesn't need credentials
+        // to verify a session cookie, which is a server-to-server operation.
         if (admin.apps.length === 0) {
              admin.initializeApp();
         }
@@ -259,6 +270,8 @@ export async function saveCredentials(values: z.infer<typeof credentialsSchema>)
             return { error: 'Unauthorized: Only the founder can save credentials.' };
         }
         
+        // Now that the user is verified, we can use the default app's firestore instance
+        // which will have elevated privileges to write to the protected collection.
         const firestore = admin.firestore();
         const docRef = firestore.collection('_private_admin_data').doc('credentials');
         await docRef.set({ serviceAccountKeyBase64: values.serviceAccountKey });
@@ -289,6 +302,10 @@ export async function getCredentials() {
     } catch (e) {
         console.error('Get Credentials Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
-        return { error: `Failed to get credentials: ${message}` };
+        // Don't expose detailed server errors to the client
+        if (message.includes('Unauthorized')) {
+             return { error: message };
+        }
+        return { error: `Failed to get credentials. This may be due to server configuration. Check logs.` };
     }
 }

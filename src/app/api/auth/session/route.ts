@@ -22,7 +22,7 @@ async function initializeTempAdmin() {
     if (!credentialsDoc.exists) {
         // This can happen if the app is starting for the very first time.
         // We can't create sessions until the key is saved.
-        console.warn("Service account key not found in Firestore. Session creation will fail until it's set.");
+        console.warn("Service account key not found in Firestore. Session creation will fail until it's set via the Admin Panel.");
         return null; // Return null to indicate failure
     }
     const serviceAccountKeyBase64 = credentialsDoc.data()?.serviceAccountKeyBase64;
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
   const adminApp = await initializeTempAdmin();
   if (!adminApp) {
-      return NextResponse.json({ error: 'Server not configured for authentication.' }, { status: 500 });
+      return NextResponse.json({ error: 'Server not configured for authentication. Please save credentials on the Admin page.' }, { status: 500 });
   }
 
   try {
