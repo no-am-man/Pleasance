@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Generates speech from text using a specified voice.
@@ -76,11 +77,14 @@ const generateSpeechFlow = ai.defineFlow(
       return { wavBase64: '' };
     }
     // The media URL is a data URI: "data:audio/L16;rate=24000;channels=1;base64,..."
-    // We need to extract the base64 part.
+    // We need to extract the base64 part and the sample rate.
     const pcmBase64 = media.url.substring(media.url.indexOf(',') + 1);
     const audioBuffer = Buffer.from(pcmBase64, 'base64');
     
-    const wavBase64 = await toWav(audioBuffer);
+    // The model returns audio at a 24000 Hz sample rate.
+    const sampleRate = 24000;
+    
+    const wavBase64 = await toWav(audioBuffer, 1, sampleRate);
     
     return {
       wavBase64: wavBase64,
