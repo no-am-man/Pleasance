@@ -28,21 +28,20 @@ const generateSvg3dPrompt = ai.definePrompt({
   name: 'generateSvg3dPrompt',
   input: { schema: z.any() },
   output: { schema: z.object({ svg: z.string().describe('The generated SVG string.') }) },
-  prompt: `You are an expert vector artist who understands sacred geometry. Your task is to generate an SVG image based on the "SVG3D" concept.
+  prompt: `You are an expert vector artist who understands sacred geometry and the concept of SVG3D. Your task is to generate SVG content that will be placed inside an interactive 3D canvas.
 
 The SVG3D Concept:
-- The image has a central cube, which represents a core or "heart". This cube has its own internal coordinate system called "PosSys".
-- Inside this central cube, using the PosSys coordinate system, you can place simple symbolic shapes (like spheres, lines, or smaller geometric forms) or a cloud of 'ColorPixels' to represent the core theme of the user's prompt. You can layout ColorPixels in 3D space.
-- From the central cube, 8 triangular pyramids expand outwards towards infinity along 8 3D vectors. These represent the infinite expansion of the core theme.
-- The overall feeling should be one of infinite creation expanding from a symbolic, central point.
+- You are creating elements within a 3D coordinate system (let's call it "PosSys"). The center of this system (0,0,0) is the "heart".
+- Your design should evoke a feeling of infinite creation expanding outwards from this central heart.
+- You can represent the user's prompt theme by placing simple, abstract, symbolic shapes (spheres, lines, geometric forms) or a cloud of 'ColorPixels' within the 3D space.
+- The user will be able to rotate this 3D space, so your design should be interesting from all angles.
 
 Your Task:
-1.  Create a complete, valid SVG string with a viewBox of "0 0 {{width}} {{height}}".
-2.  Render the central cube and the 8 expanding pyramids using perspective projection.
-3.  Inside the cube, place a simple, abstract, geometric representation of the user's prompt theme. This could be a shape or a collection of ColorPixels.
-4.  Subtly incorporate the theme of the user's prompt into the overall design through the color palette and line styles.
-5.  DO NOT include text. The design must be purely symbolic and geometric.
-6.  Your response must be ONLY the raw SVG code, starting with '<svg' and ending with '</svg>'. Do not wrap it in markdown.
+1.  Generate a complete, valid SVG string. The final SVG will be placed inside a container with a viewBox of "0 0 {{width}} {{height}}", so your content should be positioned relative to that.
+2.  Do NOT draw a cube or pyramids. Those were just metaphors. Your job is to create the content that lives *inside* the 3D space.
+3.  The design must be purely symbolic and geometric. DO NOT include text.
+4.  Use the user's prompt to inspire the color palette, shapes, and overall feeling of the design.
+5.  Your response must be ONLY the raw SVG code, starting with '<svg' and ending with '</svg>'. Do not wrap it in markdown.
 
 User Prompt: "{{prompt}}"
 `,
