@@ -11,7 +11,7 @@ import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
 import { VOICES } from '@/config/languages';
 import { initializeFirebase } from '@/firebase/config-for-actions';
-import { doc, serverTimestamp } from 'firebase/firestore';
+import { doc, serverTimestamp, deleteField } from 'firebase/firestore';
 import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 const storySchema = z.object({
@@ -183,7 +183,7 @@ export async function softDeleteMessage(values: z.infer<typeof softDeleteMessage
         const updatePayload = {
             deleted: true,
             deletedAt: serverTimestamp(),
-            text: null, // Clear content for privacy
+            text: deleteField(), // Use deleteField() to correctly remove the field.
         };
 
         // Use the non-blocking update function
