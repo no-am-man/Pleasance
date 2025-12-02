@@ -9,8 +9,6 @@ import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member
 import { generateSpeech } from '@/ai/flows/generate-speech';
 import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
-import { initializeFirebase } from '@/firebase/config-for-actions';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import admin from 'firebase-admin';
 
@@ -52,6 +50,7 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>
     // --- Step 2: Initialize Firebase Admin ---
     const adminApp = initializeAdminApp();
     const firestore = adminApp.firestore();
+    const storage = adminApp.storage();
 
     // --- Step 3: Save Initial Story to Firestore using Admin SDK ---
     const storyCollectionRef = firestore.collection('users').doc(userId).collection('stories');
@@ -77,12 +76,18 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>
         throw new Error('Speech synthesis failed to produce audio.');
     }
 
-    // --- Step 5: Upload Audio and Get URL (using client storage instance) ---
-    const { storage } = initializeFirebase(); // Client SDK for storage upload rules
+    // --- Step 5: Upload Audio and Get URL (using Admin SDK) ---
+    const bucket = storage.bucket(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);
     const storagePath = `stories/${userId}/${storyId}.wav`;
-    const storageRef = ref(storage, storagePath);
-    await uploadBytes(storageRef, speechResult.wavBuffer, { contentType: 'audio/wav' });
-    const downloadURL = await getDownloadURL(storageRef);
+    const file = bucket.file(storagePath);
+    await file.save(speechResult.wavBuffer, {
+        metadata: {
+            contentType: 'audio/wav',
+        },
+    });
+    
+    // The public URL is constructed manually. Note the URL encoding for the path.
+    const downloadURL = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(storagePath)}?alt=media`;
 
     // --- Step 6: Update Story with Audio URL using Admin SDK ---
     await newDocRef.update({ audioUrl: downloadURL });
