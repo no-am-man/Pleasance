@@ -24,26 +24,58 @@ type StoryViewerProps = {
 };
 
 // A component for the karaoke-style text highlighting
-const KaraokeText = ({ text, progress }: { text: string; progress: number }) => {
+const KaraokeText = ({ text, totalDuration, currentTime }: { text: string; totalDuration: number; currentTime: number; }) => {
+    const lines = text.split('\n');
+    const totalChars = text.length;
+    
+    if (totalDuration === 0) {
+        return <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">{text}</p>;
+    }
+
+    // Estimate the time per character
+    const timePerChar = totalDuration / totalChars;
+    let accumulatedChars = 0;
+
     return (
-        <div className="relative whitespace-pre-wrap leading-relaxed">
-            {/* Base text layer (the color of the un-highlighted text) */}
-            <p className="text-muted-foreground" aria-hidden="true">
-                {text}
-            </p>
-            {/* Highlighted text layer, revealed by a clipping mask */}
-            <div
-                className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-primary to-primary bg-no-repeat text-transparent"
-                style={{
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    backgroundSize: '100% 100%',
-                    // Animate the width of the clip mask based on audio progress
-                    clipPath: `inset(0 ${100 - progress}% 0 0)`,
-                }}
-            >
-                <p className="text-primary">{text}</p>
-            </div>
+        <div className="leading-relaxed space-y-2">
+            {lines.map((line, lineIndex) => {
+                const lineStartChar = accumulatedChars;
+                const lineEndChar = accumulatedChars + line.length;
+                accumulatedChars = lineEndChar + 1; // +1 for the newline character
+
+                const lineStartTime = lineStartChar * timePerChar;
+                const lineEndTime = lineEndChar * timePerChar;
+
+                const isLineActive = currentTime >= lineStartTime && currentTime < lineEndTime;
+                const lineProgress = isLineActive
+                    ? Math.min(100, ((currentTime - lineStartTime) / (lineEndTime - lineStartTime)) * 100)
+                    : (currentTime >= lineEndTime ? 100 : 0);
+
+                if (line.trim() === '') {
+                    return <div key={lineIndex} className="h-4" />;
+                }
+
+                return (
+                    <div key={lineIndex} className="relative whitespace-pre-wrap">
+                        {/* Base text layer (the color of the un-highlighted text) */}
+                        <p className="text-muted-foreground" aria-hidden="true">
+                            {line}
+                        </p>
+                        {/* Highlighted text layer, revealed by a clipping mask */}
+                        <div
+                            className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-primary to-primary bg-no-repeat text-transparent"
+                            style={{
+                                backgroundClip: 'text',
+                                WebkitBackgroundClip: 'text',
+                                clipPath: `inset(0 ${100 - lineProgress}% 0 0)`,
+                                transition: isLineActive ? 'clip-path 0.1s linear' : 'none',
+                            }}
+                        >
+                            <p className="text-primary">{line}</p>
+                        </div>
+                    </div>
+                );
+            })}
         </div>
     );
 };
@@ -56,7 +88,6 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
   const [currentTime, setCurrentTime] = useState(0);
   const { toast } = useToast();
 
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
   const isProcessing = story.status === 'processing';
   const hasAudio = story.audioUrl && story.audioUrl.length > 0;
 
@@ -92,6 +123,7 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
         }
       }
     } else if (!story.audioUrl) {
+        // No audio URL, ensure it's paused and reset
         audio.pause();
         audio.currentTime = 0;
     }
@@ -145,7 +177,7 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
                     </CardHeader>
                     <CardContent>
                          {hasAudio ? (
-                            <KaraokeText text={story.nativeText} progress={progress} />
+                            <KaraokeText text={story.nativeText} totalDuration={duration} currentTime={currentTime} />
                          ) : (
                             <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">{story.nativeText}</p>
                          )}
@@ -183,7 +215,7 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
                 </CardHeader>
                 <CardContent>
                     {hasAudio ? (
-                        <KaraokeText text={story.translatedText} progress={progress} />
+                        <KaraokeText text={story.translatedText} totalDuration={duration} currentTime={currentTime} />
                     ) : (
                         <p className="text-foreground whitespace-pre-wrap leading-relaxed">{story.translatedText}</p>
                     )}
