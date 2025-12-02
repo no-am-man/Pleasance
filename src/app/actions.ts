@@ -19,14 +19,6 @@ const storySchema = z.object({
   targetLanguage: z.string().min(1),
 });
 
-// Initialize Firebase Admin SDK only if not already initialized
-if (!admin.apps.length) {
-    admin.initializeApp({
-      credential: admin.credential.applicationDefault(),
-      storageBucket: 'studio-2441219031-242ae.firebasestorage.app',
-    });
-}
-
 export async function generateAndTranslateStory(values: z.infer<typeof storySchema>) {
   try {
     const validatedFields = storySchema.safeParse(values);
@@ -186,6 +178,14 @@ const flagSchema = z.object({
 
 export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) {
     try {
+        // Initialize Firebase Admin SDK only if not already initialized
+        if (!admin.apps.length) {
+            admin.initializeApp({
+              credential: admin.credential.applicationDefault(),
+              storageBucket: 'studio-2441219031-242ae.firebasestorage.app',
+            });
+        }
+        
         const validatedFields = flagSchema.safeParse(values);
         if (!validatedFields.success) {
             return { error: 'Invalid input for flag generation.' };
