@@ -7,6 +7,7 @@ import { translateStory } from '@/ai/flows/translate-story';
 import { generateCommunity } from '@/ai/flows/generate-community';
 import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member';
 import { generateSpeech } from '@/ai/flows/generate-speech';
+import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { VOICES } from '@/config/languages';
 import { initializeFirebase } from '@/firebase/config-for-actions';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
@@ -150,7 +151,9 @@ export async function updateMessageStatus(values: z.infer<typeof updateMessageSt
         const { firestore } = initializeFirebase();
 
         const messageDocRef = doc(firestore, `communities/${communityId}/messages`, messageId);
-        await updateDoc(messageDocRef, { status });
+        
+        // Use non-blocking update
+        updateDocumentNonBlocking(messageDocRef, { status });
 
         return { success: true };
 
@@ -193,5 +196,32 @@ export async function softDeleteMessage(values: z.infer<typeof softDeleteMessage
         console.error('Delete Message Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
         return { error: `Failed to delete message. ${message}` };
+    }
+}
+
+
+const generateAvatarsSchema = z.object({
+    name: z.string().min(1, 'Name is required to generate an avatar.'),
+});
+
+export async function generateProfileAvatars(values: z.infer<typeof generateAvatarsSchema>) {
+    try {
+        const validatedFields = generateAvatarsSchema.safeParse(values);
+        if (!validatedFields.success) {
+            return { error: 'Invalid input for avatar generation.' };
+        }
+
+        const { name } = validatedFields.data;
+        const result = await generateAvatars({ name });
+
+        if (!result.avatars || result.avatars.length === 0) {
+            return { error: 'Could not generate avatars.' };
+        }
+
+        return { avatars: result.avatars };
+    } catch (e) {
+        console.error('Avatar Generation Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Avatar generation failed. ${message}` };
     }
 }

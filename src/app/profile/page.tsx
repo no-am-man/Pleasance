@@ -1,3 +1,4 @@
+
 // src/app/profile/page.tsx
 'use client';
 
@@ -15,23 +16,113 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LANGUAGES } from '@/config/languages';
-import { LoaderCircle, LogIn, AlertCircle } from 'lucide-react';
+import { LoaderCircle, LogIn, AlertCircle, Sparkles, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { generateProfileAvatars } from '../actions';
+import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 const ProfileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
   bio: z.string().min(10, 'Bio must be at least 10 characters.').max(200, 'Bio cannot exceed 200 characters.'),
   nativeLanguage: z.string({ required_error: 'Please select your native language.' }),
   learningLanguage: z.string({ required_error: 'Please select a language to learn.' }),
+  avatarUrl: z.string().url().optional(),
 });
 
 type CommunityProfile = z.infer<typeof ProfileSchema> & {
   id: string;
   userId: string;
-  avatarUrl?: string;
 };
+
+function AvatarSelectionDialog({ name, onSelectAvatar }: { name: string; onSelectAvatar: (url: string) => void }) {
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [avatars, setAvatars] = useState<string[]>([]);
+    const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
+
+    const handleGenerate = async () => {
+        if (!name) {
+            setError("Please enter your name first to generate avatars.");
+            return;
+        }
+        setIsLoading(true);
+        setError(null);
+        setAvatars([]);
+
+        const result = await generateProfileAvatars({ name });
+
+        if (result.error) {
+            setError(result.error);
+        } else if (result.avatars) {
+            setAvatars(result.avatars);
+        }
+        setIsLoading(false);
+    };
+
+    const handleSelect = (avatarUrl: string) => {
+        setSelectedAvatar(avatarUrl);
+        onSelectAvatar(avatarUrl);
+    };
+
+    return (
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Generate Avatars
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[625px]">
+                <DialogHeader>
+                    <DialogTitle>Generate Your Avatar</DialogTitle>
+                    <DialogDescription>
+                        Click the button to generate unique, abstract avatars based on your name. Click on an image to select it.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="flex justify-center my-4">
+                    <Button onClick={handleGenerate} disabled={isLoading}>
+                        {isLoading ? <LoaderCircle className="animate-spin mr-2" /> : <Sparkles className="mr-2" />}
+                        Generate New Avatars
+                    </Button>
+                </div>
+
+                {error && (
+                    <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Generation Failed</AlertTitle>
+                        <p>{error}</p>
+                    </Alert>
+                )}
+
+                {avatars.length > 0 && (
+                    <div className="grid grid-cols-2 gap-4">
+                        {avatars.map((avatar, index) => (
+                            <div key={index} className="relative cursor-pointer" onClick={() => handleSelect(avatar)}>
+                                <Image
+                                    src={avatar}
+                                    alt={`Generated Avatar ${index + 1}`}
+                                    width={250}
+                                    height={250}
+                                    className={cn("rounded-lg border-4 transition-all", selectedAvatar === avatar ? "border-primary" : "border-transparent")}
+                                />
+                                {selectedAvatar === avatar && (
+                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
+                                        <CheckCircle className="h-12 w-12 text-primary-foreground" />
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </DialogContent>
+        </Dialog>
+    );
+}
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
@@ -41,6 +132,8 @@ export default function ProfilePage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedAvatarUrl, setSelectedAvatarUrl] = useState<string | null>(null);
+
 
   const profileDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -54,22 +147,21 @@ export default function ProfilePage() {
     defaultValues: {
       name: '',
       bio: '',
+      avatarUrl: '',
     },
   });
   
   useEffect(() => {
     if (existingProfile) {
-      form.reset({
-        name: existingProfile.name,
-        bio: existingProfile.bio,
-        nativeLanguage: existingProfile.nativeLanguage,
-        learningLanguage: existingProfile.learningLanguage,
-      });
+      form.reset(existingProfile);
+      setSelectedAvatarUrl(existingProfile.avatarUrl || user?.photoURL || null);
     } else if (user) {
         form.reset({
             name: user.displayName || '',
             bio: '',
-        })
+            avatarUrl: user.photoURL || '',
+        });
+        setSelectedAvatarUrl(user.photoURL || null);
     }
   }, [existingProfile, form, user]);
 
@@ -85,7 +177,7 @@ export default function ProfilePage() {
       ...data,
       id: user.uid,
       userId: user.uid,
-      avatarUrl: user.photoURL || undefined, // Add the avatar URL from the user object
+      avatarUrl: selectedAvatarUrl || user.photoURL || undefined, // Use selected avatar or fallback
     };
 
     try {
@@ -102,6 +194,10 @@ export default function ProfilePage() {
     }
     setIsLoading(false);
   }
+
+  const nameValue = form.watch('name');
+  const currentAvatarUrl = selectedAvatarUrl || form.watch('avatarUrl') || user?.photoURL;
+
 
   if (isUserLoading || isProfileLoading) {
     return (
@@ -141,6 +237,13 @@ export default function ProfilePage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div className="flex flex-col items-center space-y-4">
+                    <Avatar className="w-32 h-32 border-4 border-primary">
+                        <AvatarImage src={currentAvatarUrl || undefined} alt={nameValue} />
+                        <AvatarFallback>{nameValue?.charAt(0) || 'U'}</AvatarFallback>
+                    </Avatar>
+                    <AvatarSelectionDialog name={nameValue} onSelectAvatar={setSelectedAvatarUrl} />
+                </div>
               <FormField
                 control={form.control}
                 name="name"
@@ -240,5 +343,3 @@ export default function ProfilePage() {
     </main>
   );
 }
-
-    
