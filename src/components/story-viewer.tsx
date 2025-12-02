@@ -68,7 +68,6 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
     }
 
     return () => {
-      audio.pause();
       audio.removeEventListener("loadeddata", setAudioData);
       audio.removeEventListener("timeupdate", setAudioTime);
       audio.removeEventListener("ended", handlePlaybackEnded);
@@ -168,3 +167,4 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
     </div>
   );
 }
+
