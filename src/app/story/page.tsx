@@ -15,9 +15,9 @@ import { LANGUAGES } from '@/config/languages';
 import { generateAndTranslateStory } from '@/app/actions';
 import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useUser } from '@/firebase';
+import { useUser, addDocument } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { collection, query, orderBy, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, serverTimestamp, doc } from 'firebase/firestore';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
@@ -131,8 +131,7 @@ export default function StoryPage() {
     
     if (result.originalStory && result.translatedText) {
         const storyCollectionRef = collection(firestore, 'users', user.uid, 'stories');
-        const newStoryDocRef = doc(storyCollectionRef); // Create a reference with a new ID
-
+        
         const newStoryData: Omit<Story, 'id' | 'audioUrl' | 'createdAt'> & { createdAt: any } = {
             userId: user.uid,
             level: data.difficulty,
@@ -142,16 +141,15 @@ export default function StoryPage() {
             translatedText: result.translatedText,
             createdAt: serverTimestamp() 
         };
-
-        setStoryResult({
-            originalStory: result.originalStory,
-            translatedText: result.translatedText,
-            sourceLanguage: data.sourceLanguage,
-            storyId: newStoryDocRef.id,
-        });
       
         try {
-            await addDoc(storyCollectionRef, newStoryData);
+            const newDocRef = await addDocument(storyCollectionRef, newStoryData);
+            setStoryResult({
+                originalStory: result.originalStory,
+                translatedText: result.translatedText,
+                sourceLanguage: data.sourceLanguage,
+                storyId: newDocRef.id,
+            });
         } catch (firestoreError) {
             const message = firestoreError instanceof Error ? firestoreError.message : 'An unknown error occurred';
             setError("Story generated, but failed to save to your history. " + message);

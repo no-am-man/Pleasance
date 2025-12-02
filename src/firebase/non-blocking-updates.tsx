@@ -9,6 +9,7 @@ import {
   CollectionReference,
   DocumentReference,
   SetOptions,
+  doc,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import {FirestorePermissionError} from '@/firebase/errors';
@@ -34,12 +35,13 @@ export function setDocumentNonBlocking(docRef: DocumentReference, data: any, opt
 
 /**
  * Initiates an addDoc operation for a collection reference.
- * Does NOT await the write operation internally.
- * Returns the Promise for the new doc ref, but typically not awaited by caller.
+ * It now awaits the operation and returns the document reference.
  */
-export function addDocumentNonBlocking(colRef: CollectionReference, data: any) {
-  addDoc(colRef, data)
-    .catch(error => {
+export async function addDocument(colRef: CollectionReference, data: any): Promise<DocumentReference> {
+  try {
+    const docRef = await addDoc(colRef, data);
+    return docRef;
+  } catch (error) {
       errorEmitter.emit(
         'permission-error',
         new FirestorePermissionError({
@@ -47,8 +49,10 @@ export function addDocumentNonBlocking(colRef: CollectionReference, data: any) {
           operation: 'create',
           requestResourceData: data,
         })
-      )
-    });
+      );
+      // Re-throw the error after emitting so the caller knows it failed
+      throw error;
+  }
 }
 
 
