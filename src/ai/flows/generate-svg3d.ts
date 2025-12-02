@@ -25,7 +25,6 @@ export async function generateSvg3d(input: GenerateSvg3dInput): Promise<Svg3dOut
 const generateSvg3dPrompt = ai.definePrompt({
   name: 'generateSvg3dPrompt',
   input: { schema: GenerateSvg3dInputSchema },
-  output: { schema: Svg3dOutputSchema },
   model: 'googleai/gemini-1.5-pro',
   prompt: `You are a digital artist who creates 3D point clouds. Generate a JSON object with a 'pixels' property containing an array of 'ColorPixel' objects based on the user's request.
 
@@ -40,7 +39,7 @@ Your task is to generate the array of pixels.
   - High: ~2000-3000 points
 - All coordinates (x, y, z) must be within a -50 to 50 range.
 - Use the prompt to inspire the shape, color, and structure of the point cloud.
-- Your entire response MUST be only the JSON object. Do not include any other text, explanations, or markdown.`,
+- Your entire response MUST be only the JSON object. Do not include any other text, explanations, or markdown formatting like \`\`\`json. Your response must be raw JSON text.`,
 });
 
 const generateSvg3dFlow = ai.defineFlow(
@@ -51,9 +50,19 @@ const generateSvg3dFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await generateSvg3dPrompt(input);
-    if (!output) {
+    const textResponse = output?.text || '';
+
+    if (!textResponse) {
       throw new Error('Could not generate SVG3D image from the AI.');
     }
-    return output;
+    
+    try {
+      const parsedJson = JSON.parse(textResponse);
+      const validatedOutput = Svg3dOutputSchema.parse(parsedJson);
+      return validatedOutput;
+    } catch (e) {
+      console.error("Failed to parse JSON response from AI:", textResponse);
+      throw new Error("The AI returned an invalid JSON format.");
+    }
   }
 );
