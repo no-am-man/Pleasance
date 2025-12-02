@@ -44,6 +44,7 @@ const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com'; // Founder email check
 const navLinks = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/community', label: 'Community', icon: Users },
+  { href: '/story', label: 'Nuncy Lingua', icon: BookOpen },
   { href: '/fabrication', label: 'Fabrication', icon: Warehouse },
   { href: '/treasury', label: 'Treasury', icon: Banknote },
   { href: '/wiki', label: 'Wiki', icon: Info },
