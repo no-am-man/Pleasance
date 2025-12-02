@@ -18,6 +18,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
 import { ai } from '@/ai/genkit';
+import { listModels } from '@genkit-ai/google-genai';
 import {
     GenerateSvg3dInputSchema,
     type GenerateSvg3dInput,
@@ -392,5 +393,22 @@ export async function saveSvgAsset(values: z.infer<typeof saveSvgAssetSchema>) {
         return { error: `Failed to save asset: ${message}` };
     }
 }
+
+/**
+ * Lists available models from the configured Genkit Google AI plugin.
+ * @returns An object containing a list of model names or an error.
+ */
+export async function listAvailableModels() {
+    try {
+        const availableModels = await listModels();
+        const modelNames = availableModels.map(model => model.name);
+        return { data: modelNames };
+    } catch (e) {
+        console.error('List Models Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Failed to list available models: ${message}` };
+    }
+}
+    
 
     
