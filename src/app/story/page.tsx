@@ -226,20 +226,22 @@ export default function StoryPage() {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   
+  const profileDocRef = useMemo(() => user ? doc(firestore, 'community-profiles', user.uid) : null, [user]);
+  const [profile, isProfileLoading] = useDocumentData<CommunityProfile>(profileDocRef);
+
   const form = useForm<z.infer<typeof StoryFormSchema>>({
     resolver: zodResolver(StoryFormSchema),
     defaultValues: {
       difficulty: 'beginner',
+      sourceLanguage: profile?.nativeLanguage,
+      targetLanguage: profile?.learningLanguage,
     },
   });
-  
-  const profileDocRef = useMemo(() => user ? doc(firestore, 'community-profiles', user.uid) : null, [user]);
-  const [profile, isProfileLoading] = useDocumentData<CommunityProfile>(profileDocRef);
 
   useEffect(() => {
     if (profile) {
       form.reset({
-        ...form.getValues(),
+        difficulty: form.getValues('difficulty'),
         sourceLanguage: profile.nativeLanguage,
         targetLanguage: profile.learningLanguage,
       });
