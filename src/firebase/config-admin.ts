@@ -32,7 +32,7 @@ export function initializeAdminApp() {
     // Initialize the Firebase Admin SDK
     return admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-      storageBucket: 'pleasance_bucket',
+      storageBucket: firebaseConfig.storageBucket,
     }, appName);
 
   } catch (e: any) {
@@ -41,5 +41,4 @@ export function initializeAdminApp() {
   }
 }
 
-
-
+    

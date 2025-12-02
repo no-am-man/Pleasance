@@ -23,18 +23,20 @@ service firebase.storage {
 
     //====================================================================
     // SVG3D Assets: Allow an authenticated user to write to their own assets folder.
-    // This secures the endpoint so only the asset owner can upload an SVG.
+    // This secures the endpoint so only the asset owner can upload a JSON file.
     //====================================================================
-    match /users/{userId}/svg3d-assets/{assetId}.svg {
+    match /users/{userId}/svg3d-assets/{assetId}.json {
       allow write: if request.auth != null && request.auth.uid == userId;
     }
 
     //====================================================================
     // Community Flags: Allow public write access to unblock uploads.
     // This is a temporary, broader rule to fix a persistent permission error.
-    //====================================================================
+    //================================a====================================
     match /communities/{communityId}/flag.png {
       allow write: if true;
     }
   }
 }
+
+    

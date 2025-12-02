@@ -1,7 +1,9 @@
+
 // src/app/svg3d/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -101,6 +103,7 @@ export default function Svg3dPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pixels, setPixels] = useState<ColorPixel[] | null>(null);
+  const searchParams = useSearchParams();
 
   const form = useForm<z.infer<typeof Svg3dSchema>>({
     resolver: zodResolver(Svg3dSchema),
@@ -108,6 +111,35 @@ export default function Svg3dPage() {
       prompt: '',
     },
   });
+  
+  useEffect(() => {
+    const assetUrl = searchParams.get('assetUrl');
+    if (assetUrl) {
+      const loadAsset = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+          // Use a proxy or server action if CORS becomes an issue. For now, direct fetch.
+          const response = await fetch(assetUrl);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch asset: ${response.statusText}`);
+          }
+          const data = await response.json();
+          if (data.pixels) {
+            setPixels(data.pixels);
+          } else {
+            throw new Error('Invalid asset data format.');
+          }
+        } catch (e) {
+          const message = e instanceof Error ? e.message : 'An unknown error occurred.';
+          setError(`Failed to load asset: ${message}`);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      loadAsset();
+    }
+  }, [searchParams]);
 
   async function onSubmit(data: z.infer<typeof Svg3dSchema>) {
     setIsLoading(true);
@@ -226,3 +258,5 @@ export default function Svg3dPage() {
     </main>
   );
 }
+
+    

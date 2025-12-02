@@ -1,3 +1,4 @@
+
 // src/app/treasury/page.tsx
 'use client';
 
@@ -16,7 +17,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { LoaderCircle, LogIn, Coins, BrainCircuit, Box, PlusCircle } from 'lucide-react';
+import { LoaderCircle, LogIn, Coins, BrainCircuit, Box, PlusCircle, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 
@@ -31,6 +32,7 @@ type Asset = z.infer<typeof AssetSchema> & {
     id: string;
     ownerId: string;
     createdAt: { seconds: number; nanoseconds: number; } | null;
+    fileUrl?: string; // Add fileUrl to the type
 };
 
 function AddAssetForm() {
@@ -188,18 +190,29 @@ function AssetList() {
             <CardContent>
                 {assets && assets.length > 0 ? (
                     <div className="space-y-4">
-                        {assets.map(asset => (
-                            <div key={asset.id} className="flex items-start gap-4 rounded-md border p-4">
-                                {asset.type === 'physical' ? <Box className="h-8 w-8 text-primary mt-1" /> : <BrainCircuit className="h-8 w-8 text-primary mt-1" />}
-                                <div className="flex-1">
-                                    <div className="flex justify-between items-center">
-                                        <h3 className="font-semibold">{asset.name}</h3>
-                                        <p className="font-mono text-primary font-bold text-lg">${asset.value.toLocaleString()}</p>
+                        {assets.map(asset => {
+                            const isSvg3dAsset = asset.fileUrl && asset.fileUrl.includes('svg3d-assets');
+                            return (
+                                <div key={asset.id} className="flex items-start gap-4 rounded-md border p-4">
+                                    {asset.type === 'physical' ? <Box className="h-8 w-8 text-primary mt-1" /> : <BrainCircuit className="h-8 w-8 text-primary mt-1" />}
+                                    <div className="flex-1">
+                                        <div className="flex justify-between items-center">
+                                            <h3 className="font-semibold">{asset.name}</h3>
+                                            <p className="font-mono text-primary font-bold text-lg">${asset.value.toLocaleString()}</p>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground">{asset.description}</p>
                                     </div>
-                                    <p className="text-sm text-muted-foreground">{asset.description}</p>
+                                    {isSvg3dAsset && (
+                                        <Button asChild variant="outline" size="sm">
+                                            <Link href={`/svg3d?assetUrl=${encodeURIComponent(asset.fileUrl!)}`}>
+                                                <Eye className="mr-2 h-4 w-4" />
+                                                View
+                                            </Link>
+                                        </Button>
+                                    )}
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 ) : (
                     <div className="text-center py-8 text-muted-foreground">
@@ -260,3 +273,5 @@ export default function TreasuryPage() {
     </main>
   );
 }
+
+    
