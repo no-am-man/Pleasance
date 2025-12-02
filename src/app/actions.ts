@@ -19,10 +19,11 @@ const storySchema = z.object({
   targetLanguage: z.string().min(1),
 });
 
+// Initialize Firebase Admin SDK only if not already initialized
 if (!admin.apps.length) {
     admin.initializeApp({
       credential: admin.credential.applicationDefault(),
-      storageBucket: 'studio-2441219031-242ae.appspot.com',
+      storageBucket: 'studio-2441219031-242ae.firebasestorage.app',
     });
 }
 
