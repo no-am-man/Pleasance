@@ -260,5 +260,3 @@ export async function runMemberSync() {
         return { error: `Member synchronization failed. ${message}` };
     }
 }
-
-    
