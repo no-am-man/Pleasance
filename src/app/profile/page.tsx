@@ -170,7 +170,7 @@ export default function ProfilePage() {
   }, [existingProfile, form, user]);
 
   async function onSubmit(data: z.infer<typeof ProfileSchema>) {
-    if (!user) {
+    if (!user || !profileDocRef) {
       setError('You must be logged in to update your profile.');
       return;
     }
@@ -185,7 +185,7 @@ export default function ProfilePage() {
     };
 
     try {
-      setDocumentNonBlocking(profileDocRef!, profileData, { merge: true });
+      setDocumentNonBlocking(profileDocRef, profileData, { merge: true });
       toast({
         title: "Profile Saved!",
         description: "Your community profile has been updated.",
