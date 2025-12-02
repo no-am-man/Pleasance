@@ -15,9 +15,10 @@ import { LANGUAGES } from '@/config/languages';
 import { generateStoryAndSpeech, createHistorySnapshot } from '@/app/actions';
 import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useUser } from '@/firebase';
-import { firestore } from '@/firebase/config';
-import { collection, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
+import { useUser, setDocumentNonBlocking } from '@/firebase';
+import { firestore, storage } from '@/firebase/config';
+import { collection, query, orderBy, doc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
@@ -234,13 +235,50 @@ export default function StoryPage() {
     setError(null);
     setActiveStory(null);
 
-    const result = await generateStoryAndSpeech({ ...data, userId: user.uid });
+    const result = await generateStoryAndSpeech(data);
 
     if (result.error) {
       setError(result.error);
-    } else if (result.story) {
-      setActiveStory(result.story as Story);
-      toast({ title: "Story and Speech Ready!", description: "Your new story is ready to be played."});
+      setIsLoading(false);
+      return;
+    }
+    
+    if (result.storyData && result.audioBase64) {
+        try {
+            const storyCollectionRef = collection(firestore, 'users', user.uid, 'stories');
+            const newDocRef = doc(storyCollectionRef);
+            const storyId = newDocRef.id;
+
+            // Upload audio to Firebase Storage from client
+            const storagePath = `stories/${user.uid}/${storyId}.wav`;
+            const storageRef = ref(storage, storagePath);
+            const uploadResult = await uploadString(storageRef, result.audioBase64, 'base64', {
+                contentType: 'audio/wav',
+            });
+            const downloadURL = await getDownloadURL(uploadResult.ref);
+
+            const newStoryData: Omit<Story, 'createdAt'> & { createdAt: any } = {
+                id: storyId,
+                userId: user.uid,
+                ...result.storyData,
+                createdAt: serverTimestamp(),
+                audioUrl: downloadURL,
+            };
+
+            // Non-blocking write to Firestore
+            setDocumentNonBlocking(newDocRef, newStoryData, { merge: false });
+            
+            // Set the active story for immediate viewing
+            setActiveStory({
+                ...newStoryData,
+                createdAt: null, // set to null because serverTimestamp hasn't resolved
+            });
+
+            toast({ title: "Story and Speech Ready!", description: "Your new story is ready to be played."});
+        } catch (e) {
+            const message = e instanceof Error ? e.message : 'An unknown error occurred during upload.';
+            setError(`Story creation failed after generation: ${message}`);
+        }
     } else {
       setError('An unknown error occurred while generating the story.');
     }

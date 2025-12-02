@@ -10,7 +10,6 @@ import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import admin from 'firebase-admin';
-import { firebaseConfig } from '@/firebase/config';
 import { generateCommunity } from '@/ai/flows/generate-community';
 
 
@@ -18,7 +17,6 @@ const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
   sourceLanguage: z.string().min(1),
   targetLanguage: z.string().min(1),
-  userId: z.string(),
 });
 
 export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>) {
@@ -28,13 +26,8 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>
       return { error: 'Invalid input.' };
     }
     
-    const { difficulty, sourceLanguage, targetLanguage, userId } = validatedFields.data;
+    const { difficulty, sourceLanguage, targetLanguage } = validatedFields.data;
     
-    // Initialize Firebase Admin
-    const adminApp = initializeAdminApp();
-    const firestore = adminApp.firestore();
-    const storage = adminApp.storage();
-
     // --- Step 1: Generate and Translate Story ---
     const storyResult = await generateStory({ difficultyLevel: difficulty, sourceLanguage });
     if (!storyResult.story) {
@@ -59,45 +52,16 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>
         throw new Error('Speech synthesis failed to produce audio.');
     }
     
-    // --- Step 3: Save Story and Upload Audio ---
-    const storyCollectionRef = firestore.collection('users').doc(userId).collection('stories');
-    const newDocRef = storyCollectionRef.doc();
-    const storyId = newDocRef.id;
-
-    // Upload audio to Firebase Storage
-    const storagePath = `stories/${userId}/${storyId}.wav`;
-    const bucket = storage.bucket(firebaseConfig.storageBucket);
-    const file = bucket.file(storagePath);
-    
-    await file.save(speechResult.wavBuffer, {
-      metadata: { contentType: 'audio/wav' },
-    });
-
-    // Get the public URL
-    const downloadURL = await file.getSignedUrl({
-        action: 'read',
-        expires: '03-09-2491' // A far-future date
-    }).then(urls => urls[0]);
-
-
-    const newStoryData = {
-        id: storyId,
-        userId: userId,
+    // Return story data and audio buffer to the client
+    return {
+      storyData: {
         level: difficulty,
         sourceLanguage: sourceLanguage,
         targetLanguage: targetLanguage,
         nativeText: originalStory,
         translatedText: translatedText,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        audioUrl: downloadURL,
-    };
-    await newDocRef.set(newStoryData);
-    
-    return {
-      story: {
-        ...newStoryData,
-        createdAt: null,
       },
+      audioBase64: speechResult.wavBuffer.toString('base64'),
     };
 
   } catch (e) {
