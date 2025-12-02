@@ -11,13 +11,14 @@
  * - `/community-profiles/{userId}`: Publicly readable profiles, writable only by the owner.
  * - `/communities/{communityId}`: Publicly readable communities, writable only by the owner.
  *   - `/communities/{communityId}/messages/{messageId}`: Messages are readable by any signed-in user.
+ * - `/_private_admin_data/{docId}`: Highly restricted data, only accessible by the founder.
  *
  * Key Security Decisions:
  * - User data (`/users`) is strictly private.
  * - User-owned data (stories, assets) is nested under the user document, making it inherently private.
  * - Community Profiles (`/community-profiles`) are public to read, but a user can only write to their own profile.
  * - Communities (`/communities`) are public to read for discovery. Writes are restricted to the owner.
- * - Listing all users from the top-level `/users` collection is explicitly disallowed.
+ * - Founder-only data is stored in a separate collection with strict access controls.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -33,6 +34,10 @@ service cloud.firestore {
 
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isFounder() {
+      return isSignedIn() && request.auth.token.email == 'gg.el0ai.com@gmail.com';
     }
     
     // --- User Validation Functions ---
@@ -168,6 +173,15 @@ service cloud.firestore {
             allow update, delete: if isCommunityOwner(communityId);
         }
     }
+
+    /**
+     * @description Secure storage for administrative data, like service account keys.
+     * @path /_private_admin_data/{docId}
+     * @allow Only the founder can read or write to this collection.
+     */
+    match /_private_admin_data/{docId} {
+        allow read, write: if isFounder();
+        allow list: if false; // Disallow listing documents for security.
+    }
   }
 }
-

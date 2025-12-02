@@ -9,17 +9,14 @@ const flagSchema = z.object({
     communityId: z.string(),
     communityName: z.string(),
     communityDescription: z.string(),
-    serviceAccountKey: z.string().min(1, { message: "Service account key is required and cannot be empty." }),
 });
 
 function initializeAdminApp(serviceAccountKey: string) {
-    // Prevent re-initialization
     if (admin.apps.length > 0) {
         return admin.app();
     }
 
     let serviceAccount: admin.ServiceAccount;
-
     try {
         const decodedServiceAccount = Buffer.from(serviceAccountKey, 'base64').toString('utf8');
         try {
@@ -45,9 +42,25 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
             return { error: errorMessage };
         }
         
-        const { communityId, communityName, communityDescription, serviceAccountKey } = validatedFields.data;
+        const { communityId, communityName, communityDescription } = validatedFields.data;
 
+        // Initialize a temporary firestore instance to fetch the key
+        const tempFirestore = admin.firestore(initializeApp({
+             // The config is not strictly needed here if default app exists, but helps consistency
+        }, 'temp-key-fetch-' + Date.now()));
+
+        const credentialsDoc = await tempFirestore.collection('_private_admin_data').doc('credentials').get();
+        if (!credentialsDoc.exists) {
+            throw new Error("Service account key not found. Please set it in the Admin Panel.");
+        }
+        const serviceAccountKey = credentialsDoc.data()?.serviceAccountKeyBase64;
+        if (!serviceAccountKey) {
+            throw new Error("Service account key is empty. Please set it in the Admin Panel.");
+        }
+        
+        // Now initialize the main app with the fetched key
         const adminApp = initializeAdminApp(serviceAccountKey);
+        const firestore = adminApp.firestore();
 
         const flagResult = await generateFlag({ communityName, communityDescription });
         if (!flagResult.svg) {
@@ -57,7 +70,6 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
         const svgBase64 = Buffer.from(flagResult.svg, 'utf-8').toString('base64');
         const svgDataUri = `data:image/svg+xml;base64,${svgBase64}`;
 
-        const firestore = adminApp.firestore();
         const communityDocRef = firestore.collection('communities').doc(communityId);
         await communityDocRef.update({ flagUrl: svgDataUri });
 
