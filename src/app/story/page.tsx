@@ -21,7 +21,7 @@ import { collection, query, orderBy, doc, deleteDoc, serverTimestamp } from 'fir
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -58,6 +58,12 @@ type HistorySnapshot = {
     storyCount: number;
     stories: Story[];
 };
+
+type CommunityProfile = {
+    nativeLanguage: string;
+    learningLanguage: string;
+};
+
 
 function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void; }) {
     const { user, isUserLoading } = useUser();
@@ -225,6 +231,19 @@ export default function StoryPage() {
       difficulty: 'beginner',
     },
   });
+  
+  const profileDocRef = useMemo(() => user ? doc(firestore, 'community-profiles', user.uid) : null, [user]);
+  const [profile, isProfileLoading] = useDocumentData<CommunityProfile>(profileDocRef);
+
+  useEffect(() => {
+    if (profile) {
+      form.reset({
+        ...form.getValues(),
+        sourceLanguage: profile.nativeLanguage,
+        targetLanguage: profile.learningLanguage,
+      });
+    }
+  }, [profile, form]);
 
   const generateAndUploadAudio = async (textToSpeak: string, storyData: Omit<Story, 'audioUrl' | 'createdAt'>) => {
       if (!user) return;
@@ -310,7 +329,7 @@ export default function StoryPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  if (isUserLoading) {
+  if (isUserLoading || isProfileLoading) {
     return (
         <main className="container mx-auto flex min-h-[80vh] items-center justify-center">
             <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
@@ -390,7 +409,7 @@ export default function StoryPage() {
                         render={({ field }) => (
                             <FormItem>
                             <FormLabel className="text-white font-serif">Your Language</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
                                 <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-sans">
                                     <SelectValue placeholder="Select your language" />
@@ -414,7 +433,7 @@ export default function StoryPage() {
                         render={({ field }) => (
                             <FormItem>
                             <FormLabel className="text-white font-serif">Language to Learn</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
                                 <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-sans">
                                     <SelectValue placeholder="Select a language" />
