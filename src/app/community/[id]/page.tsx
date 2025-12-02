@@ -264,7 +264,6 @@ function CommentThread({ message, comments, isLoading }: { message: Message, com
 function MessageCard({ message, canManage }: { message: Message; canManage: boolean; }) {
     const { toast } = useToast();
     const [isUpdating, setIsUpdating] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
     const firestore = useFirestore();
 
     const isDone = message.status === 'done';
@@ -293,7 +292,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
 
     const handleDelete = async () => {
         if (!firestore) return;
-        setIsDeleting(true);
+        setIsUpdating(true);
         const messageDocRef = doc(firestore, `communities/${message.communityId}/messages`, message.id);
 
         const updatePayload = {
@@ -304,7 +303,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
 
         updateDocumentNonBlocking(messageDocRef, updatePayload);
         toast({ title: 'Message Deleted' });
-        setIsDeleting(false);
+        setIsUpdating(false);
     };
 
      if (isDeleted) {
@@ -339,7 +338,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
 
     return (
         <Collapsible asChild>
-            <Card className={cn("flex flex-col", (isUpdating || isDeleting) && "opacity-50")}>
+            <Card className={cn("flex flex-col", isUpdating && "opacity-50")}>
                 <div>
                     <CardHeader className="flex flex-row items-start gap-4 pb-4">
                         <Avatar>
@@ -361,7 +360,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                                 <>
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
-                                            <Button variant="ghost" size="icon" disabled={isDeleting} aria-label="Delete message">
+                                            <Button variant="ghost" size="icon" disabled={isUpdating} aria-label="Delete message">
                                                 <Ban className="w-4 h-4 text-muted-foreground hover:text-destructive" />
                                             </Button>
                                         </AlertDialogTrigger>
@@ -375,7 +374,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                                             <AlertDialogFooter>
                                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                                                 <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
-                                                    {isDeleting ? <LoaderCircle className="animate-spin" /> : 'Delete'}
+                                                    {isUpdating ? <LoaderCircle className="animate-spin" /> : 'Delete'}
                                                 </AlertDialogAction>
                                             </AlertDialogFooter>
                                         </AlertDialogContent>
@@ -455,7 +454,7 @@ function Chat({ communityId, isOwner, allMembers }: { communityId: string; isOwn
             const aiMessage = {
                 communityId,
                 userId: `ai_${aiMemberToRespond.name.toLowerCase().replace(/\s/g, '_')}`,
-                userName: aiMemberTorespond.name,
+                userName: aiMemberToRespond.name,
                 userAvatarUrl: `https://i.pravatar.cc/150?u=${aiMemberToRespond.name}`,
                 type: 'text' as const,
                 text: result.response,
@@ -579,6 +578,7 @@ export default function CommunityProfilePage() {
   const router = useRouter();
   const { user } = useUser();
   const firestore = useFirestore();
+  const storage = useStorage();
   const { toast } = useToast();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const [isPending, startTransition] = useTransition();
@@ -714,20 +714,46 @@ export default function CommunityProfilePage() {
   };
 
   const handleGenerateFlag = () => {
-    if (!community) return;
+    if (!community || !communityDocRef || !storage) return;
 
     startTransition(async () => {
-        toast({ title: 'Generating New Flag...', description: 'This may take a moment.' });
-        const result = await generateCommunityFlag({
-            communityId: community.id,
-            communityName: community.name,
-            communityDescription: community.description,
-        });
+        try {
+            toast({ title: 'Generating New Flag...', description: 'This may take a moment.' });
+            
+            // 1. Call server action to get the image data URI
+            const result = await generateCommunityFlag({
+                communityName: community.name,
+                communityDescription: community.description,
+            });
+    
+            if (result.error) {
+                throw new Error(result.error);
+            }
+            if (!result.flagUrl) {
+                throw new Error('AI flow did not return a flag image.');
+            }
 
-        if (result.error) {
-            toast({ variant: 'destructive', title: 'Flag Generation Failed', description: result.error });
-        } else {
+            // 2. Upload to Firebase Storage from the client
+            const storagePath = `communities/${community.id}/flag.png`;
+            const storageRef = ref(storage, storagePath);
+            const base64Data = result.flagUrl.split(',')[1];
+
+            if (!base64Data) {
+                throw new Error('Invalid data URI format received from server.');
+            }
+
+            await uploadString(storageRef, base64Data, 'base64', { contentType: 'image/png' });
+            
+            // 3. Get download URL
+            const downloadURL = await getDownloadURL(storageRef);
+
+            // 4. Update Firestore with the permanent URL
+            await updateDoc(communityDocRef, { flagUrl: downloadURL });
+
             toast({ title: 'New Flag Generated!', description: 'Your community has a new look.' });
+        } catch (e) {
+            const message = e instanceof Error ? e.message : 'An unknown error occurred';
+            toast({ variant: 'destructive', title: 'Flag Generation Failed', description: message });
         }
     });
   };
@@ -919,5 +945,3 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
-
-    

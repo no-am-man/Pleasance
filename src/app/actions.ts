@@ -173,7 +173,6 @@ export async function runMemberSync() {
 }
 
 const flagSchema = z.object({
-    communityId: z.string(),
     communityName: z.string(),
     communityDescription: z.string(),
 });
@@ -185,7 +184,7 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
             return { error: 'Invalid input for flag generation.' };
         }
         
-        const { communityId, communityName, communityDescription } = validatedFields.data;
+        const { communityName, communityDescription } = validatedFields.data;
 
         // 1. Generate the flag image data URI from the AI flow
         const flagResult = await generateFlag({ communityName, communityDescription });
@@ -193,36 +192,8 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
             throw new Error('Failed to generate a flag image from the AI flow.');
         }
 
-        // 2. Initialize Firebase services for server-side operations
-        const { firestore, storage } = initializeFirebase();
-
-        // 3. Define the path in Firebase Storage
-        const storagePath = `communities/${communityId}/flag.png`;
-        const storageRef = ref(storage, storagePath);
-
-        // 4. Upload the image to Firebase Storage
-        // The flagUrl is a data URI (e.g., 'data:image/png;base64,iVBORw0KGgo...')
-        // We need to extract the Base64 part to upload it.
-        const base64Data = flagResult.flagUrl.split(',')[1];
-        if (!base64Data) {
-            throw new Error('Invalid data URI format for the flag image.');
-        }
-
-        await uploadString(storageRef, base64Data, 'base64', {
-            contentType: 'image/png'
-        });
-        
-        // 5. Get the permanent download URL for the uploaded image
-        const downloadURL = await getDownloadURL(storageRef);
-        
-        // 6. Update the community document in Firestore with the new download URL
-        const communityDocRef = doc(firestore, 'communities', communityId);
-        await updateDoc(communityDocRef, {
-            flagUrl: downloadURL,
-        });
-
-        // 7. Return the permanent URL to the client
-        return { flagUrl: downloadURL };
+        // 2. Return the raw data URI to the client
+        return { flagUrl: flagResult.flagUrl };
 
     } catch (e) {
         console.error('Flag Generation Error:', e);
