@@ -1,9 +1,8 @@
-
 'use server';
 /**
- * @fileOverview A flow to generate a community flag.
+ * @fileOverview A flow to generate a community flag as an SVG string.
  *
- * - generateFlag - A function that generates a flag image.
+ * - generateFlag - A function that generates an SVG flag.
  * - GenerateFlagInput - The input type for the generateFlag function.
  * - GenerateFlagOutput - The return type for the generateFlag function.
  */
@@ -18,13 +17,40 @@ const GenerateFlagInputSchema = z.object({
 export type GenerateFlagInput = z.infer<typeof GenerateFlagInputSchema>;
 
 const GenerateFlagOutputSchema = z.object({
-  flagUrl: z.string().describe('The data URL of the generated flag image.'),
+  svg: z.string().describe('The complete, valid SVG string for the generated flag.'),
 });
 export type GenerateFlagOutput = z.infer<typeof GenerateFlagOutputSchema>;
 
 export async function generateFlag(input: GenerateFlagInput): Promise<GenerateFlagOutput> {
   return generateFlagFlow(input);
 }
+
+const generateFlagPrompt = ai.definePrompt({
+    name: 'generateFlagPrompt',
+    input: { schema: GenerateFlagInputSchema },
+    output: { schema: GenerateFlagOutputSchema },
+    prompt: `You are an expert graphic designer who specializes in creating symbolic, minimalist, and modern vector art for flags.
+
+Task: Generate a complete, valid SVG string for a flag representing an online community.
+
+Community Name: "{{communityName}}"
+Community Description: "{{communityDescription}}"
+
+Requirements:
+1.  The SVG must be a single, self-contained string. Do not wrap it in markdown or any other characters.
+2.  The SVG should have a 16:9 aspect ratio. A viewBox of "0 0 160 90" is ideal.
+3.  The design must be abstract, geometric, and symbolic. DO NOT include any text, letters, or numbers.
+4.  Use a modern, professional color palette. Use 2-3 colors that are harmonious.
+5.  The background of the SVG should be a solid color.
+6.  Your response must be ONLY the SVG code, starting with '<svg' and ending with '</svg>'.
+
+Example of a good response format:
+<svg width="160" height="90" viewBox="0 0 160 90" fill="none" xmlns="http://www.w3.org/2000/svg">...</svg>
+
+Now, generate the SVG based on the provided community details.
+`,
+});
+
 
 const generateFlagFlow = ai.defineFlow(
   {
@@ -33,21 +59,10 @@ const generateFlagFlow = ai.defineFlow(
     outputSchema: GenerateFlagOutputSchema,
   },
   async (input) => {
-    const prompt = `Generate a symbolic flag for an online community called "${input.communityName}".
-The community is about: "${input.communityDescription}".
-The flag should be abstract, emblematic, and suitable for a digital banner.
-Style: minimalist, vector art, symbolic, with a clean and modern aesthetic. Avoid text.`;
-
-    const { media } = await ai.generate({
-      model: 'googleai/imagen-4.0-fast-generate-001',
-      prompt: prompt,
-      config: {
-        aspectRatio: '16:9',
-      },
-    });
-
-    return { flagUrl: media.url };
+    const { output } = await generateFlagPrompt(input);
+    if (!output?.svg) {
+        throw new Error("The AI failed to generate an SVG string.");
+    }
+    return { svg: output.svg };
   }
 );
-
-    

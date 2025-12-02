@@ -1,9 +1,9 @@
-
 'use server';
 
 import { z } from 'zod';
 import { generateFlag } from '@/ai/flows/generate-flag';
-import * as admin from 'firebase-admin';
+import { initializeFirebase } from '@/firebase/config-for-actions';
+import { doc, updateDoc } from 'firebase/firestore';
 
 const flagSchema = z.object({
     communityId: z.string(),
@@ -11,16 +11,17 @@ const flagSchema = z.object({
     communityDescription: z.string(),
 });
 
+function toBase64(str: string): string {
+    if (typeof Buffer !== 'undefined') {
+      return Buffer.from(str).toString('base64');
+    } else {
+      // Browser environment
+      return btoa(unescape(encodeURIComponent(str)));
+    }
+}
+
 export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) {
     try {
-        // Initialize Firebase Admin SDK only if not already initialized
-        if (!admin.apps.length) {
-            admin.initializeApp({
-                credential: admin.credential.applicationDefault(),
-                storageBucket: 'studio-2441219031-242ae.appspot.com',
-            });
-        }
-        
         const validatedFields = flagSchema.safeParse(values);
         if (!validatedFields.success) {
             return { error: 'Invalid input for flag generation.' };
@@ -28,28 +29,24 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
         
         const { communityId, communityName, communityDescription } = validatedFields.data;
 
+        // 1. Generate the SVG string using the AI flow
         const flagResult = await generateFlag({ communityName, communityDescription });
-        if (!flagResult.flagUrl) {
-            throw new Error('Failed to generate a flag image from the AI flow.');
+        if (!flagResult.svg) {
+            throw new Error('Failed to generate a flag SVG from the AI flow.');
         }
 
-        const bucket = admin.storage().bucket();
-        const filePath = `communities/${communityId}/flag.png`;
-        const file = bucket.file(filePath);
+        // 2. Convert the SVG string to a Base64 data URI
+        const svgBase64 = toBase64(flagResult.svg);
+        const svgDataUri = `data:image/svg+xml;base64,${svgBase64}`;
 
-        const [signedUrl] = await file.getSignedUrl({
-            action: 'write',
-            expires: Date.now() + 15 * 60 * 1000, // 15 minutes
-            contentType: 'image/png',
-        });
-        
-        const downloadURL = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filePath)}?alt=media`;
+        // 3. Update the community document in Firestore
+        const { firestore } = initializeFirebase();
+        const communityDocRef = doc(firestore, 'communities', communityId);
+        await updateDoc(communityDocRef, { flagUrl: svgDataUri });
 
         return {
             data: {
-                signedUrl,
-                imageDataUri: flagResult.flagUrl,
-                downloadURL,
+                flagUrl: svgDataUri,
             }
         };
 

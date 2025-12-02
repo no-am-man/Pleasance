@@ -714,50 +714,23 @@ export default function CommunityProfilePage() {
 
   const handleGenerateFlag = async () => {
     if (!community || !communityDocRef) return;
-  
+
     setIsGeneratingFlag(true);
     toast({ title: 'Generating New Flag...', description: 'The AI is painting. This may take a moment.' });
-  
+
     try {
       const result = await generateCommunityFlag({
         communityId: community.id,
         communityName: community.name,
         communityDescription: community.description,
       });
-  
-      if (result.error || !result.data) {
-        throw new Error(result.error || 'Server action failed to return necessary data.');
+
+      if (result.error) {
+        throw new Error(result.error);
       }
       
-      const { signedUrl, imageDataUri, downloadURL } = result.data;
-
-      if (!signedUrl || !imageDataUri || !downloadURL) {
-         throw new Error('Server action returned incomplete data. Could not find signedUrl, imageDataUri, or downloadURL.');
-      }
-      
-      toast({ title: 'Uploading Flag...', description: 'Sending the new flag to storage.' });
-  
-      const response = await fetch(imageDataUri);
-      const imageBlob = await response.blob();
-  
-      const uploadResponse = await fetch(signedUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'image/png',
-        },
-        body: imageBlob,
-      });
-
-      if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text();
-        throw new Error(`Upload to signed URL failed with status ${uploadResponse.status}: ${errorText}`);
-      }
-  
-      toast({ title: 'Finalizing...', description: 'Updating the community records.' });
-      await updateDoc(communityDocRef, { flagUrl: downloadURL });
-  
       toast({ title: 'New Flag Hoisted!', description: 'Your community has a new look.' });
-  
+
     } catch (e) {
       const message = e instanceof Error ? e.message : 'An unknown error occurred';
       toast({ variant: 'destructive', title: 'Flag Generation Failed', description: message });
