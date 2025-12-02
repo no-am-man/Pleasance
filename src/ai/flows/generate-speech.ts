@@ -18,7 +18,7 @@ const GenerateSpeechInputSchema = z.object({
 export type GenerateSpeechInput = z.infer<typeof GenerateSpeechInputSchema>;
 
 const GenerateSpeechOutputSchema = z.object({
-  wavBuffer: z.instanceof(Buffer).describe('The audio data in WAV format as a Buffer.'),
+  wavBase64: z.string().describe('The audio data in WAV format as a Base64-encoded string.'),
 });
 export type GenerateSpeechOutput = z.infer<typeof GenerateSpeechOutputSchema>;
 
@@ -31,7 +31,7 @@ async function toWav(
   channels = 1,
   rate = 24000,
   sampleWidth = 2
-): Promise<Buffer> {
+): Promise<string> {
   return new Promise((resolve, reject) => {
     const writer = new wav.Writer({
       channels,
@@ -45,7 +45,7 @@ async function toWav(
       bufs.push(d);
     });
     writer.on('end', function () {
-      resolve(Buffer.concat(bufs));
+      resolve(Buffer.concat(bufs).toString('base64'));
     });
 
     writer.write(pcmData);
@@ -82,10 +82,10 @@ const generateSpeechFlow = ai.defineFlow(
     
     const sampleRate = 24000;
     
-    const wavBuffer = await toWav(audioBuffer, 1, sampleRate);
+    const wavBase64 = await toWav(audioBuffer, 1, sampleRate);
     
     return {
-      wavBuffer,
+      wavBase64,
     };
   }
 );
