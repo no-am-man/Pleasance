@@ -27,6 +27,11 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>
     }
     
     const { difficulty, sourceLanguage, targetLanguage, userId } = validatedFields.data;
+    
+    // Initialize Firebase Admin
+    const adminApp = initializeAdminApp();
+    const firestore = adminApp.firestore();
+    const storage = adminApp.storage();
 
     // --- Step 1: Generate and Translate Story ---
     const storyResult = await generateStory({ difficultyLevel: difficulty, sourceLanguage });
@@ -46,14 +51,32 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>
     }
     const translatedText = translationResult.translatedText;
 
-    // --- Step 2: Initialize Firebase Admin for Firestore Write ---
-    const adminApp = initializeAdminApp();
-    const firestore = adminApp.firestore();
-
-    // --- Step 3: Save Initial Story to Firestore to get an ID ---
+    // --- Step 2: Generate Speech Buffer ---
+    const speechResult = await generateSpeech({ text: translatedText });
+    if (!speechResult.wavBuffer) {
+        throw new Error('Speech synthesis failed to produce audio.');
+    }
+    
+    // --- Step 3: Save Story and Upload Audio ---
     const storyCollectionRef = firestore.collection('users').doc(userId).collection('stories');
     const newDocRef = storyCollectionRef.doc();
     const storyId = newDocRef.id;
+
+    // Upload audio to Firebase Storage
+    const storagePath = `stories/${userId}/${storyId}.wav`;
+    const bucket = storage.bucket();
+    const file = bucket.file(storagePath);
+    
+    await file.save(speechResult.wavBuffer, {
+      metadata: { contentType: 'audio/wav' },
+    });
+
+    // Get the public URL
+    const downloadURL = await file.getSignedUrl({
+        action: 'read',
+        expires: '03-09-2491' // A far-future date
+    }).then(urls => urls[0]);
+
 
     const newStoryData = {
         id: storyId,
@@ -64,23 +87,15 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>
         nativeText: originalStory,
         translatedText: translatedText,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        audioUrl: '', // Initialize with empty audioUrl
+        audioUrl: downloadURL,
     };
     await newDocRef.set(newStoryData);
-
-    // --- Step 4: Generate Speech Buffer ---
-    const speechResult = await generateSpeech({ text: translatedText });
-    if (!speechResult.wavBuffer) {
-        throw new Error('Speech synthesis failed to produce audio.');
-    }
     
-    // --- Step 5: Return data to client for upload ---
     return {
       story: {
         ...newStoryData,
-        createdAt: null, // Let client handle timestamp if needed, or it will be null
+        createdAt: null,
       },
-      audioData: speechResult.wavBuffer.toString('base64'),
     };
 
   } catch (e) {
