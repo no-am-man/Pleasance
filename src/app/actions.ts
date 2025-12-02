@@ -17,6 +17,7 @@ const storySchema = z.object({
   sourceLanguage: z.string().min(1),
   targetLanguage: z.string().min(1),
   userId: z.string(),
+  storageBucket: z.string().min(1),
 });
 
 export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>) {
@@ -26,7 +27,7 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>
       return { error: 'Invalid input.' };
     }
     
-    const { difficulty, sourceLanguage, targetLanguage, userId } = validatedFields.data;
+    const { difficulty, sourceLanguage, targetLanguage, userId, storageBucket } = validatedFields.data;
 
     // --- Step 1: Generate and Translate Story ---
     const storyResult = await generateStory({ difficultyLevel: difficulty, sourceLanguage });
@@ -76,7 +77,7 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>
     }
 
     // --- Step 5: Upload Audio and Get URL (using Admin SDK) ---
-    const bucket = storage.bucket(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);
+    const bucket = storage.bucket(storageBucket);
     const storagePath = `stories/${userId}/${storyId}.wav`;
     const file = bucket.file(storagePath);
     await file.save(speechResult.wavBuffer, {

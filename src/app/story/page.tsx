@@ -16,7 +16,7 @@ import { generateStoryAndSpeech, createHistorySnapshot } from '@/app/actions';
 import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useUser } from '@/firebase';
-import { firestore } from '@/firebase/config';
+import { firestore, firebaseConfig } from '@/firebase/config';
 import { collection, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
@@ -233,7 +233,11 @@ export default function StoryPage() {
     setError(null);
     setActiveStory(null);
 
-    const result = await generateStoryAndSpeech({ ...data, userId: user.uid });
+    const result = await generateStoryAndSpeech({
+        ...data,
+        userId: user.uid,
+        storageBucket: firebaseConfig.storageBucket,
+    });
 
     if (result.error) {
       setError(result.error);
