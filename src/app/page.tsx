@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, BookOpen, Warehouse, ArrowRight, Banknote } from 'lucide-react';
 import { Logo } from '@/components/icons';
+import { FederationDiagram } from '@/components/federation-diagram';
 
 const features = [
     {
@@ -75,6 +76,8 @@ export default function Home() {
       <p className="max-w-3xl text-lg sm:text-xl text-muted-foreground mb-12">
         A federated universe for co-learning, creation, and fabrication. Explore communities, generate AI-powered stories, or bring your digital creations to life.
       </p>
+
+      <FederationDiagram />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 w-full max-w-6xl">
         {features.map((feature) => (
