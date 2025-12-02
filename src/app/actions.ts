@@ -4,13 +4,13 @@
 import { z } from 'zod';
 import { generateStory } from '@/ai/flows/generate-story';
 import { translateStory } from '@/ai/flows/translate-story';
-import { generateCommunity } from '@/aiflows/generate-community';
+import { generateCommunity } from '@/ai/flows/generate-community';
 import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member';
 import { generateSpeech } from '@/ai/flows/generate-speech';
 import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
 import { VOICES } from '@/config/languages';
-
+import * as admin from 'firebase-admin';
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
@@ -166,5 +166,38 @@ export async function runMemberSync() {
     } catch(e) {
         const message = e instanceof Error ? e.message : 'An unexpected error occurred during member sync.';
         return { error: message };
+    }
+}
+
+function initializeAdminApp() {
+    if (admin.apps.length > 0) {
+        return admin.app();
+    }
+    // This is a placeholder for where you'd securely get your service account.
+    // In a real app, this should come from a secure source like environment variables.
+    // For this context, we will assume it's being handled by the caller.
+    throw new Error('Admin app initialization should be handled by the calling action.');
+}
+
+
+export async function getCredentials(userId: string) {
+    if (userId !== 'Ms2g8eAlLnYcSB9eI4ZPU269ijz2') { // Founder's UID
+        return { error: 'Unauthorized' };
+    }
+    
+    try {
+        const app = initializeAdminApp();
+        const firestore = admin.firestore(app);
+        const docRef = firestore.collection('_private_admin_data').doc('credentials');
+        const docSnap = await docRef.get();
+
+        if (docSnap.exists) {
+            return { data: docSnap.data() };
+        } else {
+            return { data: null };
+        }
+    } catch (e) {
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Failed to get credentials: ${message}` };
     }
 }
