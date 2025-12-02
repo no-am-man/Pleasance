@@ -9,11 +9,8 @@ import * as admin from 'firebase-admin';
  * If initialization fails, it throws a clear, descriptive error.
  */
 export function initializeAdminApp() {
-  const appName = 'pleasance-admin';
-  const existingApp = admin.apps.find(app => app?.name === appName);
-
-  if (existingApp) {
-    return existingApp;
+  if (admin.apps.length > 0) {
+    return admin.app();
   }
 
   const serviceAccountKeyBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
@@ -33,7 +30,7 @@ export function initializeAdminApp() {
         clientEmail: serviceAccount.client_email,
         privateKey: serviceAccount.private_key.replace(/\\n/g, '\n'), // Ensure private key newlines are handled
       }),
-    }, appName);
+    });
   } catch (e: any) {
     throw new Error(`Server configuration error: Failed to parse the service account key. Please ensure it is a valid, non-malformed Base64 string. Original error: ${e.message}`);
   }
