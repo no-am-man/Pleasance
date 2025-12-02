@@ -11,6 +11,7 @@ import {
   Info,
   LogOut,
   Menu,
+  Shield,
   UserCircle,
   Users,
   Warehouse,
@@ -38,6 +39,8 @@ import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import useIsMobile from '@/hooks/use-is-mobile';
 
+const FOUNDER_UID = 'PzPwb23fA4h6iH6i0J2aJ5aK9bA2'; // Founder UID check
+
 const navLinks = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/community', label: 'Community', icon: Users },
@@ -46,6 +49,8 @@ const navLinks = [
   { href: '/treasury', label: 'Treasury', icon: Banknote },
   { href: '/wiki', label: 'Wiki', icon: Info },
 ];
+
+const adminLink = { href: '/admin', label: 'Admin', icon: Shield };
 
 function NavLink({
   href,
@@ -80,6 +85,7 @@ function NavLink({
 function UserNav() {
   const { user } = useUser();
   const auth = useAuth();
+  const isFounder = user?.uid === FOUNDER_UID;
 
   const handleSignOut = async () => {
     await signOut(auth);
@@ -108,6 +114,14 @@ function UserNav() {
             <span>My Profile</span>
           </Link>
         </DropdownMenuItem>
+        {isFounder && (
+            <DropdownMenuItem asChild>
+                <Link href="/admin">
+                    <Shield className="mr-2 h-4 w-4" />
+                    <span>Admin Panel</span>
+                </Link>
+            </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>
           <LogOut className="mr-2 h-4 w-4" />
@@ -123,6 +137,9 @@ export function Header() {
   const pathname = usePathname();
   const { user } = useUser();
   const isMobile = useIsMobile();
+  const isFounder = user?.uid === FOUNDER_UID;
+
+  const allLinks = isFounder ? [...navLinks, adminLink] : navLinks;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm">
@@ -161,7 +178,7 @@ export function Header() {
                     </div>
                 </Link>
                 <nav className="flex flex-col gap-2">
-                    {navLinks.map((link) => (
+                    {allLinks.map((link) => (
                     <NavLink
                         key={link.href}
                         {...link}
@@ -208,7 +225,7 @@ export function Header() {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-                {navLinks.map((link) => (
+                {allLinks.map((link) => (
                     <DropdownMenuItem key={link.href} asChild>
                     <NavLink
                         {...link}

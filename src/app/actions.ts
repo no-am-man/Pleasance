@@ -8,9 +8,10 @@ import { generateCommunity } from '@/ai/flows/generate-community';
 import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member';
 import { generateSpeech } from '@/ai/flows/generate-speech';
 import { generateAvatars } from '@/ai/flows/generate-avatars';
+import { syncAllMembers } from '@/ai/flows/sync-members';
 import { VOICES } from '@/config/languages';
 import { initializeFirebase } from '@/firebase/config-for-actions';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, serverTimestamp } from 'firebase/firestore';
 import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 const storySchema = z.object({
@@ -148,9 +149,8 @@ export async function updateMessageStatus(values: z.infer<typeof updateMessageSt
         }
 
         const { communityId, messageId, status } = validatedFields.data;
-        const { firestore } = initializeFirebase();
-
-        const messageDocRef = doc(firestore, `communities/${communityId}/messages`, messageId);
+        
+        const messageDocRef = doc(initializeFirebase().firestore, `communities/${communityId}/messages`, messageId);
         
         // Use non-blocking update
         updateDocumentNonBlocking(messageDocRef, { status });
@@ -177,9 +177,8 @@ export async function softDeleteMessage(values: z.infer<typeof softDeleteMessage
         }
 
         const { communityId, messageId } = validatedFields.data;
-        const { firestore } = initializeFirebase();
 
-        const messageDocRef = doc(firestore, `communities/${communityId}/messages`, messageId);
+        const messageDocRef = doc(initializeFirebase().firestore, `communities/${communityId}/messages`, messageId);
 
         const updatePayload = {
             deleted: true,
@@ -223,5 +222,15 @@ export async function generateProfileAvatars(values: z.infer<typeof generateAvat
         console.error('Avatar Generation Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
         return { error: `Avatar generation failed. ${message}` };
+    }
+}
+
+export async function runMemberSync() {
+    try {
+        const result = await syncAllMembers();
+        return { data: result };
+    } catch(e) {
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred during member sync.';
+        return { error: message };
     }
 }
