@@ -21,7 +21,7 @@ function initializeAdminApp() {
     const serviceAccountBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
 
     if (!serviceAccountBase64) {
-        throw new Error('Server configuration error: The FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is not set.');
+        throw new Error('Server configuration error: The FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is not set. Please ensure it is set in your deployment environment or .env.local file.');
     }
 
     try {
