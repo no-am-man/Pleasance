@@ -6,7 +6,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 
 const generateSvg3dPrompt = ai.definePrompt({
   name: 'generateSvg3dPrompt',
@@ -20,7 +20,7 @@ The Core Concept (PosSys):
 - The origin point (0,0,0,0,0,0,0,0) also represents the "ground plane" from which all creation emerges.
 - Your design must evoke a feeling of infinite creation expanding outwards from this central heart.
 - The user will be able to rotate this 3D space, so your design should be interesting from all angles.
-- You can lay out a cloud of 'ColorPixels' in 3D space.
+- You can lay out a cloud of 'ColorPixels' in 3D space. You can place them in front, back, up, and down.
 
 Your Task:
 1.  Go wild with your imagination. Create anything you can dream of: organic forms, ethereal clouds, surreal landscapes, abstract energy fields, etc. Do not limit yourself to simple geometry.
