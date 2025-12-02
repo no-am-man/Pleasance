@@ -310,8 +310,6 @@ export async function runMemberSync() {
 
 const GenerateSvg3dInputSchema = z.object({
   prompt: z.string().describe('The user prompt to inspire the SVG design.'),
-  width: z.number().describe('The width of the SVG image.'),
-  height: z.number().describe('The height of the SVG image.'),
 });
 
 export async function generateSvg3dImage(values: z.infer<typeof GenerateSvg3dInputSchema>) {
@@ -323,11 +321,11 @@ export async function generateSvg3dImage(values: z.infer<typeof GenerateSvg3dInp
 
         const result = await generateSvg3dFlow(validatedFields.data);
 
-        if (!result.svg) {
+        if (!result.pixels) {
             return { error: 'Could not generate SVG3D image.' };
         }
 
-        return { svg: result.svg };
+        return { pixels: result.pixels };
     } catch (e) {
         console.error('SVG3D Generation Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
