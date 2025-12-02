@@ -14,6 +14,7 @@ type Story = {
     nativeText: string;
     translatedText: string;
     sourceLanguage: string;
+    targetLanguage: string;
     audioUrl?: string; 
     status?: 'processing' | 'complete' | 'failed';
 };
@@ -23,32 +24,38 @@ type StoryViewerProps = {
   autoplay?: boolean;
 };
 
+const rtlLanguages = ['Arabic', 'Hebrew', 'Aramaic', 'Yiddish'];
+const isRtl = (lang: string) => rtlLanguages.includes(lang);
+
+
 // A component for the karaoke-style text highlighting
-const KaraokeText = ({ text, totalDuration, currentTime, isMuted }: { text: string; totalDuration: number; currentTime: number; isMuted: boolean; }) => {
+const KaraokeText = ({ text, totalDuration, currentTime, isMuted, language }: { text: string; totalDuration: number; currentTime: number; isMuted: boolean; language: string; }) => {
     
-    if (totalDuration === 0) {
-        return <p className={cn("whitespace-pre-wrap leading-relaxed", isMuted ? "text-muted-foreground" : "text-foreground")}>{text}</p>;
+    if (totalDuration === 0 || !text) {
+        return <p className={cn("whitespace-pre-wrap leading-relaxed", isMuted ? "text-muted-foreground" : "text-foreground", isRtl(language) && "text-right")} dir={isRtl(language) ? "rtl" : "ltr"}>{text}</p>;
     }
     
     const progress = (currentTime / totalDuration) * 100;
+    const isRtlLanguage = isRtl(language);
 
     return (
         <div className="relative">
-            {/* Base text layer (the color of the un-highlighted text) */}
-            <p className={cn("whitespace-pre-wrap leading-relaxed", isMuted ? "text-muted-foreground" : "text-foreground")} aria-hidden="true">
+            {/* Base text layer */}
+            <p 
+                className={cn("whitespace-pre-wrap leading-relaxed", isMuted ? "text-muted-foreground" : "text-foreground", isRtlLanguage && "text-right")} 
+                aria-hidden="true"
+                dir={isRtlLanguage ? "rtl" : "ltr"}
+            >
                 {text}
             </p>
             {/* Highlighted text layer, revealed by a clipping mask */}
             <div
-                className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-primary to-primary bg-no-repeat text-transparent"
+                className={cn("absolute top-0 left-0 w-full h-full text-primary", isRtlLanguage && "right-0")}
                 style={{
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    clipPath: `inset(0 0 ${100 - progress}% 0)`,
-                    transition: 'clip-path 0.1s linear',
+                    clipPath: `inset(0 ${isRtlLanguage ? '0' : (100 - progress)+'%'} 0 ${isRtlLanguage ? (100 - progress)+'%' : '0'})`,
                 }}
             >
-                <p className="whitespace-pre-wrap leading-relaxed text-primary">{text}</p>
+                <p className={cn("whitespace-pre-wrap leading-relaxed", isRtlLanguage && "text-right")} dir={isRtlLanguage ? "rtl" : "ltr"}>{text}</p>
             </div>
         </div>
     );
@@ -96,7 +103,6 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
         }
       }
     } else if (!story.audioUrl) {
-        audio.pause();
         audio.currentTime = 0;
     }
 
@@ -148,7 +154,7 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
                         </Button>
                     </CardHeader>
                     <CardContent>
-                         <KaraokeText text={story.nativeText} totalDuration={duration} currentTime={currentTime} isMuted={true} />
+                         <KaraokeText text={story.nativeText} totalDuration={duration} currentTime={currentTime} isMuted={true} language={story.sourceLanguage} />
                     </CardContent>
                 </Card>
             </div>
@@ -176,13 +182,13 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
             <div className="w-full md:w-5/12">
                 <Card className="overflow-hidden">
                 <CardHeader className="flex flex-row justify-between items-start">
-                    <CardTitle>Translated Story</CardTitle>
+                    <CardTitle>Translated Story ({story.targetLanguage})</CardTitle>
                     <Button variant="ghost" size="icon" onClick={() => handleCopy(story.translatedText, 'translated')}>
                         <Copy className="w-4 h-4" />
                     </Button>
                 </CardHeader>
                 <CardContent>
-                    <KaraokeText text={story.translatedText} totalDuration={duration} currentTime={currentTime} isMuted={false} />
+                    <KaraokeText text={story.translatedText} totalDuration={duration} currentTime={currentTime} isMuted={false} language={story.targetLanguage} />
                 </CardContent>
                 </Card>
             </div>
