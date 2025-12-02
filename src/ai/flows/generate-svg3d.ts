@@ -50,6 +50,3 @@ Your task is to generate the array of pixels.
     }
     return output;
 }
-
-
-    
