@@ -17,7 +17,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
 import { generateSvg3dFlow } from '@/ai/flows/generate-svg3d-flow';
-import type { ColorPixel } from '@/ai/flows/generate-svg3d-flow';
+import type { ColorPixel, GenerateSvg3dInput } from '@/ai/flows/generate-svg3d-flow';
 
 
 // Schema for chat input, as it's used across client and server
@@ -311,7 +311,10 @@ export async function runMemberSync() {
 
 const GenerateSvg3dInputSchema = z.object({
   prompt: z.string().describe('The user prompt to inspire the SVG design.'),
+  cubeSize: z.number().describe('The conceptual size of the cube in millimeters.'),
+  density: z.enum(['low', 'medium', 'high']).describe('The desired pixel density.'),
 });
+
 
 export async function generateSvg3d(values: z.infer<typeof GenerateSvg3dInputSchema>) {
     try {

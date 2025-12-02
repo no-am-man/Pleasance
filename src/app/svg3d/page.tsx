@@ -1,4 +1,3 @@
-
 // src/app/svg3d/page.tsx
 'use client';
 
@@ -17,9 +16,12 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Svg3dCube, type ColorPixel } from '@/components/icons/svg3d-cube';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
 const Svg3dSchema = z.object({
   prompt: z.string().min(3, 'Prompt must be at least 3 characters.'),
+  cubeSize: z.coerce.number().min(1, 'Size must be at least 1mm.'),
+  density: z.enum(['low', 'medium', 'high']),
 });
 
 const SaveAssetSchema = z.object({
@@ -124,6 +126,8 @@ export default function Svg3dPage() {
     resolver: zodResolver(Svg3dSchema),
     defaultValues: {
       prompt: '',
+      cubeSize: 100,
+      density: 'medium',
     },
   });
   
@@ -162,9 +166,7 @@ export default function Svg3dPage() {
     setPixels(null);
 
     try {
-      const result = await generateSvg3d({
-        prompt: data.prompt,
-      });
+      const result = await generateSvg3d(data);
 
       if (result.error) {
         setError(result.error);
@@ -207,12 +209,50 @@ export default function Svg3dPage() {
                         <FormItem>
                             <FormLabel>Your Prompt</FormLabel>
                             <FormControl>
-                            <Input placeholder="e.g., 'The birth of a star', 'Silent forest morning', 'Quantum entanglement'" {...field} />
+                            <Input placeholder="e.g., 'The birth of a star', 'Silent forest morning'" {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
                         )}
                     />
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="cubeSize"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Cube Size (mm)</FormLabel>
+                                    <FormControl>
+                                        <Input type="number" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="density"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Pixel Density</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select density" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="low">Low</SelectItem>
+                                            <SelectItem value="medium">Medium</SelectItem>
+                                            <SelectItem value="high">High</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
 
                     <Button type="submit" disabled={isLoading} className="w-full">
                         {isLoading ? (
