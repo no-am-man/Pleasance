@@ -4,13 +4,9 @@ import * as React from 'react';
 import { SVGProps, useState, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import type { ColorPixel } from '@/ai/flows/generate-svg3d-flow';
 
-export type ColorPixel = {
-  x: number;
-  y: number;
-  z: number;
-  color: string;
-};
+export type { ColorPixel };
 
 type Svg3dCubeProps = SVGProps<SVGSVGElement> & {
   pixels: ColorPixel[];

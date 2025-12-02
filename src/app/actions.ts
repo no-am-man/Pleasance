@@ -17,7 +17,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
 import { generateSvg3dFlow } from '@/ai/flows/generate-svg3d-flow';
-import type { ColorPixel } from '@/components/icons/svg3d-cube';
+import type { ColorPixel } from '@/ai/flows/generate-svg3d-flow';
 
 
 // Schema for chat input, as it's used across client and server
@@ -322,11 +322,11 @@ export async function generateSvg3d(values: z.infer<typeof GenerateSvg3dInputSch
 
         const result = await generateSvg3dFlow(validatedFields.data);
 
-        if (!result.pixels) {
+        if (!result) {
             return { error: 'Could not generate SVG3D image.' };
         }
 
-        return { pixels: result.pixels };
+        return { pixels: result };
     } catch (e) {
         console.error('SVG3D Generation Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
