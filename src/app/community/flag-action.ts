@@ -13,7 +13,7 @@ const flagSchema = z.object({
 
 // Helper to ensure the admin app is initialized only once.
 function initializeAdminApp() {
-    // Check if the app is already initialized to prevent errors.
+    // Check if the default app is already initialized to prevent errors.
     if (admin.apps.length > 0) {
         return admin.app();
     }
@@ -21,7 +21,7 @@ function initializeAdminApp() {
     const serviceAccountBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
 
     if (!serviceAccountBase64) {
-        throw new Error('Server configuration error: The FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is not set. Please ensure it is set in your deployment environment or .env.local file.');
+        throw new Error('Server configuration error: The FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is not set. Please ensure it is set in your deployment environment or .env file.');
     }
 
     let serviceAccountJson;
@@ -37,7 +37,7 @@ function initializeAdminApp() {
         serviceAccount = JSON.parse(serviceAccountJson);
     } catch (e) {
         console.error('Firebase Admin Initialization Error: Failed to parse service account JSON.', e);
-        throw new Error('Server configuration error: The decoded service account key is not valid JSON. Please check for formatting errors.');
+        throw new Error('Server configuration error: The decoded service account key is not valid JSON. Please check for formatting errors. You can verify the decoded output by pasting your key at https://www.base64decode.org/ and checking if the result is valid JSON.');
     }
 
     try {
