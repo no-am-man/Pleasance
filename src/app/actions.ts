@@ -1,7 +1,6 @@
 
 'use server';
 
-import 'dotenv/config';
 import { z } from 'zod';
 import { generateStory } from '@/ai/flows/generate-story';
 import { translateStory } from '@/ai/flows/translate-story';
