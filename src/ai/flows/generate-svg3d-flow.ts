@@ -22,7 +22,7 @@ const Svg3dOutputSchema = z.object({
 const generateSvg3dPrompt = ai.definePrompt({
   name: 'generateSvg3dPrompt',
   input: { schema: z.object({ prompt: z.string() }) },
-  output: { schema: Svg3dOutputSchema },
+  output: { schema: Svg3dOutputSchema, format: 'json' },
   prompt: `You are a wildly imaginative digital artist creating for an interactive 3D canvas. Your task is to generate a JSON object representing a 3D point cloud based on the user's prompt.
 
 The Core Concept (PosSys):
