@@ -10,6 +10,7 @@ import '@/ai/flows/chat-with-member.ts';
 import '@/ai/flows/generate-avatars.ts';
 import '@/ai/flows/sync-members.ts';
 import '@/ai/flows/generate-flag.ts';
+import '@/ai/flows/generate-svg3d-flow.ts';
 
 
     

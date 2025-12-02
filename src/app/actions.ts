@@ -15,6 +15,7 @@ import { generateCommunity } from '@/ai/flows/generate-community';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
+import { generateSvg3d, GenerateSvg3dInputSchema } from '@/ai/flows/generate-svg3d-flow';
 
 const storyTextSchema = z.object({
   userId: z.string(),
@@ -288,5 +289,26 @@ export async function runMemberSync() {
         console.error('Member Sync Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
         return { error: `Member synchronization failed. ${message}` };
+    }
+}
+
+export async function generateSvg3dImage(values: z.infer<typeof GenerateSvg3dInputSchema>) {
+    try {
+        const validatedFields = GenerateSvg3dInputSchema.safeParse(values);
+        if (!validatedFields.success) {
+            return { error: 'Invalid input for SVG3D generation.' };
+        }
+
+        const result = await generateSvg3d(validatedFields.data);
+
+        if (!result.svg) {
+            return { error: 'Could not generate SVG3D image.' };
+        }
+
+        return { svg: result.svg };
+    } catch (e) {
+        console.error('SVG3D Generation Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `SVG3D generation failed. ${message}` };
     }
 }
