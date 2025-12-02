@@ -1,3 +1,4 @@
+
 // src/firebase/config.ts
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
@@ -10,7 +11,7 @@ export const firebaseConfig = {
   "authDomain": "studio-2441219031-242ae.firebaseapp.com",
   "messagingSenderId": "865373195178",
   "projectId": "studio-2441219031-242ae",
-  "storageBucket": "studio-2441219031-242ae.appspot.com"
+  "storageBucket": "pleasance_bucket"
 };
 
 // Initialize Firebase and export the services
@@ -26,3 +27,4 @@ const firestore: Firestore = getFirestore(firebaseApp);
 const storage: FirebaseStorage = getStorage(firebaseApp);
 
 export { firebaseApp, auth, firestore, storage };
+
