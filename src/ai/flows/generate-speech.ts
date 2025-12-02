@@ -17,7 +17,7 @@ const GenerateSpeechInputSchema = z.object({
 export type GenerateSpeechInput = z.infer<typeof GenerateSpeechInputSchema>;
 
 const GenerateSpeechOutputSchema = z.object({
-  audioBase64: z.string().describe('The raw audio data in l16 format as a Base64-encoded string.'),
+  audioUrl: z.string().describe('A data URI of the generated MP3 audio.'),
 });
 export type GenerateSpeechOutput = z.infer<typeof GenerateSpeechOutputSchema>;
 
@@ -33,29 +33,21 @@ const generateSpeechFlow = ai.defineFlow(
   },
   async (input) => {
     const { media } = await ai.generate({
-      model: 'googleai/gemini-2.5-flash-preview-tts',
-      config: {
-        responseModalities: ['AUDIO'],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Algenib' },
-          },
-        },
-      },
+      model: 'googleai/text-to-speech-1',
       prompt: input.text,
+      config: {
+        output: {
+          format: 'mp3', // Specify MP3 output
+        }
+      }
     });
 
     if (!media) {
       throw new Error('AI did not return any media for speech generation.');
     }
-
-    // Return the raw Base64 data directly from the AI response.
-    // The format is 'data:audio/l16;rate=24000;base64,<encoded_data>'
-    // We just need the encoded data part.
-    const audioBase64 = media.url.substring(media.url.indexOf(',') + 1);
     
     return {
-      audioBase64,
+      audioUrl: media.url, // The model returns a data:audio/mp3;base64,... URI directly
     };
   }
 );
