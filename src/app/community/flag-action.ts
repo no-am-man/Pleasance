@@ -4,9 +4,6 @@
 import { z } from 'zod';
 import { generateFlag } from '@/ai/flows/generate-flag';
 import * as admin from 'firebase-admin';
-import { config } from 'dotenv';
-
-config(); // Load environment variables from .env file
 
 const flagSchema = z.object({
     communityId: z.string(),
@@ -16,19 +13,28 @@ const flagSchema = z.object({
 
 // Helper to ensure the admin app is initialized only once.
 function initializeAdminApp() {
+    // Check if the app is already initialized to prevent errors.
     if (admin.apps.length > 0) {
         return admin.app();
     }
+
+    const serviceAccountBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
+
+    if (!serviceAccountBase64) {
+        throw new Error('Server configuration error: The FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is not set.');
+    }
+
     try {
-        // When running in a Google Cloud environment (like App Hosting),
-        // it should pick up credentials automatically. Explicitly providing the
-        // projectId can help in some cases.
+        const serviceAccountJson = Buffer.from(serviceAccountBase64, 'base64').toString('utf8');
+        const serviceAccount = JSON.parse(serviceAccountJson);
+
         return admin.initializeApp({
-            projectId: process.env.GCLOUD_PROJECT,
+            credential: admin.credential.cert(serviceAccount),
+            projectId: serviceAccount.project_id,
         });
     } catch (e) {
         console.error('Firebase Admin Initialization Error in flag-action:', e);
-        throw new Error('Server configuration error. Could not initialize Firebase Admin.');
+        throw new Error('Server configuration error: Could not initialize Firebase Admin. The service account key may be invalid or malformed.');
     }
 }
 
