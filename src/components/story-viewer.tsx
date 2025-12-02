@@ -29,10 +29,17 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const { toast } = useToast();
+  const scrollRef = useRef<HTMLDivElement>(null); // Ref for the scroll target
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
   const isProcessing = story.status === 'processing';
   const hasAudio = story.audioUrl && story.audioUrl.length > 0;
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [story.id]); // Scroll when story changes
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -107,7 +114,7 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
   };
 
   return (
-    <div className="animate-in fade-in-50 duration-500 space-y-4">
+    <div ref={scrollRef} className="animate-in fade-in-50 duration-500 space-y-4">
       <div className="flex flex-col items-center space-y-4">
         <audio ref={audioRef} crossOrigin="anonymous" />
         
