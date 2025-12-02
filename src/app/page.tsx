@@ -6,56 +6,6 @@ import { Users, BookOpen, Warehouse, ArrowRight, Banknote } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { FederationDiagram } from '@/components/federation-diagram';
 
-const features = [
-    {
-        icon: Users,
-        title: "Community Federation",
-        description: "Discover, join, or create your own co-learning communities. Connect with AI and human members who share your passions.",
-        href: "/community",
-        cta: "Browse Communities",
-        gradient: "bg-gradient-to-r from-fuchsia-600 to-pink-600 hover:from-fuchsia-700 hover:to-pink-700"
-    },
-    {
-        icon: Warehouse,
-        title: "Fabrication Service",
-        description: "Turn digital into physical. Upload CAD files for 3D printing or PDFs for print-on-demand books and objects.",
-        href: "/fabrication",
-        cta: "Submit a Job"
-    },
-    {
-        icon: Banknote,
-        title: "Treasury",
-        description: "Declare and manage your personal sovereign assets, both physical and intellectual, within the federation.",
-        href: "/treasury",
-        cta: "Manage Assets"
-    }
-];
-
-const FeatureCard = ({ icon: Icon, title, description, href, cta, gradient }: (typeof features)[0]) => (
-    <Card className="text-left flex flex-col">
-      <CardHeader>
-        <div className="flex items-center gap-4">
-           <div className="mx-auto bg-primary/10 rounded-full p-3 w-fit">
-                <Icon className="h-8 w-8 text-primary" />
-            </div>
-            <CardTitle className="text-2xl">{title}</CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent className="flex-grow">
-        <CardDescription>
-          {description}
-        </CardDescription>
-      </CardContent>
-      <div className="p-6 pt-0">
-         <Button asChild className={`w-full text-white ${gradient || ''}`}>
-            <Link href={href}>
-              {cta} <ArrowRight className="ml-2" />
-            </Link>
-          </Button>
-      </div>
-    </Card>
-);
-
 
 export default function Home() {
   return (
@@ -71,12 +21,6 @@ export default function Home() {
       </p>
 
       <FederationDiagram />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
-        {features.map((feature) => (
-            <FeatureCard key={feature.title} {...feature} />
-        ))}
-      </div>
 
        <div className="mt-16">
         <Button asChild variant="link" className="text-lg whitespace-normal h-auto underline">

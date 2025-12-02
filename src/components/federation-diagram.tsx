@@ -49,7 +49,7 @@ const Node = ({ icon, label, x, y, custom, color = "text-primary", description }
 export function FederationDiagram() {
   return (
     <div className="my-16 w-full flex justify-center">
-        <svg viewBox="0 0 400 400" className="w-full max-w-lg h-auto">
+        <svg viewBox="0 0 400 400" className="w-full max-w-2xl h-auto">
             <defs>
                  <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="5" refY="3.5" orient="auto">
                     <polygon points="0 0, 10 3.5, 0 7" className="fill-border" />
