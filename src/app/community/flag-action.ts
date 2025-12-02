@@ -9,7 +9,7 @@ const flagSchema = z.object({
     communityId: z.string(),
     communityName: z.string(),
     communityDescription: z.string(),
-    serviceAccountKey: z.string(),
+    serviceAccountKey: z.string().min(1, { message: "Service account key cannot be empty." }),
 });
 
 // Helper to ensure the admin app is initialized only once.
@@ -42,7 +42,8 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
     try {
         const validatedFields = flagSchema.safeParse(values);
         if (!validatedFields.success) {
-            return { error: 'Invalid input for flag generation.' };
+            const errorMessage = validatedFields.error.issues[0]?.message || 'Invalid input for flag generation.';
+            return { error: errorMessage };
         }
         
         const { communityId, communityName, communityDescription, serviceAccountKey } = validatedFields.data;
