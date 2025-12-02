@@ -2,7 +2,7 @@
 /**
  * @fileOverview A flow to generate an SVG3D image based on a prompt.
  *
- * - generateSvg3d - A function that generates the SVG3D.
+ * - generateSvg3dFlow - A function that generates the SVG3D.
  */
 
 import { ai } from '@/ai/genkit';
@@ -15,6 +15,7 @@ const generateSvg3dPrompt = ai.definePrompt({
   prompt: `You are a wildly imaginative digital artist creating for an interactive 3D canvas. Your task is to generate SVG content that represents a user's prompt.
 
 The Core Concept (PosSys):
+- You have to imagine you are a person standing on the ground. Front is your eyes to be pointing outside of the screen.
 - You are creating elements within a 3D coordinate system. The center of this system (0,0,0) is the "heart".
 - The origin point (0,0,0,0,0,0,0,0) also represents the "ground plane" from which all creation emerges.
 - Your design must evoke a feeling of infinite creation expanding outwards from this central heart.
