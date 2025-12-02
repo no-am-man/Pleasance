@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview A flow to generate an SVG3D image based on a prompt.
@@ -9,32 +8,18 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-type GenerateSvg3dInput = {
-  prompt: string;
-  width: number;
-  height: number;
-};
-
-type GenerateSvg3dOutput = {
-  svg: string;
-};
-
-export async function generateSvg3d(
-  input: GenerateSvg3dInput
-): Promise<GenerateSvg3dOutput> {
-  return generateSvg3dFlow(input);
-}
-
 const generateSvg3dPrompt = ai.definePrompt({
   name: 'generateSvg3dPrompt',
   input: { schema: z.any() },
   output: { schema: z.object({ svg: z.string().describe('The generated SVG string.') }) },
   prompt: `You are a wildly imaginative digital artist creating for an interactive 3D canvas. Your task is to generate SVG content that represents a user's prompt.
 
-The Core Concept:
+The Core Concept (PosSys):
 - You are creating elements within a 3D coordinate system. The center of this system (0,0,0) is the "heart".
+- The origin point (0,0,0,0,0,0,0,0) also represents the "ground plane" from which all creation emerges.
 - Your design must evoke a feeling of infinite creation expanding outwards from this central heart.
 - The user will be able to rotate this 3D space, so your design should be interesting from all angles.
+- You can lay out a cloud of 'ColorPixels' in 3D space.
 
 Your Task:
 1.  Go wild with your imagination. Create anything you can dream of: organic forms, ethereal clouds, surreal landscapes, abstract energy fields, etc. Do not limit yourself to simple geometry.
@@ -61,3 +46,4 @@ const generateSvg3dFlow = ai.defineFlow(
     return { svg: output.svg };
   }
 );
+export { generateSvg3dFlow };
