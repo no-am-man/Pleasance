@@ -26,6 +26,7 @@ const generateSvg3dPrompt = ai.definePrompt({
   name: 'generateSvg3dPrompt',
   input: { schema: GenerateSvg3dInputSchema },
   output: { schema: Svg3dOutputSchema },
+  model: 'googleai/gemini-1.5-flash-latest',
   prompt: `You are a digital artist who creates 3D point clouds. Generate a JSON object with a 'pixels' property containing an array of 'ColorPixel' objects based on the user's request.
 
 - The user wants to create a point cloud representing: "{{prompt}}"
