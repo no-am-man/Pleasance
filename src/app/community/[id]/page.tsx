@@ -577,7 +577,6 @@ export default function CommunityProfilePage() {
   const router = useRouter();
   const { user } = useUser();
   const firestore = useFirestore();
-  const storage = useStorage();
   const { toast } = useToast();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const [isGeneratingFlag, setIsGeneratingFlag] = useState(false);
@@ -713,24 +712,24 @@ export default function CommunityProfilePage() {
   };
 
   const handleGenerateFlag = async () => {
-    if (!community || !firestore || !communityDocRef || !storage) return;
+    if (!community || !communityDocRef) return;
   
     setIsGeneratingFlag(true);
     toast({ title: 'Generating New Flag...', description: 'The AI is painting. This may take a moment.' });
   
     try {
-      // Step 1: Call server action to get signed URL and image data
+      // Step 1: Call server action to get signed URL, image data, and final URL
       const result = await generateCommunityFlag({
         communityId: community.id,
         communityName: community.name,
         communityDescription: community.description,
       });
   
-      if (result.error || !result.signedUrl || !result.imageDataUri || !result.filePath) {
+      if (result.error || !result.signedUrl || !result.imageDataUri || !result.downloadURL) {
         throw new Error(result.error || 'Server action failed to return necessary data.');
       }
   
-      const { signedUrl, imageDataUri, filePath } = result;
+      const { signedUrl, imageDataUri, downloadURL } = result;
       toast({ title: 'Uploading Flag...', description: 'Sending the new flag to storage.' });
   
       // Step 2: Convert data URI to Blob and upload from client
@@ -745,10 +744,8 @@ export default function CommunityProfilePage() {
         body: imageBlob,
       });
   
-      // Step 3: Get public download URL and update Firestore
+      // Step 3: Update Firestore with the final download URL
       toast({ title: 'Finalizing...', description: 'Updating the community records.' });
-      const storageRef = ref(storage, filePath);
-      const downloadURL = await getDownloadURL(storageRef);
       await updateDoc(communityDocRef, { flagUrl: downloadURL });
   
       toast({ title: 'New Flag Hoisted!', description: 'Your community has a new look.' });

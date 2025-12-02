@@ -210,11 +210,15 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
             contentType: 'image/png',
         });
         
-        // 3. Return the signed URL and the image data URI to the client
+        // 3. Construct the public download URL
+        // This is a standard format for Firebase Storage files with a public read rule.
+        const downloadURL = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filePath)}?alt=media`;
+
+        // 4. Return all necessary data to the client
         return {
             signedUrl,
             imageDataUri: flagResult.flagUrl,
-            filePath,
+            downloadURL, // Return the final public URL
         };
 
     } catch (e) {
