@@ -13,7 +13,7 @@ type Svg3dCubeProps = SVGProps<SVGSVGElement> & {
 };
 
 export function Svg3dCube(props: Svg3dCubeProps) {
-  const { className, pixels, ...rest } = props;
+  const { className, pixels = [], ...rest } = props;
   const viewWidth = 400;
   const viewHeight = 400;
 
