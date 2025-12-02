@@ -1,10 +1,10 @@
+
 // src/ai/flows/sync-members.ts
 'use server';
 /**
  * @fileOverview A flow to synchronize member data across all communities.
  *
  * - syncAllMembers - A function that scans and updates member data.
- * - SyncResult - The return type for the syncAllMembers function.
  */
 
 import { ai } from '@/ai/genkit';

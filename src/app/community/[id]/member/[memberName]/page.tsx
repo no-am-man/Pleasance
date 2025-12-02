@@ -1,3 +1,4 @@
+
 // src/app/community/[id]/member/[memberName]/page.tsx
 'use client';
 
@@ -12,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
-import { getAiChatResponse } from '@/app/actions';
+import { getAiChatResponse, type ChatWithMemberInput } from '@/app/actions';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { type ChatHistory } from 'genkit';

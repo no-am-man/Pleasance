@@ -1,26 +1,24 @@
+
 'use server';
 /**
  * @fileOverview A flow to generate an SVG3D image based on a prompt.
  *
  * - generateSvg3d - A function that generates the SVG3D.
- * - GenerateSvg3dInput - The input type for the generateSvg3d function.
- * - GenerateSvg3dOutput - The return type for the generateSvg3d function.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-// Input is now defined in the calling action.
-export type GenerateSvg3dInput = {
+type GenerateSvg3dInput = {
   prompt: string;
   width: number;
   height: number;
 };
 
-export const GenerateSvg3dOutputSchema = z.object({
+const GenerateSvg3dOutputSchema = z.object({
   svg: z.string().describe('The generated SVG string.'),
 });
-export type GenerateSvg3dOutput = z.infer<typeof GenerateSvg3dOutputSchema>;
+type GenerateSvg3dOutput = z.infer<typeof GenerateSvg3dOutputSchema>;
 
 export async function generateSvg3d(
   input: GenerateSvg3dInput
@@ -30,7 +28,6 @@ export async function generateSvg3d(
 
 const generateSvg3dPrompt = ai.definePrompt({
   name: 'generateSvg3dPrompt',
-  // Use a generic schema here, validation happens in the action.
   input: { schema: z.any() },
   output: { schema: GenerateSvg3dOutputSchema },
   prompt: `You are an expert vector artist who understands sacred geometry. Your task is to generate an SVG image based on the "SVG3D" concept.

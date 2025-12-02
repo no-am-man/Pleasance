@@ -4,7 +4,8 @@
 import { z } from 'zod';
 import { generateStory } from '@/ai/flows/generate-story';
 import { translateStory } from '@/ai/flows/translate-story';
-import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member';
+import { chatWithMember } from '@/ai/flows/chat-with-member';
+import type { ChatHistory, Part } from 'genkit';
 import { generateSpeech } from '@/ai/flows/generate-speech';
 import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
@@ -16,6 +17,21 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
 import { generateSvg3d } from '@/ai/flows/generate-svg3d-flow';
+
+
+// Schema for chat input, as it's used across client and server
+const MemberSchema = z.object({
+  name: z.string().describe("The AI member's unique name."),
+  role: z.string().describe("The member's role in the community."),
+  bio: z.string().describe("A short bio describing the member's personality and purpose."),
+  type: z.enum(['AI', 'human']).describe('The type of member.'),
+});
+
+export type ChatWithMemberInput = {
+    member: z.infer<typeof MemberSchema>;
+    userMessage: string;
+    history?: ChatHistory;
+}
 
 const storyTextSchema = z.object({
   userId: z.string(),

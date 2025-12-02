@@ -4,8 +4,6 @@
  * @fileOverview A flow to generate a community based on a user prompt, including AI members.
  *
  * - generateCommunity - A function that generates community details and members.
- * - GenerateCommunityInput - The input type for the generateCommunity function.
- * - GenerateCommunityOutput - The return type for the generateCommunity function.
  */
 
 import {ai} from '@/ai/genkit';
@@ -16,7 +14,7 @@ const GenerateCommunityInputSchema = z.object({
     .string()
     .describe('A user-provided prompt describing the desired community.'),
 });
-export type GenerateCommunityInput = z.infer<typeof GenerateCommunityInputSchema>;
+type GenerateCommunityInput = z.infer<typeof GenerateCommunityInputSchema>;
 
 const MemberSchema = z.object({
     name: z.string().describe("The AI member's unique name."),
@@ -31,10 +29,8 @@ const GenerateCommunityOutputSchema = z.object({
   welcomeMessage: z.string().describe("A warm, one-paragraph welcome message for new members."),
   members: z.array(MemberSchema).min(3).max(5).describe('A list of 3-5 unique, AI-generated members for the community.'),
 });
-export type GenerateCommunityOutput = z.infer<typeof GenerateCommunityOutputSchema>;
 
-
-export async function generateCommunity(input: GenerateCommunityInput): Promise<GenerateCommunityOutput> {
+export async function generateCommunity(input: GenerateCommunityInput): Promise<z.infer<typeof GenerateCommunityOutputSchema>> {
   return generateCommunityFlow(input);
 }
 

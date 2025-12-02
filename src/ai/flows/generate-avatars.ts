@@ -4,8 +4,6 @@
  * @fileOverview A flow to generate abstract avatars for user profiles.
  *
  * - generateAvatars - A function that generates a set of abstract avatars.
- * - GenerateAvatarsInput - The input type for the generateAvatars function.
- * - GenerateAvatarsOutput - The return type for the generateAvatars function.
  */
 
 import { ai } from '@/ai/genkit';
@@ -14,14 +12,13 @@ import { z } from 'genkit';
 const GenerateAvatarsInputSchema = z.object({
   name: z.string().describe('The name of the user, to be used as a seed for the avatar style.'),
 });
-export type GenerateAvatarsInput = z.infer<typeof GenerateAvatarsInputSchema>;
+type GenerateAvatarsInput = z.infer<typeof GenerateAvatarsInputSchema>;
 
 const GenerateAvatarsOutputSchema = z.object({
   avatars: z.array(z.string()).describe('A list of generated avatar images as data URIs.'),
 });
-export type GenerateAvatarsOutput = z.infer<typeof GenerateAvatarsOutputSchema>;
 
-export async function generateAvatars(input: GenerateAvatarsInput): Promise<GenerateAvatarsOutput> {
+export async function generateAvatars(input: GenerateAvatarsInput): Promise<z.infer<typeof GenerateAvatarsOutputSchema>> {
   return generateAvatarsFlow(input);
 }
 

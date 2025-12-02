@@ -4,13 +4,11 @@
  * @fileOverview A flow to handle chat interactions with an AI community member.
  *
  * - chatWithMember - A function that generates a response from an AI member.
- * - ChatWithMemberInput - The input type for the chatWithMember function.
- * - ChatWithMemberOutput - The return type for the chatWithMember function.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { GenerateRequest } from 'genkit/generate';
+import { GenerateRequest, type ChatHistory } from 'genkit/generate';
 
 const MemberSchema = z.object({
   name: z.string().describe("The AI member's unique name."),
@@ -19,35 +17,28 @@ const MemberSchema = z.object({
   type: z.enum(['AI', 'human']).describe('The type of member.'),
 });
 
-const ChatHistorySchema = z.object({
-    role: z.enum(['user', 'model']),
-    content: z.array(z.object({ text: z.string() })),
-});
-
-const ChatWithMemberInputSchema = z.object({
-  member: MemberSchema.describe('The AI member the user is chatting with.'),
-  userMessage: z.string().describe('The latest message from the user.'),
-  history: z.array(ChatHistorySchema).optional().describe('The recent chat history.'),
-});
-export type ChatWithMemberInput = z.infer<typeof ChatWithMemberInputSchema>;
+type ChatWithMemberInput = {
+    member: z.infer<typeof MemberSchema>;
+    userMessage: string;
+    history?: ChatHistory;
+};
 
 const ChatWithMemberOutputSchema = z.object({
   response: z.string().describe('The AI member\'s response to the user.'),
 });
-export type ChatWithMemberOutput = z.infer<typeof ChatWithMemberOutputSchema>;
 
 
-export async function chatWithMember(input: ChatWithMemberInput): Promise<ChatWithMemberOutput> {
+export async function chatWithMember(input: ChatWithMemberInput) {
   return chatWithMemberFlow(input);
 }
 
 const chatWithMemberFlow = ai.defineFlow(
   {
     name: 'chatWithMemberFlow',
-    inputSchema: ChatWithMemberInputSchema,
+    inputSchema: z.any(),
     outputSchema: ChatWithMemberOutputSchema,
   },
-  async (input) => {
+  async (input: ChatWithMemberInput) => {
 
     const systemPrompt = `You are an AI community member. Your persona is defined below. You must stay in character at all times.
 Name: ${input.member.name}

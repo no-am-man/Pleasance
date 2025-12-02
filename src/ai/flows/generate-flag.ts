@@ -1,10 +1,9 @@
+
 'use server';
 /**
  * @fileOverview A flow to generate a community flag as an SVG string.
  *
  * - generateFlag - A function that generates an SVG flag.
- * - GenerateFlagInput - The input type for the generateFlag function.
- * - GenerateFlagOutput - The return type for the generateFlag function.
  */
 
 import { ai } from '@/ai/genkit';
@@ -14,14 +13,13 @@ const GenerateFlagInputSchema = z.object({
   communityName: z.string().describe('The name of the community.'),
   communityDescription: z.string().describe('The description of the community.'),
 });
-export type GenerateFlagInput = z.infer<typeof GenerateFlagInputSchema>;
+type GenerateFlagInput = z.infer<typeof GenerateFlagInputSchema>;
 
 const GenerateFlagOutputSchema = z.object({
   svg: z.string().describe('The complete, valid SVG string for the generated flag.'),
 });
-export type GenerateFlagOutput = z.infer<typeof GenerateFlagOutputSchema>;
 
-export async function generateFlag(input: GenerateFlagInput): Promise<GenerateFlagOutput> {
+export async function generateFlag(input: GenerateFlagInput): Promise<z.infer<typeof GenerateFlagOutputSchema>> {
   return generateFlagFlow(input);
 }
 
