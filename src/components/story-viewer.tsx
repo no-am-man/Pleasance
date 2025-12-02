@@ -37,7 +37,7 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-
+  
     const setAudioData = () => {
       setDuration(audio.duration);
       setCurrentTime(audio.currentTime);
@@ -49,13 +49,13 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
     };
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
-
+  
     audio.addEventListener("loadeddata", setAudioData);
     audio.addEventListener("timeupdate", setAudioTime);
     audio.addEventListener("ended", handlePlaybackEnded);
     audio.addEventListener("play", handlePlay);
     audio.addEventListener("pause", handlePause);
-
+  
     if (story.audioUrl && audio.src !== story.audioUrl) {
         audio.src = story.audioUrl;
         audio.load();
@@ -63,19 +63,20 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
             audio.play().catch(e => console.error("Autoplay failed:", e));
         }
     } else if (!story.audioUrl) {
+        // No audio URL, ensure it's paused and reset
         audio.pause();
         audio.currentTime = 0;
     }
-
+  
     return () => {
+      // No pause on cleanup
       audio.removeEventListener("loadeddata", setAudioData);
       audio.removeEventListener("timeupdate", setAudioTime);
       audio.removeEventListener("ended", handlePlaybackEnded);
       audio.removeEventListener("play", handlePlay);
       audio.removeEventListener("pause", handlePause);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [story.id, story.audioUrl]);
+  }, [story.id, story.audioUrl, autoplay]);
 
 
   const togglePlayPause = () => {
@@ -112,9 +113,18 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
                         </Button>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                        {story.nativeText}
-                        </p>
+                        <div className="relative text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                            {hasAudio && (
+                                <div
+                                    className="absolute inset-0 bg-gradient-to-r from-accent/70 to-accent/10 pointer-events-none -z-10"
+                                    style={{
+                                        width: `${progress}%`,
+                                        transition: isPlaying ? 'width 0.1s linear' : 'none',
+                                    }}
+                                />
+                            )}
+                            <span className="relative z-0">{story.nativeText}</span>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
@@ -167,4 +177,3 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
     </div>
   );
 }
-
