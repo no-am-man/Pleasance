@@ -1,4 +1,3 @@
-
 // src/app/treasury/page.tsx
 'use client';
 
@@ -192,7 +191,7 @@ function AssetList() {
                 {assets && assets.length > 0 ? (
                     <div className="space-y-4">
                         {assets.map(asset => {
-                            const isSvg3dAsset = asset.fileUrl && asset.fileUrl.includes('svg3d-assets');
+                            const isViewableVirtualAsset = (asset.type === 'virtual' || asset.type === 'ip') && asset.fileUrl;
                             return (
                                 <div key={asset.id} className="flex items-start gap-4 rounded-md border p-4">
                                     {asset.type === 'physical' ? <Box className="h-8 w-8 text-primary mt-1" /> : <BrainCircuit className="h-8 w-8 text-primary mt-1" />}
@@ -203,7 +202,7 @@ function AssetList() {
                                         </div>
                                         <p className="text-sm text-muted-foreground break-words">{asset.description}</p>
                                     </div>
-                                    {isSvg3dAsset && (
+                                    {isViewableVirtualAsset && (
                                         <Button asChild variant="outline" size="sm">
                                             <Link href={`/svg3d?assetUrl=${encodeURIComponent(asset.fileUrl!)}`}>
                                                 <Eye className="mr-2 h-4 w-4" />
@@ -274,6 +273,3 @@ export default function TreasuryPage() {
     </main>
   );
 }
-
-    
-
