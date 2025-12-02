@@ -75,15 +75,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
   // Effect to subscribe to Firebase auth state changes and manage session cookie
   useEffect(() => {
-    // If the auth service is not available, set loading to false and exit.
-    if (!auth) {
-      setUserAuthState({ user: null, isUserLoading: false, userError: new Error("Auth service not available.") });
-      return;
-    }
-    
-    // Start with a loading state
-    setUserAuthState({ user: null, isUserLoading: true, userError: null });
-
     const unsubscribe = onAuthStateChanged(
       auth,
       async (firebaseUser) => {
