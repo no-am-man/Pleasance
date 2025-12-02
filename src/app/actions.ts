@@ -17,8 +17,7 @@ import { generateCommunity } from '@/ai/flows/generate-community';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
-import { ai } from '@/ai/genkit';
-import { listModels } from 'genkit';
+import { listModels as listModelsFlow } from '@/ai/flows/list-models';
 import {
     GenerateSvg3dInputSchema,
     type GenerateSvg3dInput,
@@ -395,14 +394,13 @@ export async function saveSvgAsset(values: z.infer<typeof saveSvgAssetSchema>) {
 }
 
 /**
- * Lists available models from the configured Genkit AI plugin.
- * @returns An object containing a list of model names or an error.
+ * Lists available models from the configured Genkit AI plugin by calling a dedicated flow.
+ * @returns An object containing a list of model data or an error.
  */
 export async function listAvailableModels() {
     try {
-        const availableModels = await listModels();
-        const modelNames = availableModels.map(model => model.name);
-        return { data: modelNames };
+        const result = await listModelsFlow();
+        return { data: result.models };
     } catch (e) {
         console.error('List Models Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
@@ -414,4 +412,5 @@ export async function listAvailableModels() {
     
 
     
+
 

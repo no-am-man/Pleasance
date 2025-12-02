@@ -10,6 +10,7 @@ import { LoaderCircle, ShieldCheck, AlertTriangle, CheckCircle, Bone, List, Copy
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { runMemberSync, listAvailableModels } from '../actions';
 import { useToast } from '@/hooks/use-toast';
+import type { Model } from 'genkit/models';
 
 // This is a simple check. In a real-world app, this should be a secure custom claim.
 export const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com';
@@ -23,7 +24,7 @@ type SyncResult = {
 function ModelLister() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [models, setModels] = useState<string[] | null>(null);
+    const [models, setModels] = useState<Model[] | null>(null);
     const { toast } = useToast();
 
     const handleListModels = async () => {
@@ -81,9 +82,9 @@ function ModelLister() {
                         <h4 className="font-semibold mb-2">Available Models:</h4>
                         <div className="space-y-2 rounded-md border p-4 bg-background">
                             {models.map(model => (
-                                <div key={model} className="flex items-center justify-between text-sm font-mono bg-muted/50 p-2 rounded">
-                                    <span>{model}</span>
-                                    <Button size="icon" variant="ghost" onClick={() => handleCopy(model)}>
+                                <div key={model.name} className="flex items-center justify-between text-sm font-mono bg-muted/50 p-2 rounded">
+                                    <span>{model.name}</span>
+                                    <Button size="icon" variant="ghost" onClick={() => handleCopy(model.name)}>
                                         <Copy className="h-4 w-4" />
                                     </Button>
                                 </div>
