@@ -12,13 +12,23 @@ import { syncAllMembers } from '@/ai/flows/sync-members';
 import { generateFlag } from '@/ai/flows/generate-flag';
 import { VOICES } from '@/config/languages';
 import { initializeFirebase } from '@/firebase/config-for-actions';
-import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { getStorage } from 'firebase/storage';
+import { getDownloadURL, ref } from 'firebase/storage';
+import * as admin from 'firebase-admin';
+import { firebaseConfig } from '@/firebase/config';
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
   sourceLanguage: z.string().min(1),
   targetLanguage: z.string().min(1),
 });
+
+if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.applicationDefault(),
+      storageBucket: firebaseConfig.storageBucket,
+    });
+}
 
 export async function generateAndTranslateStory(values: z.infer<typeof storySchema>) {
   try {
@@ -192,21 +202,23 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
             throw new Error('Failed to generate a flag image from the AI flow.');
         }
 
-        // 2. Upload the flag from the server action
-        const { storage } = initializeFirebase();
-        const storagePath = `communities/${communityId}/flag.png`;
-        const storageRef = ref(storage, storagePath);
-        const base64Data = flagResult.flagUrl.split(',')[1];
-      
-        if (!base64Data) {
-            throw new Error('Invalid data URI format received from AI.');
-        }
+        // 2. Generate a signed URL for uploading
+        const bucket = admin.storage().bucket();
+        const filePath = `communities/${communityId}/flag.png`;
+        const file = bucket.file(filePath);
 
-        await uploadString(storageRef, base64Data, 'base64', { contentType: 'image/png' });
-        const downloadURL = await getDownloadURL(storageRef);
+        const [signedUrl] = await file.getSignedUrl({
+            action: 'write',
+            expires: Date.now() + 15 * 60 * 1000, // 15 minutes
+            contentType: 'image/png',
+        });
         
-        // 3. Return the public URL to the client
-        return { flagUrl: downloadURL };
+        // 3. Return the signed URL and the image data URI to the client
+        return {
+            signedUrl,
+            imageDataUri: flagResult.flagUrl,
+            filePath,
+        };
 
     } catch (e) {
         console.error('Flag Generation Error:', e);

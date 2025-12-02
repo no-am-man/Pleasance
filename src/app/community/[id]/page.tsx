@@ -4,7 +4,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, useStorage, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
 import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, setDoc, getDoc, deleteField, updateDoc } from 'firebase/firestore';
-import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { ref, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag } from 'lucide-react';
@@ -713,25 +713,43 @@ export default function CommunityProfilePage() {
   };
 
   const handleGenerateFlag = async () => {
-    if (!community || !firestore || !communityDocRef) return;
+    if (!community || !firestore || !communityDocRef || !storage) return;
   
     setIsGeneratingFlag(true);
     toast({ title: 'Generating New Flag...', description: 'The AI is painting. This may take a moment.' });
   
     try {
+      // Step 1: Call server action to get signed URL and image data
       const result = await generateCommunityFlag({
         communityId: community.id,
         communityName: community.name,
         communityDescription: community.description,
       });
   
-      if (result.error || !result.flagUrl) {
-        throw new Error(result.error || 'Server action failed to return a flag URL.');
+      if (result.error || !result.signedUrl || !result.imageDataUri || !result.filePath) {
+        throw new Error(result.error || 'Server action failed to return necessary data.');
       }
   
-      toast({ title: 'Finalizing...', description: 'Updating the community records.' });
+      const { signedUrl, imageDataUri, filePath } = result;
+      toast({ title: 'Uploading Flag...', description: 'Sending the new flag to storage.' });
   
-      await updateDoc(communityDocRef, { flagUrl: result.flagUrl });
+      // Step 2: Convert data URI to Blob and upload from client
+      const response = await fetch(imageDataUri);
+      const imageBlob = await response.blob();
+  
+      await fetch(signedUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'image/png',
+        },
+        body: imageBlob,
+      });
+  
+      // Step 3: Get public download URL and update Firestore
+      toast({ title: 'Finalizing...', description: 'Updating the community records.' });
+      const storageRef = ref(storage, filePath);
+      const downloadURL = await getDownloadURL(storageRef);
+      await updateDoc(communityDocRef, { flagUrl: downloadURL });
   
       toast({ title: 'New Flag Hoisted!', description: 'Your community has a new look.' });
   
