@@ -15,7 +15,7 @@ import { generateCommunity } from '@/ai/flows/generate-community';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
-import { generateSvg3d, GenerateSvg3dInputSchema } from '@/ai/flows/generate-svg3d-flow';
+import { generateSvg3d } from '@/ai/flows/generate-svg3d-flow';
 
 const storyTextSchema = z.object({
   userId: z.string(),
@@ -291,6 +291,12 @@ export async function runMemberSync() {
         return { error: `Member synchronization failed. ${message}` };
     }
 }
+
+const GenerateSvg3dInputSchema = z.object({
+  prompt: z.string().describe('The user prompt to inspire the SVG design.'),
+  width: z.number().describe('The width of the SVG image.'),
+  height: z.number().describe('The height of the SVG image.'),
+});
 
 export async function generateSvg3dImage(values: z.infer<typeof GenerateSvg3dInputSchema>) {
     try {

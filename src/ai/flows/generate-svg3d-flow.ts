@@ -10,12 +10,12 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-export const GenerateSvg3dInputSchema = z.object({
-  prompt: z.string().describe('The user prompt to inspire the SVG design.'),
-  width: z.number().describe('The width of the SVG image.'),
-  height: z.number().describe('The height of the SVG image.'),
-});
-export type GenerateSvg3dInput = z.infer<typeof GenerateSvg3dInputSchema>;
+// Input is now defined in the calling action.
+export type GenerateSvg3dInput = {
+  prompt: string;
+  width: number;
+  height: number;
+};
 
 export const GenerateSvg3dOutputSchema = z.object({
   svg: z.string().describe('The generated SVG string.'),
@@ -30,7 +30,8 @@ export async function generateSvg3d(
 
 const generateSvg3dPrompt = ai.definePrompt({
   name: 'generateSvg3dPrompt',
-  input: { schema: GenerateSvg3dInputSchema },
+  // Use a generic schema here, validation happens in the action.
+  input: { schema: z.any() },
   output: { schema: GenerateSvg3dOutputSchema },
   prompt: `You are an expert vector artist who understands sacred geometry. Your task is to generate an SVG image based on the "SVG3D" concept.
 
@@ -53,7 +54,7 @@ User Prompt: "{{prompt}}"
 const generateSvg3dFlow = ai.defineFlow(
   {
     name: 'generateSvg3dFlow',
-    inputSchema: GenerateSvg3dInputSchema,
+    inputSchema: z.any(),
     outputSchema: GenerateSvg3dOutputSchema,
   },
   async (input) => {
