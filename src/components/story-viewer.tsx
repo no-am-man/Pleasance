@@ -195,7 +195,7 @@ export default function StoryViewer({
                  <Button
                     onClick={togglePlayPause}
                     size="lg"
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-16 h-16 shadow-lg"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-16 h-16 shadow-lg flex items-center justify-center"
                     aria-label={isPlaying ? "Pause" : "Play"}
                     disabled={isLoading}
                     >
@@ -204,7 +204,7 @@ export default function StoryViewer({
                     ) : isPlaying ? (
                         <Pause className="h-8 w-8" />
                     ) : (
-                        <Play className="h-8 w-8 ml-1" />
+                        <Play className="h-8 w-8" fill="currentColor" />
                     )}
                 </Button>
                 {!hasAudio && !isLoading && <p className="text-xs text-muted-foreground">Click to Play</p>}
