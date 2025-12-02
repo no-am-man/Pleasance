@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, BookOpen, Warehouse, Banknote, Info, PartyPopper, Github } from 'lucide-react';
+import { Users, BookOpen, Warehouse, Banknote, Info, PartyPopper, Github, Beaker } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 
@@ -47,12 +47,12 @@ export default function WikiPage() {
             <CardHeader>
                 <div className="flex items-center gap-4">
                     <PartyPopper className="h-8 w-8 text-primary"/>
-                    <CardTitle>Version 2.0.0 is Live!</CardTitle>
+                    <CardTitle>Version 3.0.0 is Live!</CardTitle>
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
                 <p className="text-lg">
-                    This major update introduces a fully-featured Community Federation, allowing sovereign individuals to create, manage, and discover co-learning communities. We've also enhanced our AI capabilities and refined the user experience across the board.
+                    This major update introduces the collaborative AI Workshop, a real-time creative space where members of the Federation can experiment with generative tools together.
                 </p>
                 <Button asChild>
                     <Link href="https://github.com/no-am-man/Pleasance" target="_blank" rel="noopener noreferrer">
@@ -81,6 +81,15 @@ export default function WikiPage() {
         >
             The Federation is the social fabric. It's where you find or form your tribe. Each community is a self-governing entity, created and owned by its founder. You can create a community around any interest—a language, a technology, a philosophy. Populate it with AI members to spark conversation or invite other sovereign individuals to join your cause. There are no central authorities here.
         </FeatureCard>
+
+        <FeatureCard 
+            icon={<Beaker className="h-8 w-8 text-primary" />} 
+            title="AI Workshop"
+            imageUrl="https://picsum.photos/seed/105/600/400"
+            imageHint="ai collaboration"
+        >
+            The AI Workshop is a real-time, collaborative creative space. Anyone in the Federation can join and experiment with generative AI tools together. See who's currently in the workshop, generate 3D point-cloud art (SVG3D) from a prompt, and watch as the creation updates live for everyone. It's a shared sandbox for collective imagination.
+        </FeatureCard>
         
         <FeatureCard 
             icon={<BookOpen className="h-8 w-8 text-primary" />} 
@@ -97,7 +106,7 @@ export default function WikiPage() {
             imageUrl="https://picsum.photos/seed/103/600/400"
             imageHint="3d printer"
         >
-            Ideas are worthless without execution. The Fabrication service is where the digital becomes physical. Upload your designs—CAD files for objects, PDFs for books—and have them manufactured. This is a direct line from intellectual property to tangible assets. Create, build, and own.
+            Ideas are worthless without execution. The Fabrication service is where the digital becomes physical. Upload your designs—CAD files for objects, PDFs for books—and have them manufactured. The integrated Positioning System (PosSys) ensures precision from digital file to tangible asset. Create, build, and own.
         </FeatureCard>
         
         <FeatureCard 

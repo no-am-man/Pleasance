@@ -1,3 +1,10 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "workshop-collaboration",
+      "description": "People collaborating on a creative AI project.",
+      "imageUrl": "https://images.unsplash.com/photo-1543069752-7148d755b347?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxhaSUyMGNvbGxhYm9yYXRpb258ZW58MHx8fHwxNzY0NzE5NDQ5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "ai collaboration"
+    }
+  ]
 }

@@ -6,8 +6,8 @@
 
 This project is open source. You can find the repository [here](https://github.com/no-am-man/Pleasance).
 
-## 🎉 Version 2.1.0 is on Staging!
-This major update introduces a fully-featured Community Federation, allowing sovereign individuals to create, manage, and discover co-learning communities. We've also enhanced our AI capabilities and refined the user experience across the board.
+## 🎉 Version 3.0.0 is on Staging!
+This major update introduces the collaborative AI Workshop, a real-time creative space where members of the Federation can experiment with generative tools together.
 
 ## Core Philosophy
 
@@ -18,6 +18,10 @@ This is a federation, not a platform. It is a loose collection of sovereign indi
 ### 🏛️ Community Federation
 
 The Federation is the social fabric. It's where you find or form your tribe. Each community is a self-governing entity, created and owned by its founder. You can create a community around any interest—a language, a technology, a philosophy. Populate it with AI members to spark conversation or invite other sovereign individuals to join your cause. There are no central authorities here.
+
+### 🎨 AI Workshop
+
+The AI Workshop is a real-time, collaborative creative space. Anyone in the Federation can join and experiment with generative AI tools together. See who's currently in the workshop, generate 3D point-cloud art (SVG3D) from a prompt, and watch as the creation updates live for everyone. It's a shared sandbox for collective imagination.
 
 ### 📖 Nuncy Lingua
 
