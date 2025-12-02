@@ -9,6 +9,7 @@ import type { ChatHistory } from 'genkit';
 import { generateSpeech } from '@/ai/flows/generate-speech';
 import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
+import { generateSvg3dFlow } from '@/ai/flows/generate-svg3d';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { firebaseConfig } from '@/firebase/config';
 import admin from 'firebase-admin';
@@ -20,17 +21,9 @@ import { ai } from '@/ai/genkit';
 import {
     GenerateSvg3dInputSchema,
     type GenerateSvg3dInput,
-    ColorPixelSchema
+    MemberSchema
 } from '@/lib/types';
 
-
-// Schema for chat input, as it's used across client and server
-const MemberSchema = z.object({
-  name: z.string().describe("The AI member's unique name."),
-  role: z.string().describe("The member's role in the community."),
-  bio: z.string().describe("A short bio describing the member's personality and purpose."),
-  type: z.enum(['AI', 'human']).describe('The type of member.'),
-});
 
 export type ChatWithMemberInput = {
     member: z.infer<typeof MemberSchema>;
@@ -313,30 +306,6 @@ export async function runMemberSync() {
     }
 }
 
-const Svg3dOutputSchema = z.array(ColorPixelSchema);
-
-const generateSvg3dPrompt = ai.definePrompt({
-  name: 'generateSvg3dPrompt',
-  input: { schema: GenerateSvg3dInputSchema },
-  output: { schema: Svg3dOutputSchema },
-  model: 'googleai/gemini-1.5-flash-preview-0514',
-  prompt: `You are a digital artist who creates 3D point clouds. Generate a JSON array of 'ColorPixel' objects based on the user's request.
-
-- The user wants to create a point cloud representing: "{{{prompt}}}"
-- The conceptual cube size is {{cubeSize}}mm.
-- The requested pixel density is {{density}}.
-
-Your task is to generate the array of pixels.
-- The number of points should reflect the requested density:
-  - Low: ~300-500 points
-  - Medium: ~800-1500 points
-  - High: ~2000-3000 points
-- All coordinates (x, y, z) must be within a -50 to 50 range.
-- Use the prompt to inspire the shape, color, and structure of the point cloud.
-- Your entire response MUST be only the JSON array. Do not include any other text, explanations, or markdown.`,
-});
-
-
 export async function generateSvg3d(values: GenerateSvg3dInput) {
     try {
         const validatedFields = GenerateSvg3dInputSchema.safeParse(values);
@@ -344,13 +313,13 @@ export async function generateSvg3d(values: GenerateSvg3dInput) {
             return { error: 'Invalid input for SVG3D generation.' };
         }
 
-        const { output } = await generateSvg3dPrompt(validatedFields.data);
+        const result = await generateSvg3dFlow(validatedFields.data);
 
-        if (!output) {
+        if (!result.pixels) {
             return { error: 'Could not generate SVG3D image.' };
         }
 
-        return { pixels: output };
+        return { pixels: result.pixels };
     } catch (e) {
         console.error('SVG3D Generation Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';

@@ -1,3 +1,4 @@
+
 // src/lib/types.ts
 import { z } from 'zod';
 
@@ -12,7 +13,7 @@ export type ColorPixel = z.infer<typeof ColorPixelSchema>;
 
 export const GenerateSvg3dInputSchema = z.object({
   prompt: z.string(),
-  cubeSize: z.number(),
+  cubeSize: z.coerce.number(),
   density: z.enum(['low', 'medium', 'high']),
 });
 export type GenerateSvg3dInput = z.infer<typeof GenerateSvg3dInputSchema>;
