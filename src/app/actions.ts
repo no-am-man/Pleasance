@@ -13,6 +13,7 @@ import admin from 'firebase-admin';
 import { generateCommunity } from '@/ai/flows/generate-community';
 import { getStorage } from 'firebase-admin/storage';
 import { getFirestore } from 'firebase-admin/firestore';
+import wav from 'wav';
 
 
 const storyTextSchema = z.object({
@@ -88,6 +89,29 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
   }
 }
 
+async function toWav(pcmData: Buffer, channels = 1, rate = 24000, sampleWidth = 2): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const writer = new wav.Writer({
+      channels,
+      sampleRate: rate,
+      bitDepth: sampleWidth * 8,
+    });
+
+    let bufs: any[] = [];
+    writer.on('error', reject);
+    writer.on('data', function (d) {
+      bufs.push(d);
+    });
+    writer.on('end', function () {
+      resolve(Buffer.concat(bufs));
+    });
+
+    writer.write(pcmData);
+    writer.end();
+  });
+}
+
+
 async function processAudioInBackground(storyId: string, userId: string, textToSpeak: string) {
     try {
         const speechResult = await generateSpeech({ text: textToSpeak });
@@ -99,14 +123,16 @@ async function processAudioInBackground(storyId: string, userId: string, textToS
         const storage = getStorage(adminApp);
         const firestore = getFirestore(adminApp);
         
-        const storagePath = `stories/${userId}/${storyId}.l16`;
+        const storagePath = `stories/${userId}/${storyId}.wav`;
         const file = storage.bucket().file(storagePath);
         
-        const buffer = Buffer.from(speechResult.audioBase64, 'base64');
+        const pcmBuffer = Buffer.from(speechResult.audioBase64, 'base64');
+        const wavBuffer = await toWav(pcmBuffer);
 
-        await file.save(buffer, {
+
+        await file.save(wavBuffer, {
             metadata: {
-                contentType: 'audio/l16;rate=24000',
+                contentType: 'audio/wav',
             },
         });
         
@@ -127,7 +153,7 @@ async function processAudioInBackground(storyId: string, userId: string, textToS
         const adminApp = initializeAdminApp();
         const firestore = getFirestore(adminApp);
         const storyDocRef = firestore.collection('users').doc(userId).collection('stories').doc(storyId);
-        await storyDocRef.update({ status: 'failed' });
+        await storyDocRef.update({ status: 'failed', error: e instanceof Error ? e.message : String(e) });
     }
 }
 
