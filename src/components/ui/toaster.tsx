@@ -1,6 +1,7 @@
 
 "use client"
 
+import * as React from "react"
 import { useToast, toast } from "@/hooks/use-toast"
 import {
   Toast,
@@ -11,14 +12,28 @@ import {
   ToastViewport,
 } from "@/components/ui/toast"
 
+// Helper function to extract text from React nodes
+function extractTextFromNode(node: React.ReactNode): string {
+  if (typeof node === 'string' || typeof node === 'number') {
+    return node.toString();
+  }
+  if (Array.isArray(node)) {
+    return node.map(extractTextFromNode).join('');
+  }
+  if (React.isValidElement(node) && node.props.children) {
+    return extractTextFromNode(node.props.children);
+  }
+  return '';
+}
+
 export function Toaster() {
   const { toasts } = useToast()
 
   const handleContextMenu = (e: React.MouseEvent, title?: React.ReactNode, description?: React.ReactNode) => {
     e.preventDefault();
     
-    const titleText = title && typeof title === 'string' ? title : '';
-    const descriptionText = description && typeof description === 'string' ? description : '';
+    const titleText = extractTextFromNode(title);
+    const descriptionText = extractTextFromNode(description);
     
     const textToCopy = [titleText, descriptionText].filter(Boolean).join('\n');
 
@@ -36,6 +51,12 @@ export function Toaster() {
                 description: 'Could not copy message to clipboard.',
             })
         });
+    } else {
+        toast({
+            variant: 'destructive',
+            title: 'Copy Failed',
+            description: 'There was no text content to copy.',
+        })
     }
   };
 
