@@ -39,7 +39,7 @@ import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import useIsMobile from '@/hooks/use-is-mobile';
 
-const FOUNDER_EMAIL = 'jane.doe@example.com'; // Founder email check
+const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com'; // Founder email check
 
 const navLinks = [
   { href: '/', label: 'Home', icon: Home },

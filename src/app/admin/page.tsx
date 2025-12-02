@@ -10,7 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { runMemberSync } from '../actions';
 
 // This is a simple check. In a real-world app, this should be a secure custom claim.
-const FOUNDER_EMAIL = 'jane.doe@example.com';
+const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com';
 
 type SyncResult = {
     communitiesScanned: number;
