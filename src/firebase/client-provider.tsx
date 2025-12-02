@@ -1,7 +1,8 @@
+
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useMemo, type ReactNode, type DependencyList } from 'react';
-import { initializeFirebase } from '@/firebase/config';
+import { getFirebaseApp } from '@/firebase/config';
 import { type FirebaseApp } from 'firebase/app';
 import { type Auth, type User, getAuth, onAuthStateChanged } from 'firebase/auth';
 import { type Firestore, getFirestore } from 'firebase/firestore';
@@ -30,16 +31,22 @@ export const FirebaseContext = createContext<FirebaseContextState | undefined>(u
 export function FirebaseClientProvider({ children }: { children: ReactNode }) {
   const [services, setServices] = useState<{ app: FirebaseApp; auth: Auth; firestore: Firestore; storage: FirebaseStorage; } | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [isUserLoading, setIsUserLoading] = useState(true);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   useEffect(() => {
-    const { app, auth, firestore, storage } = initializeFirebase();
+    // Initialize Firebase on the client
+    const app = getFirebaseApp();
+    const auth = getAuth(app);
+    const firestore = getFirestore(app);
+    const storage = getStorage(app);
+    
     setServices({ app, auth, firestore, storage });
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
-      setIsUserLoading(false);
+      setIsAuthLoading(false);
 
+      // Manage server-side session cookie
       if (firebaseUser) {
         try {
           const idToken = await firebaseUser.getIdToken();
@@ -71,11 +78,12 @@ export function FirebaseClientProvider({ children }: { children: ReactNode }) {
       firestore: services.firestore,
       storage: services.storage,
       user,
-      isUserLoading,
+      isUserLoading: isAuthLoading,
     };
-  }, [services, user, isUserLoading]);
+  }, [services, user, isAuthLoading]);
 
-  if (!contextValue || isUserLoading) {
+  // Render a loading screen until Firebase services and initial auth state are ready
+  if (!contextValue || isAuthLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
