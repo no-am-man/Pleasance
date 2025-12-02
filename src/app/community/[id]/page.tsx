@@ -1,10 +1,10 @@
+
 // src/app/community/[id]/page.tsx
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, useStorage, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
 import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, setDoc, getDoc, deleteField, updateDoc } from 'firebase/firestore';
-import { ref, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag } from 'lucide-react';
@@ -15,7 +15,7 @@ import { useEffect, useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { getAiChatResponse, generateCommunityFlag } from '@/app/actions';
+import { generateCommunityFlag } from '@/app/actions';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
@@ -718,33 +718,35 @@ export default function CommunityProfilePage() {
     toast({ title: 'Generating New Flag...', description: 'The AI is painting. This may take a moment.' });
   
     try {
-      // Step 1: Call server action to get signed URL, image data, and final URL
       const result = await generateCommunityFlag({
         communityId: community.id,
         communityName: community.name,
         communityDescription: community.description,
       });
   
-      if (result.error || !result.signedUrl || !result.imageDataUri || !result.downloadURL) {
+      if (result.error || !result.data?.signedUrl || !result.data?.imageDataUri || !result.data?.downloadURL) {
         throw new Error(result.error || 'Server action failed to return necessary data.');
       }
   
-      const { signedUrl, imageDataUri, downloadURL } = result;
+      const { signedUrl, imageDataUri, downloadURL } = result.data;
+      
       toast({ title: 'Uploading Flag...', description: 'Sending the new flag to storage.' });
   
-      // Step 2: Convert data URI to Blob and upload from client
       const response = await fetch(imageDataUri);
       const imageBlob = await response.blob();
   
-      await fetch(signedUrl, {
+      const uploadResponse = await fetch(signedUrl, {
         method: 'PUT',
         headers: {
           'Content-Type': 'image/png',
         },
         body: imageBlob,
       });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Upload to signed URL failed.');
+      }
   
-      // Step 3: Update Firestore with the final download URL
       toast({ title: 'Finalizing...', description: 'Updating the community records.' });
       await updateDoc(communityDocRef, { flagUrl: downloadURL });
   

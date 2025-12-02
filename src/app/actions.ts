@@ -178,7 +178,6 @@ const flagSchema = z.object({
 
 export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) {
     try {
-        // Initialize Firebase Admin SDK only if not already initialized
         if (!admin.apps.length) {
             admin.initializeApp({
               credential: admin.credential.applicationDefault(),
@@ -193,13 +192,11 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
         
         const { communityId, communityName, communityDescription } = validatedFields.data;
 
-        // 1. Generate the flag image data URI from the AI flow
         const flagResult = await generateFlag({ communityName, communityDescription });
         if (!flagResult.flagUrl) {
             throw new Error('Failed to generate a flag image from the AI flow.');
         }
 
-        // 2. Generate a signed URL for uploading using the Admin SDK
         const bucket = admin.storage().bucket();
         const filePath = `communities/${communityId}/flag.png`;
         const file = bucket.file(filePath);
@@ -210,20 +207,19 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
             contentType: 'image/png',
         });
         
-        // 3. Construct the public download URL
-        // This is a standard format for Firebase Storage files with a public read rule.
         const downloadURL = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filePath)}?alt=media`;
 
-        // 4. Return all necessary data to the client
         return {
-            signedUrl,
-            imageDataUri: flagResult.flagUrl,
-            downloadURL, // Return the final public URL
+            data: {
+                signedUrl,
+                imageDataUri: flagResult.flagUrl,
+                downloadURL,
+            }
         };
 
     } catch (e) {
         console.error('Flag Generation Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
-        return { error: `Flag generation failed. ${message}` };
+        return { error: `Flag generation failed: ${message}` };
     }
 }
