@@ -2,7 +2,7 @@
 // src/app/story/page.tsx
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -224,6 +224,7 @@ export default function StoryPage() {
   const [activeStory, setActiveStory] = useState<Story | null>(null);
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
+  const storyViewerRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<z.infer<typeof StoryFormSchema>>({
     resolver: zodResolver(StoryFormSchema),
@@ -312,7 +313,9 @@ export default function StoryPage() {
           createdAt: null, // set to null because it's not saved yet
         };
         setActiveStory(temporaryActiveStory);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (storyViewerRef.current) {
+            storyViewerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
         toast({ title: "Story Generated!", description: "Your new story text is ready. Generating audio..."});
         
         // Now, generate and upload audio in the background
@@ -326,7 +329,9 @@ export default function StoryPage() {
 
   const handleSelectStoryFromHistory = (story: Story) => {
     setActiveStory(story);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (storyViewerRef.current) {
+        storyViewerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   if (isUserLoading || isProfileLoading) {
@@ -355,7 +360,7 @@ export default function StoryPage() {
       </div>
       
       {activeStory && (
-        <div className="mb-8">
+        <div className="mb-8" ref={storyViewerRef}>
             <StoryViewer 
                 key={activeStory.id}
                 story={activeStory}

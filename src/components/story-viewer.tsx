@@ -102,6 +102,28 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
 
   return (
     <div className="animate-in fade-in-50 duration-500 space-y-8">
+       <div className="flex flex-col items-center space-y-4 pt-4">
+        <audio ref={audioRef} src={story.audioUrl} crossOrigin="anonymous" />
+        
+        <div className="flex items-center gap-4">
+            <div className="flex flex-col items-center gap-2 self-end">
+                 <Button
+                    onClick={togglePlayPause}
+                    size="icon"
+                    className="rounded-full w-12 h-12 bg-red-600 hover:bg-red-700 disabled:bg-gray-400"
+                    aria-label={isPlaying ? "Pause" : "Play"}
+                    disabled={!hasAudio}
+                    >
+                    {isPlaying ? (
+                        <Pause className="h-6 w-6 fill-white text-white" />
+                    ) : (
+                        <Play className="h-6 w-6 fill-white text-white" />
+                    )}
+                </Button>
+                {!hasAudio && <LoaderCircle className="w-6 h-6 animate-spin text-primary" />}
+            </div>
+        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card>
           <CardHeader className="flex flex-row justify-between items-start">
@@ -138,29 +160,6 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
             </div>
           </CardContent>
         </Card>
-      </div>
-      
-      <div className="flex flex-col items-center space-y-4 pt-4">
-        <audio ref={audioRef} src={story.audioUrl} crossOrigin="anonymous" />
-        
-        <div className="flex items-center gap-4">
-            <div className="flex flex-col items-center gap-2 self-end">
-                 <Button
-                    onClick={togglePlayPause}
-                    size="icon"
-                    className="rounded-full w-12 h-12 bg-red-600 hover:bg-red-700 disabled:bg-gray-400"
-                    aria-label={isPlaying ? "Pause" : "Play"}
-                    disabled={!hasAudio}
-                    >
-                    {isPlaying ? (
-                        <Pause className="h-6 w-6 fill-white text-white" />
-                    ) : (
-                        <Play className="h-6 w-6 fill-white text-white" />
-                    )}
-                </Button>
-                {!hasAudio && <LoaderCircle className="w-6 h-6 animate-spin text-primary" />}
-            </div>
-        </div>
       </div>
     </div>
   );
