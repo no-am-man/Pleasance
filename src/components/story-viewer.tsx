@@ -38,36 +38,37 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-  
+
     const setAudioData = () => {
       setDuration(audio.duration);
       setCurrentTime(audio.currentTime);
     };
     const setAudioTime = () => setCurrentTime(audio.currentTime);
-    const handlePlaybackEnded = () => {
-      setIsPlaying(false);
-      setCurrentTime(0);
-    };
+    const handlePlaybackEnded = () => setIsPlaying(false);
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
-  
+    
+    // Set up event listeners
     audio.addEventListener("loadeddata", setAudioData);
     audio.addEventListener("timeupdate", setAudioTime);
     audio.addEventListener("ended", handlePlaybackEnded);
     audio.addEventListener("play", handlePlay);
     audio.addEventListener("pause", handlePause);
-  
+
+    // Load new audio source when story changes
     if (story.audioUrl && audio.src !== story.audioUrl) {
-        audio.src = story.audioUrl;
-        audio.load();
-        if (autoplay) {
-            audio.play().catch(e => console.error("Autoplay failed:", e));
-        }
+      audio.src = story.audioUrl;
+      audio.load();
+      if (autoplay) {
+        // Attempt to play, but catch errors (e.g., browser restrictions)
+        audio.play().catch(e => console.error("Autoplay was prevented:", e));
+      }
     } else if (!story.audioUrl) {
         audio.pause();
         audio.currentTime = 0;
     }
-  
+
+    // Cleanup function
     return () => {
       audio.removeEventListener("loadeddata", setAudioData);
       audio.removeEventListener("timeupdate", setAudioTime);
@@ -97,6 +98,19 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
       description: `The ${type} story has been copied.`,
     });
   };
+  
+  const HighlightLayer = ({ progress, isPlaying }: { progress: number, isPlaying: boolean }) => (
+    <div
+      className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-yellow-400/50 to-yellow-400/20 pointer-events-none -z-10 opacity-70"
+      style={{
+        width: '15%', // Width of the highlight gradient
+        left: `${progress}%`,
+        transition: isPlaying ? 'left 0.1s linear' : 'none',
+        filter: 'blur(20px)', // Softens the edges of the gradient
+      }}
+    />
+  );
+
 
   return (
     <div className="animate-in fade-in-50 duration-500">
@@ -104,7 +118,7 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
         <div className="flex flex-col md:flex-row items-start justify-center gap-8">
             {/* Original Story Panel */}
             <div className="w-full md:w-5/12">
-                <Card>
+                <Card className="overflow-hidden">
                     <CardHeader className="flex flex-row justify-between items-start">
                         <CardTitle>Original Story ({story.sourceLanguage})</CardTitle>
                         <Button variant="ghost" size="icon" onClick={() => handleCopy(story.nativeText, 'original')}>
@@ -113,19 +127,8 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
                     </CardHeader>
                     <CardContent>
                         <div className="relative text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                            {hasAudio && (
-                                <div
-                                    className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-yellow-600 pointer-events-none -z-10"
-                                    style={{
-                                        width: `${progress}%`,
-                                        transition: isPlaying ? 'width 0.1s linear' : 'none',
-                                    }}
-                                />
-                            )}
-                             <p className={cn(
-                                "relative z-0",
-                                hasAudio && "text-transparent bg-clip-text bg-gradient-to-r from-foreground to-foreground"
-                            )} style={hasAudio ? { textShadow: "0 0 1px hsla(var(--muted-foreground), 0.8)" } : {}}>
+                            {hasAudio && <HighlightLayer progress={progress} isPlaying={isPlaying} />}
+                            <p>
                                 {story.nativeText}
                             </p>
                         </div>
@@ -154,7 +157,7 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
 
             {/* Translated Story Panel */}
             <div className="w-full md:w-5/12">
-                <Card>
+                <Card className="overflow-hidden">
                 <CardHeader className="flex flex-row justify-between items-start">
                     <CardTitle>Translated Story</CardTitle>
                     <Button variant="ghost" size="icon" onClick={() => handleCopy(story.translatedText, 'translated')}>
@@ -163,19 +166,8 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
                 </CardHeader>
                 <CardContent>
                     <div className="relative text-foreground whitespace-pre-wrap leading-relaxed">
-                        {hasAudio && (
-                            <div
-                                className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-yellow-600 pointer-events-none -z-10"
-                                style={{
-                                    width: `${progress}%`,
-                                    transition: isPlaying ? 'width 0.1s linear' : 'none',
-                                }}
-                            />
-                        )}
-                        <p className={cn(
-                            "relative z-0",
-                            hasAudio && "text-transparent bg-clip-text bg-gradient-to-r from-foreground to-foreground"
-                        )} style={hasAudio ? { textShadow: "0 0 1px hsla(var(--foreground), 0.8)" } : {}}>
+                        {hasAudio && <HighlightLayer progress={progress} isPlaying={isPlaying} />}
+                        <p>
                             {story.translatedText}
                         </p>
                     </div>
