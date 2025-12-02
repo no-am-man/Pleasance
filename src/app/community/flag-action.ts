@@ -22,7 +22,8 @@ function getAdminApp() {
 
     const serviceAccountKeyBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
     if (!serviceAccountKeyBase64) {
-        throw new Error("Server not configured: FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is not set. Please add it to your .env file.");
+        // Return null instead of throwing, so the caller can handle the error gracefully.
+        return null;
     }
 
     let serviceAccount;
@@ -30,7 +31,9 @@ function getAdminApp() {
         const decodedKey = Buffer.from(serviceAccountKeyBase64, 'base64').toString('utf8');
         serviceAccount = JSON.parse(decodedKey);
     } catch (e) {
-        throw new Error("Server not configured: Failed to parse the service account key. It may be malformed.");
+        console.error("Flag Action Error: Failed to parse the service account key.", e);
+        // Return null for parsing errors as well.
+        return null;
     }
     
     return admin.initializeApp({
@@ -42,6 +45,10 @@ function getAdminApp() {
 export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) {
     try {
         const adminApp = getAdminApp();
+        if (!adminApp) {
+            throw new Error("Server not configured: Firebase Admin SDK initialization failed. Check server logs and .env configuration.");
+        }
+        
         const firestore = adminApp.firestore();
 
         const validatedFields = flagSchema.safeParse(values);
