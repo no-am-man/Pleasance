@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview A flow to generate a 3D point cloud for an SVG.
