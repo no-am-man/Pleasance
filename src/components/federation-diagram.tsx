@@ -33,7 +33,7 @@ const pathVariants = {
 
 const Node = ({ icon, label, x, y, custom, color = "text-primary", description }: { icon: React.ReactNode, label: string, x: number, y: number, custom: number, color?: string, description: string }) => (
     <motion.g initial="hidden" animate="visible" variants={itemVariants} custom={custom}>
-        <foreignObject x={x - 60} y={y - 55} width="120" height="110">
+        <foreignObject x={x - 60} y={y - 65} width="120" height="130">
             <div className="flex flex-col items-center justify-center text-center w-full h-full p-1">
                 <div className={`p-3 rounded-full bg-card border-2 border-border ${color}`}>
                     {icon}
@@ -49,7 +49,7 @@ const Node = ({ icon, label, x, y, custom, color = "text-primary", description }
 export function FederationDiagram() {
   return (
     <div className="my-16 w-full flex justify-center">
-        <svg viewBox="0 0 400 400" className="w-full max-w-sm h-auto">
+        <svg viewBox="0 0 400 400" className="w-full max-w-lg h-auto">
             <defs>
                  <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="5" refY="3.5" orient="auto">
                     <polygon points="0 0, 10 3.5, 0 7" className="fill-border" />
@@ -83,7 +83,7 @@ export function FederationDiagram() {
 
             {/* Special node for Global Markets */}
              <motion.g initial="hidden" animate="visible" variants={itemVariants} custom={2}>
-                <foreignObject x={280} y={240} width="120" height="110">
+                <foreignObject x={280} y={240} width="120" height="130">
                     <div className="flex flex-col items-center justify-center text-center w-full h-full p-1">
                         <div className="p-3 rounded-full bg-card border-2 border-yellow-400/50 text-yellow-400">
                            <Globe className="w-6 h-6" />
