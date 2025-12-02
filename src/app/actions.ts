@@ -11,36 +11,7 @@ import { generateSpeech } from '@/ai/flows/generate-speech';
 import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
 import { VOICES } from '@/config/languages';
-import * as admin from 'firebase-admin';
-
-/**
- * Gets a Firebase Admin app instance. It initializes the app with credentials
- * from environment variables, which is the standard and secure way.
- */
-function getAdminApp() {
-    const appName = 'pleasance-admin-actions';
-    const existingApp = admin.apps.find(app => app?.name === appName);
-    if (existingApp) {
-        return existingApp;
-    }
-
-    const serviceAccountKeyBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
-    if (!serviceAccountKeyBase64) {
-        throw new Error("Server not configured: FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is not set. Please add it to your .env file.");
-    }
-
-    let serviceAccount;
-    try {
-        const decodedKey = Buffer.from(serviceAccountKeyBase64, 'base64').toString('utf8');
-        serviceAccount = JSON.parse(decodedKey);
-    } catch (e) {
-        throw new Error("Server not configured: Failed to parse the service account key. It may be malformed.");
-    }
-    
-    return admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-    }, appName);
-}
+import { initializeAdminApp } from '@/firebase/config-admin';
 
 
 const storySchema = z.object({
@@ -192,11 +163,9 @@ export async function generateProfileAvatars(values: z.infer<typeof generateAvat
 
 export async function runMemberSync() {
     try {
-        getAdminApp();
+        // Initialize admin app to ensure server-side operations are authenticated
+        initializeAdminApp(); 
         const result = await syncAllMembers();
         return { data: result };
     } catch(e) {
         const message = e instanceof Error ? e.message : 'An unexpected error occurred during member sync.';
-        return { error: message };
-    }
-}
