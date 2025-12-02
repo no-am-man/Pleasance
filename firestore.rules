@@ -182,6 +182,25 @@ service cloud.firestore {
             allow update, delete: if isCommunityOwner(communityId);
         }
     }
+    
+    /**
+     * @description Manages collaborative workshop spaces.
+     * @path /workshops/{workshopId}
+     * @allow Read is public. Write is for signed-in users.
+     */
+    match /workshops/{workshopId} {
+        allow read: if true;
+        allow write: if isSignedIn();
+
+        /**
+         * @description Manages user presence within a workshop.
+         * @path /workshops/{workshopId}/present_users/{userId}
+         */
+        match /present_users/{userId} {
+            allow read: if true;
+            allow write, delete: if isOwner(userId); // Only a user can manage their own presence.
+        }
+    }
 
     /**
      * @description Secure storage for administrative data, like service account keys.

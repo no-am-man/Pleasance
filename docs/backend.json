@@ -296,6 +296,46 @@
             "createdAt": { "type": "string", "format": "date-time" }
         },
         "required": ["id", "userId", "userName", "userBio", "status", "createdAt"]
+    },
+    "Workshop": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Workshop",
+      "type": "object",
+      "description": "Represents a collaborative workshop space.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the workshop." },
+        "latestPrompt": { "type": "string", "description": "The last prompt used to generate art." },
+        "pixels": {
+          "type": "array",
+          "items": { "$ref": "#/backend/entities/ColorPixel" }
+        }
+      },
+      "required": ["id"]
+    },
+    "ColorPixel": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ColorPixel",
+        "type": "object",
+        "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" },
+            "z": { "type": "number" },
+            "color": { "type": "string" }
+        },
+        "required": ["x", "y", "z", "color"]
+    },
+    "PresentUser": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "PresentUser",
+        "type": "object",
+        "description": "Represents a user currently active in a specific part of the app, like a workshop.",
+        "properties": {
+            "userId": { "type": "string" },
+            "name": { "type": "string" },
+            "avatarUrl": { "type": "string", "format": "uri" },
+            "lastSeen": { "type": "string", "format": "date-time" }
+        },
+        "required": ["userId", "name", "lastSeen"]
     }
   },
   "auth": {
@@ -438,6 +478,29 @@
             "params": [
                 { "name": "communityId", "description": "The ID of the community." },
                 { "name": "requestId", "description": "The ID of the join request." }
+            ]
+        }
+      },
+      {
+        "path": "/workshops/{workshopId}",
+        "definition": {
+          "entityName": "Workshop",
+          "schema": { "$ref": "#/backend/entities/Workshop" },
+          "description": "Stores the state of a collaborative workshop. Publicly readable and writable by signed-in users.",
+          "params": [
+            { "name": "workshopId", "description": "The unique ID for the workshop." }
+          ]
+        }
+      },
+      {
+        "path": "/workshops/{workshopId}/present_users/{userId}",
+        "definition": {
+            "entityName": "PresentUser",
+            "schema": { "$ref": "#/backend/entities/PresentUser" },
+            "description": "Stores information about users currently active in a workshop.",
+            "params": [
+                { "name": "workshopId", "description": "The ID of the workshop." },
+                { "name": "userId", "description": "The ID of the user." }
             ]
         }
       }
