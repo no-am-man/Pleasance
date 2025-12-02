@@ -1,4 +1,3 @@
-
 'use server';
 
 import { z } from 'zod';
@@ -48,7 +47,7 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>
 
     // --- Step 2: Generate Speech Buffer ---
     const speechResult = await generateSpeech({ text: translatedText });
-    if (!speechResult.wavBase64) {
+    if (!speechResult.audioBase64) {
         throw new Error('Speech synthesis failed to produce audio.');
     }
     
@@ -61,7 +60,7 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>
         nativeText: originalStory,
         translatedText: translatedText,
       },
-      audioBase64: speechResult.wavBase64,
+      audioBase64: speechResult.audioBase64,
     };
 
   } catch (e) {

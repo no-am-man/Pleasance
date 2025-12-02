@@ -1,4 +1,3 @@
-
 // src/app/story/page.tsx
 'use client';
 
@@ -250,10 +249,10 @@ export default function StoryPage() {
             const storyId = newDocRef.id;
 
             // Upload audio to Firebase Storage from client
-            const storagePath = `stories/${user.uid}/${storyId}.wav`;
+            const storagePath = `stories/${user.uid}/${storyId}.l16`;
             const storageRef = ref(storage, storagePath);
             const uploadResult = await uploadString(storageRef, result.audioBase64, 'base64', {
-                contentType: 'audio/wav',
+                contentType: 'audio/l16;rate=24000',
             });
             const downloadURL = await getDownloadURL(uploadResult.ref);
 
