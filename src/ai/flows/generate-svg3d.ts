@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview A flow to generate a 3D point cloud for an SVG.
@@ -17,15 +16,22 @@ import type { GenerateSvg3dInput } from '@/lib/types';
 const Svg3dOutputSchema = z.object({
     pixels: z.array(ColorPixelSchema)
 });
-type Svg3dOutput = z.infer<typeof Svg3dOutputSchema>;
+export type Svg3dOutput = z.infer<typeof Svg3dOutputSchema>;
 
+export async function generateSvg3d(input: GenerateSvg3dInput): Promise<Svg3dOutput> {
+  return generateSvg3dFlow(input);
+}
 
-export async function generateSvg3d(values: GenerateSvg3dInput): Promise<Svg3dOutput> {
-    const prompt = `You are a digital artist who creates 3D point clouds. Generate a JSON object with a 'pixels' property containing an array of 'ColorPixel' objects based on the user's request.
+const generateSvg3dPrompt = ai.definePrompt({
+  name: 'generateSvg3dPrompt',
+  input: { schema: GenerateSvg3dInputSchema },
+  output: { schema: Svg3dOutputSchema },
+  model: 'googleai/gemini-1.5-pro',
+  prompt: `You are a digital artist who creates 3D point clouds. Generate a JSON object with a 'pixels' property containing an array of 'ColorPixel' objects based on the user's request.
 
-- The user wants to create a point cloud representing: "${values.prompt}"
-- The conceptual cube size is ${values.cubeSize}mm.
-- The requested pixel density is ${values.density}.
+- The user wants to create a point cloud representing: "{{prompt}}"
+- The conceptual cube size is {{cubeSize}}mm.
+- The requested pixel density is {{density}}.
 
 Your task is to generate the array of pixels.
 - The number of points should reflect the requested density:
@@ -34,19 +40,20 @@ Your task is to generate the array of pixels.
   - High: ~2000-3000 points
 - All coordinates (x, y, z) must be within a -50 to 50 range.
 - Use the prompt to inspire the shape, color, and structure of the point cloud.
-- Your entire response MUST be only the JSON object. Do not include any other text, explanations, or markdown.`;
+- Your entire response MUST be only the JSON object. Do not include any other text, explanations, or markdown.`,
+});
 
-    const { output } = await ai.generate({
-        model: 'googleai/gemini-1.5-pro',
-        prompt: prompt,
-        output: {
-            format: 'json',
-            schema: Svg3dOutputSchema,
-        },
-    });
-
+const generateSvg3dFlow = ai.defineFlow(
+  {
+    name: 'generateSvg3dFlow',
+    inputSchema: GenerateSvg3dInputSchema,
+    outputSchema: Svg3dOutputSchema,
+  },
+  async (input) => {
+    const { output } = await generateSvg3dPrompt(input);
     if (!output) {
-        throw new Error('Could not generate SVG3D image from the AI.');
+      throw new Error('Could not generate SVG3D image from the AI.');
     }
     return output;
-}
+  }
+);
