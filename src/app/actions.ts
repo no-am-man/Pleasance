@@ -9,7 +9,7 @@ import type { ChatHistory } from 'genkit';
 import { generateSpeech } from '@/ai/flows/generate-speech';
 import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
-import { generateSvg3d } from '@/ai/flows/generate-svg3d';
+import { generateSvg3d as generateSvg3dFlow } from '@/ai/flows/generate-svg3d';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { firebaseConfig } from '@/firebase/config';
 import admin from 'firebase-admin';
@@ -394,7 +394,7 @@ export async function saveSvgAsset(values: z.infer<typeof saveSvgAssetSchema>) {
 }
 
 /**
- * Lists available models from the configured Genkit Google AI plugin.
+ * Lists available models from the configured Genkit AI plugin.
  * @returns An object containing a list of model names or an error.
  */
 export async function listAvailableModels() {
