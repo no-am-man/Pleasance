@@ -15,7 +15,7 @@ import { LANGUAGES } from '@/config/languages';
 import { generateStoryAndSpeech, createHistorySnapshot } from '@/app/actions';
 import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useUser, setDocumentNonBlocking } from '@/firebase';
+import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
 import { collection, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import { Separator } from '@/components/ui/separator';
@@ -224,7 +224,6 @@ export default function StoryPage() {
   const [activeStoryId, setActiveStoryId] = useState<string | null>(null);
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
-  const storyViewerRef = useRef<HTMLDivElement>(null);
 
   const storyDocRef = useMemo(() => (user && activeStoryId) ? doc(firestore, 'users', user.uid, 'stories', activeStoryId) : null, [user, activeStoryId]);
   const [activeStory] = useDocumentData<Story>(storyDocRef);
@@ -273,7 +272,7 @@ export default function StoryPage() {
         
         // Scroll to the story viewer.
         setTimeout(() => {
-            storyViewerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }, 100);
     } else {
       setError('An unknown error occurred while generating the story text.');
@@ -283,7 +282,7 @@ export default function StoryPage() {
   const handleSelectStoryFromHistory = (story: Story) => {
     setActiveStoryId(story.id);
     setTimeout(() => {
-        storyViewerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }, 100);
   }
 
@@ -312,7 +311,7 @@ export default function StoryPage() {
         </p>
       </div>
       
-      <div ref={storyViewerRef} className="scroll-mt-4">
+      <div className="scroll-mt-4">
         {activeStory && (
             <div className="mb-8">
                 <StoryViewer 
