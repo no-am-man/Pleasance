@@ -39,7 +39,7 @@ import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import useIsMobile from '@/hooks/use-is-mobile';
 
-const FOUNDER_UID = 'PzPwb23fA4h6iH6i0J2aJ5aK9bA2'; // Founder UID check
+const FOUNDER_EMAIL = 'jane.doe@example.com'; // Founder email check
 
 const navLinks = [
   { href: '/', label: 'Home', icon: Home },
@@ -85,7 +85,7 @@ function NavLink({
 function UserNav() {
   const { user } = useUser();
   const auth = useAuth();
-  const isFounder = user?.uid === FOUNDER_UID;
+  const isFounder = user?.email === FOUNDER_EMAIL;
 
   const handleSignOut = async () => {
     await signOut(auth);
@@ -137,7 +137,7 @@ export function Header() {
   const pathname = usePathname();
   const { user } = useUser();
   const isMobile = useIsMobile();
-  const isFounder = user?.uid === FOUNDER_UID;
+  const isFounder = user?.email === FOUNDER_EMAIL;
 
   const allLinks = isFounder ? [...navLinks, adminLink] : navLinks;
 

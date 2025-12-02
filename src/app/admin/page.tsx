@@ -10,7 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { runMemberSync } from '../actions';
 
 // This is a simple check. In a real-world app, this should be a secure custom claim.
-const FOUNDER_UID = 'PzPwb23fA4h6iH6i0J2aJ5aK9bA2';
+const FOUNDER_EMAIL = 'jane.doe@example.com';
 
 type SyncResult = {
     communitiesScanned: number;
@@ -107,7 +107,7 @@ export default function AdminPage() {
         );
     }
 
-    if (user?.uid !== FOUNDER_UID) {
+    if (user?.email !== FOUNDER_EMAIL) {
         return (
             <main className="container mx-auto flex min-h-[80vh] items-center justify-center">
                 <Card className="w-full max-w-md text-center">
