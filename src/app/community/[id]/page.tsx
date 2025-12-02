@@ -713,41 +713,28 @@ export default function CommunityProfilePage() {
   };
 
   const handleGenerateFlag = async () => {
-    if (!community || !storage || !firestore || !communityDocRef) return;
-
+    if (!community || !firestore || !communityDocRef) return;
+  
     setIsGeneratingFlag(true);
+    toast({ title: 'Generating New Flag...', description: 'The AI is painting. This may take a moment.' });
+  
     try {
-      toast({ title: 'Generating New Flag...', description: 'This may take a moment. The AI is painting.' });
-
       const result = await generateCommunityFlag({
+        communityId: community.id,
         communityName: community.name,
         communityDescription: community.description,
       });
-
+  
       if (result.error || !result.flagUrl) {
-        throw new Error(result.error || 'AI did not return a flag image.');
+        throw new Error(result.error || 'Server action failed to return a flag URL.');
       }
-
-      toast({ title: 'Uploading Flag...', description: 'Saving the new flag to the federation archives.' });
-
-      const storagePath = `communities/${community.id}/flag.png`;
-      const storageRef = ref(storage, storagePath);
-      const base64Data = result.flagUrl.split(',')[1];
-      
-      if (!base64Data) {
-        throw new Error('Invalid data URI format received from AI.');
-      }
-
-      await uploadString(storageRef, base64Data, 'base64', { contentType: 'image/png' });
-      
-      const downloadURL = await getDownloadURL(storageRef);
-
+  
       toast({ title: 'Finalizing...', description: 'Updating the community records.' });
-
-      await updateDoc(communityDocRef, { flagUrl: downloadURL });
-
+  
+      await updateDoc(communityDocRef, { flagUrl: result.flagUrl });
+  
       toast({ title: 'New Flag Hoisted!', description: 'Your community has a new look.' });
-
+  
     } catch (e) {
       const message = e instanceof Error ? e.message : 'An unknown error occurred';
       toast({ variant: 'destructive', title: 'Flag Generation Failed', description: message });

@@ -11,6 +11,8 @@ import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
 import { generateFlag } from '@/ai/flows/generate-flag';
 import { VOICES } from '@/config/languages';
+import { initializeFirebase } from '@/firebase/config-for-actions';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
@@ -170,6 +172,7 @@ export async function runMemberSync() {
 }
 
 const flagSchema = z.object({
+    communityId: z.string(),
     communityName: z.string(),
     communityDescription: z.string(),
 });
@@ -181,16 +184,29 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
             return { error: 'Invalid input for flag generation.' };
         }
         
-        const { communityName, communityDescription } = validatedFields.data;
+        const { communityId, communityName, communityDescription } = validatedFields.data;
 
         // 1. Generate the flag image data URI from the AI flow
         const flagResult = await generateFlag({ communityName, communityDescription });
         if (!flagResult.flagUrl) {
             throw new Error('Failed to generate a flag image from the AI flow.');
         }
+
+        // 2. Upload the flag from the server action
+        const { storage } = initializeFirebase();
+        const storagePath = `communities/${communityId}/flag.png`;
+        const storageRef = ref(storage, storagePath);
+        const base64Data = flagResult.flagUrl.split(',')[1];
+      
+        if (!base64Data) {
+            throw new Error('Invalid data URI format received from AI.');
+        }
+
+        await uploadString(storageRef, base64Data, 'base64', { contentType: 'image/png' });
+        const downloadURL = await getDownloadURL(storageRef);
         
-        // 2. Return the data URI to the client
-        return { flagUrl: flagResult.flagUrl };
+        // 3. Return the public URL to the client
+        return { flagUrl: downloadURL };
 
     } catch (e) {
         console.error('Flag Generation Error:', e);
