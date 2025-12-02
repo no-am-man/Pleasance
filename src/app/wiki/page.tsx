@@ -1,4 +1,3 @@
-
 // src/app/wiki/page.tsx
 'use client';
 
@@ -38,12 +37,12 @@ export default function WikiPage() {
             <CardHeader>
                 <div className="flex items-center gap-4">
                     <PartyPopper className="h-8 w-8 text-primary"/>
-                    <CardTitle>Version 1.0.0 is Live!</CardTitle>
+                    <CardTitle>Version 2.0.0 is Live!</CardTitle>
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
                 <p className="text-lg">
-                    We are excited to announce the official release of Pleasance. The federation is now open source and ready for its first wave of sovereign individuals. Thank you for being part of this journey.
+                    This major update introduces a fully-featured Community Federation, allowing sovereign individuals to create, manage, and discover co-learning communities. We've also enhanced our AI capabilities and refined the user experience across the board.
                 </p>
                 <Button asChild>
                     <Link href="https://github.com/no-am-man/Pleasance" target="_blank" rel="noopener noreferrer">
