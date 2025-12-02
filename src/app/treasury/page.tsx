@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
 import { collection, query, serverTimestamp, doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -18,6 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LoaderCircle, LogIn, Coins, BrainCircuit, Box, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
 
 const AssetSchema = z.object({
   name: z.string().min(2, 'Asset name must be at least 2 characters.'),
@@ -165,13 +166,10 @@ function AddAssetForm() {
 
 function AssetList() {
     const { user } = useUser();
-
-    const assetsQuery = useMemoFirebase(() => {
-        if (!user) return null;
-        return query(collection(firestore, 'users', user.uid, 'assets'));
-    }, [user]);
-
-    const { data: assets, isLoading, error } = useCollection<Asset>(assetsQuery);
+    const assetsQuery = user ? query(collection(firestore, 'users', user.uid, 'assets')) : null;
+    const [assets, isLoading, error] = useCollectionData<Asset>(assetsQuery, {
+      idField: 'id'
+    });
 
     if (isLoading) {
         return <div className="flex justify-center p-8"><LoaderCircle className="w-8 h-8 animate-spin text-primary" /></div>;

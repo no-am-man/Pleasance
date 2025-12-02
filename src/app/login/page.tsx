@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth';
-import { useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { auth, firestore } from '@/firebase/config';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import { LoaderCircle, LogIn, LogOut, MailPlus } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { doc } from 'firebase/firestore';
 import Link from 'next/link';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
 
 const GoogleIcon = () => (
     <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -59,12 +60,8 @@ export default function LoginPage() {
     processRedirectResult();
   }, []);
 
-  const profileRef = useMemoFirebase(() => {
-    if (!user) return null;
-    return doc(firestore, 'community-profiles', user.uid);
-  }, [user]);
-
-  const { data: profile, isLoading: isProfileLoading } = useDoc(profileRef);
+  const profileRef = user ? doc(firestore, 'community-profiles', user.uid) : null;
+  const [profile, isProfileLoading] = useDocumentData(profileRef);
 
   const handleGoogleSignIn = async () => {
     setIsSigningIn(true);

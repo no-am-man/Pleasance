@@ -2,7 +2,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
 import { doc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +16,7 @@ import { getAiChatResponse } from '@/app/actions';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { type ChatHistory } from 'genkit';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
 
 type Member = {
   name: string;
@@ -150,12 +151,8 @@ export default function AiMemberProfilePage() {
   const communityId = Array.isArray(params.id) ? params.id[0] : params.id;
   const memberName = Array.isArray(params.memberName) ? params.memberName[0] : params.memberName;
 
-  const communityDocRef = useMemoFirebase(() => {
-    if (!communityId) return null;
-    return doc(firestore, 'communities', communityId);
-  }, [communityId]);
-
-  const { data: community, isLoading, error } = useDoc<Community>(communityDocRef);
+  const communityDocRef = communityId ? doc(firestore, 'communities', communityId) : null;
+  const [community, isLoading, error] = useDocumentData<Community>(communityDocRef);
 
   const member = community?.members.find(
     (m) => m.name === decodeURIComponent(memberName)

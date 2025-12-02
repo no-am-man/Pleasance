@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
-import { useUser, useCollection, useMemoFirebase } from "@/firebase";
+import { useUser } from "@/firebase";
 import { firestore } from "@/firebase/config";
 import { collection, doc, query, where, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import { createCommunityDetails } from "../actions";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { useCollectionData } from "react-firebase-hooks/firestore";
 
 const FormSchema = z.object({
   prompt: z.string().min(10, "Please enter a prompt of at least 10 characters."),
@@ -129,7 +130,7 @@ function CreateCommunityForm() {
   );
 }
 
-function CommunityList({ title, communities, isLoading, error }: { title: string, communities: Community[] | null, isLoading: boolean, error: Error | null }) {
+function CommunityList({ title, communities, isLoading, error }: { title: string, communities: Community[] | undefined, isLoading: boolean, error: Error | undefined }) {
     if (isLoading) {
       return <div className="flex justify-center"><LoaderCircle className="w-8 h-8 animate-spin text-primary" /></div>;
     }
@@ -166,14 +167,13 @@ function CommunityList({ title, communities, isLoading, error }: { title: string
 }
 
 function CommunitySearchResults({ searchTerm }: { searchTerm: string }) {
-    const searchCommunitiesQuery = useMemoFirebase(() => {
-      if (!searchTerm) return null;
-      const communitiesRef = collection(firestore, 'communities');
-      // A simple "startsWith" search. For full-text search, an external service like Algolia is better.
-      return query(communitiesRef, where('name', '>=', searchTerm), where('name', '<=', searchTerm + '\uf8ff'));
-    }, [searchTerm]);
+    const searchCommunitiesQuery = searchTerm 
+      ? query(collection(firestore, 'communities'), where('name', '>=', searchTerm), where('name', '<=', searchTerm + '\uf8ff'))
+      : null;
   
-    const { data: communities, isLoading, error } = useCollection<Community>(searchCommunitiesQuery);
+    const [communities, isLoading, error] = useCollectionData<Community>(searchCommunitiesQuery, {
+      idField: 'id',
+    });
 
     return (
         <CommunityList 
@@ -186,11 +186,11 @@ function CommunitySearchResults({ searchTerm }: { searchTerm: string }) {
 }
 
 function PublicCommunityList() {
-    const publicCommunitiesQuery = useMemoFirebase(() => {
-        return query(collection(firestore, 'communities'), orderBy('name', 'asc'));
-    }, []);
+    const publicCommunitiesQuery = query(collection(firestore, 'communities'), orderBy('name', 'asc'));
 
-    const { data: communities, isLoading, error } = useCollection<Community>(publicCommunitiesQuery);
+    const [communities, isLoading, error] = useCollectionData<Community>(publicCommunitiesQuery, {
+      idField: 'id',
+    });
 
     return (
         <CommunityList
@@ -207,12 +207,11 @@ export default function CommunityPage() {
   const { user, isUserLoading } = useUser();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const userCommunitiesQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return query(collection(firestore, 'communities'), where('ownerId', '==', user.uid));
-  }, [user]);
+  const userCommunitiesQuery = user ? query(collection(firestore, 'communities'), where('ownerId', '==', user.uid)) : null;
 
-  const { data: userCommunities, isLoading, error } = useCollection<Community>(userCommunitiesQuery);
+  const [userCommunities, isLoading, error] = useCollectionData<Community>(userCommunitiesQuery, {
+    idField: 'id',
+  });
 
   if (isUserLoading) {
     return (

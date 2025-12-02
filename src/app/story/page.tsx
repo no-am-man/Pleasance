@@ -14,11 +14,12 @@ import { LANGUAGES } from '@/config/languages';
 import { generateAndTranslateStory } from '@/app/actions';
 import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
 import { collection, query, orderBy, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
 
 const StoryFormSchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
@@ -47,13 +48,10 @@ type StoryResult = {
 function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void; }) {
     const { user, isUserLoading } = useUser();
 
-    const storiesQuery = useMemoFirebase(() => {
-        if (!user) return null;
-        const storiesCollectionRef = collection(firestore, 'users', user.uid, 'stories');
-        return query(storiesCollectionRef, orderBy('createdAt', 'desc'));
-    }, [user]);
-
-    const { data: stories, isLoading, error } = useCollection<Story>(storiesQuery);
+    const storiesQuery = user ? query(collection(firestore, 'users', user.uid, 'stories'), orderBy('createdAt', 'desc')) : null;
+    const [stories, isLoading, error] = useCollectionData<Story>(storiesQuery, {
+      idField: 'id'
+    });
 
     if (isUserLoading) {
       return (

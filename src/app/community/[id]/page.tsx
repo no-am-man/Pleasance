@@ -2,7 +2,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useUser, useDoc, useMemoFirebase, useCollection, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
+import { useUser, addDocumentNonBlocking } from '@/firebase';
 import { firestore } from '@/firebase/config';
 import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, setDoc, getDoc, deleteField, updateDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +23,7 @@ import { AiIcon } from '@/components/icons/ai-icon';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import Image from 'next/image';
 import { getAiChatResponse } from '@/app/actions';
+import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
 
 type Member = {
   name: string;
@@ -244,7 +245,7 @@ function CommentCard({ comment }: { comment: Comment }) {
     )
 }
 
-function CommentThread({ message, comments, isLoading }: { message: Message, comments: Comment[] | null, isLoading: boolean }) {
+function CommentThread({ message, comments, isLoading }: { message: Message, comments: Comment[] | undefined, isLoading: boolean }) {
     const { user } = useUser();
 
     return (
@@ -265,12 +266,10 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
     const isDone = message.status === 'done';
     const isDeleted = message.deleted;
     
-    const commentsQuery = useMemoFirebase(() => {
-        const commentsColRef = collection(firestore, `communities/${message.communityId}/messages/${message.id}/comments`);
-        return query(commentsColRef, orderBy('createdAt', 'asc'));
-    }, [message.communityId, message.id]);
-
-    const { data: comments, isLoading: isLoadingComments } = useCollection<Comment>(commentsQuery);
+    const commentsQuery = query(collection(firestore, `communities/${message.communityId}/messages/${message.id}/comments`), orderBy('createdAt', 'asc'));
+    const [comments, isLoadingComments] = useCollectionData<Comment>(commentsQuery, {
+      idField: 'id'
+    });
     const commentCount = comments?.length || 0;
 
     const handleToggleStatus = async () => {
@@ -409,12 +408,10 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
 function Chat({ communityId, isOwner, allMembers }: { communityId: string; isOwner: boolean, allMembers: Member[] }) {
     const { user } = useUser();
 
-    const messagesQuery = useMemoFirebase(() => {
-        const messagesColRef = collection(firestore, `communities/${communityId}/messages`);
-        return query(messagesColRef, orderBy('createdAt', 'desc'));
-    }, [communityId]);
-
-    const { data: messages, isLoading, error } = useCollection<Message>(messagesQuery);
+    const messagesQuery = query(collection(firestore, `communities/${communityId}/messages`), orderBy('createdAt', 'desc'));
+    const [messages, isLoading, error] = useCollectionData<Message>(messagesQuery, {
+      idField: 'id'
+    });
     
     const triggerAiResponse = async (userMessage: string) => {
         if (!user) return;
@@ -493,12 +490,10 @@ function Chat({ communityId, isOwner, allMembers }: { communityId: string; isOwn
 function JoinRequests({ communityId, communityDocRef }: { communityId: string, communityDocRef: any }) {
     const { toast } = useToast();
 
-    const requestsQuery = useMemoFirebase(() => {
-        const requestsColRef = collection(firestore, `communities/${communityId}/joinRequests`);
-        return query(requestsColRef, where('status', '==', 'pending'));
-    }, [communityId]);
-
-    const { data: requests, isLoading } = useCollection<JoinRequest>(requestsQuery);
+    const requestsQuery = query(collection(firestore, `communities/${communityId}/joinRequests`), where('status', '==', 'pending'));
+    const [requests, isLoading] = useCollectionData<JoinRequest>(requestsQuery, {
+      idField: 'id'
+    });
 
     const handleRequest = async (request: JoinRequest, newStatus: 'approved' | 'rejected') => {
         const requestDocRef = doc(firestore, `communities/${communityId}/joinRequests`, request.id);
@@ -569,18 +564,15 @@ export default function CommunityProfilePage() {
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const [isGeneratingFlag, setIsGeneratingFlag] = useState(false);
 
-  const communityDocRef = useMemoFirebase(() => {
-    if (!id) return null;
-    return doc(firestore, 'communities', id);
-  }, [id]);
-
-  const { data: community, isLoading, error } = useDoc<Community>(communityDocRef);
+  const communityDocRef = id ? doc(firestore, 'communities', id) : null;
+  const [community, isLoading, error] = useDocumentData<Community>(communityDocRef, {
+    idField: 'id'
+  });
   
-  const allProfilesQuery = useMemoFirebase(() => {
-    return collection(firestore, 'community-profiles');
-  }, []);
-
-  const { data: allProfiles, isLoading: profilesLoading } = useCollection<CommunityProfile>(allProfilesQuery);
+  const allProfilesQuery = collection(firestore, 'community-profiles');
+  const [allProfiles, profilesLoading] = useCollectionData<CommunityProfile>(allProfilesQuery, {
+    idField: 'id'
+  });
 
   const [allMembers, setAllMembers] = useState<Member[]>([]);
   const [suggestedUsers, setSuggestedUsers] = useState<CommunityProfile[]>([]);
@@ -588,18 +580,11 @@ export default function CommunityProfilePage() {
 
   const isOwner = user?.uid === community?.ownerId;
   
-  const userProfileRef = useMemoFirebase(() => {
-    if (!user) return null;
-    return doc(firestore, 'community-profiles', user.uid);
-  }, [user]);
-  const { data: userProfile } = useDoc<CommunityProfile>(userProfileRef);
+  const userProfileRef = user ? doc(firestore, 'community-profiles', user.uid) : null;
+  const [userProfile] = useDocumentData<CommunityProfile>(userProfileRef);
 
-  const userJoinRequestRef = useMemoFirebase(() => {
-    if (!user || !id) return null;
-    return doc(firestore, 'communities', id, 'joinRequests', user.uid);
-  }, [user, id]);
-  
-  const { data: userJoinRequest, isLoading: isRequestLoading } = useDoc<JoinRequest>(userJoinRequestRef);
+  const userJoinRequestRef = user && id ? doc(firestore, 'communities', id, 'joinRequests', user.uid) : null;
+  const [userJoinRequest, isRequestLoading] = useDocumentData<JoinRequest>(userJoinRequestRef);
 
   const hasPendingRequest = userJoinRequest?.status === 'pending';
 

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
 import { doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -25,6 +25,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { generateProfileAvatars } from '../actions';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { useDocumentDataOnce } from 'react-firebase-hooks/firestore';
 
 const ProfileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -139,12 +140,9 @@ export default function ProfilePage() {
   const [selectedAvatarUrl, setSelectedAvatarUrl] = useState<string | null>(null);
 
 
-  const profileDocRef = useMemoFirebase(() => {
-    if (!user) return null;
-    return doc(firestore, 'community-profiles', user.uid);
-  }, [user]);
+  const profileDocRef = user ? doc(firestore, 'community-profiles', user.uid) : null;
+  const [existingProfile, isProfileLoading] = useDocumentDataOnce(profileDocRef);
 
-  const { data: existingProfile, isLoading: isProfileLoading } = useDoc<CommunityProfile>(profileDocRef);
 
   const form = useForm<z.infer<typeof ProfileSchema>>({
     resolver: zodResolver(ProfileSchema),
