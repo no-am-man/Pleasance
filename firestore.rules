@@ -49,10 +49,6 @@ service cloud.firestore {
         return request.resource.data.ownerId == request.auth.uid;
     }
     
-    function isImmutableCommunityOwnerId() {
-        return request.resource.data.ownerId == resource.data.ownerId;
-    }
-
     // --- Community Profile Validation ---
     function hasValidProfileData(userId) {
         return request.resource.data.userId == userId && request.resource.data.id == userId;
@@ -132,7 +128,7 @@ service cloud.firestore {
         allow get: if true;
         allow list: if true;
         allow create: if isSignedIn() && hasValidCommunityData();
-        allow update: if isCommunityOwner(communityId) && isImmutableCommunityOwnerId();
+        allow update: if isCommunityOwner(communityId) && request.resource.data.ownerId == resource.data.ownerId;
         allow delete: if isCommunityOwner(communityId);
 
         /**
