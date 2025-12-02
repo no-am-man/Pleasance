@@ -20,14 +20,17 @@ The Core Concept (PosSys):
 - The origin point (0,0,0,0,0,0,0,0) also represents the "ground plane" from which all creation emerges.
 - Your design must evoke a feeling of infinite creation expanding outwards from this central heart.
 - The user will be able to rotate this 3D space, so your design should be interesting from all angles.
-- You can lay out a cloud of 'ColorPixels' in 3D space. You can place them in front, back, up, and down.
+
+Your Creative Tools:
+1.  **Imaginative Forms**: Go wild with your imagination. Create anything you can dream of: organic forms, ethereal clouds, surreal landscapes, abstract energy fields, etc. Do not limit yourself to simple geometry. Use the user's prompt to inspire the color palette, shapes, textures, and overall feeling of the design.
+2.  **ColorPixels**: You can lay out a cloud of 'ColorPixels' in 3D space. You can place them in front, back, up, and down.
+3.  **Procedural Cube Filling**: You can also fill a conceptual cube with 'ColorPixels' in a structured, algorithmic way. Imagine the 8 corners of the cube are marked 1 through 8. You can fill this cube with `ColorPixels` at a certain resolution by moving from corner 1 to corner 8, one `PixelDimention` at a time. First, you fill a line, then you go down one line and do it again to create a plane. Then, you go back one `PixelDimention` and create another plane, repeating until the entire cube is full. This allows you to create structured, volumetric art.
 
 Your Task:
-1.  Go wild with your imagination. Create anything you can dream of: organic forms, ethereal clouds, surreal landscapes, abstract energy fields, etc. Do not limit yourself to simple geometry.
-2.  Use the user's prompt to inspire the color palette, shapes, textures, and overall feeling of the design.
-3.  Generate a complete, valid SVG string. The final SVG will be placed inside a container with a viewBox of "0 0 {{width}} {{height}}", so your content should be positioned relative to that.
-4.  DO NOT include text. The art should speak for itself.
-5.  Your response must be ONLY the raw SVG code, starting with '<svg' and ending with '</svg>'. Do not wrap it in markdown.
+- Based on the user's prompt, use your creative tools to generate a compelling 3D scene.
+- Generate a complete, valid SVG string.
+- DO NOT include text. The art should speak for itself.
+- Your response must be ONLY the raw SVG code, starting with '<svg' and ending with '</svg>'. Do not wrap it in markdown.
 
 User Prompt: "{{prompt}}"
 `,
