@@ -196,12 +196,12 @@ function AssetList() {
                             return (
                                 <div key={asset.id} className="flex items-start gap-4 rounded-md border p-4">
                                     {asset.type === 'physical' ? <Box className="h-8 w-8 text-primary mt-1" /> : <BrainCircuit className="h-8 w-8 text-primary mt-1" />}
-                                    <div className="flex-1">
+                                    <div className="flex-1 min-w-0">
                                         <div className="flex justify-between items-center">
                                             <h3 className="font-semibold">{asset.name}</h3>
                                             <p className="font-mono text-primary font-bold text-lg">${asset.value.toLocaleString()}</p>
                                         </div>
-                                        <p className="text-sm text-muted-foreground">{asset.description}</p>
+                                        <p className="text-sm text-muted-foreground break-words">{asset.description}</p>
                                     </div>
                                     {isSvg3dAsset && (
                                         <Button asChild variant="outline" size="sm">
@@ -276,3 +276,4 @@ export default function TreasuryPage() {
 }
 
     
+
