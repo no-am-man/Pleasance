@@ -26,8 +26,13 @@ export function initializeAdminApp() {
     const decodedKey = Buffer.from(serviceAccountKeyBase64, 'base64').toString('utf8');
     const serviceAccount = JSON.parse(decodedKey);
 
+    // Explicitly construct the credential object to avoid parsing issues.
     return admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
+      credential: admin.credential.cert({
+        projectId: serviceAccount.project_id,
+        clientEmail: serviceAccount.client_email,
+        privateKey: serviceAccount.private_key.replace(/\\n/g, '\n'), // Ensure private key newlines are handled
+      }),
     }, appName);
   } catch (e: any) {
     throw new Error(`Server configuration error: Failed to parse the service account key. Please ensure it is a valid, non-malformed Base64 string. Original error: ${e.message}`);
