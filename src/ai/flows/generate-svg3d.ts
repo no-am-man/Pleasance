@@ -25,7 +25,6 @@ export async function generateSvg3d(input: GenerateSvg3dInput): Promise<Svg3dOut
 
 const generateSvg3dPrompt = ai.definePrompt({
     name: 'generateSvg3dPrompt',
-    model: 'googleai/gemini-pro',
     input: { schema: GenerateSvg3dInputSchema },
     output: { schema: Svg3dOutputSchema },
     prompt: `You are a digital artist who creates 3D point clouds. Generate a JSON object with a 'pixels' property containing an array of 'ColorPixel' objects based on the user's request.
