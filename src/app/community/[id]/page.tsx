@@ -1,4 +1,3 @@
-
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -12,7 +11,7 @@ import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mess
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
@@ -267,7 +266,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
     const isDone = message.status === 'done';
     const isDeleted = message.deleted;
     
-    const commentsQuery = query(collection(firestore, `communities/${message.communityId}/messages/${message.id}/comments`), orderBy('createdAt', 'asc'));
+    const commentsQuery = useMemo(() => query(collection(firestore, `communities/${message.communityId}/messages/${message.id}/comments`), orderBy('createdAt', 'asc')), [message.communityId, message.id]);
     const [comments, isLoadingComments] = useCollectionData<Comment>(commentsQuery, {
       idField: 'id'
     });
@@ -409,7 +408,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
 function Chat({ communityId, isOwner, allMembers }: { communityId: string; isOwner: boolean, allMembers: Member[] }) {
     const { user } = useUser();
 
-    const messagesQuery = query(collection(firestore, `communities/${communityId}/messages`), orderBy('createdAt', 'desc'));
+    const messagesQuery = useMemo(() => query(collection(firestore, `communities/${communityId}/messages`), orderBy('createdAt', 'desc')), [communityId]);
     const [messages, isLoading, error] = useCollectionData<Message>(messagesQuery, {
       idField: 'id'
     });
@@ -491,7 +490,7 @@ function Chat({ communityId, isOwner, allMembers }: { communityId: string; isOwn
 function JoinRequests({ communityId, communityDocRef }: { communityId: string, communityDocRef: any }) {
     const { toast } = useToast();
 
-    const requestsQuery = query(collection(firestore, `communities/${communityId}/joinRequests`), where('status', '==', 'pending'));
+    const requestsQuery = useMemo(() => query(collection(firestore, `communities/${communityId}/joinRequests`), where('status', '==', 'pending')), [communityId]);
     const [requests, isLoading] = useCollectionData<JoinRequest>(requestsQuery, {
       idField: 'id'
     });
@@ -565,12 +564,12 @@ export default function CommunityProfilePage() {
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const [isGeneratingFlag, setIsGeneratingFlag] = useState(false);
 
-  const communityDocRef = id ? doc(firestore, 'communities', id) : null;
+  const communityDocRef = useMemo(() => id ? doc(firestore, 'communities', id) : null, [id]);
   const [community, isLoading, error] = useDocumentData<Community>(communityDocRef, {
     idField: 'id'
   });
   
-  const allProfilesQuery = collection(firestore, 'community-profiles');
+  const allProfilesQuery = useMemo(() => collection(firestore, 'community-profiles'), []);
   const [allProfiles, profilesLoading] = useCollectionData<CommunityProfile>(allProfilesQuery, {
     idField: 'id'
   });
@@ -581,10 +580,10 @@ export default function CommunityProfilePage() {
 
   const isOwner = user?.uid === community?.ownerId;
   
-  const userProfileRef = user ? doc(firestore, 'community-profiles', user.uid) : null;
+  const userProfileRef = useMemo(() => user ? doc(firestore, 'community-profiles', user.uid) : null, [user]);
   const [userProfile] = useDocumentData<CommunityProfile>(userProfileRef);
 
-  const userJoinRequestRef = user && id ? doc(firestore, 'communities', id, 'joinRequests', user.uid) : null;
+  const userJoinRequestRef = useMemo(() => user && id ? doc(firestore, 'communities', id, 'joinRequests', user.uid) : null, [user, id]);
   const [userJoinRequest, isRequestLoading] = useDocumentData<JoinRequest>(userJoinRequestRef);
 
   const hasPendingRequest = userJoinRequest?.status === 'pending';

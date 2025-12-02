@@ -1,7 +1,7 @@
 // src/app/login/page.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth';
 import { useUser } from '@/firebase';
@@ -60,7 +60,7 @@ export default function LoginPage() {
     processRedirectResult();
   }, []);
 
-  const profileRef = user ? doc(firestore, 'community-profiles', user.uid) : null;
+  const profileRef = useMemo(() => user ? doc(firestore, 'community-profiles', user.uid) : null, [user]);
   const [profile, isProfileLoading] = useDocumentData(profileRef);
 
   const handleGoogleSignIn = async () => {

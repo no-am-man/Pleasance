@@ -1,7 +1,7 @@
 // src/app/community/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -167,9 +167,9 @@ function CommunityList({ title, communities, isLoading, error }: { title: string
 }
 
 function CommunitySearchResults({ searchTerm }: { searchTerm: string }) {
-    const searchCommunitiesQuery = searchTerm 
+    const searchCommunitiesQuery = useMemo(() => searchTerm 
       ? query(collection(firestore, 'communities'), where('name', '>=', searchTerm), where('name', '<=', searchTerm + '\uf8ff'))
-      : null;
+      : null, [searchTerm]);
   
     const [communities, isLoading, error] = useCollectionData<Community>(searchCommunitiesQuery, {
       idField: 'id',
@@ -186,7 +186,7 @@ function CommunitySearchResults({ searchTerm }: { searchTerm: string }) {
 }
 
 function PublicCommunityList() {
-    const publicCommunitiesQuery = query(collection(firestore, 'communities'), orderBy('name', 'asc'));
+    const publicCommunitiesQuery = useMemo(() => query(collection(firestore, 'communities'), orderBy('name', 'asc')), []);
 
     const [communities, isLoading, error] = useCollectionData<Community>(publicCommunitiesQuery, {
       idField: 'id',
@@ -207,7 +207,7 @@ export default function CommunityPage() {
   const { user, isUserLoading } = useUser();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const userCommunitiesQuery = user ? query(collection(firestore, 'communities'), where('ownerId', '==', user.uid)) : null;
+  const userCommunitiesQuery = useMemo(() => user ? query(collection(firestore, 'communities'), where('ownerId', '==', user.uid)) : null, [user]);
 
   const [userCommunities, isLoading, error] = useCollectionData<Community>(userCommunitiesQuery, {
     idField: 'id',

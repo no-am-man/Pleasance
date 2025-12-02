@@ -11,6 +11,7 @@ import { LoaderCircle, AlertCircle, ArrowLeft, Languages, User, BookUser } from 
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { useMemo } from 'react';
 
 type CommunityProfile = {
     id: string;
@@ -28,7 +29,7 @@ export default function UserProfilePage() {
   const { user: currentUser } = useUser();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
-  const profileDocRef = id ? doc(firestore, 'community-profiles', id) : null;
+  const profileDocRef = useMemo(() => id ? doc(firestore, 'community-profiles', id) : null, [id]);
   const [profile, isLoading, error] = useDocumentData<CommunityProfile>(profileDocRef, {
     idField: 'id'
   });

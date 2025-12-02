@@ -1,7 +1,7 @@
 // src/app/treasury/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -166,7 +166,7 @@ function AddAssetForm() {
 
 function AssetList() {
     const { user } = useUser();
-    const assetsQuery = user ? query(collection(firestore, 'users', user.uid, 'assets')) : null;
+    const assetsQuery = useMemo(() => user ? query(collection(firestore, 'users', user.uid, 'assets')) : null, [user]);
     const [assets, isLoading, error] = useCollectionData<Asset>(assetsQuery, {
       idField: 'id'
     });
