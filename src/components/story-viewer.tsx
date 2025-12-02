@@ -23,6 +23,31 @@ type StoryViewerProps = {
   autoplay?: boolean;
 };
 
+// A component for the karaoke-style text highlighting
+const KaraokeText = ({ text, progress }: { text: string; progress: number }) => {
+    return (
+        <div className="relative whitespace-pre-wrap leading-relaxed">
+            {/* Base text layer (the color of the un-highlighted text) */}
+            <p className="text-muted-foreground" aria-hidden="true">
+                {text}
+            </p>
+            {/* Highlighted text layer, revealed by a clipping mask */}
+            <div
+                className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-primary to-primary bg-no-repeat text-transparent"
+                style={{
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    backgroundSize: '100% 100%',
+                    // Animate the width of the clip mask based on audio progress
+                    clipPath: `inset(0 ${100 - progress}% 0 0)`,
+                }}
+            >
+                <p className="text-primary">{text}</p>
+            </div>
+        </div>
+    );
+};
+
 
 export default function StoryViewer({ story, autoplay = false }: StoryViewerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -61,7 +86,10 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
       audio.load();
       if (autoplay) {
         // Attempt to play, but catch errors (e.g., browser restrictions)
-        audio.play().catch(e => console.error("Autoplay was prevented:", e));
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => console.error("Autoplay was prevented:", e));
+        }
       }
     } else if (!story.audioUrl) {
         audio.pause();
@@ -86,7 +114,10 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
     if (isPlaying) {
       audio.pause();
     } else {
-      audio.play().catch(e => console.error("Playback error:", e));
+      const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => console.error("Playback error:", e));
+        }
     }
   };
 
@@ -98,19 +129,6 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
       description: `The ${type} story has been copied.`,
     });
   };
-  
-  const HighlightLayer = ({ progress, isPlaying }: { progress: number, isPlaying: boolean }) => (
-    <div
-      className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-yellow-400/50 to-yellow-400/20 pointer-events-none -z-10 opacity-70"
-      style={{
-        width: '15%', // Width of the highlight gradient
-        left: `${progress}%`,
-        transition: isPlaying ? 'left 0.1s linear' : 'none',
-        filter: 'blur(20px)', // Softens the edges of the gradient
-      }}
-    />
-  );
-
 
   return (
     <div className="animate-in fade-in-50 duration-500">
@@ -126,12 +144,11 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
                         </Button>
                     </CardHeader>
                     <CardContent>
-                        <div className="relative text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                            {hasAudio && <HighlightLayer progress={progress} isPlaying={isPlaying} />}
-                            <p>
-                                {story.nativeText}
-                            </p>
-                        </div>
+                         {hasAudio ? (
+                            <KaraokeText text={story.nativeText} progress={progress} />
+                         ) : (
+                            <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">{story.nativeText}</p>
+                         )}
                     </CardContent>
                 </Card>
             </div>
@@ -165,12 +182,11 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
                     </Button>
                 </CardHeader>
                 <CardContent>
-                    <div className="relative text-foreground whitespace-pre-wrap leading-relaxed">
-                        {hasAudio && <HighlightLayer progress={progress} isPlaying={isPlaying} />}
-                        <p>
-                            {story.translatedText}
-                        </p>
-                    </div>
+                    {hasAudio ? (
+                        <KaraokeText text={story.translatedText} progress={progress} />
+                    ) : (
+                        <p className="text-foreground whitespace-pre-wrap leading-relaxed">{story.translatedText}</p>
+                    )}
                 </CardContent>
                 </Card>
             </div>
