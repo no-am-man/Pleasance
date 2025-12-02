@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -193,17 +194,15 @@
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "Message",
         "type": "object",
-        "description": "Represents a message in a community chat, which can be text or voice.",
+        "description": "Represents a message in a community chat.",
         "properties": {
             "id": { "type": "string" },
             "communityId": { "type": "string" },
             "userId": { "type": "string" },
             "userName": { "type": "string" },
             "userAvatarUrl": { "type": "string", "format": "uri" },
-            "type": { "type": "string", "enum": ["text", "voice"], "description": "The type of message." },
+            "type": { "type": "string", "enum": ["text"], "description": "The type of message." },
             "text": { "type": "string", "description": "The content of a text message." },
-            "audioUrl": { "type": "string", "format": "uri", "description": "The URL for a voice message." },
-            "transcription": { "type": "string", "description": "The transcription of a voice message." },
             "createdAt": { "type": "string", "format": "date-time" },
             "status": { "type": "string", "enum": ["active", "done"], "description": "The status of the message." },
             "deleted": { "type": "boolean", "description": "Flag indicating if the message is soft-deleted." },
@@ -221,10 +220,8 @@
             "userId": { "type": "string" },
             "userName": { "type": "string" },
             "userAvatarUrl": { "type": "string", "format": "uri" },
-            "type": { "type": "string", "enum": ["text", "voice"], "description": "The type of comment." },
+            "type": { "type": "string", "enum": ["text"], "description": "The type of comment." },
             "text": { "type": "string", "description": "The content of a text comment." },
-            "audioUrl": { "type": "string", "format": "uri", "description": "The URL for a voice comment." },
-            "transcription": { "type": "string", "description": "The transcription of a voice comment." },
             "createdAt": { "type": "string", "format": "date-time" },
             "deleted": { "type": "boolean", "description": "Flag indicating if the comment is soft-deleted." },
             "deletedAt": { "type": "string", "format": "date-time", "description": "The timestamp when the comment was soft-deleted." }

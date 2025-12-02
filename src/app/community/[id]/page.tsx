@@ -8,7 +8,7 @@ import { doc, collection, query, orderBy, serverTimestamp, where, updateDoc, arr
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, Mic, Square, MessageSquare, LogIn, Check, X, Hourglass, Volume2, CheckCircle, Circle, Undo2, Ban } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +16,7 @@ import { useEffect, useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { getAiChatResponse, getTranscription, updateMessageStatus, softDeleteMessage } from '@/app/actions';
+import { getAiChatResponse, updateMessageStatus, softDeleteMessage } from '@/app/actions';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
@@ -58,10 +58,8 @@ type Message = {
     userId: string;
     userName: string;
     userAvatarUrl?: string;
-    type: 'text' | 'voice';
+    type: 'text';
     text?: string | null;
-    audioUrl?: string | null;
-    transcription?: string | null;
     createdAt: { seconds: number, nanoseconds: number } | null;
     status: 'active' | 'done';
     deleted?: boolean;
@@ -73,10 +71,8 @@ type Comment = {
     userId: string;
     userName: string;
     userAvatarUrl?: string;
-    type: 'text' | 'voice';
+    type: 'text';
     text?: string;
-    audioUrl?: string;
-    transcription?: string;
     createdAt: { seconds: number, nanoseconds: number } | null;
     deleted?: boolean;
     deletedAt?: { seconds: number, nanoseconds: number } | null;
@@ -186,128 +182,6 @@ function TextMessageForm({ communityId, onMessageSent }: { communityId: string, 
     );
 }
 
-function RecordAudio({ communityId, onMessageSent }: { communityId: string, onMessageSent: (messageText: string) => void }) {
-    const [isRecording, setIsRecording] = useState(false);
-    const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-    const [isProcessing, setIsProcessing] = useState(false);
-    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-    const audioChunksRef = useRef<Blob[]>([]);
-    const { user } = useUser();
-    const firestore = useFirestore();
-    const storage = useStorage();
-    const { toast } = useToast();
-
-    useEffect(() => {
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(stream => {
-                setHasPermission(true);
-                const recorder = new MediaRecorder(stream);
-                mediaRecorderRef.current = recorder;
-                recorder.ondataavailable = (event) => {
-                    audioChunksRef.current.push(event.data);
-                };
-                recorder.onstop = () => {
-                    setIsProcessing(true);
-                    const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-                    const reader = new FileReader();
-                    reader.readAsDataURL(audioBlob);
-                    reader.onloadend = async () => {
-                        const base64Audio = reader.result as string;
-                        if (!user || !firestore || !storage) return;
-
-                        try {
-                            const messagesColRef = collection(firestore, `communities/${communityId}/messages`);
-                            const newMessageRef = doc(messagesColRef); // Create a reference to get an ID
-
-                            const audioPath = `communities/${communityId}/messages/${newMessageRef.id}.wav`;
-                            const storageRef = ref(storage, audioPath);
-                            const uploadResult = await uploadString(storageRef, base64Audio, 'data_url');
-                            const audioUrl = await getDownloadURL(uploadResult.ref);
-                            
-                            const transcriptionResult = await getTranscription({ audioDataUri: base64Audio });
-                             if (transcriptionResult.error) {
-                                throw new Error(transcriptionResult.error);
-                            }
-                             const transcription = transcriptionResult.transcription || '';
-
-                            const newMessage = {
-                                communityId,
-                                userId: user.uid,
-                                userName: user.displayName || 'Anonymous',
-                                userAvatarUrl: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
-                                type: 'voice' as const,
-                                audioUrl,
-                                transcription: transcription,
-                                createdAt: serverTimestamp(),
-                                status: 'active' as const,
-                            };
-                            
-                            setDocumentNonBlocking(newMessageRef, newMessage, { merge: false });
-                            onMessageSent(transcription);
-
-                            toast({ title: 'Message sent!' });
-                        } catch (error) {
-                             const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
-                             toast({ variant: 'destructive', title: 'Failed to send message', description: message });
-                        } finally {
-                            audioChunksRef.current = [];
-                            setIsProcessing(false);
-                        }
-                    };
-                };
-            })
-            .catch(err => {
-                console.error("Mic permission denied:", err);
-                setHasPermission(false);
-            });
-    }, [user, firestore, storage, communityId, toast, onMessageSent]);
-
-    const startRecording = () => {
-        if (!hasPermission || !mediaRecorderRef.current) {
-            toast({ variant: 'destructive', title: 'Microphone access denied or not ready.' });
-            return;
-        }
-        audioChunksRef.current = [];
-        mediaRecorderRef.current.start();
-        setIsRecording(true);
-    };
-
-    const stopRecording = () => {
-        mediaRecorderRef.current?.stop();
-        setIsRecording(false);
-    };
-
-    if (hasPermission === null) {
-        return <div className="flex items-center justify-center p-4"><LoaderCircle className="animate-spin"/></div>
-    }
-    
-    if (hasPermission === false) {
-        return (
-             <Alert variant="destructive">
-                <AlertTitle>Microphone Access Required</AlertTitle>
-                <AlertDescription>Please enable microphone permissions in your browser settings to send voice messages.</AlertDescription>
-            </Alert>
-        )
-    }
-
-    return (
-        <div className="flex flex-col items-center gap-4">
-            {isProcessing ? (
-                 <div className="flex items-center gap-2 text-muted-foreground">
-                    <LoaderCircle className="animate-spin" />
-                    <span>Processing...</span>
-                </div>
-            ) : (
-                <Button onClick={isRecording ? stopRecording : startRecording} size="lg" className="rounded-full w-16 h-16 shadow-lg">
-                    {isRecording ? <Square /> : <Mic />}
-                </Button>
-            )}
-           
-            <p className="text-sm text-muted-foreground">{isRecording ? "Recording... Click to stop." : "Click to record a voice message."}</p>
-        </div>
-    );
-}
-
 function TextCommentForm({ communityId, messageId }: { communityId: string, messageId: string }) {
     const [text, setText] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -386,8 +260,6 @@ function CommentThread({ message, comments, isLoading }: { message: Message, com
 }
 
 function MessageCard({ message, canManage }: { message: Message; canManage: boolean; }) {
-    const audioRef = useRef<HTMLAudioElement>(null);
-    const [isPlaying, setIsPlaying] = useState(false);
     const { toast } = useToast();
     const [isUpdating, setIsUpdating] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -404,27 +276,6 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
 
     const { data: comments, isLoading: isLoadingComments } = useCollection<Comment>(commentsQuery);
     const commentCount = comments?.length || 0;
-
-
-    const togglePlay = () => {
-        if (audioRef.current) {
-            if (isPlaying) {
-                audioRef.current.pause();
-            } else {
-                audioRef.current.play();
-            }
-            setIsPlaying(!isPlaying);
-        }
-    };
-
-    useEffect(() => {
-        const audio = audioRef.current;
-        if(audio) {
-            const handleEnd = () => setIsPlaying(false);
-            audio.addEventListener('ended', handleEnd);
-            return () => audio.removeEventListener('ended', handleEnd);
-        }
-    }, [])
 
     const handleToggleStatus = async () => {
         setIsUpdating(true);
@@ -551,25 +402,10 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                          </div>
                     </CardHeader>
                     <CardContent className="flex-grow space-y-4">
-                        {message.type === 'voice' ? (
-                            <>
-                                <audio ref={audioRef} src={message.audioUrl || undefined} className="hidden" />
-                                {message.transcription && (
-                                    <p className="text-sm text-muted-foreground pt-2 italic whitespace-pre-wrap">"{message.transcription}"</p>
-                                )}
-                            </>
-                        ) : (
-                            <p className="text-sm text-foreground whitespace-pre-wrap">{message.text}</p>
-                        )}
+                        <p className="text-sm text-foreground whitespace-pre-wrap">{message.text}</p>
                     </CardContent>
                     <CardFooter className="bg-muted/50 p-2">
                         <div className="flex items-center gap-2">
-                            {message.type === 'voice' && message.audioUrl && (
-                                <Button onClick={togglePlay} variant="outline" size="sm">
-                                    <Volume2 className="mr-2 h-4 w-4" />
-                                    {isPlaying ? 'Pause' : 'Original'}
-                                </Button>
-                            )}
                             <CollapsibleTrigger asChild>
                                 <Button variant="ghost" size="sm" className="relative">
                                     <MessageSquare className="mr-2 h-4 w-4" />
@@ -619,7 +455,7 @@ function Chat({ communityId, isOwner, allMembers }: { communityId: string; isOwn
             .reverse() // Oldest first
             .map(msg => ({
                 role: msg.userId === user?.uid ? 'user' : 'model' as 'user' | 'model',
-                content: [{ text: msg.text || msg.transcription || '' }],
+                content: [{ text: msg.text || '' }],
             }));
             
         // Generate AI response
@@ -663,11 +499,6 @@ function Chat({ communityId, isOwner, allMembers }: { communityId: string; isOwn
             {user ? (
                 <div className="border-t p-4 space-y-4">
                     <TextMessageForm communityId={communityId} onMessageSent={triggerAiResponse} />
-                    <div className="relative">
-                        <Separator />
-                        <span className="absolute left-1/2 -translate-x-1/2 -top-3 bg-card px-2 text-xs text-muted-foreground">OR</span>
-                    </div>
-                    <RecordAudio communityId={communityId} onMessageSent={triggerAiResponse} />
                 </div>
             ) : (
                 <div className="border-t p-4 text-center">

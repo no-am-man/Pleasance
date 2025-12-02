@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { generateStory } from '@/ai/flows/generate-story';
 import { translateStory } from '@/ai/flows/translate-story';
 import { generateCommunity } from '@/ai/flows/generate-community';
-import { transcribeAudio } from '@/ai/flows/transcribe-audio';
 import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member';
 import { generateSpeech } from '@/ai/flows/generate-speech';
 import { VOICES } from '@/config/languages';
@@ -91,30 +90,6 @@ export async function createCommunityDetails(values: z.infer<typeof communitySch
         return { error: `Community creation failed. ${message}` };
     }
 }
-
-const voiceMessageSchema = z.object({
-  audioDataUri: z.string(),
-});
-
-export async function getTranscription(values: z.infer<typeof voiceMessageSchema>) {
-    try {
-        const validatedFields = voiceMessageSchema.safeParse(values);
-        if (!validatedFields.success) {
-            return { error: 'Invalid audio data.' };
-        }
-
-        const { audioDataUri } = validatedFields.data;
-        const result = await transcribeAudio({ audioDataUri });
-
-        return { transcription: result.transcription };
-
-    } catch(e) {
-        console.error('Transcription Error:', e);
-        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
-        return { error: `Transcription failed. ${message}` };
-    }
-}
-
 
 export async function getAiChatResponse(input: ChatWithMemberInput) {
     try {
@@ -207,8 +182,6 @@ export async function softDeleteMessage(values: z.infer<typeof softDeleteMessage
             deleted: true,
             deletedAt: serverTimestamp(),
             text: null, // Clear content for privacy
-            transcription: null,
-            audioUrl: null,
         };
 
         // Use the non-blocking update function

@@ -4,21 +4,6 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     
-    // Helper function to check community ownership by reading the community document in Firestore.
-    function isCommunityOwner(communityId) {
-      return request.auth != null && request.auth.uid == get(/databases/(default)/documents/communities/$(communityId)).data.ownerId;
-    }
-
-    // Helper function to get the message document from Firestore to check ownership.
-    function getMessageDoc(communityId, messageId) {
-      return get(/databases/(default)/documents/communities/$(communityId)/messages/$(messageId)).data;
-    }
-    
-    // Helper function to get the comment document from Firestore.
-    function getCommentDoc(communityId, messageId, commentId) {
-        return get(/databases/(default)/documents/communities/$(communityId)/messages/$(messageId)/comments/$(commentId)).data;
-    }
-
     //====================================================================
     // Generic rule: Allow read access to all files.
     // This is useful for public assets like story audio.
@@ -34,20 +19,6 @@ service firebase.storage {
     //====================================================================
     match /stories/{userId}/{storyId}.wav {
       allow write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    //====================================================================
-    // Community Voice Messages & Comments: 
-    // Allow any authenticated user to write.
-    // Deletion is restricted to the owner of the content or the community owner.
-    //====================================================================
-    match /communities/{communityId}/messages/{messageId}.wav {
-        allow write: if request.auth != null;
-        allow delete: if request.auth != null && (request.auth.uid == getMessageDoc(communityId, messageId).userId || isCommunityOwner(communityId));
-    }
-    match /communities/{communityId}/messages/{messageId}/comments/{commentId}.wav {
-        allow write: if request.auth != null;
-        allow delete: if request.auth != null && (request.auth.uid == getCommentDoc(communityId, messageId, commentId).userId || isCommunityOwner(communityId));
     }
   }
 }
