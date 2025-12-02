@@ -22,7 +22,6 @@ import {
     type GenerateSvg3dInput,
     MemberSchema
 } from '@/lib/types';
-import { exec } from 'child_process';
 
 
 export type ChatWithMemberInput = {
@@ -391,33 +390,6 @@ export async function saveSvgAsset(values: z.infer<typeof saveSvgAssetSchema>) {
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
         return { error: `Failed to save asset: ${message}` };
     }
-}
-
-/**
- * Lists available Genkit models by executing the Genkit CLI command.
- * @returns An object containing the raw CLI output or an error.
- */
-export async function listAvailableModels(): Promise<{ data?: string; error?: string }> {
-    return new Promise((resolve) => {
-        // Execute the Genkit CLI command to list models.
-        exec('npx genkit list models', (error, stdout, stderr) => {
-            if (error) {
-                console.error(`CLI Execution Error: ${error.message}`);
-                resolve({ error: `Failed to execute Genkit CLI: ${stderr || error.message}` });
-                return;
-            }
-            if (stderr && !stdout) {
-                // Sometimes stderr contains warnings but stdout has the data.
-                // Only treat stderr as a primary error if stdout is empty.
-                console.warn(`CLI Stderr: ${stderr}`);
-                resolve({ error: `Genkit CLI reported an error: ${stderr}` });
-                return;
-            }
-
-            // Return the raw stdout string.
-            resolve({ data: stdout });
-        });
-    });
 }
     
 
