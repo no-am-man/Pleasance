@@ -35,11 +35,6 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
   const hasAudio = story.audioUrl && story.audioUrl.length > 0;
 
   useEffect(() => {
-    // Scroll to top whenever a new story is loaded
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [story.id]);
-
-  useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 

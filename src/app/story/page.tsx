@@ -224,6 +224,7 @@ export default function StoryPage() {
   const [activeStoryId, setActiveStoryId] = useState<string | null>(null);
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
+  const storyViewerRef = useRef<HTMLDivElement>(null);
 
   const storyDocRef = useMemo(() => (user && activeStoryId) ? doc(firestore, 'users', user.uid, 'stories', activeStoryId) : null, [user, activeStoryId]);
   const [activeStory] = useDocumentData<Story>(storyDocRef);
@@ -247,6 +248,12 @@ export default function StoryPage() {
       });
     }
   }, [profile, form]);
+
+  useEffect(() => {
+    if (activeStoryId && storyViewerRef.current) {
+      storyViewerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [activeStoryId]);
 
 
   async function onSubmit(data: z.infer<typeof StoryFormSchema>) {
@@ -303,7 +310,7 @@ export default function StoryPage() {
         </p>
       </div>
       
-      <div className="scroll-mt-4">
+      <div ref={storyViewerRef} className="scroll-mt-4">
         {activeStory && (
             <div className="mb-8">
                 <StoryViewer 
