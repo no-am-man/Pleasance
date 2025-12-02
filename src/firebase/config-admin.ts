@@ -3,10 +3,12 @@ import admin from 'firebase-admin';
 
 const appName = 'pleasance-admin';
 
+// This function ensures Firebase Admin is initialized only once.
 export function initializeAdminApp() {
   // Check if the app is already initialized to prevent errors
-  if (admin.apps.find(app => app?.name === appName)) {
-    return admin.app(appName);
+  const existingApp = admin.apps.find(app => app?.name === appName);
+  if (existingApp) {
+    return existingApp;
   }
 
   // Retrieve the base64 encoded service account key from environment variables

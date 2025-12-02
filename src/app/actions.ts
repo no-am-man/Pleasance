@@ -11,7 +11,8 @@ import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
 import { initializeFirebase } from '@/firebase/config-for-actions';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { doc, updateDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { serverTimestamp } from 'firebase/firestore';
+import { initializeAdminApp } from '@/firebase/config-admin';
 
 
 const storySchema = z.object({
@@ -48,23 +49,27 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>
     }
     const translatedText = translationResult.translatedText;
 
-    // --- Step 2: Initialize Firebase ---
-    const { firestore, storage } = initializeFirebase();
+    // --- Step 2: Initialize Firebase Admin ---
+    const adminApp = initializeAdminApp();
+    const firestore = adminApp.firestore();
 
-    // --- Step 3: Save Initial Story to Firestore ---
-    const storyCollectionRef = collection(firestore, 'users', userId, 'stories');
+    // --- Step 3: Save Initial Story to Firestore using Admin SDK ---
+    const storyCollectionRef = firestore.collection('users').doc(userId).collection('stories');
+    const newDocRef = storyCollectionRef.doc(); // Create a new doc reference
+    const storyId = newDocRef.id;
+
     const newStoryData = {
+        id: storyId,
         userId: userId,
         level: difficulty,
         sourceLanguage: sourceLanguage,
         targetLanguage: targetLanguage,
         nativeText: originalStory,
         translatedText: translatedText,
-        createdAt: serverTimestamp(),
+        createdAt: admin.firestore.FieldValue.serverTimestamp(), // Use Admin SDK serverTimestamp
         audioUrl: '', // Initialize with empty audioUrl
     };
-    const newDocRef = await addDoc(storyCollectionRef, newStoryData);
-    const storyId = newDocRef.id;
+    await newDocRef.set(newStoryData);
 
     // --- Step 4: Generate Speech ---
     const speechResult = await generateSpeech({ text: translatedText });
@@ -72,15 +77,15 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>
         throw new Error('Speech synthesis failed to produce audio.');
     }
 
-    // --- Step 5: Upload Audio and Get URL ---
+    // --- Step 5: Upload Audio and Get URL (using client storage instance) ---
+    const { storage } = initializeFirebase(); // Client SDK for storage upload rules
     const storagePath = `stories/${userId}/${storyId}.wav`;
     const storageRef = ref(storage, storagePath);
     await uploadBytes(storageRef, speechResult.wavBuffer, { contentType: 'audio/wav' });
     const downloadURL = await getDownloadURL(storageRef);
 
-    // --- Step 6: Update Story with Audio URL ---
-    const storyDocRef = doc(firestore, 'users', userId, 'stories', storyId);
-    await updateDoc(storyDocRef, { audioUrl: downloadURL });
+    // --- Step 6: Update Story with Audio URL using Admin SDK ---
+    await newDocRef.update({ audioUrl: downloadURL });
 
     // --- Step 7: Return Complete Story Object ---
     return {
