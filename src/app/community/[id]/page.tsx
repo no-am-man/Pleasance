@@ -2,8 +2,8 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, useStorage, setDocumentNonBlocking, updateDocumentNonBlocking, addDocumentNonBlocking, updateDoc } from '@/firebase';
-import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, setDoc, getDoc, deleteField } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, useStorage, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
+import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, setDoc, getDoc, deleteField, updateDoc } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -283,7 +283,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
         const newStatus = isDone ? 'active' : 'done';
         const messageDocRef = doc(firestore, 'communities', message.communityId, 'messages', message.id);
         
-        updateDocumentNonBlocking(messageDocRef, { status: newStatus });
+        await updateDoc(messageDocRef, { status: newStatus });
         
         toast({ title: `Message Marked as ${newStatus}` });
         setIsUpdating(false);
@@ -300,7 +300,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
             text: deleteField(),
         };
 
-        updateDocumentNonBlocking(messageDocRef, updatePayload);
+        await updateDoc(messageDocRef, updatePayload);
         toast({ title: 'Message Deleted' });
         setIsUpdating(false);
     };
@@ -690,7 +690,7 @@ export default function CommunityProfilePage() {
     }
   };
 
-  const handleInvite = (profile: CommunityProfile) => {
+  const handleInvite = async (profile: CommunityProfile) => {
     if (!communityDocRef) return;
     
     const newMember: Member = {
@@ -702,7 +702,7 @@ export default function CommunityProfilePage() {
         avatarUrl: profile.avatarUrl || '', // Ensure avatarUrl is not undefined
     };
 
-    updateDocumentNonBlocking(communityDocRef, {
+    await updateDoc(communityDocRef, {
         members: arrayUnion(newMember)
     });
 
