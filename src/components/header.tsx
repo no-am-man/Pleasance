@@ -88,6 +88,7 @@ function UserNav() {
   const isFounder = user?.email === FOUNDER_EMAIL;
 
   const handleSignOut = async () => {
+    // The onAuthStateChanged listener in FirebaseProvider will handle clearing the session cookie.
     await signOut(auth);
   };
 
@@ -135,11 +136,17 @@ function UserNav() {
 
 export function Header() {
   const pathname = usePathname();
+  const auth = useAuth();
   const { user } = useUser();
   const isMobile = useIsMobile();
   const isFounder = user?.email === FOUNDER_EMAIL;
 
   const allLinks = isFounder ? [...navLinks, adminLink] : navLinks;
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+  };
+
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm">
@@ -195,7 +202,7 @@ export function Header() {
                             isActive={pathname === '/profile'}
                         />
                         <button
-                            onClick={() => signOut(useAuth())}
+                            onClick={handleSignOut}
                             className={cn(
                                 'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-accent/50 hover:text-foreground'
                             )}
