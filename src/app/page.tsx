@@ -16,13 +16,6 @@ const features = [
         gradient: "bg-gradient-to-r from-fuchsia-600 to-pink-600 hover:from-fuchsia-700 hover:to-pink-700"
     },
     {
-        icon: BookOpen,
-        title: "Nuncy Lingua",
-        description: "Enhance your language skills with AI-generated stories and a karaoke-style speech trainer for perfect pronunciation.",
-        href: "/story",
-        cta: "Start Learning"
-    },
-    {
         icon: Warehouse,
         title: "Fabrication Service",
         description: "Turn digital into physical. Upload CAD files for 3D printing or PDFs for print-on-demand books and objects.",
@@ -79,7 +72,7 @@ export default function Home() {
 
       <FederationDiagram />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 w-full max-w-6xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
         {features.map((feature) => (
             <FeatureCard key={feature.title} {...feature} />
         ))}
