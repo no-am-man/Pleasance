@@ -2,11 +2,11 @@
 
 > A federated universe for co-learning, creation, and fabrication.
 
-**[Live App](https://studio--studio-2441219031-242ae.us-central1.hosted.app) | [GitHub Repository](https://github.com/no-am-man/Pleasance)**
+**[Staging App](https://studio--studio-2441219031-242ae.us-central1.hosted.app) | [GitHub Repository](https://github.com/no-am-man/Pleasance)**
 
 This project is open source. You can find the repository [here](https://github.com/no-am-man/Pleasance).
 
-## 🎉 Version 2.0.0 is Live!
+## 🎉 Version 2.1.0 is on Staging!
 This major update introduces a fully-featured Community Federation, allowing sovereign individuals to create, manage, and discover co-learning communities. We've also enhanced our AI capabilities and refined the user experience across the board.
 
 ## Core Philosophy
