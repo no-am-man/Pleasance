@@ -5,7 +5,6 @@ import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, LoaderCircle, Copy } from "lucide-react";
-import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { VOICES } from "@/config/languages";
 import { Label } from "@/components/ui/label";
@@ -124,21 +123,6 @@ export default function StoryViewer({
     }
     setIsPlaying(!isPlaying);
   };
-  
-  const handleSeek = (value: number[]) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    const newTime = (value[0] / 100) * duration;
-    audio.currentTime = newTime;
-    setCurrentTime(newTime);
-  };
-
-  const formatTime = (seconds: number) => {
-    if (isNaN(seconds)) return "0:00";
-    const minutes = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${minutes}:${secs.toString().padStart(2, '0')}`;
-  };
 
   const handleCopy = (text: string, type: string) => {
     navigator.clipboard.writeText(text);
@@ -190,21 +174,7 @@ export default function StoryViewer({
       
       <div className="flex flex-col items-center space-y-4 pt-4">
         <audio ref={audioRef} crossOrigin="anonymous" />
-        <div className="w-full max-w-md">
-            <Slider
-                value={[progress]}
-                onValueChange={handleSeek}
-                max={100}
-                step={0.1}
-                aria-label="Audio progress"
-                disabled={!hasAudio || isLoading}
-            />
-            <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                <span>{formatTime(currentTime)}</span>
-                <span>{formatTime(duration)}</span>
-            </div>
-        </div>
-
+        
         <div className="flex items-center gap-4">
             <div className="grid gap-1.5">
                 <Label htmlFor="voice-select">Speaker Voice</Label>
