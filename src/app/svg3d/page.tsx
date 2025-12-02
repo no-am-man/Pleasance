@@ -1,5 +1,5 @@
 
-// src/app/svg3d/page.tsx
+// src/app/svg3d/page.tsx -> renamed to src/app/workshop/page.tsx conceptually
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { LoaderCircle, Sparkles, Save } from 'lucide-react';
+import { LoaderCircle, Sparkles, Save, Beaker } from 'lucide-react';
 import { generateSvg3d, saveSvgAsset } from '@/app/actions';
 import { GenerateSvg3dInputSchema, type ColorPixel } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -114,7 +114,7 @@ function SaveToTreasuryForm({ pixels }: { pixels: ColorPixel[] }) {
 }
 
 
-export default function Svg3dPage() {
+export default function WorkshopPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pixels, setPixels] = useState<ColorPixel[] | null>(null);
@@ -183,18 +183,18 @@ export default function Svg3dPage() {
     <main className="container mx-auto max-w-4xl py-8">
        <div className="text-center mb-8">
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-          <Svg3dCube pixels={[]} className="w-10 h-10" /> SVG3D Generator
+          <Beaker className="w-10 h-10" /> AI Workshop
         </h1>
-        <p className="text-lg text-muted-foreground mt-2">An interactive 3D canvas for your imagination.</p>
+        <p className="text-lg text-muted-foreground mt-2">A private space to experiment with generative AI tools.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         <div className="space-y-8">
             <Card className="shadow-lg">
                 <CardHeader>
-                <CardTitle>Create Your Vision</CardTitle>
+                <CardTitle>Tool: 3D Point-Cloud Generator</CardTitle>
                 <CardDescription>
-                    Enter a prompt and watch the AI bring your idea to life in a rotatable 3D space. Go wild.
+                    Enter a prompt and watch the AI bring your idea to life in a rotatable 3D space.
                 </CardDescription>
                 </CardHeader>
                 <CardContent>

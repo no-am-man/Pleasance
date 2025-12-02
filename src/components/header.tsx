@@ -15,6 +15,7 @@ import {
   UserCircle,
   Users,
   Warehouse,
+  Beaker,
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -47,6 +48,7 @@ const navLinks = [
   { href: '/story', label: 'Nuncy Lingua', icon: BookOpen },
   { href: '/fabrication', label: 'Fabrication', icon: Warehouse },
   { href: '/treasury', label: 'Treasury', icon: Banknote },
+  { href: '/svg3d', label: 'Workshop', icon: Beaker },
   { href: '/wiki', label: 'Wiki', icon: Info },
 ];
 
