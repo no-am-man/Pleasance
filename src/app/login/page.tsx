@@ -60,7 +60,7 @@ export default function LoginPage() {
   }, []);
 
   const profileRef = useMemoFirebase(() => {
-    if (!user || !firestore) return null;
+    if (!user) return null;
     return doc(firestore, 'community-profiles', user.uid);
   }, [user]);
 

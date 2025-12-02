@@ -50,7 +50,7 @@ function CreateCommunityForm() {
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    if (!user || !firestore) {
+    if (!user) {
       setError("You must be logged in to create a community.");
       return;
     }
@@ -167,7 +167,7 @@ function CommunityList({ title, communities, isLoading, error }: { title: string
 
 function CommunitySearchResults({ searchTerm }: { searchTerm: string }) {
     const searchCommunitiesQuery = useMemoFirebase(() => {
-      if (!firestore || !searchTerm) return null;
+      if (!searchTerm) return null;
       const communitiesRef = collection(firestore, 'communities');
       // A simple "startsWith" search. For full-text search, an external service like Algolia is better.
       return query(communitiesRef, where('name', '>=', searchTerm), where('name', '<=', searchTerm + '\uf8ff'));
@@ -187,7 +187,6 @@ function CommunitySearchResults({ searchTerm }: { searchTerm: string }) {
 
 function PublicCommunityList() {
     const publicCommunitiesQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
         return query(collection(firestore, 'communities'), orderBy('name', 'asc'));
     }, []);
 
@@ -209,7 +208,7 @@ export default function CommunityPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const userCommunitiesQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
+    if (!user) return null;
     return query(collection(firestore, 'communities'), where('ownerId', '==', user.uid));
   }, [user]);
 

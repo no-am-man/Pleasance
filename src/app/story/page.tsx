@@ -48,7 +48,7 @@ function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void
     const { user, isUserLoading } = useUser();
 
     const storiesQuery = useMemoFirebase(() => {
-        if (!firestore || !user) return null;
+        if (!user) return null;
         const storiesCollectionRef = collection(firestore, 'users', user.uid, 'stories');
         return query(storiesCollectionRef, orderBy('createdAt', 'desc'));
     }, [user]);
@@ -112,7 +112,7 @@ export default function StoryPage() {
   });
 
   async function onSubmit(data: z.infer<typeof StoryFormSchema>) {
-    if (!user || !firestore) {
+    if (!user) {
         setError("You must be logged in to generate a story.");
         return;
     }

@@ -151,7 +151,7 @@ export default function AiMemberProfilePage() {
   const memberName = Array.isArray(params.memberName) ? params.memberName[0] : params.memberName;
 
   const communityDocRef = useMemoFirebase(() => {
-    if (!firestore || !communityId) return null;
+    if (!communityId) return null;
     return doc(firestore, 'communities', communityId);
   }, [communityId]);
 

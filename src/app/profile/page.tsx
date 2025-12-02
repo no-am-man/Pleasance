@@ -140,7 +140,7 @@ export default function ProfilePage() {
 
 
   const profileDocRef = useMemoFirebase(() => {
-    if (!user || !firestore) return null;
+    if (!user) return null;
     return doc(firestore, 'community-profiles', user.uid);
   }, [user]);
 
@@ -170,7 +170,7 @@ export default function ProfilePage() {
   }, [existingProfile, form, user]);
 
   async function onSubmit(data: z.infer<typeof ProfileSchema>) {
-    if (!user || !firestore) {
+    if (!user) {
       setError('You must be logged in to update your profile.');
       return;
     }

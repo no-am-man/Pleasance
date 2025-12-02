@@ -43,7 +43,7 @@ function AddAssetForm() {
     });
 
     async function onSubmit(data: z.infer<typeof AssetSchema>) {
-        if (!user || !firestore) {
+        if (!user) {
             toast({ variant: 'destructive', title: 'Not Authenticated', description: 'You must be logged in to add an asset.' });
             return;
         }
@@ -167,7 +167,7 @@ function AssetList() {
     const { user } = useUser();
 
     const assetsQuery = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
+        if (!user) return null;
         return query(collection(firestore, 'users', user.uid, 'assets'));
     }, [user]);
 
