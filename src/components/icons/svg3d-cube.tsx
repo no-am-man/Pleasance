@@ -4,7 +4,7 @@ import * as React from 'react';
 import { SVGProps, useState, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import type { ColorPixel } from '@/app/actions';
+import type { ColorPixel } from '@/lib/types';
 
 export type { ColorPixel };
 

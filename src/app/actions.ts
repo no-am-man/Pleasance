@@ -17,22 +17,12 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
 import { ai } from '@/ai/genkit';
+import {
+    GenerateSvg3dInputSchema,
+    type GenerateSvg3dInput,
+    ColorPixelSchema
+} from '@/lib/types';
 
-// Schemas and Types for SVG3D Generation
-const ColorPixelSchema = z.object({
-    x: z.number().describe('The X coordinate, from -50 to 50.'),
-    y: z.number().describe('The Y coordinate, from -50 to 50.'),
-    z: z.number().describe('The Z coordinate, from -50 to 50.'),
-    color: z.string().describe('The hexadecimal color code (e.g., "#FF5733").')
-});
-export type ColorPixel = z.infer<typeof ColorPixelSchema>;
-
-export const GenerateSvg3dInputSchema = z.object({
-  prompt: z.string(),
-  cubeSize: z.number(),
-  density: z.enum(['low', 'medium', 'high']),
-});
-export type GenerateSvg3dInput = z.infer<typeof GenerateSvg3dInputSchema>;
 
 // Schema for chat input, as it's used across client and server
 const MemberSchema = z.object({
