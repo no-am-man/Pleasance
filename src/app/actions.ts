@@ -13,6 +13,7 @@ import { generateFlag } from '@/ai/flows/generate-flag';
 import { VOICES } from '@/config/languages';
 import { initializeFirebase } from '@/firebase/config-for-actions';
 import { doc, serverTimestamp, deleteField, updateDoc } from 'firebase/firestore';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
@@ -186,21 +187,42 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
         
         const { communityId, communityName, communityDescription } = validatedFields.data;
 
-        // 1. Generate the flag image
+        // 1. Generate the flag image data URI from the AI flow
         const flagResult = await generateFlag({ communityName, communityDescription });
         if (!flagResult.flagUrl) {
-            throw new Error('Failed to generate a flag image.');
+            throw new Error('Failed to generate a flag image from the AI flow.');
         }
 
-        // 2. Update the community document in Firestore
-        const { firestore } = initializeFirebase();
-        const communityDocRef = doc(firestore, 'communities', communityId);
+        // 2. Initialize Firebase services for server-side operations
+        const { firestore, storage } = initializeFirebase();
 
+        // 3. Define the path in Firebase Storage
+        const storagePath = `communities/${communityId}/flag.png`;
+        const storageRef = ref(storage, storagePath);
+
+        // 4. Upload the image to Firebase Storage
+        // The flagUrl is a data URI (e.g., 'data:image/png;base64,iVBORw0KGgo...')
+        // We need to extract the Base64 part to upload it.
+        const base64Data = flagResult.flagUrl.split(',')[1];
+        if (!base64Data) {
+            throw new Error('Invalid data URI format for the flag image.');
+        }
+
+        await uploadString(storageRef, base64Data, 'base64', {
+            contentType: 'image/png'
+        });
+        
+        // 5. Get the permanent download URL for the uploaded image
+        const downloadURL = await getDownloadURL(storageRef);
+        
+        // 6. Update the community document in Firestore with the new download URL
+        const communityDocRef = doc(firestore, 'communities', communityId);
         await updateDoc(communityDocRef, {
-            flagUrl: flagResult.flagUrl,
+            flagUrl: downloadURL,
         });
 
-        return { flagUrl: flagResult.flagUrl };
+        // 7. Return the permanent URL to the client
+        return { flagUrl: downloadURL };
 
     } catch (e) {
         console.error('Flag Generation Error:', e);
@@ -208,5 +230,3 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
         return { error: `Flag generation failed. ${message}` };
     }
 }
-
-    
