@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview A flow to generate a 3D point cloud for an SVG.
@@ -48,9 +47,6 @@ Your task is to generate the array of pixels.
     const { output } = await ai.generate({
         model: 'googleai/gemini-1.5-flash',
         prompt: prompt,
-        config: {
-            responseMIMEType: 'application/json',
-        }
     });
 
     if (!output) {
