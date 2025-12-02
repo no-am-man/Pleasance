@@ -147,6 +147,13 @@ export async function createHistorySnapshot(values: z.infer<typeof snapshotSchem
         // 3. Save the new snapshot
         await snapshotRef.set(snapshotData);
 
+        // 4. Batch delete the original stories
+        const batch = firestore.batch();
+        storiesSnapshot.docs.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+        await batch.commit();
+
         return {
             success: true,
             snapshotId: snapshotRef.id,
