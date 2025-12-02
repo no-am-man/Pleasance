@@ -32,7 +32,7 @@ Your task is to generate the array of pixels.
 
     const { output } = await ai.generate({
         prompt: prompt,
-        model: 'googleai/gemini-1.5-flash',
+        model: 'gemini-1.5-flash',
         output: {
             schema: Svg3dOutputSchema,
         },
