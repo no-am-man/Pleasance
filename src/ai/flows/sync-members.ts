@@ -9,8 +9,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { initializeFirebase } from '@/firebase/config-for-actions';
-import { collection, getDocs, doc, writeBatch } from 'firebase/firestore';
+import { initializeAdminApp } from '@/firebase/config-admin';
+import { collection, getDocs, doc, writeBatch, getFirestore } from 'firebase-admin/firestore';
 
 // Define schema for a member within a community's subcollection
 const MemberSchema = z.object({
@@ -58,7 +58,8 @@ const syncMembersFlow = ai.defineFlow(
     outputSchema: SyncResultSchema,
   },
   async () => {
-    const { firestore } = initializeFirebase();
+    const adminApp = initializeAdminApp();
+    const firestore = getFirestore(adminApp);
     const batch = writeBatch(firestore);
 
     let communitiesScanned = 0;
@@ -140,3 +141,5 @@ const syncMembersFlow = ai.defineFlow(
     };
   }
 );
+
+    

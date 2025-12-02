@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { generateStory } from '@/ai/flows/generate-story';
 import { translateStory } from '@/ai/flows/translate-story';
 import { chatWithMember } from '@/ai/flows/chat-with-member';
-import type { ChatHistory, Part } from 'genkit';
+import type { ChatHistory } from 'genkit';
 import { generateSpeech } from '@/ai/flows/generate-speech';
 import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
@@ -33,9 +33,6 @@ export const GenerateSvg3dInputSchema = z.object({
   density: z.enum(['low', 'medium', 'high']),
 });
 export type GenerateSvg3dInput = z.infer<typeof GenerateSvg3dInputSchema>;
-export type Svg3dOutput = z.infer<typeof Svg3dOutputSchema>;
-const Svg3dOutputSchema = z.array(ColorPixelSchema);
-
 
 // Schema for chat input, as it's used across client and server
 const MemberSchema = z.object({
@@ -326,24 +323,28 @@ export async function runMemberSync() {
     }
 }
 
+const Svg3dOutputSchema = z.array(ColorPixelSchema);
+
 const generateSvg3dPrompt = ai.definePrompt({
   name: 'generateSvg3dPrompt',
   input: { schema: GenerateSvg3dInputSchema },
-  output: { schema: Svg3dOutputSchema, format: 'json' },
+  output: { schema: Svg3dOutputSchema },
   prompt: `You are a digital artist who creates 3D point clouds. Generate a JSON array of 'ColorPixel' objects based on the user's request.
 
-User Prompt: "{{{prompt}}}"
-Conceptual Cube Size: {{cubeSize}}mm
-Pixel Density: {{density}}
+- The user wants to create a point cloud representing: "{{{prompt}}}"
+- The conceptual cube size is {{cubeSize}}mm.
+- The requested pixel density is {{density}}.
 
-- Generate points within a coordinate space from -50 to 50 on all axes.
+Your task is to generate the array of pixels.
 - The number of points should reflect the requested density:
   - Low: ~300-500 points
   - Medium: ~800-1500 points
   - High: ~2000-3000 points
+- All coordinates (x, y, z) must be within a -50 to 50 range.
 - Use the prompt to inspire the shape, color, and structure of the point cloud.
-`,
+- Your entire response MUST be only the JSON array. Do not include any other text, explanations, or markdown.`,
 });
+
 
 export async function generateSvg3d(values: GenerateSvg3dInput) {
     try {
