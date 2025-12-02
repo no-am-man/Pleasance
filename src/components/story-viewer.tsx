@@ -109,7 +109,7 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
   return (
     <div className="animate-in fade-in-50 duration-500">
         <audio ref={audioRef} crossOrigin="anonymous" />
-        <div className="flex flex-col md:flex-row items-center justify-center gap-8">
+        <div className="flex flex-col md:flex-row items-start justify-center gap-8">
             {/* Original Story Panel */}
             <div className="w-full md:w-5/12">
                 <Card>
@@ -128,7 +128,7 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
             </div>
             
             {/* Play Button */}
-            <div className="w-full md:w-auto flex justify-center order-first md:order-none">
+            <div className="w-full md:w-auto flex justify-center self-center order-first md:order-none">
                  <Button
                     onClick={togglePlayPause}
                     size="icon"
