@@ -11,9 +11,6 @@ import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
 import { generateFlag } from '@/ai/flows/generate-flag';
 import { VOICES } from '@/config/languages';
-import { initializeFirebase } from '@/firebase/config-for-actions';
-import { getStorage } from 'firebase/storage';
-import { getDownloadURL, ref } from 'firebase/storage';
 import * as admin from 'firebase-admin';
 
 const storySchema = z.object({
@@ -201,7 +198,7 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
             throw new Error('Failed to generate a flag image from the AI flow.');
         }
 
-        // 2. Generate a signed URL for uploading
+        // 2. Generate a signed URL for uploading using the Admin SDK
         const bucket = admin.storage().bucket();
         const filePath = `communities/${communityId}/flag.png`;
         const file = bucket.file(filePath);
