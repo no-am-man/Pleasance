@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { SVGProps, useState, useMemo } from 'react';
+import { SVGProps, useState, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -21,34 +21,40 @@ export function Svg3dCube(props: Svg3dCubeProps) {
   const viewWidth = 400;
   const viewHeight = 400;
 
-  const [rotation, setRotation] = useState({ x: -0.5, y: 0.5 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
+  const [rotationX, setRotationX] = useState(-0.5);
+  const [rotationY, setRotationY] = useState(0.5);
+
+  const isDraggingRef = useRef(false);
+  const lastPositionRef = useRef({ x: 0, y: 0 });
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    setLastPosition({ x: e.clientX, y: e.clientY });
+    isDraggingRef.current = true;
+    lastPositionRef.current = { x: e.clientX, y: e.clientY };
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    const deltaX = e.clientX - lastPosition.x;
-    const deltaY = e.clientY - lastPosition.y;
-    setRotation({
-      y: rotation.y + deltaX * 0.01,
-      x: rotation.x - deltaY * 0.01,
-    });
-    setLastPosition({ x: e.clientX, y: e.clientY });
+    if (!isDraggingRef.current) return;
+    const deltaX = e.clientX - lastPositionRef.current.x;
+    const deltaY = e.clientY - lastPositionRef.current.y;
+    
+    setRotationY(prevY => prevY + deltaX * 0.01);
+    setRotationX(prevX => prevX - deltaY * 0.01);
+    
+    lastPositionRef.current = { x: e.clientX, y: e.clientY };
   };
 
-  const handleMouseUp = () => setIsDragging(false);
-  const handleMouseLeave = () => setIsDragging(false);
+  const handleMouseUp = () => {
+    isDraggingRef.current = false;
+  };
+  const handleMouseLeave = () => {
+    isDraggingRef.current = false;
+  };
 
   const projectedPixels = useMemo(() => {
-    const cosX = Math.cos(rotation.x);
-    const sinX = Math.sin(rotation.x);
-    const cosY = Math.cos(rotation.y);
-    const sinY = Math.sin(rotation.y);
+    const cosX = Math.cos(rotationX);
+    const sinX = Math.sin(rotationX);
+    const cosY = Math.cos(rotationY);
+    const sinY = Math.sin(rotationY);
 
     return pixels
       .map(p => {
@@ -74,7 +80,7 @@ export function Svg3dCube(props: Svg3dCubeProps) {
         };
       })
       .sort((a, b) => a.depth - b.depth); // Sort by depth for correct layering
-  }, [pixels, rotation]);
+  }, [pixels, rotationX, rotationY]);
 
   return (
     <svg
@@ -83,7 +89,7 @@ export function Svg3dCube(props: Svg3dCubeProps) {
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseLeave}
-      className={cn('w-full h-full', className, isDragging ? 'cursor-grabbing' : 'cursor-grab')}
+      className={cn('w-full h-full', className, isDraggingRef.current ? 'cursor-grabbing' : 'cursor-grab')}
       {...rest}
     >
       <g style={{ transform: `translate(${viewWidth / 2}px, ${viewHeight / 2}px)` }}>
