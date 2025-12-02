@@ -293,6 +293,7 @@ export default function StoryPage() {
           createdAt: null, // set to null because it's not saved yet
         };
         setActiveStory(temporaryActiveStory);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         toast({ title: "Story Generated!", description: "Your new story text is ready. Generating audio..."});
         
         // Now, generate and upload audio in the background
