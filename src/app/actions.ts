@@ -4,7 +4,7 @@
 import { z } from 'zod';
 import { generateStory } from '@/ai/flows/generate-story';
 import { translateStory } from '@/ai/flows/translate-story';
-import { generateCommunity } from '@/ai/flows/generate-community';
+import { generateCommunity } from '@/aiflows/generate-community';
 import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member';
 import { generateSpeech } from '@/ai/flows/generate-speech';
 import { generateAvatars } from '@/ai/flows/generate-avatars';

@@ -1,8 +1,9 @@
+
 // src/app/admin/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, ShieldCheck, AlertTriangle, CheckCircle, Bone, KeyRound } from 'lucide-react';
@@ -38,25 +39,12 @@ function AdminDashboard() {
     const [syncError, setSyncError] = useState<string | null>(null);
     const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
     const [keyIsLoading, setKeyIsLoading] = useState(false);
-
-    const credentialDocRef = useMemoFirebase(() => {
-        if (!firestore) return null;
-        return doc(firestore, '_private_admin_data', 'credentials');
-    }, [firestore]);
-
-    const { data: existingCredentials, isLoading: credentialsLoading } = useDoc(credentialDocRef);
+    const [credentialsLoading, setCredentialsLoading] = useState(false);
 
     const form = useForm<z.infer<typeof credentialsSchema>>({
         resolver: zodResolver(credentialsSchema),
         defaultValues: { serviceAccountKey: '' },
     });
-
-    useEffect(() => {
-        if (existingCredentials) {
-            // @ts-ignore - a bit of a hack to get the key into the form
-            form.setValue('serviceAccountKey', existingCredentials.serviceAccountKeyBase64 || '');
-        }
-    }, [existingCredentials, form]);
 
     const handleSync = async () => {
         setSyncIsLoading(true);
@@ -108,7 +96,7 @@ function AdminDashboard() {
                            <KeyRound /> Service Account Credentials
                         </CardTitle>
                         <CardDescription>
-                            Securely store the Base64-encoded service account key required for server-side AI actions like flag generation. This only needs to be set once.
+                            Securely store the Base64-encoded service account key required for server-side AI actions like flag generation. This only needs to be set once. This form writes to a Firestore document that is only writable by you.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
