@@ -10,6 +10,8 @@ import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import admin from 'firebase-admin';
+import { firebaseConfig } from '@/firebase/config';
+import { generateCommunity } from '@/ai/flows/generate-community';
 
 
 const storySchema = z.object({
@@ -64,7 +66,7 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>
 
     // Upload audio to Firebase Storage
     const storagePath = `stories/${userId}/${storyId}.wav`;
-    const bucket = storage.bucket();
+    const bucket = storage.bucket(firebaseConfig.storageBucket);
     const file = bucket.file(storagePath);
     
     await file.save(speechResult.wavBuffer, {
