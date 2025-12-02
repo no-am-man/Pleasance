@@ -1,8 +1,9 @@
+
 'use client';
 
 import * as React from 'react';
 import { motion } from 'framer-motion';
-import { SVGProps } from 'react';
+import { SVGProps, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 // 3D Point
@@ -44,11 +45,72 @@ const pyramidVariants = {
     })
 };
 
+// Function to rotate a point around X and Y axes
+function rotatePoint(point: Point3D, rotation: { x: number; y: number }): Point3D {
+    const radX = rotation.x;
+    const radY = rotation.y;
+
+    const cosX = Math.cos(radX);
+    const sinX = Math.sin(radX);
+    const cosY = Math.cos(radY);
+    const sinY = Math.sin(radY);
+
+    // Rotate around Y axis
+    const yRotated = {
+        x: point.x * cosY - point.z * sinY,
+        y: point.y,
+        z: point.x * sinY + point.z * cosY,
+    };
+
+    // Rotate around X axis
+    const xRotated = {
+        x: yRotated.x,
+        y: yRotated.y * cosX - yRotated.z * sinX,
+        z: yRotated.y * sinX + yRotated.z * cosX,
+    };
+
+    return xRotated;
+}
+
+
 export function Svg3dCube(props: SVGProps<SVGSVGElement>) {
+  const { className, ...rest } = props;
   const size = 50;
   const perspective = 200;
   const viewWidth = 400;
   const viewHeight = 400;
+
+  const [rotation, setRotation] = useState({ x: -0.5, y: 0.5 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setLastPosition({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+
+    const deltaX = e.clientX - lastPosition.x;
+    const deltaY = e.clientY - lastPosition.y;
+
+    setRotation({
+      y: rotation.y + deltaX * 0.01,
+      x: rotation.x - deltaY * 0.01,
+    });
+
+    setLastPosition({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
 
   const vertices: Point3D[] = [
     { x: -size, y: -size, z: -size }, // 0: Left-Back-Top
@@ -61,7 +123,8 @@ export function Svg3dCube(props: SVGProps<SVGSVGElement>) {
     { x: -size, y: size, z: size },   // 7: Left-Front-Bottom
   ];
 
-  const projectedPoints = vertices.map(v => project(v, perspective));
+  const rotatedVertices = vertices.map(v => rotatePoint(v, rotation));
+  const projectedPoints = rotatedVertices.map(v => project(v, perspective));
 
   const center: Point2D = { x: viewWidth / 2, y: viewHeight / 2 };
 
@@ -73,6 +136,13 @@ export function Svg3dCube(props: SVGProps<SVGSVGElement>) {
     [0, 1, 5, 4], // Top
     [3, 2, 6, 7], // Bottom
   ];
+
+  // Calculate face depths to sort for painter's algorithm
+  const sortedFaces = faces.map((face, index) => {
+    const avgZ = face.reduce((sum, vertexIndex) => sum + rotatedVertices[vertexIndex].z, 0) / face.length;
+    return { face, index, avgZ };
+  }).sort((a, b) => a.avgZ - b.avgZ);
+
 
   const pyramidVectors = [
     { x: 1, y: -1, z: 1 },  // Right-Front-Up
@@ -91,15 +161,23 @@ export function Svg3dCube(props: SVGProps<SVGSVGElement>) {
     z: vec.z * 1000,
   }));
   
-  const projectedApexes = pyramidApexes.map(p => project(p, perspective));
+  const rotatedApexes = pyramidApexes.map(p => rotatePoint(p, rotation));
+  const projectedApexes = rotatedApexes.map(p => project(p, perspective));
 
   return (
-    <svg viewBox={`0 0 ${viewWidth} ${viewHeight}`} {...props}>
+    <svg 
+        viewBox={`0 0 ${viewWidth} ${viewHeight}`}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        className={cn(className, isDragging ? 'cursor-grabbing' : 'cursor-grab')}
+        {...rest}>
       <g transform={`translate(${center.x}, ${center.y})`}>
         {/* Render Cube Faces */}
-        {faces.map((face, i) => (
+        {sortedFaces.map(({ face, index }) => (
           <polygon
-            key={i}
+            key={index}
             points={face.map(p => `${projectedPoints[p].x},${projectedPoints[p].y}`).join(' ')}
             fill="hsl(var(--primary) / 0.1)"
             stroke="hsl(var(--primary))"
@@ -137,3 +215,4 @@ export function Svg3dCube(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
