@@ -17,7 +17,6 @@ import {
   Warehouse,
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
-import { Svg3dCube } from '@/components/icons/svg3d-cube';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -48,7 +47,6 @@ const navLinks = [
   { href: '/story', label: 'Nuncy Lingua', icon: BookOpen },
   { href: '/fabrication', label: 'Fabrication', icon: Warehouse },
   { href: '/treasury', label: 'Treasury', icon: Banknote },
-  { href: '/svg3d', label: 'SVG3D', icon: Svg3dCube },
   { href: '/wiki', label: 'Wiki', icon: Info },
 ];
 
