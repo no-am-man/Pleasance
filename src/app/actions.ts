@@ -17,7 +17,6 @@ const storySchema = z.object({
   sourceLanguage: z.string().min(1),
   targetLanguage: z.string().min(1),
   userId: z.string(),
-  storageBucket: z.string().min(1),
 });
 
 export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>) {
@@ -27,7 +26,7 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>
       return { error: 'Invalid input.' };
     }
     
-    const { difficulty, sourceLanguage, targetLanguage, userId, storageBucket } = validatedFields.data;
+    const { difficulty, sourceLanguage, targetLanguage, userId } = validatedFields.data;
 
     // --- Step 1: Generate and Translate Story ---
     const storyResult = await generateStory({ difficultyLevel: difficulty, sourceLanguage });
@@ -47,14 +46,13 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>
     }
     const translatedText = translationResult.translatedText;
 
-    // --- Step 2: Initialize Firebase Admin ---
+    // --- Step 2: Initialize Firebase Admin for Firestore Write ---
     const adminApp = initializeAdminApp();
     const firestore = adminApp.firestore();
-    const storage = adminApp.storage();
 
-    // --- Step 3: Save Initial Story to Firestore using Admin SDK ---
+    // --- Step 3: Save Initial Story to Firestore to get an ID ---
     const storyCollectionRef = firestore.collection('users').doc(userId).collection('stories');
-    const newDocRef = storyCollectionRef.doc(); // Create a new doc reference
+    const newDocRef = storyCollectionRef.doc();
     const storyId = newDocRef.id;
 
     const newStoryData = {
@@ -65,46 +63,24 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storySchema>
         targetLanguage: targetLanguage,
         nativeText: originalStory,
         translatedText: translatedText,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(), // Use Admin SDK serverTimestamp
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
         audioUrl: '', // Initialize with empty audioUrl
     };
     await newDocRef.set(newStoryData);
 
-    // --- Step 4: Generate Speech ---
+    // --- Step 4: Generate Speech Buffer ---
     const speechResult = await generateSpeech({ text: translatedText });
     if (!speechResult.wavBuffer) {
         throw new Error('Speech synthesis failed to produce audio.');
     }
-
-    // --- Step 5: Upload Audio and Get URL (using Admin SDK) ---
-    const bucket = storage.bucket(storageBucket);
-    const storagePath = `stories/${userId}/${storyId}.wav`;
-    const file = bucket.file(storagePath);
-    await file.save(speechResult.wavBuffer, {
-        metadata: {
-            contentType: 'audio/wav',
-        },
-    });
     
-    // The public URL is constructed manually. Note the URL encoding for the path.
-    const downloadURL = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(storagePath)}?alt=media`;
-
-    // --- Step 6: Update Story with Audio URL using Admin SDK ---
-    await newDocRef.update({ audioUrl: downloadURL });
-
-    // --- Step 7: Return Complete Story Object ---
+    // --- Step 5: Return data to client for upload ---
     return {
       story: {
-        id: storyId,
-        userId,
-        level: difficulty,
-        sourceLanguage,
-        targetLanguage,
-        nativeText: originalStory,
-        translatedText,
-        audioUrl: downloadURL,
-        createdAt: null, // This can be null for the client, it's set on the server
-      }
+        ...newStoryData,
+        createdAt: null, // Let client handle timestamp if needed, or it will be null
+      },
+      audioData: speechResult.wavBuffer.toString('base64'),
     };
 
   } catch (e) {

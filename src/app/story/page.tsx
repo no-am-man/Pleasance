@@ -16,8 +16,9 @@ import { generateStoryAndSpeech, createHistorySnapshot } from '@/app/actions';
 import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useUser } from '@/firebase';
-import { firestore, firebaseConfig } from '@/firebase/config';
-import { collection, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
+import { firestore, storage } from '@/firebase/config';
+import { collection, query, orderBy, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
@@ -216,6 +217,7 @@ export default function StoryPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeStory, setActiveStory] = useState<Story | null>(null);
   const { user, isUserLoading } = useUser();
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof StoryFormSchema>>({
     resolver: zodResolver(StoryFormSchema),
@@ -233,16 +235,40 @@ export default function StoryPage() {
     setError(null);
     setActiveStory(null);
 
-    const result = await generateStoryAndSpeech({
-        ...data,
-        userId: user.uid,
-        storageBucket: firebaseConfig.storageBucket,
-    });
+    const result = await generateStoryAndSpeech({ ...data, userId: user.uid });
 
     if (result.error) {
       setError(result.error);
-    } else if (result.story) {
-        setActiveStory(result.story);
+      setIsLoading(false);
+      return;
+    } 
+    
+    if (result.story && result.audioData) {
+        try {
+            // Client-side upload
+            const { story, audioData } = result;
+            const storagePath = `stories/${user.uid}/${story.id}.wav`;
+            const storageRef = ref(storage, storagePath);
+            
+            // Upload the base64 string
+            await uploadString(storageRef, audioData, 'base64', { contentType: 'audio/wav' });
+            
+            // Get the download URL
+            const downloadURL = await getDownloadURL(storageRef);
+
+            // Update the story document in Firestore with the new URL
+            const storyDocRef = doc(firestore, 'users', user.uid, 'stories', story.id);
+            await updateDoc(storyDocRef, { audioUrl: downloadURL });
+
+            // Set the active story for the UI to display, now with the audio URL
+            setActiveStory({ ...story, audioUrl: downloadURL });
+            toast({ title: "Story and Speech Ready!", description: "Your new story is ready to be played."});
+
+        } catch (uploadError) {
+            console.error("Client-side upload failed:", uploadError);
+            const message = uploadError instanceof Error ? uploadError.message : "An unexpected error occurred during file upload.";
+            setError(`Failed to upload audio: ${message}`);
+        }
     } else {
         setError('An unknown error occurred while generating the story.');
     }
