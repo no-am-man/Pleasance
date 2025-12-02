@@ -122,7 +122,7 @@ async function processAudioInBackground(storyId: string, userId: string, textToS
         });
 
     } catch (e) {
-        console.error(`Background audio processing failed for story ${storyId}:`, e);
+        console.error(`Background audio processing failed for story ${storyId}:`, JSON.stringify(e, null, 2));
         // Optionally update the story doc to indicate failure
         const adminApp = initializeAdminApp();
         const firestore = getFirestore(adminApp);
