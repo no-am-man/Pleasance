@@ -1,3 +1,4 @@
+
 // src/firebase/config-admin.ts
 import admin from 'firebase-admin';
 
@@ -38,3 +39,5 @@ export function initializeAdminApp() {
     throw new Error(`Server configuration error: Failed to parse or initialize the service account key. Please ensure it is a valid, non-malformed Base64 string. Original error: ${e.message}`);
   }
 }
+
+    
