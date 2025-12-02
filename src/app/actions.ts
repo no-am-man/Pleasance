@@ -9,10 +9,10 @@ import { chatWithMember, ChatWithMemberInput } from '@/ai/flows/chat-with-member
 import { generateSpeech } from '@/ai/flows/generate-speech';
 import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
+import { generateFlag } from '@/ai/flows/generate-flag';
 import { VOICES } from '@/config/languages';
 import { initializeFirebase } from '@/firebase/config-for-actions';
 import { doc, serverTimestamp, deleteField, updateDoc } from 'firebase/firestore';
-import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
@@ -170,3 +170,43 @@ export async function runMemberSync() {
         return { error: message };
     }
 }
+
+const flagSchema = z.object({
+    communityId: z.string(),
+    communityName: z.string(),
+    communityDescription: z.string(),
+});
+
+export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) {
+    try {
+        const validatedFields = flagSchema.safeParse(values);
+        if (!validatedFields.success) {
+            return { error: 'Invalid input for flag generation.' };
+        }
+        
+        const { communityId, communityName, communityDescription } = validatedFields.data;
+
+        // 1. Generate the flag image
+        const flagResult = await generateFlag({ communityName, communityDescription });
+        if (!flagResult.flagUrl) {
+            throw new Error('Failed to generate a flag image.');
+        }
+
+        // 2. Update the community document in Firestore
+        const { firestore } = initializeFirebase();
+        const communityDocRef = doc(firestore, 'communities', communityId);
+
+        await updateDoc(communityDocRef, {
+            flagUrl: flagResult.flagUrl,
+        });
+
+        return { flagUrl: flagResult.flagUrl };
+
+    } catch (e) {
+        console.error('Flag Generation Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Flag generation failed. ${message}` };
+    }
+}
+
+    

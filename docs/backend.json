@@ -160,6 +160,11 @@
           "items": {
             "$ref": "#/backend/entities/Member"
           }
+        },
+        "flagUrl": {
+          "type": "string",
+          "description": "The data URL of the AI-generated community flag.",
+          "format": "uri"
         }
       },
       "required": ["id", "ownerId", "name", "description", "members"]
@@ -395,3 +400,5 @@
     "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities` in a top-level collection, they become publicly queryable, which is essential for search and join features. User-specific data, including stories and assets, is nested under `/users/{userId}` to ensure data privacy and allow for simple, secure queries. Public profiles are in `/community-profiles` to allow discoverability without exposing private user account details. Messages are stored in a subcollection under each community to keep them organized and contextual."
   }
 }
+
+    

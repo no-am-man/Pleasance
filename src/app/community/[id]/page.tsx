@@ -8,21 +8,22 @@ import { doc, collection, query, orderBy, serverTimestamp, where, updateDoc, arr
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useTransition } from 'react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { getAiChatResponse } from '@/app/actions';
+import { getAiChatResponse, generateCommunityFlag } from '@/app/actions';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { HumanIcon } from '@/components/icons/human-icon';
 import { AiIcon } from '@/components/icons/ai-icon';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import Image from 'next/image';
 
 type Member = {
   name: string;
@@ -40,6 +41,7 @@ type Community = {
   welcomeMessage: string;
   ownerId: string;
   members: Member[];
+  flagUrl?: string;
 };
 
 type CommunityProfile = {
@@ -453,7 +455,7 @@ function Chat({ communityId, isOwner, allMembers }: { communityId: string; isOwn
             const aiMessage = {
                 communityId,
                 userId: `ai_${aiMemberToRespond.name.toLowerCase().replace(/\s/g, '_')}`,
-                userName: aiMemberToRespond.name,
+                userName: aiMemberTorespond.name,
                 userAvatarUrl: `https://i.pravatar.cc/150?u=${aiMemberToRespond.name}`,
                 type: 'text' as const,
                 text: result.response,
@@ -579,6 +581,7 @@ export default function CommunityProfilePage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  const [isPending, startTransition] = useTransition();
 
   const communityDocRef = useMemoFirebase(() => {
     if (!firestore || !id) return null;
@@ -710,6 +713,24 @@ export default function CommunityProfilePage() {
     })
   };
 
+  const handleGenerateFlag = () => {
+    if (!community) return;
+
+    startTransition(async () => {
+        toast({ title: 'Generating New Flag...', description: 'This may take a moment.' });
+        const result = await generateCommunityFlag({
+            communityId: community.id,
+            communityName: community.name,
+            communityDescription: community.description,
+        });
+
+        if (result.error) {
+            toast({ variant: 'destructive', title: 'Flag Generation Failed', description: result.error });
+        } else {
+            toast({ title: 'New Flag Generated!', description: 'Your community has a new look.' });
+        }
+    });
+  };
 
   if (isLoading || profilesLoading || isRequestLoading) {
     return (
@@ -791,6 +812,30 @@ export default function CommunityProfilePage() {
         </Button>
         {getJoinButton()}
       </div>
+
+       <div className="mb-8 relative rounded-lg overflow-hidden border-2 border-primary aspect-[16/9] bg-muted flex items-center justify-center">
+            {community.flagUrl ? (
+                <Image src={community.flagUrl} alt={`${community.name} Flag`} layout="fill" objectFit="cover" />
+            ) : (
+                <div className="text-center text-muted-foreground">
+                    <Flag className="h-12 w-12 mx-auto" />
+                    <p>No flag has been generated for this community yet.</p>
+                </div>
+            )}
+            {isOwner && (
+                <div className="absolute top-2 right-2">
+                    <Button onClick={handleGenerateFlag} disabled={isPending} variant="secondary" size="sm">
+                        {isPending ? (
+                            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <RefreshCw className="mr-2 h-4 w-4" />
+                        )}
+                        Regenerate Flag
+                    </Button>
+                </div>
+            )}
+        </div>
+
 
       <div className="text-center mb-8">
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary">
@@ -874,6 +919,5 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
-    
 
     
