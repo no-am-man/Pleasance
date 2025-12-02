@@ -83,7 +83,7 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
     // Generate a signed URL instead of making the file public
     const [signedUrl] = await file.getSignedUrl({
         action: 'read',
-        expires: '03-17-2025', // Set a long expiration date
+        expires: '01-01-2030', // Set a long expiration date
     });
 
     // --- Step 5: Save Final Story to Firestore ---
