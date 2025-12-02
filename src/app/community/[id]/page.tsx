@@ -578,7 +578,6 @@ export default function CommunityProfilePage() {
   const router = useRouter();
   const { user } = useUser();
   const firestore = useFirestore();
-  const storage = useStorage();
   const { toast } = useToast();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const [isPending, startTransition] = useTransition();
@@ -714,14 +713,14 @@ export default function CommunityProfilePage() {
   };
 
   const handleGenerateFlag = () => {
-    if (!community || !communityDocRef || !storage) return;
+    if (!community) return;
 
     startTransition(async () => {
         try {
             toast({ title: 'Generating New Flag...', description: 'This may take a moment.' });
             
-            // 1. Call server action to get the image data URI
             const result = await generateCommunityFlag({
+                communityId: community.id,
                 communityName: community.name,
                 communityDescription: community.description,
             });
@@ -729,26 +728,6 @@ export default function CommunityProfilePage() {
             if (result.error) {
                 throw new Error(result.error);
             }
-            if (!result.flagUrl) {
-                throw new Error('AI flow did not return a flag image.');
-            }
-
-            // 2. Upload to Firebase Storage from the client
-            const storagePath = `communities/${community.id}/flag.png`;
-            const storageRef = ref(storage, storagePath);
-            const base64Data = result.flagUrl.split(',')[1];
-
-            if (!base64Data) {
-                throw new Error('Invalid data URI format received from server.');
-            }
-
-            await uploadString(storageRef, base64Data, 'base64', { contentType: 'image/png' });
-            
-            // 3. Get download URL
-            const downloadURL = await getDownloadURL(storageRef);
-
-            // 4. Update Firestore with the permanent URL
-            await updateDoc(communityDocRef, { flagUrl: downloadURL });
 
             toast({ title: 'New Flag Generated!', description: 'Your community has a new look.' });
         } catch (e) {
@@ -841,7 +820,7 @@ export default function CommunityProfilePage() {
 
        <div className="mb-8 relative rounded-lg overflow-hidden border-2 border-primary aspect-[16/9] bg-muted flex items-center justify-center">
             {community.flagUrl ? (
-                <Image src={community.flagUrl} alt={`${community.name} Flag`} layout="fill" objectFit="cover" />
+                <Image src={community.flagUrl} alt={`${community.name} Flag`} fill objectFit="cover" />
             ) : (
                 <div className="text-center text-muted-foreground">
                     <Flag className="h-12 w-12 mx-auto" />

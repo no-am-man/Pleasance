@@ -173,6 +173,7 @@ export async function runMemberSync() {
 }
 
 const flagSchema = z.object({
+    communityId: z.string(),
     communityName: z.string(),
     communityDescription: z.string(),
 });
@@ -184,16 +185,34 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
             return { error: 'Invalid input for flag generation.' };
         }
         
-        const { communityName, communityDescription } = validatedFields.data;
+        const { communityId, communityName, communityDescription } = validatedFields.data;
+        const { firestore, storage } = initializeFirebase();
 
         // 1. Generate the flag image data URI from the AI flow
         const flagResult = await generateFlag({ communityName, communityDescription });
         if (!flagResult.flagUrl) {
             throw new Error('Failed to generate a flag image from the AI flow.');
         }
+        
+        // 2. Upload to Firebase Storage
+        const storagePath = `communities/${communityId}/flag.png`;
+        const storageRef = ref(storage, storagePath);
+        const base64Data = flagResult.flagUrl.split(',')[1];
+        if (!base64Data) {
+            throw new Error('Invalid data URI format received from AI.');
+        }
 
-        // 2. Return the raw data URI to the client
-        return { flagUrl: flagResult.flagUrl };
+        await uploadString(storageRef, base64Data, 'base64', { contentType: 'image/png' });
+        
+        // 3. Get download URL
+        const downloadURL = await getDownloadURL(storageRef);
+
+        // 4. Update Firestore with the permanent URL
+        const communityDocRef = doc(firestore, 'communities', communityId);
+        await updateDoc(communityDocRef, { flagUrl: downloadURL });
+        
+        // 5. Return the new URL to the client
+        return { flagUrl: downloadURL };
 
     } catch (e) {
         console.error('Flag Generation Error:', e);
