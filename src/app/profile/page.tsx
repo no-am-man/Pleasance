@@ -21,7 +21,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { generateProfileAvatars } from '../actions';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -119,6 +119,11 @@ function AvatarSelectionDialog({ name, onSelectAvatar }: { name: string; onSelec
                         ))}
                     </div>
                 )}
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button type="button">Done</Button>
+                    </DialogClose>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );
