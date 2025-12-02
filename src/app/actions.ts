@@ -14,6 +14,7 @@ import * as admin from 'firebase-admin';
 import { getAuth } from 'firebase-admin/auth';
 import { cookies } from 'next/headers';
 import { initializeFirebase as initializeClientFirebase } from '@/firebase/config-for-actions';
+import { collection, doc, getDoc } from 'firebase/firestore';
 
 const storySchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
@@ -43,9 +44,10 @@ async function getAdminAppWithKey() {
     // This is a necessary step because we can't use the Admin SDK to fetch its own credentials.
     const { firestore: clientFirestore } = initializeClientFirebase();
     
-    const credentialsDoc = await clientFirestore.collection('_private_admin_data').doc('credentials').get();
+    const credentialsDocRef = doc(collection(clientFirestore, '_private_admin_data'), 'credentials');
+    const credentialsDoc = await getDoc(credentialsDocRef);
 
-    if (!credentialsDoc.exists) {
+    if (!credentialsDoc.exists()) {
         throw new Error("Service account key not found in Firestore. Please set it in the Admin Panel.");
     }
     const serviceAccountKeyBase64 = credentialsDoc.data()?.serviceAccountKeyBase64;
