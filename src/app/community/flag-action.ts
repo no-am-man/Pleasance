@@ -11,17 +11,6 @@ const flagSchema = z.object({
     communityDescription: z.string(),
 });
 
-function toBase64(str: string): string {
-    // This function can run in Node.js or browser environments.
-    if (typeof Buffer !== 'undefined') {
-      // Node.js environment
-      return Buffer.from(str, 'utf-8').toString('base64');
-    } else {
-      // Browser environment (fallback, though this action is server-only)
-      return btoa(unescape(encodeURIComponent(str)));
-    }
-}
-
 const APP_NAME = 'pleasance-admin';
 
 export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) {
@@ -52,7 +41,7 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
         }
 
         // 2. Convert the SVG string to a Base64 data URI
-        const svgBase64 = toBase64(flagResult.svg);
+        const svgBase64 = Buffer.from(flagResult.svg, 'utf-8').toString('base64');
         const svgDataUri = `data:image/svg+xml;base64,${svgBase64}`;
 
         // 3. Update the community document in Firestore using the Admin SDK
@@ -72,4 +61,3 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
         return { error: `Flag generation failed: ${message}` };
     }
 }
-

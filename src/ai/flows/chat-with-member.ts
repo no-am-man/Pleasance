@@ -10,6 +10,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { GenerateRequest } from 'genkit/generate';
 
 const MemberSchema = z.object({
   name: z.string().describe("The AI member's unique name."),
@@ -55,11 +56,16 @@ Bio: ${input.member.bio}
 
 Your response must be concise, engaging, and directly related to the user's message.`;
 
-    const { output } = await ai.generate({
+    const generateOptions: GenerateRequest = {
         system: systemPrompt,
         prompt: input.userMessage,
-        history: input.history,
-    });
+    };
+
+    if (input.history) {
+        generateOptions.history = input.history;
+    }
+
+    const { output } = await ai.generate(generateOptions);
     
     const responseText = output?.text || '';
 
