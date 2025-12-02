@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, LoaderCircle, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 type Story = {
     id: string;
@@ -63,13 +64,11 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
             audio.play().catch(e => console.error("Autoplay failed:", e));
         }
     } else if (!story.audioUrl) {
-        // No audio URL, ensure it's paused and reset
         audio.pause();
         audio.currentTime = 0;
     }
   
     return () => {
-      // No pause on cleanup
       audio.removeEventListener("loadeddata", setAudioData);
       audio.removeEventListener("timeupdate", setAudioTime);
       audio.removeEventListener("ended", handlePlaybackEnded);
@@ -116,14 +115,19 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
                         <div className="relative text-muted-foreground whitespace-pre-wrap leading-relaxed">
                             {hasAudio && (
                                 <div
-                                    className="absolute inset-0 bg-gradient-to-r from-accent/70 to-accent/10 pointer-events-none -z-10"
+                                    className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-yellow-600 pointer-events-none -z-10"
                                     style={{
                                         width: `${progress}%`,
                                         transition: isPlaying ? 'width 0.1s linear' : 'none',
                                     }}
                                 />
                             )}
-                            <span className="relative z-0">{story.nativeText}</span>
+                             <p className={cn(
+                                "relative z-0",
+                                hasAudio && "text-transparent bg-clip-text bg-gradient-to-r from-foreground to-foreground"
+                            )} style={hasAudio ? { textShadow: "0 0 1px hsla(var(--muted-foreground), 0.8)" } : {}}>
+                                {story.nativeText}
+                            </p>
                         </div>
                     </CardContent>
                 </Card>
@@ -134,7 +138,7 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
                  <Button
                     onClick={togglePlayPause}
                     size="icon"
-                    className="rounded-full w-20 h-20 bg-red-600 hover:bg-red-700 disabled:bg-gray-400"
+                    className="rounded-full w-20 h-20 bg-primary hover:bg-primary/90 disabled:bg-gray-400"
                     aria-label={isPlaying ? "Pause" : "Play"}
                     disabled={!hasAudio || isProcessing}
                     >
@@ -161,14 +165,19 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
                     <div className="relative text-foreground whitespace-pre-wrap leading-relaxed">
                         {hasAudio && (
                             <div
-                                className="absolute inset-0 bg-gradient-to-r from-accent/70 to-accent/10 pointer-events-none -z-10"
+                                className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-yellow-600 pointer-events-none -z-10"
                                 style={{
                                     width: `${progress}%`,
                                     transition: isPlaying ? 'width 0.1s linear' : 'none',
                                 }}
                             />
                         )}
-                        <span className="relative z-0">{story.translatedText}</span>
+                        <p className={cn(
+                            "relative z-0",
+                            hasAudio && "text-transparent bg-clip-text bg-gradient-to-r from-foreground to-foreground"
+                        )} style={hasAudio ? { textShadow: "0 0 1px hsla(var(--foreground), 0.8)" } : {}}>
+                            {story.translatedText}
+                        </p>
                     </div>
                 </CardContent>
                 </Card>
