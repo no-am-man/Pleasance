@@ -4,22 +4,29 @@
 import { z } from 'zod';
 import { generateFlag } from '@/ai/flows/generate-flag';
 import * as admin from 'firebase-admin';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const flagSchema = z.object({
     communityId: z.string(),
     communityName: z.string(),
     communityDescription: z.string(),
-    serviceAccountKey: z.string().min(1, { message: "Service account key is required and cannot be empty." }),
 });
 
 // Helper to ensure the admin app is initialized only once.
-function initializeAdminApp(serviceAccountKey: string) {
+function initializeAdminApp() {
     if (admin.apps.length > 0) {
         return admin.app();
     }
 
+    const serviceAccountBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
+    if (!serviceAccountBase64) {
+        throw new Error('Server configuration error: The FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is not set.');
+    }
+
     try {
-        const decodedServiceAccount = Buffer.from(serviceAccountKey, 'base64').toString('utf8');
+        const decodedServiceAccount = Buffer.from(serviceAccountBase64, 'base64').toString('utf8');
         try {
             const serviceAccount = JSON.parse(decodedServiceAccount);
             return admin.initializeApp({
@@ -38,15 +45,14 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
     try {
         const validatedFields = flagSchema.safeParse(values);
         if (!validatedFields.success) {
-            // Get the first error message for a more specific response.
             const errorMessage = validatedFields.error.issues[0]?.message || 'Invalid input for flag generation.';
             return { error: errorMessage };
         }
         
-        const { communityId, communityName, communityDescription, serviceAccountKey } = validatedFields.data;
+        const { communityId, communityName, communityDescription } = validatedFields.data;
 
         // This will throw an error if initialization fails, which will be caught below.
-        const adminApp = initializeAdminApp(serviceAccountKey);
+        const adminApp = initializeAdminApp();
 
         // 1. Generate the SVG string using the AI flow
         const flagResult = await generateFlag({ communityName, communityDescription });
