@@ -18,7 +18,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
 import { ai } from '@/ai/genkit';
-import { listModels } from '@genkit-ai/google-genai';
+import { listModels } from 'genkit';
 import {
     GenerateSvg3dInputSchema,
     type GenerateSvg3dInput,
