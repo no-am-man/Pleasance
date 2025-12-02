@@ -74,7 +74,6 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
     return () => {
       // Pause and reset time when component unmounts or story changes
       audio.pause();
-      audio.currentTime = 0; 
       // Remove all listeners
       audio.removeEventListener("loadeddata", setAudioData);
       audio.removeEventListener("timeupdate", setAudioTime);
