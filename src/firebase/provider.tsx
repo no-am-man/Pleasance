@@ -75,43 +75,42 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
   // Effect to subscribe to Firebase auth state changes and manage session cookie
   useEffect(() => {
-    if (!auth) {
-      setUserAuthState({ user: null, isUserLoading: false, userError: new Error("Auth service not provided.") });
-      return;
-    }
-
     setUserAuthState({ user: null, isUserLoading: true, userError: null });
 
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      async (firebaseUser) => {
-        if (firebaseUser) {
-          try {
-            const idToken = await firebaseUser.getIdToken();
-            await fetch('/api/auth/session', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ idToken }),
-            });
-          } catch (e) {
-            console.error("Failed to set session cookie:", e);
-            // Don't block user state update, but log the error
+    if (auth) {
+        const unsubscribe = onAuthStateChanged(
+          auth,
+          async (firebaseUser) => {
+            if (firebaseUser) {
+              try {
+                const idToken = await firebaseUser.getIdToken();
+                await fetch('/api/auth/session', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ idToken }),
+                });
+              } catch (e) {
+                console.error("Failed to set session cookie:", e);
+                // Don't block user state update, but log the error
+              }
+            } else {
+              try {
+                await fetch('/api/auth/session', { method: 'DELETE' });
+              } catch (e) {
+                console.error("Failed to clear session cookie:", e);
+              }
+            }
+            setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
+          },
+          (error) => {
+            console.error("FirebaseProvider: onAuthStateChanged error:", error);
+            setUserAuthState({ user: null, isUserLoading: false, userError: error });
           }
-        } else {
-          try {
-            await fetch('/api/auth/session', { method: 'DELETE' });
-          } catch (e) {
-            console.error("Failed to clear session cookie:", e);
-          }
-        }
-        setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
-      },
-      (error) => {
-        console.error("FirebaseProvider: onAuthStateChanged error:", error);
-        setUserAuthState({ user: null, isUserLoading: false, userError: error });
-      }
-    );
-    return () => unsubscribe();
+        );
+        return () => unsubscribe();
+    } else {
+        setUserAuthState({ user: null, isUserLoading: false, userError: new Error("Auth service not provided.") });
+    }
   }, [auth]);
 
   // Memoize the context value
