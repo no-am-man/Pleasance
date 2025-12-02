@@ -25,7 +25,7 @@ type StoryViewerProps = {
 
 export default function StoryViewer({ story, autoplay = false }: StoryViewerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [isPlaying, setIsPlaying] = useState(autoplay);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const { toast } = useToast();
@@ -38,18 +38,22 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
     const audio = audioRef.current;
     if (!audio) return;
 
+    const wasPlaying = isPlaying;
+
+    // When a new story with a new audio URL comes in
     if (story.audioUrl && audio.src !== story.audioUrl) {
       audio.src = story.audioUrl;
       audio.load();
-    }
 
-    // Autoplay when audioUrl becomes available and autoplay is true
-    if (story.audioUrl && autoplay && !isPlaying) {
-        audio.play().catch(e => {
-            console.error("Autoplay failed:", e);
-            setIsPlaying(false); // If autoplay fails, update the state
-        });
+      // If autoplay is intended or if audio was already playing for a previous story
+      if (autoplay || wasPlaying) {
+        audio.play().catch(e => console.error("Autoplay failed:", e));
         setIsPlaying(true);
+      }
+    } else if (!story.audioUrl) {
+        // If the new story has no audio, stop playback.
+        audio.pause();
+        setIsPlaying(false);
     }
 
     const setAudioData = () => {
@@ -75,15 +79,16 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
       audio.removeEventListener("timeupdate", setAudioTime);
       audio.removeEventListener("ended", handlePlaybackEnded);
     };
-  }, [story.audioUrl, autoplay, isPlaying]);
+  }, [story.audioUrl, story.id, autoplay]);
 
+  // This separate effect handles manual play/pause and ensures correct state
   useEffect(() => {
     const audio = audioRef.current;
     if (audio) {
       if (isPlaying) {
         audio.play().catch(e => {
           console.error("Playback error:", e);
-          setIsPlaying(false);
+          setIsPlaying(false); // If play fails, revert state
         });
       } else {
         audio.pause();
