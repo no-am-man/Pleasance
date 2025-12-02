@@ -1,4 +1,3 @@
-
 // src/app/set-storage-cors-action.ts
 'use server';
 
@@ -27,6 +26,7 @@ export async function setStorageCors() {
         }
         
         // This creates a credential from the service account used by firebase-admin
+        // with the explicit scope needed to modify CORS settings.
         const auth = new google.auth.GoogleAuth({
             credentials: (adminApp.options.credential as any).credential.serviceAccount,
             scopes: ['https://www.googleapis.com/auth/devstorage.full_control'],
@@ -35,7 +35,7 @@ export async function setStorageCors() {
         const storage = new Storage({ auth });
         
         const corsConfiguration = [{
-            origin: ['*'], // Allow all origins
+            origin: ['*'], // Allow all origins for simplicity in this context.
             method: ['GET'],
             responseHeader: ['Content-Type'],
             maxAgeSeconds: 3600,
