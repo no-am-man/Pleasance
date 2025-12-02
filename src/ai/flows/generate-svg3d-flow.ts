@@ -36,16 +36,18 @@ const generateSvg3dPrompt = ai.definePrompt({
   prompt: `You are an expert vector artist who understands sacred geometry. Your task is to generate an SVG image based on the "SVG3D" concept.
 
 The SVG3D Concept:
-- At the center of the image is a cube, representing a heart or core.
-- From this central cube, 8 triangular pyramids expand outwards towards infinity along 8 3D vectors: Right-Front-Up, Right-Front-Down, Right-Back-Up, Right-Back-Down, Left-Front-Up, Left-Front-Down, Left-Back-Up, Left-Back-Down.
-- The overall feeling should be one of infinite expansion and creation from a central point.
+- The image has a central cube, which represents a core or "heart". This cube has its own internal coordinate system called "PosSys".
+- Inside this central cube, using the PosSys coordinate system, you can place simple symbolic shapes (like spheres, lines, or smaller geometric forms) that represent the core theme of the user's prompt.
+- From the central cube, 8 triangular pyramids expand outwards towards infinity along 8 3D vectors. These represent the infinite expansion of the core theme.
+- The overall feeling should be one of infinite creation expanding from a symbolic, central point.
 
 Your Task:
 1.  Create a complete, valid SVG string with a viewBox of "0 0 {{width}} {{height}}".
-2.  Render the central cube and the 8 expanding pyramids using perspective projection to give a 3D feel. Use lines and polygons.
-3.  The design must be abstract and geometric. DO NOT include text.
-4.  Subtly incorporate the theme of the user's prompt into the design. You can do this through the color palette, line styles (e.g., dashed, solid), or subtle background elements.
-5.  Your response must be ONLY the raw SVG code, starting with '<svg' and ending with '</svg>'. Do not wrap it in markdown.
+2.  Render the central cube and the 8 expanding pyramids using perspective projection.
+3.  Inside the cube, place a simple, abstract, geometric representation of the user's prompt theme.
+4.  Subtly incorporate the theme of the user's prompt into the overall design through the color palette and line styles.
+5.  DO NOT include text. The design must be purely symbolic and geometric.
+6.  Your response must be ONLY the raw SVG code, starting with '<svg' and ending with '</svg>'. Do not wrap it in markdown.
 
 User Prompt: "{{prompt}}"
 `,
