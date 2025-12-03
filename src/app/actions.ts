@@ -16,7 +16,7 @@ import { initializeAdminApp } from '@/firebase/config-admin';
 import { firebaseConfig } from '@/firebase/config';
 import admin from 'firebase-admin';
 import { generateCommunity } from '@/ai/flows/generate-community';
-import { getFirestore, writeBatch, doc, updateDoc, arrayRemove, arrayUnion, getDoc, collection } from 'firebase-admin/firestore';
+import { getFirestore, writeBatch, updateDoc, arrayRemove, arrayUnion, getDoc, collection } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
 import {
@@ -498,12 +498,12 @@ export async function updateRoadmapCardColumn(
     const adminApp = initializeAdminApp();
     const firestore = getFirestore(adminApp);
 
-    const oldColumnRef = doc(firestore, 'roadmap', oldColumnId);
-    const newColumnRef = doc(firestore, 'roadmap', newColumnId);
+    const oldColumnRef = firestore.collection('roadmap').doc(oldColumnId);
+    const newColumnRef = firestore.collection('roadmap').doc(newColumnId);
 
     const oldColumnSnap = await getDoc(oldColumnRef);
 
-    if (!oldColumnSnap.exists()) {
+    if (!oldColumnSnap.exists) {
       throw new Error(`Source column "${oldColumnId}" not found.`);
     }
 
@@ -555,7 +555,7 @@ export async function addRoadmapCard(values: z.infer<typeof AddRoadmapCardSchema
         const firestore = getFirestore(adminApp);
 
         // Generate a new unique ID for the card
-        const newCardId = doc(collection(firestore, 'tmp')).id;
+        const newCardId = firestore.collection('tmp').doc().id;
 
         const newCard = {
             id: newCardId,
@@ -565,7 +565,7 @@ export async function addRoadmapCard(values: z.infer<typeof AddRoadmapCardSchema
             assignees: [],
         };
         
-        const ideasColumnRef = doc(firestore, 'roadmap', 'ideas');
+        const ideasColumnRef = firestore.collection('roadmap').doc('ideas');
 
         await updateDoc(ideasColumnRef, {
             cards: arrayUnion(newCard)
@@ -585,7 +585,7 @@ export async function deleteRoadmapCard(cardId: string, columnId: string) {
         const adminApp = initializeAdminApp();
         const firestore = getFirestore(adminApp);
         
-        const columnRef = doc(firestore, 'roadmap', columnId);
+        const columnRef = firestore.collection('roadmap').doc(columnId);
         const columnSnap = await getDoc(columnRef);
 
         if (!columnSnap.exists()) {
@@ -621,7 +621,7 @@ export async function updateRoadmapCardOrder(columnId: string, orderedCards: z.i
         const adminApp = initializeAdminApp();
         const firestore = getFirestore(adminApp);
 
-        const columnRef = doc(firestore, 'roadmap', columnId);
+        const columnRef = firestore.collection('roadmap').doc(columnId);
 
         await updateDoc(columnRef, {
             cards: orderedCards
@@ -688,3 +688,5 @@ export async function refineCommunityPromptAction(values: z.infer<typeof RefineC
         return { error: `Failed to refine prompt: ${message}` };
     }
 }
+
+    
