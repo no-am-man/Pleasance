@@ -5,7 +5,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useUser, addDocumentNonBlocking } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, setDoc, getDoc, deleteField, updateDoc } from 'firebase/firestore';
+import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag } from 'lucide-react';
@@ -236,7 +236,7 @@ function CommentCard({ comment, canManage }: { comment: Comment; canManage: bool
         const updatePayload = {
             deleted: true,
             deletedAt: serverTimestamp(),
-            text: deleteField(),
+            text: '', // Clear the text
         };
 
         await updateDoc(commentDocRef, updatePayload);
@@ -342,7 +342,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
         const updatePayload = {
             deleted: true,
             deletedAt: serverTimestamp(),
-            text: deleteField(),
+            text: '', // Clear the text
         };
 
         await updateDoc(messageDocRef, updatePayload);
@@ -518,7 +518,11 @@ function Chat({ communityId, isOwner, allMembers }: { communityId: string; isOwn
                 {error && <p className="text-destructive">Error loading messages: {error.message}</p>}
                 {messages && messages.length === 0 && <p className="text-muted-foreground text-center py-8">No messages yet. Be the first!</p>}
                 <div className="max-h-[40rem] overflow-y-auto space-y-4 pr-2">
-                    {messages?.map(msg => <MessageCard key={msg.id} message={msg} canManage={isOwner || msg.userId === user?.uid}/>)}
+                    {messages?.map(msg => {
+                        // Create a more robust key to prevent React warnings during optimistic updates
+                        const key = msg.id || `${msg.userId}-${msg.createdAt?.seconds}`;
+                        return <MessageCard key={key} message={msg} canManage={isOwner || msg.userId === user?.uid}/>
+                    })}
                 </div>
             </CardContent>
             {user ? (
