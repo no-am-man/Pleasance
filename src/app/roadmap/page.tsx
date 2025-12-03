@@ -256,17 +256,17 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, dr
     }
   };
   
-  const stopPropagation = (e: React.MouseEvent | React.FocusEvent) => e.stopPropagation();
-
   return (
     <Card className="bg-card/70 hover:bg-card transition-all group relative">
       <CardHeader
         className="p-4 pb-0 flex flex-row items-start justify-between"
-        {...dragHandleProps?.attributes}
-        {...dragHandleProps?.listeners}
       >
         <div className="flex items-center gap-2">
-            <div className={cn("p-1 opacity-20 group-hover:opacity-100 transition-opacity", dragHandleProps ? 'cursor-grab' : 'cursor-default')}>
+            <div
+                className={cn("p-1 opacity-20 group-hover:opacity-100 transition-opacity", dragHandleProps ? 'cursor-grab' : 'cursor-default')}
+                {...dragHandleProps?.attributes}
+                {...dragHandleProps?.listeners}
+            >
                 <GripVertical className="h-5 w-5" />
             </div>
             <CardTitle className="text-base">{card.title}</CardTitle>
@@ -275,23 +275,23 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, dr
             {isFounder && (
                 <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
                     {canMoveLeft && (
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onMouseDown={stopPropagation} onClick={() => onMove(card.id, columnId, 'left')}>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(card.id, columnId, 'left')}>
                             <ArrowLeft className="h-4 w-4" />
                         </Button>
                     )}
                     {canMoveRight && (
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onMouseDown={stopPropagation} onClick={() => onMove(card.id, columnId, 'right')}>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(card.id, columnId, 'right')}>
                             <ArrowRight className="h-4 w-4" />
                         </Button>
                     )}
                     {columnId === 'ideas' && (
                         <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onMouseDown={stopPropagation}>
+                            <Button variant="ghost" size="icon" className="h-6 w-6">
                             <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent onMouseDown={stopPropagation} onFocus={stopPropagation}>
+                        <AlertDialogContent>
                             <AlertDialogHeader>
                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                             <AlertDialogDescription>
@@ -347,11 +347,11 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, dr
              {isFounder && (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onMouseDown={stopPropagation}>
+                        <Button variant="ghost" size="icon" className="h-6 w-6">
                             <UserPlus className="h-4 w-4"/>
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent onMouseDown={stopPropagation} onFocus={stopPropagation}>
+                    <DropdownMenuContent>
                         {allProfiles.map(profile => {
                             const isAssigned = card.assignees?.includes(profile.name);
                             return (
