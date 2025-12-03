@@ -1,4 +1,3 @@
-
 'use server';
 
 import { z } from 'zod';
@@ -38,6 +37,8 @@ export type ChatWithMemberInput = {
 
 const storyTextSchema = z.object({
   userId: z.string(),
+  userName: z.string(),
+  userAvatar: z.string(),
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
   sourceLanguage: z.string().min(1),
   targetLanguage: z.string().min(1),
@@ -74,7 +75,7 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
       return { error: 'Invalid input.' };
     }
     
-    const { userId, difficulty, sourceLanguage, targetLanguage } = validatedFields.data;
+    const { userId, userName, userAvatar, difficulty, sourceLanguage, targetLanguage } = validatedFields.data;
     
     // --- Step 1: Generate Story Text ---
     const storyResult = await generateStory({ difficultyLevel: difficulty, sourceLanguage });
@@ -101,15 +102,14 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
         throw new Error('Speech synthesis failed to produce audio.');
     }
 
-    // --- Step 4: Upload Audio to Firebase Storage ---
+    // --- Step 4: Initialize Admin App and services ---
     const adminApp = initializeAdminApp();
     const storage = getStorage(adminApp);
     const firestore = getFirestore(adminApp);
-
     const storyDocRef = firestore.collection('users').doc(userId).collection('stories').doc();
     const storyId = storyDocRef.id;
 
-    // Extract raw PCM data and encode to WAV
+    // --- Step 5: Upload Audio to Firebase Storage ---
     const pcmDataUri = speechResult.audioUrl;
     const pcmBase64 = pcmDataUri.split(',')[1];
     const pcmBuffer = Buffer.from(pcmBase64, 'base64');
@@ -117,20 +117,17 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
     const wavBuffer = Buffer.from(wavBase64, 'base64');
     
     const storagePath = `stories/${userId}/${storyId}.wav`;
-    const bucketName = firebaseConfig.storageBucket; // Use the correct bucket name from config
+    const bucketName = firebaseConfig.storageBucket;
     const file = storage.bucket(bucketName).file(storagePath);
     
     await file.save(wavBuffer, {
-        metadata: {
-            contentType: 'audio/wav',
-        },
+        metadata: { contentType: 'audio/wav' },
     });
 
-    // Make the file public and get its URL
     await file.makePublic();
     const publicUrl = file.publicUrl();
 
-    // --- Step 5: Save Final Story to Firestore ---
+    // --- Step 6: Save Final Story to Firestore ---
     const storyData = {
         id: storyId,
         userId: userId,
@@ -141,16 +138,28 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
         translatedText: translatedText,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         status: 'complete',
-        audioUrl: publicUrl, // Save the public URL
+        audioUrl: publicUrl,
     };
     
     await storyDocRef.set(storyData);
     
-    // --- Step 6: Return immediately to the client ---
+    // --- Step 7: Update Leaderboard ---
+    const leaderboardRef = firestore.collection('leaderboard').doc(userId);
+    const points = { beginner: 10, intermediate: 20, advanced: 30 };
+    const scoreIncrement = points[difficulty];
+
+    await leaderboardRef.set({
+        userId: userId,
+        userName: userName,
+        avatarUrl: userAvatar,
+        score: FieldValue.increment(scoreIncrement),
+        lastActivity: FieldValue.serverTimestamp(),
+    }, { merge: true });
+    
+    // --- Step 8: Return immediately to the client ---
     return {
         storyData: {
             ...storyData,
-            // Convert server timestamp to a client-compatible format
             createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 },
         }
     };

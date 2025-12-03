@@ -1,4 +1,3 @@
-
 // src/app/story/page.tsx
 'use client';
 
@@ -31,6 +30,7 @@ import {
   DialogTrigger,
   DialogClose
 } from '@/components/ui/dialog';
+import Leaderboard from '@/components/leaderboard';
 
 const StoryFormSchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
@@ -62,6 +62,7 @@ type HistorySnapshot = {
 type CommunityProfile = {
     nativeLanguage: string;
     learningLanguage: string;
+    avatarUrl?: string;
 };
 
 
@@ -256,15 +257,20 @@ export default function StoryPage() {
 
 
   async function onSubmit(data: z.infer<typeof StoryFormSchema>) {
-    if (!user) {
-        setError("You must be logged in to generate a story.");
+    if (!user || !profile) {
+        setError("You must be logged in and have a complete profile to generate a story.");
         return;
     }
     setIsLoading(true);
     setError(null);
     setActiveStory(null);
 
-    const result = await generateStoryAndSpeech({ ...data, userId: user.uid });
+    const result = await generateStoryAndSpeech({ 
+        ...data,
+        userId: user.uid,
+        userName: user.displayName || 'Anonymous',
+        userAvatar: profile.avatarUrl || user.photoURL || ''
+    });
 
     setIsLoading(false);
     if (result.error) {
@@ -448,6 +454,10 @@ export default function StoryPage() {
                 </CardContent>
             </Card>
             
+            <Separator />
+            
+            <Leaderboard />
+
             <Separator />
 
             <StoryHistory onSelectStory={handleSelectStoryFromHistory} />

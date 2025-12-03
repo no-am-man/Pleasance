@@ -1,0 +1,96 @@
+'use client';
+
+import { useMemo } from 'react';
+import { firestore } from '@/firebase/config';
+import { collection, query, orderBy, limit } from 'firebase/firestore';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { LoaderCircle, Trophy } from 'lucide-react';
+import Link from 'next/link';
+import { BronzeMedal, SilverMedal, GoldMedal, PlatinumMedal } from './icons/medals';
+
+type LeaderboardEntry = {
+    userId: string;
+    userName: string;
+    score: number;
+    avatarUrl?: string;
+    lastActivity: any;
+};
+
+const Medal = ({ rank }: { rank: number }) => {
+    switch (rank) {
+        case 1:
+            return <PlatinumMedal className="h-8 w-8" />;
+        case 2:
+            return <GoldMedal className="h-8 w-8" />;
+        case 3:
+            return <SilverMedal className="h-8 w-8" />;
+        case 4:
+            return <BronzeMedal className="h-8 w-8" />;
+        default:
+            return <div className="w-8 h-8 flex items-center justify-center text-sm font-bold text-muted-foreground">{rank}</div>;
+    }
+}
+
+
+export default function Leaderboard() {
+    const leaderboardQuery = useMemo(() => 
+        query(collection(firestore, 'leaderboard'), orderBy('score', 'desc'), limit(10))
+    , []);
+
+    const [entries, isLoading, error] = useCollectionData<LeaderboardEntry>(leaderboardQuery, { idField: 'userId' });
+
+    return (
+        <Card className="shadow-lg">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-2xl font-headline">
+                    <Trophy /> Scribe Rankings
+                </CardTitle>
+                <CardDescription>
+                    Earn points by generating stories. The more difficult the story, the more points you earn.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                {isLoading && (
+                    <div className="flex justify-center p-8">
+                        <LoaderCircle className="w-8 h-8 animate-spin text-primary" />
+                    </div>
+                )}
+                {error && <p className="text-destructive text-center">Error loading rankings: {error.message}</p>}
+                {!isLoading && !error && (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[50px]">Rank</TableHead>
+                                <TableHead>Scribe</TableHead>
+                                <TableHead className="text-right">Score</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {entries?.map((entry, index) => (
+                                <TableRow key={entry.userId}>
+                                    <TableCell>
+                                        <Medal rank={index + 1} />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Link href={`/profile/${entry.userId}`} className="flex items-center gap-3 group">
+                                            <Avatar>
+                                                <AvatarImage src={entry.avatarUrl || `https://i.pravatar.cc/150?u=${entry.userId}`} />
+                                                <AvatarFallback>{entry.userName?.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <span className="font-medium group-hover:underline">{entry.userName}</span>
+                                        </Link>
+                                    </TableCell>
+                                    <TableCell className="text-right font-bold text-lg text-primary">{entry.score.toLocaleString()}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                )}
+                {!isLoading && entries?.length === 0 && <p className="text-center text-muted-foreground py-4">The leaderboard is empty. Be the first to earn a score!</p>}
+            </CardContent>
+        </Card>
+    );
+}
