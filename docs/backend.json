@@ -278,7 +278,8 @@
         "description": { "type": "string", "description": "A detailed description of the asset." },
         "type": { "type": "string", "enum": ["physical", "virtual", "ip"], "description": "The type of asset." },
         "value": { "type": "number", "description": "The estimated value of the asset in USD." },
-        "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the asset was declared." }
+        "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the asset was declared." },
+        "fileUrl": { "type": "string", "format": "uri", "description": "URL to the associated design or data file." }
       },
       "required": ["id", "ownerId", "name", "description", "type", "value", "createdAt"]
     },

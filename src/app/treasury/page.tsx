@@ -8,8 +8,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { collection, query, serverTimestamp, doc } from 'firebase/firestore';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { collection, query } from 'firebase/firestore';
+import { declareAssetWithFile } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { LoaderCircle, LogIn, Coins, BrainCircuit, Box, PlusCircle, Eye, Warehouse } from 'lucide-react';
+import { LoaderCircle, LogIn, Coins, BrainCircuit, Box, PlusCircle, Eye, Warehouse, Upload } from 'lucide-react';
 import Link from 'next/link';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 
@@ -26,6 +26,7 @@ const AssetSchema = z.object({
   description: z.string().min(10, 'Description must be at least 10 characters.').max(500, 'Description cannot exceed 500 characters.'),
   type: z.enum(['physical', 'virtual', 'ip'], { required_error: 'Please select an asset type.' }),
   value: z.coerce.number().min(0, 'Value must be a positive number.'),
+  file: z.any().optional(),
 });
 
 type Asset = z.infer<typeof AssetSchema> & {
@@ -53,18 +54,21 @@ function AddAssetForm() {
         setIsLoading(true);
 
         try {
-            const assetsCollectionRef = collection(firestore, 'users', user.uid, 'assets');
-            const newAssetRef = doc(assetsCollectionRef);
+            const formData = new FormData();
+            formData.append('userId', user.uid);
+            formData.append('name', data.name);
+            formData.append('description', data.description);
+            formData.append('type', data.type);
+            formData.append('value', data.value.toString());
+            if (data.file && data.file.length > 0) {
+                formData.append('file', data.file[0]);
+            }
 
-            const newAsset = {
-                ...data,
-                id: newAssetRef.id,
-                ownerId: user.uid,
-                createdAt: serverTimestamp(),
-            };
-            
-            // Non-blocking write
-            setDocumentNonBlocking(newAssetRef, newAsset, { merge: false });
+            const result = await declareAssetWithFile(formData);
+
+            if (result.error) {
+                throw new Error(result.error);
+            }
 
             toast({
                 title: 'Asset Declared!',
@@ -80,11 +84,13 @@ function AddAssetForm() {
         }
     }
 
+    const fileRef = form.register("file");
+
     return (
         <Card className="shadow-lg">
             <CardHeader>
                 <CardTitle>Declare a New Asset</CardTitle>
-                <CardDescription>Add a physical or intellectual property asset to your personal treasury.</CardDescription>
+                <CardDescription>Add a physical or intellectual property asset to your personal treasury. You can upload a design file (e.g., .stl, .obj, .pdf) for fabrication.</CardDescription>
             </CardHeader>
             <CardContent>
                 <Form {...form}>
@@ -130,28 +136,48 @@ function AddAssetForm() {
                                 </FormItem>
                             )}
                         />
-                         <FormField
-                            control={form.control}
-                            name="type"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Asset Type</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select the type of asset" />
-                                    </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                    <SelectItem value="physical">Physical</SelectItem>
-                                    <SelectItem value="virtual">Virtual</SelectItem>
-                                    <SelectItem value="ip">Intellectual Property</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                             <FormField
+                                control={form.control}
+                                name="type"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Asset Type</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select the type of asset" />
+                                        </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                        <SelectItem value="physical">Physical</SelectItem>
+                                        <SelectItem value="virtual">Virtual</SelectItem>
+                                        <SelectItem value="ip">Intellectual Property</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="file"
+                                render={({ field }) => (
+                                     <FormItem>
+                                        <FormLabel>Design File (Optional)</FormLabel>
+                                        <FormControl>
+                                            <div className="relative">
+                                                <Input type="file" {...fileRef} className="pl-12" />
+                                                <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-muted-foreground">
+                                                    <Upload className="h-4 w-4" />
+                                                </div>
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
                         <Button type="submit" disabled={isLoading}>
                             {isLoading ? (
                                 <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
@@ -192,8 +218,8 @@ function AssetList() {
                 {assets && assets.length > 0 ? (
                     <div className="space-y-4">
                         {assets.map(asset => {
-                            const isViewableVirtualAsset = (asset.type === 'virtual' || asset.type === 'ip') && asset.fileUrl;
-                             const isFabricatable = !!asset.fileUrl;
+                            const isViewableVirtualAsset = (asset.type === 'virtual' || asset.type === 'ip') && asset.fileUrl && asset.fileUrl.endsWith('.json');
+                            const isFabricatable = !!asset.fileUrl;
                             return (
                                 <div key={asset.id} className="flex flex-col sm:flex-row items-start gap-4 rounded-md border p-4">
                                     {asset.type === 'physical' ? <Box className="h-8 w-8 text-primary mt-1 flex-shrink-0" /> : <BrainCircuit className="h-8 w-8 text-primary mt-1 flex-shrink-0" />}

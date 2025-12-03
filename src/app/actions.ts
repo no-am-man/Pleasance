@@ -426,3 +426,59 @@ export async function seedRoadmapData() {
         return { error: `Failed to seed roadmap data: ${message}` };
     }
 }
+
+export async function declareAssetWithFile(formData: FormData) {
+    try {
+        const adminApp = initializeAdminApp();
+        const firestore = getFirestore(adminApp);
+        const storage = getStorage(adminApp);
+        const bucket = storage.bucket(firebaseConfig.storageBucket);
+
+        const userId = formData.get('userId') as string;
+        const name = formData.get('name') as string;
+        const description = formData.get('description') as string;
+        const type = formData.get('type') as 'physical' | 'virtual' | 'ip';
+        const value = Number(formData.get('value'));
+        const file = formData.get('file') as File | null;
+
+        if (!userId) throw new Error('User ID is missing.');
+
+        const assetsCollectionRef = firestore.collection('users').doc(userId).collection('assets');
+        const newAssetRef = assetsCollectionRef.doc();
+        const assetId = newAssetRef.id;
+
+        let fileUrl: string | undefined = undefined;
+
+        if (file && file.size > 0) {
+            const storagePath = `users/${userId}/assets/${assetId}-${file.name}`;
+            const fileBuffer = Buffer.from(await file.arrayBuffer());
+
+            const storageFile = bucket.file(storagePath);
+            await storageFile.save(fileBuffer, {
+                metadata: { contentType: file.type },
+                public: true, // Make file publicly readable
+            });
+            fileUrl = `https://storage.googleapis.com/${bucket.name}/${storagePath}`;
+        }
+
+        const newAsset = {
+            id: assetId,
+            ownerId: userId,
+            name,
+            description,
+            type,
+            value,
+            fileUrl,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
+
+        await newAssetRef.set(newAsset);
+
+        return { success: true, asset: { ...newAsset, createdAt: new Date().toISOString() } };
+
+    } catch (e) {
+        console.error('Declare Asset Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Failed to declare asset: ${message}` };
+    }
+}

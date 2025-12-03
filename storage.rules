@@ -28,6 +28,13 @@ service firebase.storage {
     match /users/{userId}/svg3d-assets/{assetId}.json {
       allow write: if request.auth != null && request.auth.uid == userId;
     }
+    
+    //====================================================================
+    // Treasury Assets: Allow users to upload their own asset files.
+    //====================================================================
+    match /users/{userId}/assets/{fileName} {
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
 
     //====================================================================
     // Community Flags: Allow public write access to unblock uploads.
@@ -38,5 +45,3 @@ service firebase.storage {
     }
   }
 }
-
-    
