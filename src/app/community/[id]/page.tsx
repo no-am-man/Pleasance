@@ -28,6 +28,7 @@ import { Svg3dCube } from '@/components/icons/svg3d-cube';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { SaveToTreasuryForm } from '@/components/community/SaveToTreasuryForm';
 import { addDoc } from 'firebase/firestore';
+import { setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 
 type Member = {
@@ -268,25 +269,30 @@ function TextCommentForm({ communityId, messageId, onCommentSent }: { communityI
 function CommentCard({ comment, communityId, messageId, canManage }: { comment: Comment; communityId: string; messageId: string, canManage: boolean; }) {
     const { toast } = useToast();
     const [isUpdating, setIsUpdating] = useState(false);
-    const isDeleted = comment.deleted;
+    const [isSoftDeleted, setIsSoftDeleted] = useState(comment.deleted);
 
-    const handleDelete = async () => {
+    const handleDelete = () => {
         if(!comment.id || !communityId || !messageId || !firestore) return;
-        setIsUpdating(true);
-        const commentDocRef = doc(firestore, `communities/${communityId}/messages/${messageId}/comments`, comment.id);
         
+        setIsUpdating(true); // Provide immediate feedback
+        setIsSoftDeleted(true);
+
+        const commentDocRef = doc(firestore, `communities/${communityId}/messages/${messageId}/comments`, comment.id);
         const updatePayload = {
             deleted: true,
             deletedAt: serverTimestamp(),
-            text: '', // Clear the text
+            text: '',
         };
 
-        await updateDoc(commentDocRef, updatePayload);
+        // Use non-blocking update
+        updateDocumentNonBlocking(commentDocRef, updatePayload);
+        
         toast({ title: 'Comment Deleted' });
-        setIsUpdating(false);
+        
+        // No need to set isUpdating back to false unless you want to allow "undo"
     };
 
-    if (isDeleted) {
+    if (isSoftDeleted) {
         return (
             <div className="p-3 rounded-md bg-muted/50 flex gap-3 items-start">
                 <Ban className="h-5 w-5 text-muted-foreground" />
@@ -381,9 +387,9 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
     const { toast } = useToast();
     const [isUpdating, setIsUpdating] = useState(false);
     const [isCollapsibleOpen, setIsCollapsibleOpen] = useState(true);
+    const [isSoftDeleted, setIsSoftDeleted] = useState(message.deleted);
 
     const isDone = message.status === 'done';
-    const isDeleted = message.deleted;
     const isReady = !!message.id && !!message.communityId && !!firestore;
     
     const handleToggleStatus = async () => {
@@ -401,23 +407,25 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
         setIsUpdating(false);
     };
 
-    const handleDelete = async () => {
+    const handleDelete = () => {
         if (!isReady || !firestore) return;
+        
         setIsUpdating(true);
-        const messageDocRef = doc(firestore, `communities/${message.communityId}/messages`, message.id);
+        setIsSoftDeleted(true);
 
+        const messageDocRef = doc(firestore, `communities/${message.communityId}/messages`, message.id);
         const updatePayload = {
             deleted: true,
             deletedAt: serverTimestamp(),
-            text: '', // Clear the text
+            text: '', 
         };
 
-        await updateDoc(messageDocRef, updatePayload);
+        updateDocumentNonBlocking(messageDocRef, updatePayload);
+        
         toast({ title: 'Message Deleted' });
-        setIsUpdating(false);
     };
 
-     if (isDeleted) {
+     if (isSoftDeleted) {
         return (
             <div className="p-4 rounded-md flex items-center gap-3 bg-muted/50">
                 <Ban className="h-5 w-5 text-muted-foreground" />
