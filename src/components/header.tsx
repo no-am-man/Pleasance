@@ -58,7 +58,7 @@ const navLinks = [
   { href: '/workshop', label: 'AI Workshop', icon: Beaker },
   { href: '/roadmap', label: 'Roadmap', icon: KanbanIcon },
   { href: '/bugs', label: 'Bug Tracker', icon: Bug },
-  { href: '/wiki', label: 'Canon', icon: Info },
+  { href: '/wiki', label: 'Wiki', icon: Info },
 ];
 
 const adminLink = { href: '/admin', label: 'Admin', icon: Shield };
