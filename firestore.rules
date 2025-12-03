@@ -186,6 +186,16 @@ service cloud.firestore {
     }
 
     /**
+     * @description Stores user presence information for the presence bar.
+     * @path /presence/{userId}
+     * @allow Publicly readable. Users can only write to their own presence document.
+     */
+    match /presence/{userId} {
+        allow read: if true;
+        allow write: if isOwner(userId);
+    }
+
+    /**
      * @description Manages all communities.
      * @path /communities/{communityId}
      * @allow Anyone can read/list communities. Only the owner can create, update, or delete.

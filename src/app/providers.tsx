@@ -9,6 +9,7 @@ import { navLinks } from './header';
 import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { PresenceBar } from '@/components/PresenceBar';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -16,8 +17,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
       <Header />
-      <main className="flex-grow pt-16 pb-40">
-        <div className="pt-12">{children}</div>
+      <div className="fixed top-16 left-0 right-0 z-40 h-12 bg-background/70 backdrop-blur-sm border-b">
+        <PresenceBar />
+      </div>
+      <main className="flex-grow pt-28 pb-40">
+        <div className="pt-4">{children}</div>
       </main>
       <footer className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t">
         <div className="h-1 w-full ant-trail" />
