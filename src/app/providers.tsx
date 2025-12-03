@@ -1,3 +1,4 @@
+
 'use client';
 
 import { FirebaseClientProvider } from '@/firebase/client-provider';
@@ -6,6 +7,8 @@ import { Header } from '@/components/header';
 import { Toaster } from '@/components/ui/toaster';
 import Link from 'next/link';
 import { PresenceBar } from '@/components/PresenceBar';
+import { navLinks } from './header';
+import { Button } from '@/components/ui/button';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -18,8 +21,17 @@ export function Providers({ children }: { children: React.ReactNode }) {
         </div>
         <div className="pt-12">{children}</div>
       </main>
-      <div className="fixed bottom-[8.5rem] left-0 w-full h-1 ant-trail z-50 pointer-events-none" />
-      <footer className="text-center p-4 border-t space-y-2">
+      <div className="fixed bottom-[12.5rem] left-0 w-full h-1 ant-trail z-50 pointer-events-none" />
+      <footer className="text-center p-4 border-t space-y-4">
+        <div className="flex justify-center flex-wrap gap-x-4 gap-y-2">
+            {navLinks.map(link => (
+                <Button key={link.href} variant="link" asChild className="text-muted-foreground">
+                    <Link href={link.href}>
+                        {link.label}
+                    </Link>
+                </Button>
+            ))}
+        </div>
         <p>
           <Link
             href="https://github.com/no-am-man/Pleasance"

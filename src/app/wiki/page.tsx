@@ -11,6 +11,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, Info, FileText, PlusCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { Input } from '@/components/ui/input';
 
 type WikiPage = {
     id: string;
@@ -47,12 +48,12 @@ export default function WikiHomePage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col sm:flex-row gap-4">
-                    <input
+                    <Input
                         type="text"
                         placeholder="Search pages..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full p-2 border rounded-md bg-background"
+                        className="w-full bg-background"
                     />
                     {user && (
                         <Button asChild className="w-full sm:w-auto">

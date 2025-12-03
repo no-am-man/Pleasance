@@ -20,8 +20,8 @@ import {
   UserX,
   Bot,
   DollarSign,
-  GalleryHorizontal,
   Landmark,
+  GalleryHorizontal,
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -43,15 +43,15 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useUser, auth } from '@/firebase';
 import { signOut } from 'firebase/auth';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import useIsMobile from '@/hooks/use-is-mobile';
-import { KanbanIcon } from './icons/kanban-icon';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
+import { KanbanIcon } from '@/components/icons/kanban-icon';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 
 const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com'; // Founder email check
 
-const navLinks = [
+export const navLinks = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/community', label: 'Community', icon: Users },
   { href: '/museum', label: 'Museum', icon: Landmark },
@@ -326,5 +326,3 @@ export function Header() {
     </header>
   );
 }
-
-    
