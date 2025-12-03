@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { firestore } from '@/firebase/config';
-import { collection, query } from 'firebase/firestore';
+import { collection, query, doc } from 'firebase/firestore';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType } from '@/lib/types';
 import { LoaderCircle, PlusCircle, Trash2, Sparkles, ArrowRight, ArrowLeft } from 'lucide-react';
@@ -317,7 +317,7 @@ export default function RoadmapPage() {
   const isFounder = user?.email === 'gg.el0ai.com@gmail.com';
   const { toast } = useToast();
   const roadmapQuery = useMemo(() => query(collection(firestore, 'roadmap')), []);
-  const [columnsData, isLoading, error] = useCollectionData<RoadmapColumnType>(roadmapQuery);
+  const [columnsData, isLoading, error] = useCollectionData<RoadmapColumnType>(roadmapQuery, { idField: 'id' });
 
   const [columns, setColumns] = useState<RoadmapColumnType[]>([]);
   const columnOrder = useMemo(() => ['ideas', 'nextUp', 'inProgress', 'alive'], []);
@@ -365,6 +365,8 @@ export default function RoadmapPage() {
     const result = await updateRoadmapCardColumn(cardId, sourceColumn.id, targetColumn.id);
     if (result.error) {
         toast({ variant: 'destructive', title: 'Update Failed', description: result.error });
+        // Revert UI on failure
+        setColumns(columnsData ? [...columnsData].sort((a, b) => columnOrder.indexOf(a.id) - columnOrder.indexOf(b.id)) : []);
     } else {
         toast({ title: 'Card Moved!', description: 'Roadmap has been updated.' });
     }
@@ -372,35 +374,34 @@ export default function RoadmapPage() {
   
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-
     if (!over || active.id === over.id) return;
     
-    // This logic only handles reordering within the 'ideas' column
-    if (over.id !== 'ideas') return;
-    
-    setColumns(prevColumns => {
-      const ideasColumn = prevColumns.find(col => col.id === 'ideas');
-      if (!ideasColumn) return prevColumns;
+    const activeColumn = columns.find(col => col.cards.some(c => c.id === active.id));
+    if (activeColumn?.id !== 'ideas') return; // Only allow reordering in 'ideas'
 
-      const oldIndex = ideasColumn.cards.findIndex(card => card.id === active.id);
-      const newIndex = ideasColumn.cards.findIndex(card => card.id === over.id || (Array.isArray(over.data.current?.sortable?.items) && over.data.current.sortable.items.includes(card.id)));
+    if (over.id === 'ideas' || columns.find(c => c.id === 'ideas')?.cards.some(card => card.id === over.id)) {
+        setColumns(prevColumns => {
+            const ideasColumn = prevColumns.find(col => col.id === 'ideas');
+            if (!ideasColumn) return prevColumns;
 
-      if (oldIndex === -1 || newIndex === -1) return prevColumns;
-      
-      const reorderedCards = arrayMove(ideasColumn.cards, oldIndex, newIndex);
-      
-      // Update the Firestore database
-      updateRoadmapCardOrder('ideas', reorderedCards).then(result => {
-        if (result.error) {
-          toast({ variant: 'destructive', title: 'Reorder Failed', description: result.error });
-          // The UI will revert on the next Firestore snapshot if the update fails.
-        }
-      });
-      
-      return prevColumns.map(col => 
-        col.id === 'ideas' ? { ...col, cards: reorderedCards } : col
-      );
-    });
+            const oldIndex = ideasColumn.cards.findIndex(card => card.id === active.id);
+            const newIndex = ideasColumn.cards.findIndex(card => card.id === over.id);
+
+            if (oldIndex === -1 || newIndex === -1) return prevColumns;
+            
+            const reorderedCards = arrayMove(ideasColumn.cards, oldIndex, newIndex);
+            
+            updateRoadmapCardOrder('ideas', reorderedCards).then(result => {
+                if (result.error) {
+                    toast({ variant: 'destructive', title: 'Reorder Failed', description: result.error });
+                }
+            });
+            
+            return prevColumns.map(col => 
+                col.id === 'ideas' ? { ...col, cards: reorderedCards } : col
+            );
+        });
+    }
   };
 
   return (
@@ -432,7 +433,7 @@ export default function RoadmapPage() {
       
       {!isLoading && !error && (
          <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <div className="grid grid-cols-1 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 {columns && columns.length > 0 ? (
                     columns.map(col => (
                     <KanbanColumn key={col.id} {...col} onMoveCard={handleMoveCard}>
@@ -440,7 +441,7 @@ export default function RoadmapPage() {
                     </KanbanColumn>
                     ))
                 ) : (
-                    <p className="text-center text-muted-foreground">Could not load roadmap columns.</p>
+                    <p className="text-center text-muted-foreground col-span-4">Could not load roadmap columns.</p>
                 )}
             </div>
          </DndContext>

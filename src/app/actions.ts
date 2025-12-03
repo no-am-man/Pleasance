@@ -16,7 +16,7 @@ import { initializeAdminApp } from '@/firebase/config-admin';
 import { firebaseConfig } from '@/firebase/config';
 import admin from 'firebase-admin';
 import { generateCommunity } from '@/ai/flows/generate-community';
-import { getFirestore, writeBatch, updateDoc, arrayRemove, arrayUnion, collection } from 'firebase-admin/firestore';
+import { getFirestore, writeBatch, updateDoc, doc } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
 import {
@@ -518,12 +518,12 @@ export async function updateRoadmapCardColumn(
 
     // Remove card from old column
     batch.update(oldColumnRef, {
-      cards: arrayRemove(cardToMove)
+      cards: admin.firestore.FieldValue.arrayRemove(cardToMove)
     });
 
     // Add card to new column
     batch.update(newColumnRef, {
-      cards: arrayUnion(cardToMove)
+      cards: admin.firestore.FieldValue.arrayUnion(cardToMove)
     });
 
     await batch.commit();
@@ -568,7 +568,7 @@ export async function addRoadmapCard(values: z.infer<typeof AddRoadmapCardSchema
         const ideasColumnRef = firestore.collection('roadmap').doc('ideas');
 
         await updateDoc(ideasColumnRef, {
-            cards: arrayUnion(newCard)
+            cards: admin.firestore.FieldValue.arrayUnion(newCard)
         });
 
         return { success: true, card: newCard };
@@ -600,7 +600,7 @@ export async function deleteRoadmapCard(cardId: string, columnId: string) {
         }
 
         await updateDoc(columnRef, {
-            cards: arrayRemove(cardToDelete)
+            cards: admin.firestore.FieldValue.arrayRemove(cardToDelete)
         });
 
         return { success: true };
@@ -688,5 +688,3 @@ export async function refineCommunityPromptAction(values: z.infer<typeof RefineC
         return { error: `Failed to refine prompt: ${message}` };
     }
 }
-
-    
