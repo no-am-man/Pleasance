@@ -89,7 +89,7 @@ export const FederationDiagram = () => {
           </marker>
         </defs>
 
-        {/* The Divine Aura */}
+        {/* The Aura */}
         <circle
           cx="250"
           cy="250"
@@ -99,7 +99,7 @@ export const FederationDiagram = () => {
         />
 
         {/* Nodes */}
-        <DiagramNode icon={User} label="The Soul" x="80" y="250" delay={0} />
+        <DiagramNode icon={User} label="The Citizen" x="80" y="250" delay={0} />
         <DiagramNode icon={BookOpen} label="Nuncy Lingua" x="250" y="80" delay={200} />
         <DiagramNode icon={Beaker} label="Crucible" x="420" y="80" delay={400} />
         <DiagramNode icon={Banknote} label="Treasury" x="420" y="420" delay={600} />
@@ -108,12 +108,11 @@ export const FederationDiagram = () => {
         {/* Flow Arrows */}
         <FlowArrow path="M 120 250 Q 180 150 240 120" delay={1000} />
         <FlowArrow path="M 120 250 Q 250 160 380 120" delay={1200} />
-        <FlowArrow path="M 280 80 Q 340 120 380 120" delay={1400} />
+        <FlowArrow path="M 280 80 H 380" delay={1400} />
         <FlowArrow path="M 420 120 V 380" delay={1600} />
         <FlowArrow path="M 380 420 H 120" delay={1800} />
         <FlowArrow path="M 80 380 V 290" delay={2000} />
         
-        {/* Return to inspiration (implicit, suggested by the circle) */}
       </svg>
     </div>
   );
