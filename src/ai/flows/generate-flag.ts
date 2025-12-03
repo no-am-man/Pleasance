@@ -28,7 +28,7 @@ const flagActionSchema = z.object({
     idToken: z.string(),
 });
 
-// 2. Genkit Prompt
+// 2. Genkit Prompt (with model config)
 const generateFlagPrompt = ai.definePrompt({
   name: 'generateFlagPrompt',
   input: { schema: GenerateFlagInputSchema },
@@ -74,7 +74,7 @@ export async function generateCommunityFlag(values: z.infer<typeof flagActionSch
             return { error: "Unauthorized: You are not the owner of this community." };
         }
 
-        // Call the Genkit Prompt directly
+        // Call the Genkit Prompt directly and correctly
         const { output } = await generateFlagPrompt({ communityName, communityDescription });
         
         if (!output || !output.svg) {
