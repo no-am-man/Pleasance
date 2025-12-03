@@ -9,7 +9,7 @@ import { firestore } from '@/firebase/config';
 import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, setDoc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, GalleryHorizontal, Camera, Presentation, Share, Paintbrush } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, GalleryHorizontal, Camera, Presentation, Share, Paintbrush, KanbanIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -1210,6 +1210,23 @@ export default function CommunityProfilePage() {
                     <Button asChild>
                         <Link href={`/community/${id}/workshop`}>
                             Enter the Workshop
+                        </Link>
+                    </Button>
+                </CardContent>
+            </Card>
+            <Separator className="my-12" />
+             <Card className="shadow-lg">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><KanbanIcon /> Community Roadmap</CardTitle>
+                    <CardDescription>View and contribute to the private roadmap for {community.name}.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground mb-4">
+                        Plan the future of your community. This is a private space for members to organize tasks and goals.
+                    </p>
+                    <Button asChild>
+                        <Link href={`/community/${id}/roadmap`}>
+                            View Roadmap
                         </Link>
                     </Button>
                 </CardContent>
