@@ -10,18 +10,52 @@ import { z } from 'zod';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import admin from 'firebase-admin';
 
-const flagSchema = z.object({
+// Define Schemas at the top level
+const GenerateFlagInputSchema = z.object({
+  communityName: z.string(),
+  communityDescription: z.string(),
+});
+
+const GenerateFlagOutputSchema = z.object({
+  svg: z.string().describe("A complete, valid SVG string. The SVG should be visually appealing, symbolic, and modern. It must be a single string of SVG code."),
+});
+
+const flagActionSchema = z.object({
     communityId: z.string(),
     communityName: z.string(),
     communityDescription: z.string(),
     idToken: z.string(),
 });
 
-export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) {
+// Define the prompt at the top level
+const generateFlagPrompt = ai.definePrompt({
+  name: 'generateFlagPrompt',
+  input: { schema: GenerateFlagInputSchema },
+  output: { schema: GenerateFlagOutputSchema },
+  config: {
+    model: 'googleai/gemini-pro',
+  },
+  prompt: `You are an expert graphic designer who specializes in creating symbolic, minimalist, and modern vector art for flags.
+        
+Task: Generate a complete, valid SVG string for a flag representing an online community.
+
+Community Name: "{{communityName}}"
+Community Description: "{{communityDescription}}"
+
+Design Constraints:
+- The SVG must be a single, complete string.
+- The design should be abstract and symbolic.
+- Do not include any text in the SVG output.
+- The SVG should look good on both light and dark backgrounds.
+- Ensure the output is a raw JSON object containing the SVG string, with no additional text, explanations, or markdown.`,
+});
+
+
+export async function generateCommunityFlag(values: z.infer<typeof flagActionSchema>) {
     try {
         const adminApp = initializeAdminApp();
         
-        const validatedFields = flagSchema.safeParse(values);
+        const validatedFields = flagActionSchema.safeParse(values);
         if (!validatedFields.success) {
             const errorMessage = validatedFields.error.issues[0]?.message || 'Invalid input.';
             return { error: errorMessage };
@@ -37,38 +71,9 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
             return { error: "Unauthorized: You are not the owner of this community." };
         }
 
-        const GenerateFlagInputSchema = z.object({
-          communityName: z.string(),
-          communityDescription: z.string(),
-        });
-        
-        const GenerateFlagOutputSchema = z.object({
-          svg: z.string().describe("A complete, valid SVG string. The SVG should be visually appealing, symbolic, and modern. It must be a single string of SVG code."),
-        });
-
-        const generateFlagPrompt = ai.definePrompt({
-          name: 'generateFlagPrompt',
-          input: { schema: GenerateFlagInputSchema },
-          output: { schema: GenerateFlagOutputSchema },
-          config: {
-            model: 'googleai/gemini-pro',
-          },
-          prompt: `You are an expert graphic designer who specializes in creating symbolic, minimalist, and modern vector art for flags.
-        
-        Task: Generate a complete, valid SVG string for a flag representing an online community.
-        
-        Community Name: "{{communityName}}"
-        Community Description: "{{communityDescription}}"
-        
-        Design Constraints:
-        - The SVG must be a single, complete string.
-        - The design should be abstract and symbolic.
-        - Do not include any text in the SVG output.
-        - The SVG should look good on both light and dark backgrounds.
-        - Ensure the output is a raw JSON object containing the SVG string, with no additional text, explanations, or markdown.`,
-        });
-
+        // Call the pre-defined prompt
         const { output } = await generateFlagPrompt({ communityName, communityDescription });
+        
         if (!output || !output.svg) {
             throw new Error('Failed to generate a flag SVG from the AI flow.');
         }
