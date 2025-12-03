@@ -22,19 +22,16 @@ export async function generateFlag(input: GenerateFlagInput): Promise<z.infer<ty
   return generateFlagFlow(input);
 }
 
-const generateFlagFlow = ai.defineFlow(
+const generateFlagPrompt = ai.definePrompt(
   {
-    name: 'generateFlagFlow',
-    inputSchema: GenerateFlagInputSchema,
-    outputSchema: GenerateFlagOutputSchema,
-  },
-  async (input) => {
-    const prompt = `You are an expert graphic designer who specializes in creating symbolic, minimalist, and modern vector art for flags.
+    name: 'generateFlagPrompt',
+    input: { schema: GenerateFlagInputSchema },
+    prompt: `You are an expert graphic designer who specializes in creating symbolic, minimalist, and modern vector art for flags.
 
 Task: Generate a complete, valid SVG string for a flag representing an online community.
 
-Community Name: "${input.communityName}"
-Community Description: "${input.communityDescription}"
+Community Name: "{{communityName}}"
+Community Description: "{{communityDescription}}"
 
 Requirements:
 1.  The SVG must be a single, self-contained string.
@@ -42,18 +39,19 @@ Requirements:
 3.  The design must be abstract, geometric, and symbolic. DO NOT include any text, letters, or numbers.
 4.  Use a modern, professional color palette. Use 2-3 harmonious colors.
 5.  The background of the SVG should be a solid color.
-6.  Your ENTIRE response MUST be ONLY the raw SVG code, starting with '<svg' and ending with '</svg>'. Do not include any other text, explanations, or markdown formatting like \`\`\`xml.
+6.  Your ENTIRE response MUST be ONLY the raw SVG code, starting with '<svg' and ending with '</svg>'. Do not include any other text, explanations, or markdown formatting like \`\`\`xml.`,
+  }
+);
 
-Example of a good response format:
-<svg width="160" height="90" viewBox="0 0 160 90" fill="none" xmlns="http://www.w3.org/2000/svg">...</svg>
 
-Now, generate the SVG based on the provided community details.`;
-
-    const { output } = await ai.generate({
-      model: 'googleai/gemini-1.5-flash-latest',
-      prompt: prompt,
-    });
-
+const generateFlagFlow = ai.defineFlow(
+  {
+    name: 'generateFlagFlow',
+    inputSchema: GenerateFlagInputSchema,
+    outputSchema: GenerateFlagOutputSchema,
+  },
+  async (input) => {
+    const { output } = await generateFlagPrompt(input);
     const svgText = output?.text || '';
 
     if (!svgText.startsWith('<svg')) {
