@@ -441,8 +441,10 @@ export default function RoadmapPage() {
   const { user } = useUser();
   const isFounder = user?.email === 'gg.el0ai.com@gmail.com';
   const { toast } = useToast();
+  
   const roadmapQuery = useMemo(() => query(collection(firestore, 'roadmap')), []);
   const [columnsData, isLoading, error] = useCollectionData<RoadmapColumnType>(roadmapQuery, { idField: 'id' });
+  
   const allProfilesQuery = useMemo(() => query(collection(firestore, 'community-profiles')), []);
   const [allProfiles, profilesLoading] = useCollectionData<CommunityProfile>(allProfilesQuery);
 
