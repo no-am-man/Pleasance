@@ -273,39 +273,36 @@ export default function StoryPage() {
   const [profile, setProfile] = useState<CommunityProfile | null>(null);
   const [isProfileLoading, setIsProfileLoading] = useState(true);
 
-  useEffect(() => {
-    if (!user) {
-        setIsProfileLoading(false);
-        return;
-    }
-    const fetchProfile = async () => {
-        const profileDocRef = doc(firestore, 'community-profiles', user.uid);
-        const docSnap = await getDoc(profileDocRef);
-        setProfile(docSnap.exists() ? docSnap.data() as CommunityProfile : null);
-        setIsProfileLoading(false);
-    };
-    fetchProfile();
-  }, [user]);
-
-
   const form = useForm<z.infer<typeof StoryFormSchema>>({
     resolver: zodResolver(StoryFormSchema),
     defaultValues: {
       difficulty: 'beginner',
-      sourceLanguage: profile?.nativeLanguage,
-      targetLanguage: profile?.learningLanguage,
     },
   });
 
   useEffect(() => {
-    if (profile) {
-      form.reset({
-        difficulty: form.getValues('difficulty'),
-        sourceLanguage: profile.nativeLanguage,
-        targetLanguage: profile.learningLanguage,
-      });
+    if (!user || isUserLoading) {
+      setIsProfileLoading(false);
+      return;
     }
-  }, [profile, form]);
+    const fetchProfile = async () => {
+        setIsProfileLoading(true);
+        const profileDocRef = doc(firestore, 'community-profiles', user.uid);
+        const docSnap = await getDoc(profileDocRef);
+        if (docSnap.exists()) {
+            const profileData = docSnap.data() as CommunityProfile;
+            setProfile(profileData);
+            form.reset({
+                difficulty: form.getValues('difficulty') || 'beginner',
+                sourceLanguage: profileData.nativeLanguage,
+                targetLanguage: profileData.learningLanguage,
+            });
+        }
+        setIsProfileLoading(false);
+    };
+    fetchProfile();
+  }, [user, isUserLoading, form]);
+
 
   useEffect(() => {
     if (activeStory && storyViewerRef.current) {
