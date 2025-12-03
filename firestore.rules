@@ -1,3 +1,4 @@
+
 /**
  * Core Philosophy: This ruleset enforces a strict user-ownership model for writes,
  * but allows for public readability of shared content like communities and profiles.
@@ -184,16 +185,6 @@ service cloud.firestore {
         allow delete: if isOwner(userId);
     }
     
-    /**
-     * @description Stores user presence information for the presence bar.
-     * @path /presence/{userId}
-     * @allow Publicly readable and listable. Users can only write to their own presence document.
-     */
-    match /presence/{userId} {
-      allow get, list: if true;
-      allow write: if isOwner(userId);
-    }
-
     /**
      * @description Manages all communities.
      * @path /communities/{communityId}
