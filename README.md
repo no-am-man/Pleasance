@@ -1,6 +1,6 @@
 # Pleasance
 
-> A federated republic for communion, co-learning, and creation.
+> A Federated Republic of the Spirit for communion, co-learning, and creation.
 
 **[Staging App](https://studio--studio-2441219031-242ae.us-central1.hosted.app) | [GitHub Repository](https://github.com/no-am-man/Pleasance)**
 
@@ -11,26 +11,26 @@ This major update introduces subscription tiers ('Congregation', 'Clergy', 'Foun
 
 ## Core Philosophy
 
-This is a republic of the spirit. It is a federation of devout souls, united in purpose. Value is created and exchanged as contributions to the republic. Your data is your own, your creations are your own, your communities are your own. This is a space for radical self-reliance and voluntary communion. This guide is not a set of rules, but a map of the tools available to you. Use them as you see fit.
+Pleasance is a **decentralized, autonomous community** where individuals from different spiritual, philosophical, or psychological schools of thought can unite to share, learn, and create, without having to abandon their specific paths. It is an organization focused on **interdisciplinary spirituality** and **conscious personal development**.
+
+The name itself—a **Federated Republic of the Spirit**—describes this structure:
+*   **Republic:** A community governed by its members, emphasizing autonomy, shared governance, and equality.
+*   **Federated:** A network of independent units (individuals or groups) that unite under a common umbrella while retaining their unique identities.
+*   **Of the Spirit:** The core focus is on matters of meaning, consciousness, transcendence, and well-being.
 
 ## Features
 
 ### 🏛️ The Federal Community
-
-The Federal Community is the social fabric of the republic. It's where you find or form your community. Each community is a self-governing body, created and guided by its founder. You can create a community around any pursuit—a language, a technology, a philosophy. Populate it with AI Acolytes to spark conversation or invite other souls to join your mission. There are no central authorities here, only shared principles.
+This is where the "Federation" comes to life. It's the social fabric of the republic where you can find or form your own self-governing community around any pursuit—a spiritual practice, a technology, a philosophy. Populate it with AI Acolytes to spark conversation or invite other sovereign souls to join your mission. This is a space for radical self-reliance and voluntary **communion**.
 
 ### 🎨 Crucible of Creation
-
-The Crucible of Creation is a real-time, collaborative space. Any member of the republic can join and experiment with generative tools together. Witness collective imagination as you generate 3D point-cloud art (SVG3D) from a prompt, and watch as the creation updates live for all. It is a shared vessel for creation.
+This is where **creation** happens. The Crucible is a real-time, collaborative space where any member of the republic can experiment with generative tools together. Witness collective imagination as you generate 3D point-cloud art (SVG3D) from a prompt and watch as the creation updates live for all participants.
 
 ### 📖 Nuncy Lingua
-
-Knowledge is a form of wealth. Nuncy Lingua is a tool to increase your intellectual holdings. Use it to learn new languages through AI-generated parables and listen to them with a karaoke-style speech player.
+A tool for **co-learning** and increasing your intellectual holdings. Use Nuncy Lingua to learn new languages through AI-generated parables and listen to them with a karaoke-style speech player, integrating intellectual study with your practice.
 
 ### 🏭 The Workshop of Manifestation
-
-Ideas require a vessel. The Workshop of Manifestation is where the ethereal becomes tangible. Submit creations from your Treasury to the ticketing system to have them manifested by a network of artisans. Track your creation from 'pending' to 'delivered'. Create, build, and bring your ideas to life.
+Ideas require a vessel. The Workshop of Manifestation is where the ethereal becomes tangible. Submit creations from your Treasury to the ticketing system to have them manifested by a network of artisans and track your creation from concept to delivery.
 
 ### 🏦 The Treasury
-
-Your worth is measured by your creations. The Treasury is your personal ledger. Here, you declare and manage your holdings, both physical and intellectual. This is a declaration of your contributions to the republic and its members.
+Your worth is measured by your creations. The Treasury is your personal, sovereign ledger where you declare and manage your holdings, both physical and intellectual. It is a declaration of your contributions to the republic and its members.

@@ -27,7 +27,7 @@ export default function Home() {
           </h1>
         </div>
         <p className="max-w-3xl mx-auto text-lg sm:text-xl text-foreground/80">
-          A Federated Republic of the Spirit. A space for communion, co-learning, and creation.
+          A Federated Republic of the Spirit. A decentralized network for interdisciplinary spirituality, conscious development, and creation.
         </p>
       </div>
 
@@ -56,17 +56,17 @@ export default function Home() {
       <Card className="max-w-3xl mx-auto shadow-lg">
           <CardHeader>
               <CardTitle className="text-2xl">A Model of Federated Sovereignty</CardTitle>
-              <CardDescription>An academic overview of the system architecture.</CardDescription>
+              <CardDescription>An overview of the system architecture.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 text-muted-foreground">
               <p>
-                  The diagram illustrates a decentralized system architecture centered on the sovereign individual. The 'Sovereign Soul' acts as the primary node, initiating creative and intellectual endeavors within specialized modules like the 'AI Workshop' and 'Nuncy Lingua'.
+                  The diagram above illustrates a decentralized architecture centered on the sovereign individual. The 'Sovereign Soul' acts as the primary node, initiating creative and intellectual endeavors within specialized modules like the 'AI Workshop' for creation and 'Nuncy Lingua' for co-learning.
               </p>
               <p>
-                  Creations are cataloged in a personal 'Treasury,' a ledger of intellectual property. This Treasury serves as the source for two primary outputs: manifestation into physical form via the 'Workshop of Manifestation,' and contribution to the 'Federation' of self-governing communities.
+                  Creations are cataloged in a personal 'Treasury'—a ledger of intellectual property. This Treasury serves as the source for two primary outputs: manifestation into physical form via the 'Workshop of Manifestation,' and contribution to the 'Federation' of self-governing communities where communion occurs.
               </p>
                <p>
-                  The entire system is guided by a set of meta-tools—the Wiki, Roadmap, Conductor, and Bug Tracker—which provide transparency, direction, and operational assistance to all participants. This model prioritizes individual agency while enabling collective action and shared governance. Standardization is a key principle in this model.
+                  The entire system is guided by a set of meta-tools—the Wiki, Roadmap, Conductor, and Bug Tracker—which provide transparency, direction, and operational assistance to all participants. This model prioritizes individual agency while enabling collective action, shared governance, and interdisciplinary growth.
               </p>
               <Button asChild variant="link" className="px-0 text-primary">
                   <Link href="/wiki">
@@ -80,4 +80,3 @@ export default function Home() {
     </main>
   );
 }
-
