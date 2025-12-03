@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/card';
 import {
   ArrowRight,
-  Book,
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { FederationDiagram } from '@/components/federation-diagram';
@@ -47,7 +46,7 @@ export default function Home() {
                   Creations are cataloged in a personal 'Treasury,' a ledger of intellectual property. This Treasury serves as the source for two primary outputs: manifestation into physical form via the 'Workshop of Manifestation,' and contribution to the 'Federation' of self-governing communities.
               </p>
                <p>
-                  The entire system is guided by a set of meta-tools—the Wiki, Roadmap, Conductor, and Bug Tracker—which provide transparency, direction, and operational assistance to all participants. This model prioritizes individual agency while enabling collective action and shared governance.
+                  The entire system is guided by a set of meta-tools—the Wiki, Roadmap, Conductor, and Bug Tracker—which provide transparency, direction, and operational assistance to all participants. This model prioritizes individual agency while enabling collective action and shared governance. Standardization is a key principle in this model.
               </p>
               <Button asChild variant="link" className="px-0 text-primary">
                   <Link href="/wiki">
