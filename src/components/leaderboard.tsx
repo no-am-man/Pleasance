@@ -49,7 +49,7 @@ export default function Leaderboard() {
                     <Trophy /> Scribe Rankings
                 </CardTitle>
                 <CardDescription>
-                    Earn points by generating stories. The more difficult the story, the more points you earn.
+                    Earn points by generating stories. Each point is worth one Satoshi. Note: These are for internal scoring and are not connected to the live Bitcoin network.
                 </CardDescription>
             </CardHeader>
             <CardContent>
