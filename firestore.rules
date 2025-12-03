@@ -1,3 +1,4 @@
+
 /**
  * Core Philosophy: This ruleset enforces a strict user-ownership model for writes,
  * but allows for public readability of shared content like communities and profiles.
@@ -11,6 +12,7 @@
  * - `/communities/{communityId}`: Publicly readable communities, writable only by the owner.
  *   - `/communities/{communityId}/messages/{messageId}`: Messages are readable by any signed-in user.
  *   - `/communities/{communityId}/creations/{creationId}`: Creations are private to community members.
+ *   - `/communities/{communityId}/roadmap/{columnId}`: Roadmap is private to community members.
  * - `/_private_admin_data/{docId}`: Highly restricted data, only accessible by the founder.
  */
 rules_version = '2';
@@ -218,10 +220,19 @@ service cloud.firestore {
          */
         match /creations/{creationId} {
             allow get: if resource.data.status == 'published' || (isSignedIn() && isCommunityMember(communityId));
-            allow list: if true; // Allow listing to filter on the client
+            allow list: if isSignedIn() && isCommunityMember(communityId); // Only members can see the list of creations
             allow create: if isSignedIn() && isValidCreation(communityId);
             allow update: if isCommunityOwner(communityId); // Only owner can publish or moderate
             allow delete: if isCommunityOwner(communityId);
+        }
+        
+        /**
+         * @description Manages the private roadmap for a specific community.
+         * @path /communities/{communityId}/roadmap/{columnId}
+         */
+        match /roadmap/{columnId} {
+            allow get, list: if isSignedIn() && isCommunityMember(communityId);
+            allow write: if isCommunityOwner(communityId);
         }
     }
     
@@ -286,5 +297,4 @@ service cloud.firestore {
     }
   }
 }
-
     
