@@ -59,9 +59,6 @@ const generateFlagFlow = ai.defineFlow(
     outputSchema: GenerateFlagOutputSchema,
   },
   async (input) => {
-    // This is the corrected call.
-    // The `generateFlagPrompt` object is an executable function that already
-    // contains the model configuration. We call it directly.
     const { output } = await generateFlagPrompt(input);
     
     if (!output) {
