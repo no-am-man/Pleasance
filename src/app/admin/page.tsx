@@ -1,4 +1,3 @@
-
 // src/app/admin/page.tsx
 'use client';
 
@@ -6,9 +5,9 @@ import { useState } from 'react';
 import { useUser } from '@/firebase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, ShieldCheck, AlertTriangle, CheckCircle, Bone } from 'lucide-react';
+import { LoaderCircle, ShieldCheck, AlertTriangle, CheckCircle, Bone, Database } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { runMemberSync } from '../actions';
+import { runMemberSync, seedRoadmapData } from '../actions';
 
 // This is a simple check. In a real-world app, this should be a secure custom claim.
 export const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com';
@@ -23,6 +22,10 @@ function AdminDashboard() {
     const [syncIsLoading, setSyncIsLoading] = useState(false);
     const [syncError, setSyncError] = useState<string | null>(null);
     const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
+
+    const [seedIsLoading, setSeedIsLoading] = useState(false);
+    const [seedError, setSeedError] = useState<string | null>(null);
+    const [seedResult, setSeedResult] = useState<string | null>(null);
 
     const handleSync = async () => {
         setSyncIsLoading(true);
@@ -42,6 +45,26 @@ function AdminDashboard() {
         }
 
         setSyncIsLoading(false);
+    };
+
+    const handleSeed = async () => {
+        setSeedIsLoading(true);
+        setSeedError(null);
+        setSeedResult(null);
+
+        try {
+            const seedResult = await seedRoadmapData();
+            if (seedResult.error) {
+                setSeedError(seedResult.error);
+            } else if (seedResult.message) {
+                setSeedResult(seedResult.message);
+            }
+        } catch (e) {
+            const message = e instanceof Error ? e.message : 'An unknown error occurred.';
+            setSeedError(`The seeding process failed: ${message}`);
+        }
+
+        setSeedIsLoading(false);
     };
 
     return (
@@ -91,6 +114,42 @@ function AdminDashboard() {
                         )}
                     </CardContent>
                 </Card>
+                <Card className="bg-muted/50">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                           <Database /> Seed Roadmap Data
+                        </CardTitle>
+                        <CardDescription>
+                            This action will populate the Realtime Database with the initial set of cards for the Kanban roadmap. Run this once to get started.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Button onClick={handleSeed} disabled={seedIsLoading}>
+                            {seedIsLoading ? (
+                                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Database className="mr-2 h-4 w-4" />
+                            )}
+                            Seed Roadmap
+                        </Button>
+                         {seedError && (
+                            <Alert variant="destructive" className="mt-4">
+                                <AlertTriangle className="h-4 w-4" />
+                                <AlertTitle>Seeding Error</AlertTitle>
+                                <AlertDescription>{seedError}</AlertDescription>
+                            </Alert>
+                        )}
+                        {seedResult && (
+                            <Alert variant="default" className="mt-4 bg-green-500/10 border-green-500/50">
+                                <CheckCircle className="h-4 w-4 text-green-500" />
+                                <AlertTitle className="text-green-500">Seeding Complete</AlertTitle>
+                                <AlertDescription className="text-green-500/80">
+                                   {seedResult}
+                                </AlertDescription>
+                            </Alert>
+                        )}
+                    </CardContent>
+                </Card>
             </CardContent>
         </Card>
     );
@@ -130,10 +189,3 @@ export default function AdminPage() {
         </main>
     );
 }
-
-    
-
-    
-
-    
-

@@ -1,4 +1,3 @@
-
 // src/lib/types.ts
 import { z } from 'zod';
 
@@ -25,3 +24,18 @@ export const MemberSchema = z.object({
   bio: z.string().describe("A short bio describing the member's personality and purpose."),
   type: z.enum(['AI', 'human']).describe('The type of member.'),
 });
+
+// Schema for the Roadmap Kanban board
+export type RoadmapCard = {
+  id: string;
+  title: string;
+  description: string;
+  tags?: string[];
+  assignees?: string[];
+};
+
+export type RoadmapColumn = 'ideas' | 'nextUp' | 'inProgress' | 'alive';
+
+export type RoadmapData = {
+  [key in RoadmapColumn]: Record<string, RoadmapCard>;
+};

@@ -16,11 +16,13 @@ import admin from 'firebase-admin';
 import { generateCommunity } from '@/ai/flows/generate-community';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
+import { getDatabase } from 'firebase-admin/database';
 import wav from 'wav';
 import {
     GenerateSvg3dInputSchema,
     type GenerateSvg3dInput,
-    MemberSchema
+    MemberSchema,
+    type RoadmapData
 } from '@/lib/types';
 
 
@@ -388,19 +390,39 @@ export async function saveSvgAsset(values: z.infer<typeof saveSvgAssetSchema>) {
         return { error: `Failed to save asset: ${message}` };
     }
 }
-    
 
-    
+export async function seedRoadmapData() {
+    try {
+        const adminApp = initializeAdminApp();
+        const db = getDatabase(adminApp);
+        const ref = db.ref('roadmap');
 
-    
+        const initialData: RoadmapData = {
+            ideas: {
+                '-N_idea1': { id: '-N_idea1', title: "Gamify Language Learning", description: "Add points, streaks, and leaderboards to Nuncy Lingua.", tags: ["Nuncy Lingua", "UX"] },
+                '-N_idea2': { id: '-N_idea2', title: "Decentralized Identity", description: "Explore using DIDs for user profiles.", tags: ["Identity", "Web3"] },
+            },
+            nextUp: {
+                '-N_nextUp1': { id: '-N_nextUp1', title: "Dynamic Kanban Board", description: "Connect this roadmap to a database for real-time updates.", tags: ["Roadmap", "Backend"], assignees: ["Gemini"] },
+                '-N_nextUp2': { id: '-N_nextUp2', title: "Community Moderation Tools", description: "Allow community owners to manage posts and members.", tags: ["Community"], assignees: ["Noam"] },
+            },
+            inProgress: {
+                '-N_inProgress1': { id: '-N_inProgress1', title: "Fabrication Ticketing System", description: "Build the UI and backend for managing fabrication orders.", tags: ["Fabrication"], assignees: ["Noam", "Gemini"] },
+            },
+            alive: {
+                '-N_alive1': { id: '-N_alive1', title: "Collaborative AI Workshop", description: "A real-time, shared space for generative AI experimentation.", tags: ["Workshop", "AI"], assignees: ["Gemini"] },
+                '-N_alive2': { id: '-N_alive2', title: "Community Federation", description: "Create and manage your own sovereign communities.", tags: ["Community"], assignees: ["Noam"] },
+                '-N_alive3': { id: '-N_alive3', title: "Nuncy Lingua Story Generator", description: "AI-powered story and speech generation for language learning.", tags: ["Nuncy Lingua"], assignees: ["Gemini"] },
+            },
+        };
 
+        await ref.set({ cards: initialData });
 
+        return { success: true, message: 'Roadmap data seeded successfully.' };
 
-
-    
-
-    
-
-
-
-    
+    } catch (e) {
+        console.error('Seeding Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Failed to seed roadmap data: ${message}` };
+    }
+}

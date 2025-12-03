@@ -1,21 +1,19 @@
-
 // src/app/roadmap/page.tsx
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { KanbanIcon } from '@/components/icons/kanban-icon';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { database } from '@/firebase/config';
+import { ref } from 'firebase/database';
+import { useObjectVal } from 'react-firebase-hooks/database';
+import type { RoadmapCard as RoadmapCardType, RoadmapData } from '@/lib/types';
+import { LoaderCircle } from 'lucide-react';
 
-type KanbanCardProps = {
-  title: string;
-  description: string;
-  tags?: string[];
-  assignees?: string[];
-};
-
-const KanbanCard = ({ title, description, tags, assignees }: KanbanCardProps) => (
+const KanbanCard = ({ title, description, tags, assignees }: RoadmapCardType) => (
   <Card className="bg-card/70 hover:bg-card transition-all cursor-pointer">
     <CardHeader className="p-4">
       <CardTitle className="text-base">{title}</CardTitle>
@@ -50,40 +48,32 @@ const KanbanCard = ({ title, description, tags, assignees }: KanbanCardProps) =>
   </Card>
 );
 
-const KanbanColumn = ({ title, children }: { title: string, children: React.ReactNode }) => (
+const KanbanColumn = ({ title, cards }: { title: string, cards: RoadmapCardType[] | undefined }) => (
   <div className="flex flex-col gap-4">
     <div className="px-3 py-2">
       <h2 className="text-lg font-semibold text-foreground">{title}</h2>
     </div>
-    <div className="flex-grow space-y-4 rounded-lg p-3 bg-muted/50">
-      {children}
+    <div className="flex-grow space-y-4 rounded-lg p-3 bg-muted/50 min-h-[200px]">
+      {cards ? (
+        cards.map(card => <KanbanCard key={card.id} {...card} />)
+      ) : (
+        <div className="flex items-center justify-center h-full">
+            <p className="text-muted-foreground">No cards in this column.</p>
+        </div>
+      )}
     </div>
   </div>
 );
 
-// Sample Data
-const ideasCards: KanbanCardProps[] = [
-  { title: "Gamify Language Learning", description: "Add points, streaks, and leaderboards to Nuncy Lingua.", tags: ["Nuncy Lingua", "UX"] },
-  { title: "Decentralized Identity", description: "Explore using DIDs for user profiles.", tags: ["Identity", "Web3"] },
-];
-
-const nextUpCards: KanbanCardProps[] = [
-  { title: "Dynamic Kanban Board", description: "Connect this roadmap to Firestore for real-time updates.", tags: ["Roadmap", "Backend"], assignees: ["Gemini"] },
-  { title: "Community Moderation Tools", description: "Allow community owners to manage posts and members.", tags: ["Community"], assignees: ["Noam"] },
-];
-
-const inProgressCards: KanbanCardProps[] = [
-  { title: "Fabrication Ticketing System", description: "Build the UI and backend for managing fabrication orders.", tags: ["Fabrication"], assignees: ["Noam", "Gemini"] },
-];
-
-const aliveCards: KanbanCardProps[] = [
-  { title: "Collaborative AI Workshop", description: "A real-time, shared space for generative AI experimentation.", tags: ["Workshop", "AI"], assignees: ["Gemini"] },
-  { title: "Community Federation", description: "Create and manage your own sovereign communities.", tags: ["Community"], assignees: ["Noam"] },
-  { title: "Nuncy Lingua Story Generator", description: "AI-powered story and speech generation for language learning.", tags: ["Nuncy Lingua"], assignees: ["Gemini"] },
-];
-
-
 export default function RoadmapPage() {
+  const roadmapRef = useMemo(() => ref(database, 'roadmap/cards'), []);
+  const [roadmapData, isLoading, error] = useObjectVal<RoadmapData>(roadmapRef);
+
+  const getCardsForColumn = (column: keyof RoadmapData) => {
+    if (!roadmapData || !roadmapData[column]) return [];
+    return Object.values(roadmapData[column]);
+  };
+
   return (
     <main className="container mx-auto min-h-screen py-8">
       <div className="text-center mb-12">
@@ -93,20 +83,32 @@ export default function RoadmapPage() {
         <p className="text-lg text-muted-foreground mt-2">The public development plan for the Pleasance project.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
-        <KanbanColumn title="💡 Ideas">
-          {ideasCards.map(card => <KanbanCard key={card.title} {...card} />)}
-        </KanbanColumn>
-        <KanbanColumn title="🚀 Next Up!">
-          {nextUpCards.map(card => <KanbanCard key={card.title} {...card} />)}
-        </KanbanColumn>
-        <KanbanColumn title="🏗️ In Progress">
-          {inProgressCards.map(card => <KanbanCard key={card.title} {...card} />)}
-        </KanbanColumn>
-        <KanbanColumn title="✅ Alive">
-          {aliveCards.map(card => <KanbanCard key={card.title} {...card} />)}
-        </KanbanColumn>
-      </div>
+      {isLoading && (
+          <div className="flex justify-center items-center h-64">
+              <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
+          </div>
+      )}
+      
+      {error && (
+        <Card className="max-w-md mx-auto bg-destructive/20 border-destructive">
+            <CardHeader>
+                <CardTitle className="text-destructive">Failed to Load Roadmap</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p className="text-destructive/80">There was an error connecting to the database.</p>
+                <pre className="text-xs mt-2">{error.message}</pre>
+            </CardContent>
+        </Card>
+      )}
+
+      {!isLoading && !error && (
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
+            <KanbanColumn title="💡 Ideas" cards={getCardsForColumn('ideas')} />
+            <KanbanColumn title="🚀 Next Up!" cards={getCardsForColumn('nextUp')} />
+            <KanbanColumn title="🏗️ In Progress" cards={getCardsForColumn('inProgress')} />
+            <KanbanColumn title="✅ Alive" cards={getCardsForColumn('alive')} />
+        </div>
+      )}
     </main>
   );
 }
