@@ -13,10 +13,11 @@ export * from './error-emitter';
 
 // Explicitly export the listener and hook
 export { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
-export { useUser } from '@/firebase/use-user';
+export { useUser } from './use-user';
 
 
 // A hook to memoize Firebase queries.
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(factory, deps);
 }
