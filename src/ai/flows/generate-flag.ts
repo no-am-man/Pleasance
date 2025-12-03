@@ -72,12 +72,7 @@ export async function generateCommunityFlag(values: z.infer<typeof flagActionSch
         }
 
         // Call the Genkit Prompt directly
-        const { output } = await ai.generate({
-            prompt: generateFlagPrompt.prompt,
-            model: 'googleai/gemini-pro',
-            input: { communityName, communityDescription },
-            output: { schema: GenerateFlagOutputSchema },
-        });
+        const { output } = await generateFlagPrompt({ communityName, communityDescription });
         
         if (!output || !output.svg) {
             throw new Error('Failed to generate a flag SVG from the AI flow.');
