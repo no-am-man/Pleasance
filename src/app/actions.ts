@@ -17,7 +17,7 @@ import { initializeAdminApp } from '@/firebase/config-admin';
 import { firebaseConfig } from '@/firebase/config';
 import admin from 'firebase-admin';
 import { generateCommunity } from '@/ai/flows/generate-community';
-import { getFirestore, writeBatch, updateDoc, doc, arrayRemove, arrayUnion } from 'firebase-admin/firestore';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
 import {
@@ -519,12 +519,12 @@ export async function updateRoadmapCardColumn(
 
     // Remove card from old column
     batch.update(oldColumnRef, {
-      cards: admin.firestore.FieldValue.arrayRemove(cardToMove)
+      cards: FieldValue.arrayRemove(cardToMove)
     });
 
     // Add card to new column
     batch.update(newColumnRef, {
-      cards: admin.firestore.FieldValue.arrayUnion(cardToMove)
+      cards: FieldValue.arrayUnion(cardToMove)
     });
 
     await batch.commit();
@@ -568,8 +568,8 @@ export async function addRoadmapCard(values: z.infer<typeof AddRoadmapCardSchema
         
         const ideasColumnRef = firestore.collection('roadmap').doc('ideas');
 
-        await updateDoc(ideasColumnRef, {
-            cards: admin.firestore.FieldValue.arrayUnion(newCard)
+        await ideasColumnRef.update({
+            cards: FieldValue.arrayUnion(newCard)
         });
 
         return { success: true, card: newCard };
@@ -600,8 +600,8 @@ export async function deleteRoadmapCard(cardId: string, columnId: string) {
             throw new Error(`Card with ID "${cardId}" not found in column "${columnId}".`);
         }
 
-        await updateDoc(columnRef, {
-            cards: admin.firestore.FieldValue.arrayRemove(cardToDelete)
+        await columnRef.update({
+            cards: FieldValue.arrayRemove(cardToDelete)
         });
 
         return { success: true };
@@ -624,7 +624,7 @@ export async function updateRoadmapCardOrder(columnId: string, orderedCards: z.i
 
         const columnRef = firestore.collection('roadmap').doc(columnId);
 
-        await updateDoc(columnRef, {
+        await columnRef.update({
             cards: orderedCards
         });
 
