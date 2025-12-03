@@ -109,8 +109,7 @@ export default function Home() {
             href="/community"
           >
             The social fabric of the republic. Find or form your
-            community, populate it with AI Acolytes, or invite other souls to
-            join your mission. Each community has its own private gallery for members.
+            community. Each community has a private workshop for members to collaborate on generative art and a public hall to showcase their finished work.
           </FeatureCard>
         </div>
 

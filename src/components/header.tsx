@@ -56,7 +56,6 @@ const navLinks = [
   { href: '/story', label: 'Nuncy Lingua', icon: BookOpen },
   { href: '/fabrication', label: 'Fabrication', icon: Warehouse },
   { href: '/treasury', label: 'Treasury', icon: Banknote },
-  { href: '/svg3d', label: 'AI Workshop', icon: Beaker },
   { href: '/roadmap', label: 'Roadmap', icon: KanbanIcon },
   { href: '/bugs', label: 'Bug Tracker', icon: Bug },
   { href: '/pricing', label: 'Pricing', icon: DollarSign },
