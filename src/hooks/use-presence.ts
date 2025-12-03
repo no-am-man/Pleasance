@@ -14,22 +14,22 @@ type PresentUser = {
 
 export function usePresence() {
     const { user } = useUser();
-    // Always return an empty array to disable the feature and prevent errors.
     const [presentUsers, setPresentUsers] = useState<PresentUser[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         if (!user || !database) {
+            setIsLoading(false);
+            setPresentUsers([]); // Clear users if not logged in
             return;
         }
 
-        // The logic for setting the user's own presence status remains,
-        // as it does not violate security rules. It's a write to a user-specific path.
+        // Set the user's own presence status
         const myConnectionsRef = ref(database, `users/${user.uid}`);
         const lastOnlineRef = ref(database, `lastOnline/${user.uid}`);
         const connectedRef = ref(database, '.info/connected');
 
-        const unsubscribe = onValue(connectedRef, async (snap) => {
+        const unsubscribeConnected = onValue(connectedRef, async (snap) => {
             if (snap.val() === true) {
                 const profileRef = doc(firestore, 'community-profiles', user.uid);
                 const profileSnap = await getDoc(profileRef);
@@ -40,22 +40,42 @@ export function usePresence() {
                     name: profile?.name || user.displayName || 'Anonymous',
                     avatarUrl: profile?.avatarUrl || user.photoURL || '',
                 };
-                // This write operation is allowed by standard rules.
+                
                 await set(myConnectionsRef, conn);
 
-                // These onDisconnect operations are also allowed.
                 onDisconnect(myConnectionsRef).remove();
                 onDisconnect(lastOnlineRef).set(serverTimestamp());
             }
         });
         
-        // Return the cleanup function for the user's own presence.
-        return () => unsubscribe();
+        // Listen for all present users
+        const usersRef = ref(database, 'users');
+        const unsubscribeUsers = onValue(usersRef, (snap) => {
+            if (snap.exists()) {
+                const users = snap.val();
+                const userList = Object.values(users) as PresentUser[];
+                setPresentUsers(userList);
+            } else {
+                setPresentUsers([]);
+            }
+            setIsLoading(false);
+        }, (error) => {
+            console.error("Error fetching present users:", error);
+            setIsLoading(false);
+        });
+
+
+        // Cleanup function for all listeners
+        return () => {
+            unsubscribeConnected();
+            off(usersRef, 'value', unsubscribeUsers);
+            // Also ensure onDisconnect is cleaned up if user logs out manually
+            const myRef = ref(database, `users/${user.uid}`);
+            off(myRef);
+        };
 
     }, [user]);
 
-    // The problematic part (reading all users) is now removed.
-    // We no longer attempt to fetch from the top-level 'users' collection.
 
     return { presentUsers, isLoading };
 }
