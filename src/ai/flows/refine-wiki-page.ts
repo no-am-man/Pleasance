@@ -61,7 +61,7 @@ Generate the refined markdown content for the page.
 
 const generateImagePrompt = ai.definePrompt({
     name: 'generateWikiImagePrompt',
-    input: { schema: RefineWikiInputSchema },
+    input: { schema: z.object({ title: z.string(), content: z.string() }) },
     output: { schema: ImagePromptSchema },
     config: {
         model: 'googleai/gemini-1.5-flash-latest',
@@ -83,21 +83,22 @@ const refineWikiPageFlow = ai.defineFlow(
     outputSchema: RefineWikiOutputSchema,
   },
   async (input) => {
-    // Run text and image prompt generation in parallel
-    const [
-      { output: textOutput },
-      { output: imagePromptOutput }
-    ] = await Promise.all([
-      refineWikiPrompt(input),
-      generateImagePrompt(input)
-    ]);
+    // Step 1: Generate the refined text content.
+    const { output: textOutput } = await refineWikiPrompt(input);
     
-    if (!textOutput) {
+    if (!textOutput?.refinedContent) {
         throw new Error("The AI failed to generate refined content for the wiki page.");
     }
     
     let generatedImage: string | undefined = undefined;
 
+    // Step 2: Generate an image prompt from the *new* refined content.
+    const { output: imagePromptOutput } = await generateImagePrompt({
+        title: input.title,
+        content: textOutput.refinedContent
+    });
+
+    // Step 3: Generate the image using the new prompt.
     if (imagePromptOutput?.prompt) {
         try {
             const { media } = await ai.generate({
