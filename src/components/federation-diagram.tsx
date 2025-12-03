@@ -1,8 +1,9 @@
 // src/components/federation-diagram.tsx
 'use client';
 
-import { Beaker, BookOpen, Banknote, Users, User } from 'lucide-react';
+import { Beaker, BookOpen, Banknote, Users, User, Warehouse, Info, Bot, DollarSign, Bug } from 'lucide-react';
 import React from 'react';
+import { KanbanIcon } from './icons/kanban-icon';
 
 const DiagramNode = ({
   icon,
@@ -10,12 +11,14 @@ const DiagramNode = ({
   x,
   y,
   delay,
+  size = 40,
 }: {
   icon: React.ElementType;
   label: string;
   x: string;
   y: string;
   delay: number;
+  size?: number;
 }) => (
   <g
     transform={`translate(${x}, ${y})`}
@@ -25,18 +28,18 @@ const DiagramNode = ({
     <circle
       cx="0"
       cy="0"
-      r="40"
+      r={size}
       fill="hsl(var(--background))"
       stroke="hsl(var(--primary))"
       strokeWidth="1.5"
     />
-    <foreignObject x="-24" y="-24" width="48" height="48">
+    <foreignObject x={-size * 0.6} y={-size * 0.6} width={size * 1.2} height={size * 1.2}>
       <div className="flex items-center justify-center w-full h-full">
-        {React.createElement(icon, { className: 'w-8 h-8 text-primary' })}
+        {React.createElement(icon, { className: `w-8 h-8 text-primary`, style: { width: `${size * 0.5}px`, height: `${size * 0.5}px`} })}
       </div>
     </foreignObject>
     <text
-      y="55"
+      y={size + 15}
       textAnchor="middle"
       fill="hsl(var(--foreground))"
       className="font-semibold text-sm"
@@ -50,9 +53,9 @@ const FlowArrow = ({ path, delay }: { path: string; delay: number }) => (
   <path
     d={path}
     stroke="hsl(var(--primary) / 0.6)"
-    strokeWidth="2"
+    strokeWidth="1.5"
     fill="none"
-    strokeDasharray="5, 5"
+    strokeDasharray="4, 4"
     markerEnd="url(#arrowhead)"
     style={{ animation: `fadeIn ${500 + delay}ms ease-out forwards`, opacity: 0 }}
   />
@@ -60,7 +63,7 @@ const FlowArrow = ({ path, delay }: { path: string; delay: number }) => (
 
 export const FederationDiagram = () => {
   return (
-    <div className="w-full aspect-square">
+    <div className="w-full aspect-[4/3]">
       <style>
         {`
           @keyframes fadeIn {
@@ -77,42 +80,70 @@ export const FederationDiagram = () => {
           }
         `}
       </style>
-      <svg viewBox="0 0 500 500" className="w-full h-full">
+      <svg viewBox="0 0 600 450" className="w-full h-full">
         <defs>
           <radialGradient id="divineAura" cx="50%" cy="50%" r="50%">
             <stop offset="60%" stopColor="hsl(var(--primary) / 0)" />
             <stop offset="90%" stopColor="hsl(var(--primary) / 0.1)" />
             <stop offset="100%" stopColor="hsl(var(--primary) / 0)" />
           </radialGradient>
-          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="8" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" fill="hsl(var(--primary) / 0.6)" />
+          <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="hsl(var(--primary) / 0.6)" />
           </marker>
         </defs>
 
         {/* The Aura */}
         <circle
-          cx="250"
-          cy="250"
-          r="250"
+          cx="300"
+          cy="225"
+          r="225"
           fill="url(#divineAura)"
           className="animate-[pulseAura_6s_ease-in-out_infinite]"
         />
 
         {/* Nodes */}
-        <DiagramNode icon={User} label="The Sovereign Soul" x="80" y="250" delay={0} />
-        <DiagramNode icon={BookOpen} label="Nuncy Lingua" x="250" y="80" delay={200} />
-        <DiagramNode icon={Beaker} label="Crucible of Creation" x="420" y="80" delay={400} />
-        <DiagramNode icon={Banknote} label="Treasury" x="420" y="420" delay={600} />
-        <DiagramNode icon={Users} label="Federation" x="80" y="420" delay={800} />
+        <DiagramNode icon={User} label="The Sovereign Soul" x="90" y="225" delay={0} />
+        
+        {/* Top Layer: Creation & Learning Tools */}
+        <DiagramNode icon={BookOpen} label="Nuncy Lingua" x="240" y="90" delay={200} />
+        <DiagramNode icon={Beaker} label="Crucible of Creation" x="360" y="90" delay={400} />
+        
+        {/* Mid Layer: Declaration */}
+        <DiagramNode icon={Banknote} label="Treasury" x="300" y="225" delay={600} />
+
+        {/* Bottom Layer: Action & Community */}
+        <DiagramNode icon={Warehouse} label="Manifestation" x="240" y="360" delay={800} />
+        <DiagramNode icon={Users} label="Federation" x="360" y="360" delay={1000} />
+        
+        {/* Right-Side Layer: Guiding Systems */}
+        <g transform="translate(520, 225)">
+            <DiagramNode icon={Info} label="Wiki" x="0" y="-120" delay={1200} size={30} />
+            <DiagramNode icon={KanbanIcon} label="Roadmap" x="0" y="-40" delay={1400} size={30} />
+            <DiagramNode icon={Bot} label="Conductor" x="0" y="40" delay={1600} size={30} />
+            <DiagramNode icon={Bug} label="Bug Tracker" x="0" y="120" delay={1800} size={30} />
+        </g>
         
         {/* Flow Arrows */}
-        <FlowArrow path="M 120 250 Q 180 150 240 120" delay={1000} />
-        <FlowArrow path="M 120 250 Q 250 160 380 120" delay={1200} />
-        <FlowArrow path="M 280 80 H 380" delay={1400} />
-        <FlowArrow path="M 420 120 V 380" delay={1600} />
-        <FlowArrow path="M 380 420 H 120" delay={1800} />
-        <FlowArrow path="M 80 380 V 290" delay={2000} />
+        {/* Soul -> Creation */}
+        <FlowArrow path="M 130 225 Q 180 150 230 125" delay={2000} />
+        <FlowArrow path="M 130 225 Q 240 160 350 125" delay={2100} />
         
+        {/* Creation -> Treasury */}
+        <FlowArrow path="M 240 130 V 185" delay={2200} />
+        <FlowArrow path="M 360 130 V 185" delay={2300} />
+
+        {/* Treasury -> Action/Community */}
+        <FlowArrow path="M 290 265 Q 260 300 245 325" delay={2400} />
+        <FlowArrow path="M 310 265 Q 340 300 355 325" delay={2500} />
+        
+        {/* Community -> Soul (inspiration) */}
+        <FlowArrow path="M 320 360 C 200 420, 150 350, 130 250" delay={2600} />
+        
+        {/* Guiding Systems -> All */}
+        <FlowArrow path="M 480 105 H 400" delay={2700} />
+        <FlowArrow path="M 480 185 H 340" delay={2800} />
+        <FlowArrow path="M 480 265 H 400" delay={2900} />
+        <FlowArrow path="M 480 345 H 400" delay={3000} />
       </svg>
     </div>
   );
