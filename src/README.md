@@ -6,8 +6,8 @@
 
 This project is open source. You can find the repository [here](https://github.com/no-am-man/Pleasance).
 
-## 🙏 Version 3.0.0 is on Staging!
-This major update introduces the AI Workshop, a private space for generative AI experimentation.
+## 🙏 Version 4.0.0 is on Staging!
+This major update introduces subscription tiers ('Congregation', 'Clergy', 'Founder') to support the use of advanced generative AI models and ensure the continued growth of the republic.
 
 ## Core Philosophy
 
