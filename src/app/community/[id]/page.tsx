@@ -5,10 +5,10 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useUser, addDocumentNonBlocking } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, setDoc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, GalleryHorizontal } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, GalleryHorizontal, Camera } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -22,7 +22,7 @@ import { HumanIcon } from '@/components/icons/human-icon';
 import { AiIcon } from '@/components/icons/ai-icon';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import Image from 'next/image';
-import { getAiChatResponse, generateCommunityFlagAction, generateSvg3d, saveSvgAsset } from '@/app/actions';
+import { getAiChatResponse, generateCommunityFlag as generateCommunityFlagAction, generateSvg3d, saveSvgAsset, createHistorySnapshot } from '@/app/actions';
 import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
 import { type ChatHistory } from 'genkit';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -33,6 +33,7 @@ import * as z from 'zod';
 import { Svg3dCube } from '@/components/icons/svg3d-cube';
 import { formatDistanceToNow } from 'date-fns';
 import { GenerateSvg3dInputSchema, type ColorPixel } from '@/lib/types';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogTrigger } from '@/components/ui/dialog';
 
 
 type Member = {
@@ -109,12 +110,66 @@ type Creation = {
     pixels: ColorPixel[];
 };
 
+type Story = {
+    id: string;
+    userId: string;
+    level: string;
+    sourceLanguage: string;
+    targetLanguage: string;
+    nativeText: string;
+    translatedText: string;
+    createdAt: { seconds: number; nanoseconds: number; } | null;
+    audioUrl?: string; 
+    status?: 'processing' | 'complete' | 'failed';
+};
+
+type HistorySnapshot = {
+    id: string;
+    userId: string;
+    createdAt: { seconds: number; nanoseconds: number; } | null;
+    storyCount: number;
+    stories: Story[];
+};
+
 const Svg3dSchema = GenerateSvg3dInputSchema;
 
 const SaveAssetSchema = z.object({
     assetName: z.string().min(2, 'Asset name must be at least 2 characters.'),
     value: z.coerce.number().min(0, 'Value must be a positive number.'),
 });
+
+function SnapshotViewer({ snapshot }: { snapshot: HistorySnapshot }) {
+  return (
+    <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
+      <DialogHeader>
+        <DialogTitle>Story Snapshot from {snapshot.createdAt ? new Date(snapshot.createdAt.seconds * 1000).toLocaleString() : 'a past time'}</DialogTitle>
+        <DialogDescription>
+          A view of your {snapshot.storyCount} stories from this point in time.
+        </DialogDescription>
+      </DialogHeader>
+      <div className="flex-grow overflow-y-auto pr-4 space-y-4">
+        {snapshot.stories.map((story, index) => (
+          <Card key={`${story.id}-${index}`} className="bg-muted/50">
+            <CardHeader>
+                <CardTitle className="text-base">{story.nativeText.substring(0, 100)}...</CardTitle>
+                <CardDescription className="text-xs">
+                    {story.level} &middot; {story.sourceLanguage} to {story.targetLanguage}
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <p className="text-sm text-muted-foreground italic whitespace-pre-wrap">{story.translatedText}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+       <DialogClose asChild>
+          <Button type="button" variant="secondary">
+            Close
+          </Button>
+        </DialogClose>
+    </DialogContent>
+  );
+}
 
 
 function MemberCard({ member, communityId }: { member: Member; communityId: string;}) {
