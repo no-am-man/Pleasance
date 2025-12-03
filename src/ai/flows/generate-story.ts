@@ -49,7 +49,20 @@ const generateStoryFlow = ai.defineFlow(
     outputSchema: GenerateStoryOutputSchema,
   },
   async input => {
-    const {output} = await generateStoryPrompt(input);
-    return output!;
+    const { output } = await ai.generate({
+      prompt: generateStoryPrompt.prompt, // Pass the prompt template string
+      input: input,                       // Pass the structured input
+      model: 'googleai/gemini-1.5-flash-latest', // Explicitly define model here as well
+      output: {
+        schema: GenerateStoryOutputSchema,
+      },
+      config: generateStoryPrompt.config, // Pass the config from the prompt definition
+    });
+    
+    if (!output) {
+      throw new Error("AI failed to generate a story.");
+    }
+    
+    return output;
   }
 );
