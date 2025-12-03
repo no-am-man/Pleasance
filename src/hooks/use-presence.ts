@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useUser, database, firestore } from '@/firebase';
-import { ref, onValue, onDisconnect, serverTimestamp, set, get } from 'firebase/database';
+import { ref, onValue, onDisconnect, serverTimestamp, set, off } from 'firebase/database';
 import { doc, getDoc } from 'firebase/firestore';
 
 type PresentUser = {
@@ -18,7 +18,7 @@ export function usePresence() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (!user) {
+        if (!user || !database) {
             setPresentUsers([]);
             setIsLoading(false);
             return;
@@ -28,7 +28,7 @@ export function usePresence() {
         const lastOnlineRef = ref(database, `lastOnline/${user.uid}`);
         const connectedRef = ref(database, '.info/connected');
 
-        onValue(connectedRef, async (snap) => {
+        const unsubscribe = onValue(connectedRef, async (snap) => {
             if (snap.val() === true) {
                 const profileRef = doc(firestore, 'community-profiles', user.uid);
                 const profileSnap = await getDoc(profileRef);
@@ -39,32 +39,36 @@ export function usePresence() {
                     name: profile?.name || user.displayName || 'Anonymous',
                     avatarUrl: profile?.avatarUrl || user.photoURL || '',
                 };
-                set(myConnectionsRef, conn);
+                await set(myConnectionsRef, conn);
 
                 onDisconnect(myConnectionsRef).remove();
-                set(lastOnlineRef, serverTimestamp());
+                onDisconnect(lastOnlineRef).set(serverTimestamp());
             }
         });
+        
+        return () => unsubscribe();
 
     }, [user]);
 
     useEffect(() => {
+        if (!database) {
+            setIsLoading(false);
+            return;
+        }
         const connectionsRef = ref(database, 'users');
-        const fetchUsers = async () => {
-            setIsLoading(true);
-            try {
-                const snapshot = await get(connectionsRef);
-                const users = snapshot.val();
-                const userList: PresentUser[] = users ? Object.values(users) : [];
-                setPresentUsers(userList);
-            } catch (error) {
-                console.error("Failed to fetch present users:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
+        
+        const unsubscribe = onValue(connectionsRef, (snapshot) => {
+            const users = snapshot.val();
+            const userList: PresentUser[] = users ? Object.values(users) : [];
+            setPresentUsers(userList);
+            setIsLoading(false);
+        }, (error) => {
+            console.error("Failed to listen for present users:", error);
+            setIsLoading(false);
+        });
 
-        fetchUsers();
+        // Cleanup the listener when the component unmounts
+        return () => off(connectionsRef);
         
     }, []);
 
