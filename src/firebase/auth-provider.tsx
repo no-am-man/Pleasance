@@ -16,11 +16,12 @@ export const AuthContext = createContext<AuthContextState | undefined>(undefined
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isUserLoading, setIsUserLoading] = useState(true);
+  const [sessionSet, setSessionSet] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
-      setIsUserLoading(false);
+      setSessionSet(false); // Reset session status on auth change
 
       if (firebaseUser) {
         try {
@@ -32,18 +33,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
         } catch (e) {
           console.error("Failed to set session cookie:", e);
+        } finally {
+            setSessionSet(true);
         }
       } else {
         try {
           await fetch('/api/auth/session', { method: 'DELETE' });
         } catch (e) {
           console.error("Failed to clear session cookie:", e);
+        } finally {
+            setSessionSet(true);
         }
       }
     });
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    // Only set loading to false when the user object is determined AND the session operation is complete.
+    if (sessionSet) {
+        setIsUserLoading(false);
+    }
+  }, [user, sessionSet]);
+
 
   const contextValue = useMemo(() => ({
     user,
