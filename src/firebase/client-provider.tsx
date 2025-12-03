@@ -12,10 +12,10 @@ import { type FirebaseStorage } from 'firebase/storage';
 
 // Define a context for all Firebase services
 interface FirebaseContextState {
-  app: FirebaseApp | null;
-  auth: Auth | null;
-  firestore: Firestore | null;
-  storage: FirebaseStorage | null;
+  app: FirebaseApp;
+  auth: Auth;
+  firestore: Firestore;
+  storage: FirebaseStorage;
   user: User | null;
   isUserLoading: boolean;
 }
@@ -23,17 +23,18 @@ interface FirebaseContextState {
 // React Context for all of Firebase
 export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
 
-export function FirebaseClientProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isUserLoading, setIsUserLoading] = useState(true);
-
-  // Memoize the Firebase instances to ensure they are stable across re-renders
-  const firebaseServices = useMemo(() => ({
+// --- Create the service instances ONCE, outside the component ---
+// This is the critical change to ensure stability.
+const firebaseServices = {
     app: firebaseApp,
     auth: auth,
     firestore: firestore,
     storage: storage,
-  }), []);
+};
+
+export function FirebaseClientProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [isUserLoading, setIsUserLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -62,12 +63,14 @@ export function FirebaseClientProvider({ children }: { children: ReactNode }) {
 
     return () => unsubscribe();
   }, []);
-
+  
+  // The context value now combines the STABLE services with the DYNAMIC user state.
+  // This useMemo will only re-run when the user's auth state changes.
   const contextValue = useMemo(() => ({
     ...firebaseServices,
     user,
     isUserLoading,
-  }), [firebaseServices, user, isUserLoading]);
+  }), [user, isUserLoading]);
 
   if (isUserLoading) {
     return (
