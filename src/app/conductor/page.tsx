@@ -1,3 +1,4 @@
+
 // src/app/conductor/page.tsx
 'use client';
 
@@ -170,7 +171,7 @@ export default function ConductorPage() {
                                         <AvatarFallback><Bot /></AvatarFallback>
                                     </Avatar>
                                 )}
-                                <div className={cn("rounded-lg px-4 py-2 max-w-[85%] prose prose-sm dark:prose-invert prose-p:my-2", msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
+                                <div className={cn("rounded-lg px-4 py-2 max-w-[85%]", msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
                                     {msg.content.map((part, partIndex) => {
                                         if (part.type === 'text') {
                                             return <div key={partIndex} dangerouslySetInnerHTML={{ __html: marked(part.text) }} />;
