@@ -28,9 +28,14 @@ const flagActionSchema = z.object({
     idToken: z.string(),
 });
 
-// 2. Genkit Prompt (template only)
+// 2. Genkit Prompt
 const generateFlagPrompt = ai.definePrompt({
   name: 'generateFlagPrompt',
+  input: { schema: GenerateFlagInputSchema },
+  output: { schema: GenerateFlagOutputSchema },
+  config: {
+    model: 'googleai/gemini-1.5-flash-latest',
+  },
   prompt: `You are an expert graphic designer who specializes in creating symbolic, minimalist, and modern vector art for flags.
         
 Task: Generate a complete, valid SVG string for a flag representing an online community.
@@ -54,14 +59,8 @@ const generateFlagFlow = ai.defineFlow(
     outputSchema: GenerateFlagOutputSchema,
   },
   async (input) => {
-    const { output } = await ai.generate({
-        model: 'googleai/gemini-1.5-flash-latest',
-        prompt: generateFlagPrompt.prompt,
-        input: input,
-        output: {
-            schema: GenerateFlagOutputSchema,
-        },
-    });
+    // Correctly call the defined prompt object, which includes the model and renders the template.
+    const { output } = await generateFlagPrompt(input);
     
     if (!output) {
       throw new Error('AI failed to generate a flag SVG.');
