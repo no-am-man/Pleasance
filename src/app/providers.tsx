@@ -21,7 +21,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
         </div>
         <div className="pt-12">{children}</div>
       </main>
-      <div className="fixed bottom-[12.5rem] left-0 w-full h-1 ant-trail z-50 pointer-events-none" />
       <footer className="text-center p-4 border-t space-y-4">
         <div className="flex justify-center flex-wrap gap-x-4 gap-y-2">
             {navLinks.map(link => (
