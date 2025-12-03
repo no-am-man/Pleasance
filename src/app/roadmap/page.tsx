@@ -112,7 +112,7 @@ function AddIdeaForm() {
                             render={({ field }) => (
                                 <FormItem>
                                     <FormControl>
-                                        <Textarea placeholder="Describe the idea..." {...field} />
+                                        <Textarea placeholder="Refine Description with AI" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
