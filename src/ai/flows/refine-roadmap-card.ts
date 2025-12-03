@@ -53,9 +53,11 @@ const refineRoadmapCardFlow = ai.defineFlow(
   },
   async (input) => {
     // Correctly call the prompt function with the input.
-    const { output } = await refineCardPrompt({
-        input,
+    const { output } = await ai.generate({
+        prompt: refineCardPrompt.prompt,
+        input: input,
         model: googleAI.model('gemini-pro'),
+        output: { schema: RefineCardOutputSchema },
     });
     if (!output) {
         throw new Error("The AI failed to generate a refined description.");
