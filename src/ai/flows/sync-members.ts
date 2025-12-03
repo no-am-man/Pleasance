@@ -10,7 +10,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { initializeAdminApp } from '@/firebase/config-admin';
-import { collection, getDocs, doc, writeBatch, getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, writeBatch } from 'firebase-admin/firestore';
 
 // Define schema for a member within a community's subcollection
 const MemberSchema = z.object({
@@ -67,8 +67,8 @@ const syncMembersFlow = ai.defineFlow(
     let issuesFixed = 0;
 
     // 1. Fetch all community profiles and map them by userId for quick lookup
-    const profilesRef = collection(firestore, 'community-profiles');
-    const profilesSnapshot = await getDocs(profilesRef);
+    const profilesRef = firestore.collection('community-profiles');
+    const profilesSnapshot = await profilesRef.get();
     const profilesMap = new Map<string, CommunityProfile>();
     profilesSnapshot.forEach(doc => {
       const profile = doc.data() as CommunityProfile;
@@ -76,8 +76,8 @@ const syncMembersFlow = ai.defineFlow(
     });
 
     // 2. Fetch all communities
-    const communitiesRef = collection(firestore, 'communities');
-    const communitiesSnapshot = await getDocs(communitiesRef);
+    const communitiesRef = firestore.collection('communities');
+    const communitiesSnapshot = await communitiesRef.get();
     communitiesScanned = communitiesSnapshot.size;
 
     // 3. Iterate over each community to check and update its members
@@ -124,7 +124,7 @@ const syncMembersFlow = ai.defineFlow(
       }
 
       if (needsUpdate) {
-        const communityRef = doc(firestore, 'communities', communityDoc.id);
+        const communityRef = firestore.collection('communities').doc(communityDoc.id);
         batch.update(communityRef, { members: updatedMembers });
       }
     }

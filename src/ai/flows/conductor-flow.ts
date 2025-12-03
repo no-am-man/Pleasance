@@ -26,6 +26,8 @@ export async function conductorFlow(input: z.infer<typeof ConductorInputSchema>)
     const adminApp = initializeAdminApp();
     const firestore = getFirestore(adminApp);
     const conductorDocRef = firestore.collection('conductor').doc(input.userId);
+    
+    // Read the document to get the history
     const conductorDoc = await conductorDocRef.get();
     
     // Ensure the document exists before trying to read from it
@@ -52,11 +54,13 @@ The current user's name is ${input.userName} and their ID is ${input.userId}. Yo
     // The entire response includes the user prompt and the model's reply.
     // We need to add both to the history to maintain context.
     const userMessagePart = { role: 'user', content: [{ text: input.prompt }] };
-    const responseContent = response.content();
+    const modelResponseParts = response.content;
     
     await conductorDocRef.update({
-        history: FieldValue.arrayUnion(userMessagePart, ...responseContent),
+        history: FieldValue.arrayUnion(userMessagePart, ...modelResponseParts),
     });
 
-    return responseContent;
+    return modelResponseParts;
 }
+
+    

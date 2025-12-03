@@ -53,7 +53,7 @@ export async function createHistorySnapshot(values: z.infer<typeof snapshotSchem
         const { userId } = validatedFields.data;
         
         const adminApp = initializeAdminApp();
-        const firestore = adminApp.firestore();
+        const firestore = getFirestore(adminApp);
 
         // 1. Fetch all stories for the user
         const storiesRef = firestore.collection('users').doc(userId).collection('stories');
@@ -70,7 +70,7 @@ export async function createHistorySnapshot(values: z.infer<typeof snapshotSchem
         const snapshotData = {
             id: snapshotRef.id,
             userId: userId,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            createdAt: FieldValue.serverTimestamp(),
             storyCount: stories.length,
             stories: stories,
         };
@@ -177,8 +177,6 @@ export async function generateProfileAvatars(values: z.infer<typeof generateAvat
 
 export async function runMemberSync() {
     try {
-        // This requires the Admin SDK, so we ensure it's initialized.
-        initializeAdminApp();
         const result = await syncAllMembers();
         return { data: result };
     } catch (e) {
@@ -294,7 +292,7 @@ export async function saveSvgAsset(values: z.infer<typeof saveSvgAssetSchema>) {
             description: `A generative 3D artwork. Stored at: ${publicUrl}`,
             type: 'ip' as 'ip' | 'physical' | 'virtual',
             value: value, 
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            createdAt: FieldValue.serverTimestamp(),
             fileUrl: publicUrl, // Storing the direct public file URL for easier access
         };
 
@@ -434,7 +432,7 @@ export async function declareAssetWithFile(formData: FormData) {
             type,
             value,
             fileUrl,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            createdAt: FieldValue.serverTimestamp(),
         };
 
         await newAssetRef.set(newAsset);
@@ -821,7 +819,7 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
           targetLanguage: targetLanguage,
           nativeText: originalStory,
           translatedText: translatedText,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          createdAt: FieldValue.serverTimestamp(),
           status: 'complete',
           audioUrl: publicUrl,
       };
@@ -1005,3 +1003,6 @@ export async function refineWikiPageAction(values: z.infer<typeof RefineWikiPage
 
     
 
+
+
+    

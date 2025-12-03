@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A Genkit tool for reporting bugs.
@@ -51,3 +52,5 @@ export const addBugReportTool = ai.defineTool(
     return { bugId: newBugRef.id, status: "Bug report created successfully." };
   }
 );
+
+    
