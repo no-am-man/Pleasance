@@ -120,11 +120,9 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
         },
     });
 
-    // Generate a signed URL instead of making the file public
-    const [signedUrl] = await file.getSignedUrl({
-        action: 'read',
-        expires: '01-01-2030', // Set a long expiration date
-    });
+    // Make the file public and get its URL
+    await file.makePublic();
+    const publicUrl = file.publicUrl();
 
     // --- Step 5: Save Final Story to Firestore ---
     const storyData = {
@@ -137,7 +135,7 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
         translatedText: translatedText,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         status: 'complete',
-        audioUrl: signedUrl, // Save the signed URL
+        audioUrl: publicUrl, // Save the public URL
     };
     
     await storyDocRef.set(storyData);
@@ -363,22 +361,21 @@ export async function saveSvgAsset(values: z.infer<typeof saveSvgAssetSchema>) {
         
         await file.save(jsonBuffer, {
             metadata: { contentType: 'application/json' },
+            public: true, // Make the file publicly accessible
         });
 
-        const [signedUrl] = await file.getSignedUrl({
-            action: 'read',
-            expires: '01-01-2030', // Long-lived URL
-        });
+        // The public URL does not require signing.
+        const publicUrl = `https://storage.googleapis.com/${bucketName}/${storagePath}`;
 
         const assetData = {
             id: assetId,
             ownerId: userId,
             name: assetName,
-            description: `A generative 3D artwork. Stored at: ${signedUrl}`,
-            type: 'ip',
+            description: `A generative 3D artwork. Stored at: ${publicUrl}`,
+            type: 'ip' as 'ip' | 'physical' | 'virtual',
             value: value, 
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            fileUrl: signedUrl, // Storing the direct file URL for easier access
+            fileUrl: publicUrl, // Storing the direct public file URL for easier access
         };
 
         await assetDocRef.set(assetData);
@@ -404,3 +401,6 @@ export async function saveSvgAsset(values: z.infer<typeof saveSvgAssetSchema>) {
 
     
 
+
+
+    
