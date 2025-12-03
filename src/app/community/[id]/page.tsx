@@ -9,7 +9,7 @@ import { firestore } from '@/firebase/config';
 import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, arrayRemove, updateDoc, getDoc, getDocs, setDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info, LogOut, Wrench } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info, LogOut, Wrench, Banknote } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -1158,7 +1158,7 @@ export default function CommunityProfilePage() {
                 <CardTitle className="flex items-center gap-2"><Wrench /> Available Tools</CardTitle>
                 <CardDescription>Use these tools to collaborate and create within the community.</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Button asChild variant="outline" className="h-auto py-4">
                     <Link href={`/community/${id}/workshop`} className="flex flex-col items-center gap-2">
                         <Sparkles className="w-8 h-8 text-primary" />
@@ -1171,6 +1171,13 @@ export default function CommunityProfilePage() {
                         <KanbanIcon className="w-8 h-8 text-primary" />
                         <span className="font-semibold">Roadmap</span>
                         <span className="text-xs text-center text-muted-foreground">View the private community roadmap.</span>
+                    </Link>
+                </Button>
+                <Button asChild variant="outline" className="h-auto py-4">
+                     <Link href={`/community/${id}/treasury`} className="flex flex-col items-center gap-2">
+                        <Banknote className="w-8 h-8 text-primary" />
+                        <span className="font-semibold">Treasury</span>
+                        <span className="text-xs text-center text-muted-foreground">View the community's creations.</span>
                     </Link>
                 </Button>
             </CardContent>

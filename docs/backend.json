@@ -599,6 +599,17 @@
           ]
         }
       },
+       {
+        "path": "/communities/{communityId}/treasury",
+        "definition": {
+          "entityName": "Creation",
+          "schema": { "$ref": "#/backend/entities/Creation" },
+          "description": "A view of all creations (published and in-workshop) for a specific community. Viewable by members only.",
+          "params": [
+            { "name": "communityId", "description": "The ID of the community." }
+          ]
+        }
+      },
       {
         "path": "/communities/{communityId}/roadmap/{columnId}",
         "definition": {
