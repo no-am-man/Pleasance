@@ -1,11 +1,10 @@
-
 // src/app/community/[id]/member/[memberName]/page.tsx
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useUser, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LoaderCircle, AlertCircle, ArrowLeft, Bot, Send } from 'lucide-react';
@@ -17,7 +16,6 @@ import { getAiChatResponse, type ChatWithMemberInput } from '@/app/actions';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { type ChatHistory } from 'genkit';
-import { useDocumentData } from 'react-firebase-hooks/firestore';
 
 type Member = {
   name: string;
@@ -152,8 +150,30 @@ export default function AiMemberProfilePage() {
   const communityId = Array.isArray(params.id) ? params.id[0] : params.id;
   const memberName = Array.isArray(params.memberName) ? params.memberName[0] : params.memberName;
 
-  const communityDocRef = useMemoFirebase(() => communityId ? doc(firestore, 'communities', communityId) : null, [communityId]);
-  const [community, isLoading, error] = useDocumentData<Community>(communityDocRef);
+  const [community, setCommunity] = useState<Community | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (!communityId) {
+      setIsLoading(false);
+      return;
+    }
+    const communityDocRef = doc(firestore, 'communities', communityId);
+    const unsubscribe = onSnapshot(communityDocRef, (doc) => {
+      if (doc.exists()) {
+        setCommunity({ id: doc.id, ...doc.data() } as Community);
+      } else {
+        setError(new Error('Community not found.'));
+      }
+      setIsLoading(false);
+    }, (err) => {
+      setError(err);
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [communityId]);
 
   const member = community?.members.find(
     (m) => m.name === decodeURIComponent(memberName)

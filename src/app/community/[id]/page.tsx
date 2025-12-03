@@ -1,11 +1,10 @@
-
 // src/app/community/[id]/page.tsx
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useUser, addDocumentNonBlocking, useMemoFirebase } from '@/firebase';
+import { useUser, addDocumentNonBlocking } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, updateDoc, deleteDoc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, updateDoc, deleteDoc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info } from 'lucide-react';
@@ -23,7 +22,6 @@ import { AiIcon } from '@/components/icons/ai-icon';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import Image from 'next/image';
 import { getAiChatResponse, generateCommunityFlagAction } from '@/app/actions';
-import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
 import { type ChatHistory } from 'genkit';
 import { Svg3dCube } from '@/components/icons/svg3d-cube';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
@@ -321,15 +319,31 @@ function CommentCard({ comment, communityId, messageId, canManage }: { comment: 
     )
 }
 
-function CommentThread({ message, comments, isLoading, canManage }: { message: Message, comments: Comment[] | undefined, isLoading: boolean, canManage: boolean }) {
+function CommentThread({ message, canManage }: { message: Message; canManage: boolean; }) {
     const { user } = useUser();
     const params = useParams();
     const communityId = Array.isArray(params.id) ? params.id[0] : params.id;
 
+    const [comments, setComments] = useState<Comment[]>([]);
+    const [isLoadingComments, setIsLoadingComments] = useState(true);
+
+    useEffect(() => {
+        if (!firestore || !message.communityId || !message.id) return;
+        const commentsQuery = query(collection(firestore, `communities/${message.communityId}/messages/${message.id}/comments`), orderBy('createdAt', 'asc'));
+        const unsubscribe = onSnapshot(commentsQuery, (querySnapshot) => {
+            const commentsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Comment));
+            setComments(commentsData);
+            setIsLoadingComments(false);
+        });
+        return () => unsubscribe();
+    }, [message.communityId, message.id]);
+
+    const commentCount = comments?.filter(c => !c.deleted).length || 0;
+
     return (
         <div className="pl-12 pr-4 pb-4 space-y-4">
             <div className="max-h-60 overflow-y-auto space-y-3 pr-2">
-                {isLoading && <LoaderCircle className="mx-auto animate-spin" />}
+                {isLoadingComments && <LoaderCircle className="mx-auto animate-spin" />}
                 {comments && comments.length > 0 && comments.map(comment => <CommentCard key={comment.id} comment={comment} communityId={communityId} messageId={message.id} canManage={canManage || user?.uid === message.userId} />)}
             </div>
             {user && <TextCommentForm communityId={message.communityId} messageId={message.id} />}
@@ -340,18 +354,11 @@ function CommentThread({ message, comments, isLoading, canManage }: { message: M
 function MessageCard({ message, canManage }: { message: Message; canManage: boolean; }) {
     const { toast } = useToast();
     const [isUpdating, setIsUpdating] = useState(false);
-    const { user } = useUser();
 
     const isDone = message.status === 'done';
     const isDeleted = message.deleted;
     const isReady = !!message.id && !!message.communityId && !!firestore;
     
-    const commentsQuery = useMemoFirebase(() => isReady ? query(collection(firestore, `communities/${message.communityId}/messages/${message.id}/comments`), orderBy('createdAt', 'asc')) : null, [isReady, message.communityId, message.id]);
-    const [comments, isLoadingComments] = useCollectionData<Comment>(commentsQuery, {
-      idField: 'id'
-    });
-    const commentCount = comments?.filter(c => !c.deleted).length || 0;
-
     const handleToggleStatus = async () => {
         if (!isReady || !firestore) return;
         setIsUpdating(true);
@@ -469,18 +476,13 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                                 <Button variant="ghost" size="sm" className="relative" disabled={!isReady}>
                                     <MessageSquare className="mr-2 h-4 w-4" />
                                     Comment
-                                    {commentCount > 0 && (
-                                        <Badge variant="secondary" className="ml-2">
-                                            {commentCount}
-                                        </Badge>
-                                    )}
                                 </Button>
                             </CollapsibleTrigger>
                         </div>
                     </CardFooter>
                 </div>
                 <CollapsibleContent>
-                   <CommentThread message={message} comments={comments} isLoading={isLoadingComments} canManage={canManage || user?.uid === message.userId} />
+                   <CommentThread message={message} canManage={canManage} />
                 </CollapsibleContent>
             </Card>
         </Collapsible>
@@ -489,15 +491,21 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
 
 function Network({ communityId, isOwner, allMembers }: { communityId: string; isOwner: boolean, allMembers: Member[] }) {
     const { user } = useUser();
+    
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
 
-    const messagesQuery = useMemoFirebase(() => {
-      if (!firestore || !communityId) return null;
-      return query(collection(firestore, `communities/${communityId}/messages`), orderBy('createdAt', 'desc'));
+    useEffect(() => {
+        if (!firestore || !communityId) return;
+        const messagesQuery = query(collection(firestore, `communities/${communityId}/messages`), orderBy('createdAt', 'desc'));
+        const unsubscribe = onSnapshot(messagesQuery, (querySnapshot) => {
+            const messagesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
+            setMessages(messagesData);
+            setIsLoading(false);
+        }, setError);
+        return () => unsubscribe();
     }, [communityId]);
-
-    const [messages, isLoading, error] = useCollectionData<Message>(messagesQuery, {
-      idField: 'id'
-    });
     
     const triggerAiResponse = async (userMessage: string) => {
         if (!user) return;
@@ -576,17 +584,21 @@ function Network({ communityId, isOwner, allMembers }: { communityId: string; is
     )
 }
 
-function JoinRequests({ communityId, communityDocRef }: { communityId: string, communityDocRef: any }) {
+function JoinRequests({ communityId }: { communityId: string }) {
     const { toast } = useToast();
+    const [requests, setRequests] = useState<JoinRequest[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const requestsQuery = useMemoFirebase(() => {
-        if (!firestore || !communityId) return null;
-        return query(collection(firestore, `communities/${communityId}/joinRequests`), where('status', '==', 'pending'));
+    useEffect(() => {
+        if (!firestore || !communityId) return;
+        const requestsQuery = query(collection(firestore, `communities/${communityId}/joinRequests`), where('status', '==', 'pending'));
+        const unsubscribe = onSnapshot(requestsQuery, (querySnapshot) => {
+            const requestsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as JoinRequest));
+            setRequests(requestsData);
+            setIsLoading(false);
+        });
+        return () => unsubscribe();
     }, [communityId]);
-
-    const [requests, isLoading] = useCollectionData<JoinRequest>(requestsQuery, {
-      idField: 'id'
-    });
 
     const handleRequest = async (request: JoinRequest, newStatus: 'approved' | 'rejected') => {
         if (!firestore) {
@@ -594,10 +606,10 @@ function JoinRequests({ communityId, communityDocRef }: { communityId: string, c
             return;
         }
         const requestDocRef = doc(firestore, `communities/${communityId}/joinRequests`, request.id);
+        const communityDocRef = doc(firestore, 'communities', communityId);
         
         try {
             if (newStatus === 'approved') {
-                // Fetch the full profile of the user to get their avatar URL
                 const profileRef = doc(firestore, 'community-profiles', request.userId);
                 const profileSnap = await getDoc(profileRef);
                 const profileData = profileSnap.exists() ? profileSnap.data() as CommunityProfile : null;
@@ -608,7 +620,7 @@ function JoinRequests({ communityId, communityDocRef }: { communityId: string, c
                     bio: request.userBio,
                     role: 'Member',
                     type: 'human',
-                    avatarUrl: profileData?.avatarUrl || '', // Ensure avatarUrl is not undefined
+                    avatarUrl: profileData?.avatarUrl || '',
                 };
                 await updateDoc(communityDocRef, {
                     members: arrayUnion(newMember)
@@ -653,13 +665,20 @@ function JoinRequests({ communityId, communityDocRef }: { communityId: string, c
 }
 
 function PresentationHall({ communityId }: { communityId: string }) {
-    const publishedCreationsQuery = useMemoFirebase(() => {
-        if (!firestore || !communityId) return null;
-        return query(collection(firestore, `communities/${communityId}/creations`), where('status', '==', 'published'), orderBy('createdAt', 'desc'));
+    const [creations, setCreations] = useState<Creation[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+
+    useEffect(() => {
+        if (!firestore || !communityId) return;
+        const q = query(collection(firestore, `communities/${communityId}/creations`), where('status', '==', 'published'), orderBy('createdAt', 'desc'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const creationsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Creation));
+            setCreations(creationsData);
+            setIsLoading(false);
+        }, setError);
+        return () => unsubscribe();
     }, [communityId]);
-    const [creations, isLoading, error] = useCollectionData<Creation>(publishedCreationsQuery, {
-        idField: 'id'
-    });
     
     if (isLoading) {
         return (
@@ -726,26 +745,62 @@ export default function CommunityProfilePage() {
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const [isGeneratingFlag, setIsGeneratingFlag] = useState(false);
 
-  const communityDocRef = useMemoFirebase(() => id && firestore ? doc(firestore, 'communities', id) : null, [id]);
-  const [community, isLoading, error] = useDocumentData<Community>(communityDocRef, {
-    idField: 'id'
-  });
-  
-  const allProfilesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'community-profiles')) : null, []);
-  const [allProfiles, profilesLoading] = useCollectionData<CommunityProfile>(allProfilesQuery, {
-    idField: 'id'
-  });
+  const [community, setCommunity] = useState<Community | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const [allProfiles, setAllProfiles] = useState<CommunityProfile[]>([]);
+  const [profilesLoading, setProfilesLoading] = useState(true);
+
+  const [userProfile, setUserProfile] = useState<CommunityProfile | null>(null);
+
+  const [userJoinRequest, setUserJoinRequest] = useState<JoinRequest | null>(null);
+  const [isRequestLoading, setIsRequestLoading] = useState(true);
+
+  useEffect(() => {
+    if (!id || !firestore) return;
+    const unsubscribe = onSnapshot(doc(firestore, 'communities', id), (doc) => {
+        setCommunity(doc.exists() ? { id: doc.id, ...doc.data() } as Community : null);
+        setIsLoading(false);
+    }, setError);
+    return () => unsubscribe();
+  }, [id]);
+
+  useEffect(() => {
+    if (!firestore) return;
+    const unsubscribe = onSnapshot(collection(firestore, 'community-profiles'), (snapshot) => {
+        setAllProfiles(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CommunityProfile)));
+        setProfilesLoading(false);
+    }, setError);
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (user && firestore) {
+        const unsubscribe = onSnapshot(doc(firestore, 'community-profiles', user.uid), (doc) => {
+            setUserProfile(doc.exists() ? doc.data() as CommunityProfile : null);
+        });
+        return () => unsubscribe();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user && id && firestore) {
+        setIsRequestLoading(true);
+        const unsubscribe = onSnapshot(doc(firestore, 'communities', id, 'joinRequests', user.uid), (doc) => {
+            setUserJoinRequest(doc.exists() ? doc.data() as JoinRequest : null);
+            setIsRequestLoading(false);
+        });
+        return () => unsubscribe();
+    } else {
+        setIsRequestLoading(false);
+    }
+  }, [user, id]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isOwner = user?.uid === community?.ownerId;
   
-  const userProfileRef = useMemoFirebase(() => user && firestore ? doc(firestore, 'community-profiles', user.uid) : null, [user]);
-  const [userProfile] = useDocumentData<CommunityProfile>(userProfileRef);
-
-  const userJoinRequestRef = useMemoFirebase(() => user && id && firestore ? doc(firestore, 'communities', id, 'joinRequests', user.uid) : null, [user, id]);
-  const [userJoinRequest, isRequestLoading] = useDocumentData<JoinRequest>(userJoinRequestRef);
-
   const hasPendingRequest = userJoinRequest?.status === 'pending';
 
   const allMembers = useMemo(() => {
@@ -802,13 +857,12 @@ export default function CommunityProfilePage() {
     
     const requestRef = doc(firestore, `communities/${id}/joinRequests/${user.uid}`);
 
-    const newRequest = {
-        id: requestRef.id,
+    const newRequest: Omit<JoinRequest, 'id'> = {
         userId: user.uid,
         userName: userProfile.name,
         userBio: userProfile.bio,
         status: 'pending' as const,
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp() as any
     };
     try {
         await setDoc(requestRef, newRequest);
@@ -822,7 +876,7 @@ export default function CommunityProfilePage() {
   };
 
   const handleInvite = async (profile: CommunityProfile) => {
-    if (!communityDocRef) return;
+    if (!community) return;
     
     const newMember: Member = {
         userId: profile.userId,
@@ -832,7 +886,7 @@ export default function CommunityProfilePage() {
         type: 'human',
         avatarUrl: profile.avatarUrl || '', // Ensure avatarUrl is not undefined
     };
-
+    const communityDocRef = doc(firestore, 'communities', community.id);
     await updateDoc(communityDocRef, {
         members: arrayUnion(newMember)
     });
@@ -844,7 +898,7 @@ export default function CommunityProfilePage() {
   };
 
   const handleGenerateFlag = async () => {
-    if (!community || !communityDocRef || !user || !firestore) {
+    if (!community || !user || !firestore) {
       toast({
         variant: 'destructive',
         title: 'Missing Information',
@@ -1079,7 +1133,7 @@ export default function CommunityProfilePage() {
                     <CardDescription>Approve or decline requests from users who want to join your community.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <JoinRequests communityId={id} communityDocRef={communityDocRef} />
+                    <JoinRequests communityId={id} />
                 </CardContent>
             </Card>
         </>

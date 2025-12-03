@@ -1,4 +1,3 @@
-
 // src/app/community/[id]/roadmap/page.tsx
 'use client';
 
@@ -9,13 +8,12 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { firestore } from '@/firebase/config';
-import { collection, query, doc, getDoc, where } from 'firebase/firestore';
-import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
+import { collection, query, doc, getDoc, where, onSnapshot } from 'firebase/firestore';
 import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType, CommunityProfile } from '@/lib/types';
 import { GripVertical, LoaderCircle, PlusCircle, Trash2, Sparkles, ArrowLeft, ArrowRight, UserPlus, Check, Database } from 'lucide-react';
 import { addRoadmapCard, deleteRoadmapCard, refineCardDescription, updateRoadmapCardAssignees, updateRoadmapCardColumn, updateRoadmapCardOrder, generateRoadmapIdeaAction, seedCommunityRoadmapData } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
-import { useUser, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -257,27 +255,56 @@ export default function CommunityRoadmapPage() {
   const communityId = params.id as string;
   const [isSeeding, setIsSeeding] = useState(false);
   
-  const communityDocRef = useMemoFirebase(() => communityId ? doc(firestore, 'communities', communityId) : null, [communityId]);
-  const [community, isCommunityLoading] = useDocumentData(communityDocRef);
+  const [community, setCommunity] = useState<any>(null);
+  const [isCommunityLoading, setIsCommunityLoading] = useState(true);
+
+  const [columnsData, setColumnsData] = useState<RoadmapColumnType[] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const [memberProfiles, setMemberProfiles] = useState<CommunityProfile[]>([]);
+
+  useEffect(() => {
+    if (!communityId || !firestore) return;
+    const unsubscribe = onSnapshot(doc(firestore, 'communities', communityId), (doc) => {
+        setCommunity(doc.data());
+        setIsCommunityLoading(false);
+    });
+    return () => unsubscribe();
+  }, [communityId]);
+  
   const isOwner = user?.uid === community?.ownerId;
 
-  const roadmapQuery = useMemoFirebase(() => communityId ? query(collection(firestore, `communities/${communityId}/roadmap`)) : null, [communityId]);
-  const [columnsData, isLoading, error] = useCollectionData<RoadmapColumnType>(roadmapQuery, { idField: 'id' });
-  
+  useEffect(() => {
+    if (!communityId || !firestore) return;
+    const q = query(collection(firestore, `communities/${communityId}/roadmap`));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RoadmapColumnType));
+        setColumnsData(data);
+        setIsLoading(false);
+    }, setError);
+    return () => unsubscribe();
+  }, [communityId]);
+
   const memberUserIds = useMemo(() => {
     if (!community?.members) return [];
     return community.members
         .filter((m: any) => m.type === 'human' && m.userId)
         .map((m: any) => m.userId);
-    }, [community?.members]);
+  }, [community?.members]);
 
-  const allProfilesQuery = useMemoFirebase(() => 
-    memberUserIds && memberUserIds.length > 0 
-        ? query(collection(firestore, 'community-profiles'), where('userId', 'in', memberUserIds)) 
-        : null
-    , [memberUserIds]);
-
-  const [memberProfiles] = useCollectionData<CommunityProfile>(allProfilesQuery);
+  useEffect(() => {
+    if (!firestore || !memberUserIds || memberUserIds.length === 0) {
+        setMemberProfiles([]);
+        return;
+    };
+    const q = query(collection(firestore, 'community-profiles'), where('userId', 'in', memberUserIds));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const profiles = snapshot.docs.map(doc => doc.data() as CommunityProfile);
+        setMemberProfiles(profiles);
+    });
+    return () => unsubscribe();
+  }, [memberUserIds]);
 
   const [columns, setColumns] = useState<RoadmapColumnType[]>([]);
   const columnOrder = useMemo(() => ['ideas', 'nextUp', 'inProgress', 'alive'], []);
@@ -291,24 +318,21 @@ export default function CommunityRoadmapPage() {
 
 
   const handleMoveCard = async (cardId: string, oldColumnId: string, direction: 'left' | 'right') => {
-    // This action needs to be modified to write to the community subcollection
     console.log("Moving card - not implemented for community yet");
   };
   
   const handleDragEnd = async (event: DragEndEvent) => {
-    // This action needs to be modified to write to the community subcollection
     console.log("Dragging card - not implemented for community yet");
   };
 
   const handleUpdateAssignees = async (cardId: string, columnId: string, assigneeName: string, shouldAssign: boolean) => {
-    // This action needs to be modified to write to the community subcollection
      console.log("Updating assignees - not implemented for community yet");
   }
   
   const handleSeedData = async () => {
-    if (!communityId) return;
+    if (!user || !communityId) return;
     setIsSeeding(true);
-    const result = await seedCommunityRoadmapData({ communityId });
+    const result = await seedCommunityRoadmapData({ communityId, userId: user.uid, userName: user.displayName || 'Owner' });
     if (result.error) {
       toast({ variant: 'destructive', title: 'Seeding Failed', description: result.error });
     } else {
@@ -372,7 +396,6 @@ export default function CommunityRoadmapPage() {
                         onUpdateAssignees={handleUpdateAssignees}
                         isOwner={isOwner}
                     >
-                        {/* Add idea forms would go here if implemented for communities */}
                     </KanbanColumn>
                     ))
                 ) : (
