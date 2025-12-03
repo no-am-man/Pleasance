@@ -30,12 +30,12 @@ const refineWikiPrompt = ai.definePrompt({
     name: 'refineWikiPagePrompt',
     input: { schema: RefineWikiInputSchema },
     output: { schema: RefineWikiOutputSchema },
-    prompt: `You are an expert technical writer and collaborative editor. Your task is to take a wiki page's title and its current markdown content and refine it.
+    prompt: `You are an expert technical writer and collaborative editor specializing in markdown formatting. Your task is to take a wiki page's title and its current markdown content and refine it.
 
 - Improve clarity, structure, and flow.
 - Add more detail where appropriate, based on the title and context.
 - Correct any grammatical errors or awkward phrasing.
-- Ensure the output is well-formatted markdown.
+- Ensure the output is well-formatted markdown, paying close attention to headings, lists, code blocks, and blockquotes.
 - The tone should be informative, clear, and collaborative.
 
 Page Title: "{{title}}"
