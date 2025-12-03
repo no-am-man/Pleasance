@@ -55,7 +55,7 @@ const navLinks = [
   { href: '/story', label: 'Nuncy Lingua', icon: BookOpen },
   { href: '/fabrication', label: 'Fabrication', icon: Warehouse },
   { href: '/treasury', label: 'Treasury', icon: Banknote },
-  { href: '/workshop', label: 'Altar of Creation', icon: Beaker },
+  { href: '/workshop', label: 'Crucible of Creation', icon: Beaker },
   { href: '/roadmap', label: 'Roadmap', icon: KanbanIcon },
   { href: '/bugs', label: 'Bug Tracker', icon: Bug },
   { href: '/wiki', label: 'Canon', icon: Info },

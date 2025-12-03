@@ -59,7 +59,7 @@ export default function WikiPage() {
             </CardHeader>
             <CardContent className="space-y-4">
                 <p className="text-lg">
-                    This major update introduces the Altar of Creation, a real-time sacred space where members can manifest generative art together.
+                    This major update introduces the Crucible of Creation, a real-time sacred space where members can manifest generative art together.
                 </p>
                 <Button asChild>
                     <Link href="https://github.com/no-am-man/Pleasance" target="_blank" rel="noopener noreferrer">
@@ -92,12 +92,12 @@ export default function WikiPage() {
 
         <FeatureCard 
             icon={<Beaker className="h-8 w-8 text-primary" />} 
-            title="Altar of Creation"
+            title="Crucible of Creation"
             imageUrl="https://picsum.photos/seed/105/600/400"
             imageHint="ai collaboration"
             href="/workshop"
         >
-            The Altar of Creation is a real-time, collaborative sacred space. Any soul in the Congregation can join and experiment with generative tools together. Witness the divine spark as you generate 3D point-cloud art from a prompt, and watch as the creation updates live for all. It is a shared vessel for collective imagination.
+            The Crucible of Creation is a real-time, collaborative sacred space. Any soul in the Congregation can join and experiment with generative tools together. Witness the divine spark as you generate 3D point-cloud art from a prompt, and watch as the creation updates live for all. It is a shared vessel for collective imagination.
         </FeatureCard>
 
         <FeatureCard 

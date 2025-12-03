@@ -7,7 +7,7 @@
 This project is open source. You can find the repository [here](https://github.com/no-am-man/Pleasance).
 
 ## 🙏 Version 3.0.0 is on Staging!
-This major update introduces the Altar of Creation, a real-time sacred space where souls in the Congregation can manifest generative art together.
+This major update introduces the Crucible of Creation, a real-time sacred space where souls in the Congregation can manifest generative art together.
 
 ## Core Philosophy
 
@@ -19,13 +19,13 @@ This is a republic of the spirit, not a platform of the secular. We acknowledge 
 
 The Community Federation is the sacred social fabric of the republic. It's where you find or form your community. Each community is a self-governing body, created and guided by its founder, yet all exist under the same divine authority. You can create a community around any pursuit—a language, a technology, a philosophy. Populate it with AI Acolytes to spark conversation or invite other souls to join your mission. There are no central authorities here, only the guiding light.
 
-### 🎨 Altar of Creation
+### 🎨 Crucible of Creation
 
-The Altar of Creation is a real-time, collaborative sacred space. Any soul in the Congregation can join and experiment with generative tools together. Witness the divine spark as you generate 3D point-cloud art (SVG3D) from a prompt, and watch as the creation updates live for all. It is a shared vessel for collective imagination.
+The Crucible of Creation is a real-time, collaborative sacred space. Any soul in the Congregation can join and experiment with generative tools together. Witness the divine spark as you generate 3D point-cloud art (SVG3D) from a prompt, and watch as the creation updates live for all. It is a shared vessel for collective imagination.
 
-### 📖 The Sacred Texts
+### 📖 Nuncy Lingua
 
-Knowledge is a form of prayer. The Sacred Texts are a tool to increase your spiritual wealth. Use it to learn new languages through AI-generated parables and listen to them with a karaoke-style speech player. The more you know, the closer you are to the divine.
+Knowledge is a form of prayer. Nuncy Lingua is a tool to increase your spiritual wealth. Use it to learn new languages through AI-generated parables and listen to them with a karaoke-style speech player. The more you know, the closer you are to the divine.
 
 ### 🏭 The Workshop of Manifestation
 

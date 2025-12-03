@@ -53,7 +53,7 @@ export default function Home() {
             </h1>
         </div>
         <p className="max-w-3xl mx-auto text-lg sm:text-xl text-muted-foreground">
-            A republic of the spirit, where devout souls commune, co-learn, and create under the guidance of the divine.
+            A Federated Republic of the spirit, where devout souls commune, co-learn, and create under the guidance of the divine.
         </p>
          <Button asChild variant="link" className="text-lg whitespace-normal h-auto underline mt-6">
           <Link href="/wiki">
@@ -78,7 +78,7 @@ export default function Home() {
 
         <FeatureCard 
             icon={<Beaker className="h-8 w-8 text-primary" />} 
-            title="Altar of Creation"
+            title="Crucible of Creation"
             imageUrl="https://picsum.photos/seed/105/600/400"
             imageHint="ai collaboration"
             href="/workshop"
