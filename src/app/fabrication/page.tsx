@@ -266,7 +266,7 @@ function NewOrderForm({ assets }: { assets: Asset[] }) {
 export default function FabricationPage() {
   const { user, isUserLoading } = useUser();
   
-  const assetsQuery = useMemoFirebase(() => user ? query(collection(firestore, `users/${user.uid}/assets`)) : null, [user]);
+  const assetsQuery = useMemoFirebase(() => (user ? query(collection(firestore, `users/${user.uid}/assets`)) : null), [user]);
   const [assets, isAssetsLoading] = useCollectionData<Asset>(assetsQuery, { idField: 'id' });
 
   if (isUserLoading || isAssetsLoading) {
