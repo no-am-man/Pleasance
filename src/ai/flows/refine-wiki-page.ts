@@ -37,6 +37,9 @@ const refineWikiPrompt = ai.definePrompt({
     name: 'refineWikiPagePrompt',
     input: { schema: RefineWikiInputSchema },
     output: { schema: z.object({ refinedContent: z.string() }) },
+    config: {
+        model: "googleai/gemini-1.5-flash-latest",
+    },
     prompt: `You are an expert technical writer and collaborative editor specializing in markdown formatting. Your task is to take a wiki page's title and its current markdown content and refine it.
 
 - Improve clarity, structure, and flow.
@@ -54,15 +57,15 @@ Existing Content:
 
 Generate the refined markdown content for the page.
 `,
-    config: {
-        model: "googleai/gemini-1.5-flash-latest",
-    },
 });
 
 const generateImagePrompt = ai.definePrompt({
     name: 'generateWikiImagePrompt',
     input: { schema: RefineWikiInputSchema },
     output: { schema: ImagePromptSchema },
+    config: {
+        model: 'googleai/gemini-1.5-flash-latest',
+    },
     prompt: `Analyze the following wiki page content and title. Identify the single most important, core concept. Create a concise, visually descriptive prompt for a text-to-image model to generate an abstract, artistic image that represents this core concept.
 
 Page Title: "{{title}}"
@@ -70,9 +73,6 @@ Content: "{{content}}"
 
 The image prompt should be creative and evocative.
 `,
-    config: {
-        model: 'googleai/gemini-1.5-flash-latest',
-    }
 });
 
 
