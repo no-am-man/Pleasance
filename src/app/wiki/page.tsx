@@ -7,7 +7,7 @@ import { Users, BookOpen, Warehouse, Banknote, Info, PartyPopper, Github, Beaker
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { KanbanIcon } from '@/components/icons/kanban-icon';
-import { Svg3dCube } from '@/components/icons';
+import { Svg3dCube } from '@/components/icons/svg3d-cube';
 
 const FeatureCard = ({ icon, title, imageUrl, imageHint, href, children }: { icon: React.ReactNode, title: string, imageUrl: string, imageHint: string, href: string, children: React.ReactNode }) => (
     <Card className="shadow-lg flex flex-col">
