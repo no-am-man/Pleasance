@@ -1,34 +1,46 @@
 // src/firebase/client-provider.tsx
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useMemo, type ReactNode, type DependencyList, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, type ReactNode, type DependencyList } from 'react';
 import { type User, onAuthStateChanged } from 'firebase/auth';
 import { LoaderCircle } from 'lucide-react';
-import { auth } from '@/firebase/config'; // Directly import the initialized auth service
+import { auth, firebaseApp, firestore, storage } from '@/firebase/config';
+import { type FirebaseApp } from 'firebase/app';
+import { type Auth } from 'firebase/auth';
+import { type Firestore } from 'firebase/firestore';
+import { type FirebaseStorage } from 'firebase/storage';
 
-// Context state for user authentication
-export interface AuthContextState {
+// Define a context for all Firebase services
+interface FirebaseContextState {
+  app: FirebaseApp | null;
+  auth: Auth | null;
+  firestore: Firestore | null;
+  storage: FirebaseStorage | null;
   user: User | null;
   isUserLoading: boolean;
 }
 
-// React Context for Auth
-export const AuthContext = createContext<AuthContextState | undefined>(undefined);
+// React Context for all of Firebase
+export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
 
 export function FirebaseClientProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isUserLoading, setIsUserLoading] = useState(true);
-  const lastUid = useRef<string | null>(null);
+
+  // Memoize the Firebase instances to ensure they are stable across re-renders
+  const firebaseServices = useMemo(() => ({
+    app: firebaseApp,
+    auth: auth,
+    firestore: firestore,
+    storage: storage,
+  }), []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       setIsUserLoading(false);
 
-      // Only update the session cookie if the user's login state (UID) has actually changed.
-      // This prevents unnecessary writes on every background token refresh.
-      if (firebaseUser && firebaseUser.uid !== lastUid.current) {
-        lastUid.current = firebaseUser.uid;
+      if (firebaseUser) {
         try {
           const idToken = await firebaseUser.getIdToken();
           await fetch('/api/auth/session', {
@@ -39,8 +51,7 @@ export function FirebaseClientProvider({ children }: { children: ReactNode }) {
         } catch (e) {
           console.error("Failed to set session cookie:", e);
         }
-      } else if (!firebaseUser && lastUid.current !== null) {
-        lastUid.current = null;
+      } else {
         try {
           await fetch('/api/auth/session', { method: 'DELETE' });
         } catch (e) {
@@ -49,16 +60,15 @@ export function FirebaseClientProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [auth]); // CRITICAL FIX: Added 'auth' to the dependency array
+  }, [auth]);
 
-  const authContextValue = useMemo(() => ({
+  const contextValue = useMemo(() => ({
+    ...firebaseServices,
     user,
     isUserLoading,
-  }), [user, isUserLoading]);
+  }), [firebaseServices, user, isUserLoading]);
 
-  // Render a loading screen until initial auth state is resolved
   if (isUserLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -68,25 +78,36 @@ export function FirebaseClientProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={authContextValue}>
+    <FirebaseContext.Provider value={contextValue}>
       {children}
-    </AuthContext.Provider>
+    </FirebaseContext.Provider>
   );
 }
 
 /**
- * Hook specifically for accessing the authenticated user's state.
- * @returns {AuthContextState} Object with user and isUserLoading.
+ * General hook to access all Firebase services.
+ * @returns {FirebaseContextState} The full Firebase context.
  */
-export const useUser = (): AuthContextState => {
-  const context = useContext(AuthContext);
+export const useFirebase = (): FirebaseContextState => {
+  const context = useContext(FirebaseContext);
   if (context === undefined) {
-    throw new Error('useUser must be used within a FirebaseClientProvider.');
+    throw new Error('useFirebase must be used within a FirebaseClientProvider.');
   }
   return context;
 };
 
-// This hook is for memoizing Firebase queries/references.
+/**
+ * Hook specifically for accessing the authenticated user's state.
+ * @returns {{ user: User | null, isUserLoading: boolean }} Object with user and loading state.
+ */
+export const useUser = (): { user: User | null; isUserLoading: boolean } => {
+  const context = useContext(FirebaseContext);
+  if (context === undefined) {
+    throw new Error('useUser must be used within a FirebaseClientProvider.');
+  }
+  return { user: context.user, isUserLoading: context.isUserLoading };
+};
+
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(factory, deps);
