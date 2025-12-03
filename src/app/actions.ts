@@ -14,7 +14,7 @@ import { initializeAdminApp } from '@/firebase/config-admin';
 import { firebaseConfig } from '@/firebase/config';
 import admin from 'firebase-admin';
 import { generateCommunity } from '@/ai/flows/generate-community';
-import { getFirestore, writeBatch, doc, updateDoc, arrayRemove, arrayUnion } from 'firebase-admin/firestore';
+import { getFirestore, writeBatch, doc, updateDoc, arrayRemove, arrayUnion, getDoc, collection } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
 import {
@@ -499,7 +499,7 @@ export async function updateRoadmapCardColumn(
     const oldColumnRef = doc(firestore, 'roadmap', oldColumnId);
     const newColumnRef = doc(firestore, 'roadmap', newColumnId);
 
-    const oldColumnSnap = await oldColumnRef.get();
+    const oldColumnSnap = await getDoc(oldColumnRef);
 
     if (!oldColumnSnap.exists()) {
       throw new Error(`Source column "${oldColumnId}" not found.`);
@@ -575,5 +575,37 @@ export async function addRoadmapCard(values: z.infer<typeof AddRoadmapCardSchema
         console.error('Add Roadmap Card Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
         return { error: `Failed to add new idea: ${message}` };
+    }
+}
+
+export async function deleteRoadmapCard(cardId: string, columnId: string) {
+    try {
+        const adminApp = initializeAdminApp();
+        const firestore = getFirestore(adminApp);
+        
+        const columnRef = doc(firestore, 'roadmap', columnId);
+        const columnSnap = await getDoc(columnRef);
+
+        if (!columnSnap.exists()) {
+            throw new Error(`Column "${columnId}" not found.`);
+        }
+
+        const columnData = columnSnap.data() as z.infer<typeof RoadmapColumnSchema>;
+        const cardToDelete = columnData.cards.find(c => c.id === cardId);
+
+        if (!cardToDelete) {
+            throw new Error(`Card with ID "${cardId}" not found in column "${columnId}".`);
+        }
+
+        await updateDoc(columnRef, {
+            cards: arrayRemove(cardToDelete)
+        });
+
+        return { success: true };
+
+    } catch (e) {
+        console.error('Delete Roadmap Card Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Failed to delete card: ${message}` };
     }
 }

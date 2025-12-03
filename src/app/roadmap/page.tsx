@@ -1,3 +1,4 @@
+
 // src/app/roadmap/page.tsx
 'use client';
 
@@ -11,7 +12,7 @@ import { firestore } from '@/firebase/config';
 import { collection, query } from 'firebase/firestore';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType } from '@/lib/types';
-import { LoaderCircle, PlusCircle } from 'lucide-react';
+import { LoaderCircle, PlusCircle, Trash2 } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -29,7 +30,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { updateRoadmapCardColumn, addRoadmapCard } from '../actions';
+import { updateRoadmapCardColumn, addRoadmapCard, deleteRoadmapCard } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -39,6 +40,17 @@ import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 
 const AddIdeaSchema = z.object({
@@ -117,8 +129,13 @@ function AddIdeaForm() {
     )
 }
 
-const SortableKanbanCard = ({ id, title, description, tags, assignees }: RoadmapCardType) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+const SortableKanbanCard = ({ card, columnId }: { card: RoadmapCardType; columnId: string; }) => {
+  const { user } = useUser();
+  const isFounder = user?.email === 'gg.el0ai.com@gmail.com';
+  const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: card.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -127,23 +144,68 @@ const SortableKanbanCard = ({ id, title, description, tags, assignees }: Roadmap
     zIndex: isDragging ? 10 : 1,
   };
   
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    const result = await deleteRoadmapCard(card.id, columnId);
+    if (result.error) {
+        toast({
+            variant: 'destructive',
+            title: 'Error deleting idea',
+            description: result.error,
+        });
+    } else {
+        toast({
+            title: 'Idea Deleted!',
+            description: 'The idea has been removed from the board.',
+        });
+    }
+    // No need to set isDeleting to false as the component will unmount
+  };
+
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <Card className="bg-card/70 hover:bg-card transition-all cursor-grab active:cursor-grabbing">
-        <CardHeader className="p-4">
-          <CardTitle className="text-base">{title}</CardTitle>
+      <Card className="bg-card/70 hover:bg-card transition-all cursor-grab active:cursor-grabbing group">
+        <CardHeader className="p-4 pb-0 flex flex-row items-start justify-between">
+          <CardTitle className="text-base">{card.title}</CardTitle>
+          {isFounder && columnId === 'ideas' && (
+             <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete the idea "{card.title}". This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className="bg-destructive hover:bg-destructive/90"
+                  >
+                    {isDeleting ? <LoaderCircle className="animate-spin" /> : 'Delete'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </CardHeader>
-        <CardContent className="p-4 pt-0">
-          <p className="text-sm text-muted-foreground mb-4">{description}</p>
+        <CardContent className="p-4 pt-2">
+          <p className="text-sm text-muted-foreground mb-4">{card.description}</p>
           <div className="flex justify-between items-center">
             <div className="flex gap-2 flex-wrap">
-              {tags?.map(tag => (
+              {card.tags?.map(tag => (
                 <Badge key={tag} variant="secondary">{tag}</Badge>
               ))}
             </div>
             <div className="flex -space-x-2">
               <TooltipProvider>
-                {assignees?.map(assignee => (
+                {card.assignees?.map(assignee => (
                   <Tooltip key={assignee}>
                     <TooltipTrigger asChild>
                       <Avatar className="h-6 w-6 border-2 border-background">
@@ -174,7 +236,7 @@ const KanbanColumn = ({ id, title, cards, children }: RoadmapColumnType & { chil
         {children}
       <SortableContext id={id} items={cards.map(c => c.id)} strategy={verticalListSortingStrategy}>
         {cards && cards.length > 0 ? (
-          cards.map(card => <SortableKanbanCard key={card.id} {...card} />)
+          cards.map(card => <SortableKanbanCard key={card.id} card={card} columnId={id} />)
         ) : (
           !children && (
              <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
