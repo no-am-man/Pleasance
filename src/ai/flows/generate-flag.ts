@@ -60,6 +60,7 @@ const generateFlagFlow = ai.defineFlow(
     outputSchema: GenerateFlagOutputSchema,
   },
   async (input) => {
+    // Correctly call the defined prompt object directly.
     const { output } = await generateFlagPrompt(input);
     
     if (!output?.svg) {
