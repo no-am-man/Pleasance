@@ -335,11 +335,13 @@ export default function RoadmapPage() {
     // Optimistic UI update
     setColumns(prev => {
         const newColumns = prev.map(c => ({...c, cards: [...c.cards]}));
-        const currentSourceCol = newColumns[sourceColumnIndex];
-        const currentTargetCol = newColumns[targetColumnIndex];
+        const currentSourceCol = newColumns.find(c => c.id === oldColumnId);
+        const currentTargetCol = newColumns.find(c => c.id === targetColumn.id);
 
-        currentSourceCol.cards = currentSourceCol.cards.filter(c => c.id !== cardId);
-        currentTargetCol.cards = [cardToMove, ...currentTargetCol.cards];
+        if (currentSourceCol && currentTargetCol) {
+            currentSourceCol.cards = currentSourceCol.cards.filter(c => c.id !== cardId);
+            currentTargetCol.cards = [cardToMove, ...currentTargetCol.cards];
+        }
         
         return newColumns;
     });
@@ -381,7 +383,7 @@ export default function RoadmapPage() {
       )}
 
       {!isLoading && !error && columns.length > 0 && (
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
+         <div className="grid grid-cols-1 gap-8">
              {columns.map(col => (
                  <KanbanColumn key={col.id} {...col} onMoveCard={handleMoveCard}>
                      {col.id === 'ideas' && isFounder && <AddIdeaForm />}
