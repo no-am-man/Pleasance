@@ -192,7 +192,7 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees }: 
     }
   };
   
-  const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
+  const stopPropagation = (e: React.MouseEvent | React.TouchEvent) => e.stopPropagation();
 
   return (
     <Card className="bg-card/70 hover:bg-card transition-all group relative">
@@ -276,7 +276,7 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees }: 
                             <UserPlus className="h-4 w-4"/>
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent>
+                    <DropdownMenuContent onMouseDown={stopPropagation}>
                         {allProfiles.map(profile => {
                             const isAssigned = card.assignees?.includes(profile.name);
                             return (
