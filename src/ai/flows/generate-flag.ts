@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview A flow to generate a community flag as an SVG string.
@@ -30,7 +29,7 @@ const generateFlagFlow = ai.defineFlow(
     outputSchema: GenerateFlagOutputSchema,
   },
   async (input) => {
-    const promptText = `You are an expert graphic designer who specializes in creating symbolic, minimalist, and modern vector art for flags.
+    const prompt = `You are an expert graphic designer who specializes in creating symbolic, minimalist, and modern vector art for flags.
 
 Task: Generate a complete, valid SVG string for a flag representing an online community.
 
@@ -43,7 +42,7 @@ Requirements:
 3.  The design must be abstract, geometric, and symbolic. DO NOT include any text, letters, or numbers.
 4.  Use a modern, professional color palette. Use 2-3 harmonious colors.
 5.  The background of the SVG should be a solid color.
-6.  Your ENTIRE response MUST be ONLY the raw SVG code, starting with '<svg' and ending with '</svg>'. Do not include any other text, explanations, or markdown formatting like \`\`\`json or \`\`\`xml.
+6.  Your ENTIRE response MUST be ONLY the raw SVG code, starting with '<svg' and ending with '</svg>'. Do not include any other text, explanations, or markdown formatting like \`\`\`xml.
 
 Example of a good response format:
 <svg width="160" height="90" viewBox="0 0 160 90" fill="none" xmlns="http://www.w3.org/2000/svg">...</svg>
@@ -51,14 +50,14 @@ Example of a good response format:
 Now, generate the SVG based on the provided community details.`;
 
     const { output } = await ai.generate({
-        model: 'googleai/gemini-1.5-pro-latest',
-        prompt: promptText,
+      model: 'gemini-pro',
+      prompt: prompt,
     });
-    
+
     const svgText = output?.text || '';
 
     if (!svgText.startsWith('<svg')) {
-        throw new Error("The AI failed to generate a valid SVG string.");
+      throw new Error("The AI failed to generate a valid SVG string.");
     }
     
     return { svg: svgText };
