@@ -40,6 +40,9 @@ type Bug = {
 }
 
 async function submitBugReport(values: z.infer<typeof BugSchema>, user: { uid: string, displayName: string | null }) {
+    if (!firestore) {
+        throw new Error("Firestore is not initialized");
+    }
     const newBugRef = doc(collection(firestore, 'bugs'));
     const newBug = {
         id: newBugRef.id,
@@ -157,7 +160,11 @@ function AddBugForm() {
 }
 
 function BugList() {
-    const bugsQuery = useMemoFirebase(() => query(collection(firestore, 'bugs'), orderBy('createdAt', 'desc')), []);
+    const bugsQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'bugs'), orderBy('createdAt', 'desc'));
+    }, [firestore]);
+
     const [bugs, isLoading, error] = useCollectionData<Bug>(bugsQuery, { idField: 'id' });
 
     const getStatusVariant = (status: Bug['status']) => {

@@ -1,4 +1,3 @@
-
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -169,7 +168,7 @@ function TextMessageForm({ communityId, onMessageSent }: { communityId: string, 
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!text.trim() || !user) return;
+        if (!text.trim() || !user || !firestore) return;
 
         setIsSubmitting(true);
         
@@ -214,7 +213,7 @@ function TextCommentForm({ communityId, messageId }: { communityId: string, mess
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!text.trim() || !user || !messageId || !communityId) return;
+        if (!text.trim() || !user || !messageId || !communityId || !firestore) return;
 
         setIsSubmitting(true);
         const commentsColRef = collection(firestore, `communities/${communityId}/messages/${messageId}/comments`);
@@ -253,7 +252,7 @@ function CommentCard({ comment, communityId, messageId, canManage }: { comment: 
     const isDeleted = comment.deleted;
 
     const handleDelete = async () => {
-        if(!comment.id || !communityId || !messageId) return;
+        if(!comment.id || !communityId || !messageId || !firestore) return;
         setIsUpdating(true);
         const commentDocRef = doc(firestore, `communities/${communityId}/messages/${messageId}/comments`, comment.id);
         
@@ -344,7 +343,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
 
     const isDone = message.status === 'done';
     const isDeleted = message.deleted;
-    const isReady = !!message.id && !!message.communityId;
+    const isReady = !!message.id && !!message.communityId && !!firestore;
     
     const commentsQuery = useMemoFirebase(() => isReady ? query(collection(firestore, `communities/${message.communityId}/messages/${message.id}/comments`), orderBy('createdAt', 'asc')) : null, [isReady, message.communityId, message.id]);
     const [comments, isLoadingComments] = useCollectionData<Comment>(commentsQuery, {
@@ -353,7 +352,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
     const commentCount = comments?.filter(c => !c.deleted).length || 0;
 
     const handleToggleStatus = async () => {
-        if (!isReady) return;
+        if (!isReady || !firestore) return;
         setIsUpdating(true);
         const newStatus = isDone ? 'active' : 'done';
         const messageDocRef = doc(firestore, 'communities', message.communityId, 'messages', message.id);
@@ -365,7 +364,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
     };
 
     const handleDelete = async () => {
-        if (!isReady) return;
+        if (!isReady || !firestore) return;
         setIsUpdating(true);
         const messageDocRef = doc(firestore, `communities/${message.communityId}/messages`, message.id);
 
@@ -490,7 +489,11 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
 function Network({ communityId, isOwner, allMembers }: { communityId: string; isOwner: boolean, allMembers: Member[] }) {
     const { user } = useUser();
 
-    const messagesQuery = useMemoFirebase(() => query(collection(firestore, `communities/${communityId}/messages`), orderBy('createdAt', 'desc')), [communityId]);
+    const messagesQuery = useMemoFirebase(() => {
+      if (!firestore || !communityId) return null;
+      return query(collection(firestore, `communities/${communityId}/messages`), orderBy('createdAt', 'desc'));
+    }, [communityId]);
+
     const [messages, isLoading, error] = useCollectionData<Message>(messagesQuery, {
       idField: 'id'
     });
@@ -520,7 +523,7 @@ function Network({ communityId, isOwner, allMembers }: { communityId: string; is
             history: chatHistory,
         });
         
-        if (result.response) {
+        if (result.response && firestore) {
             const aiMessage = {
                 communityId,
                 userId: `ai_${aiMemberToRespond.name.toLowerCase().replace(/\s/g, '_')}`,
@@ -575,12 +578,19 @@ function Network({ communityId, isOwner, allMembers }: { communityId: string; is
 function JoinRequests({ communityId, communityDocRef }: { communityId: string, communityDocRef: any }) {
     const { toast } = useToast();
 
-    const requestsQuery = useMemoFirebase(() => communityId ? query(collection(firestore, `communities/${communityId}/joinRequests`), where('status', '==', 'pending')) : null, [communityId]);
+    const requestsQuery = useMemoFirebase(() => {
+        if (!firestore || !communityId) return null;
+        return query(collection(firestore, `communities/${communityId}/joinRequests`), where('status', '==', 'pending'));
+    }, [communityId]);
     const [requests, isLoading] = useCollectionData<JoinRequest>(requestsQuery, {
       idField: 'id'
     });
 
     const handleRequest = async (request: JoinRequest, newStatus: 'approved' | 'rejected') => {
+        if (!firestore) {
+            toast({ variant: 'destructive', title: 'Firestore not available' });
+            return;
+        }
         const requestDocRef = doc(firestore, `communities/${communityId}/joinRequests`, request.id);
         
         try {
@@ -641,7 +651,10 @@ function JoinRequests({ communityId, communityDocRef }: { communityId: string, c
 }
 
 function PresentationHall({ communityId }: { communityId: string }) {
-    const publishedCreationsQuery = useMemoFirebase(() => query(collection(firestore, `communities/${communityId}/creations`), where('status', '==', 'published'), orderBy('createdAt', 'desc')), [communityId]);
+    const publishedCreationsQuery = useMemoFirebase(() => {
+        if (!firestore || !communityId) return null;
+        return query(collection(firestore, `communities/${communityId}/creations`), where('status', '==', 'published'), orderBy('createdAt', 'desc'));
+    }, [communityId]);
     const [creations, isLoading, error] = useCollectionData<Creation>(publishedCreationsQuery, {
         idField: 'id'
     });
@@ -711,12 +724,12 @@ export default function CommunityProfilePage() {
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const [isGeneratingFlag, setIsGeneratingFlag] = useState(false);
 
-  const communityDocRef = useMemoFirebase(() => id ? doc(firestore, 'communities', id) : null, [id]);
+  const communityDocRef = useMemoFirebase(() => id && firestore ? doc(firestore, 'communities', id) : null, [id]);
   const [community, isLoading, error] = useDocumentData<Community>(communityDocRef, {
     idField: 'id'
   });
   
-  const allProfilesQuery = useMemoFirebase(() => query(collection(firestore, 'community-profiles')), []);
+  const allProfilesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'community-profiles')) : null, []);
   const [allProfiles, profilesLoading] = useCollectionData<CommunityProfile>(allProfilesQuery, {
     idField: 'id'
   });
@@ -727,10 +740,10 @@ export default function CommunityProfilePage() {
 
   const isOwner = user?.uid === community?.ownerId;
   
-  const userProfileRef = useMemoFirebase(() => user ? doc(firestore, 'community-profiles', user.uid) : null, [user]);
+  const userProfileRef = useMemoFirebase(() => user && firestore ? doc(firestore, 'community-profiles', user.uid) : null, [user]);
   const [userProfile] = useDocumentData<CommunityProfile>(userProfileRef);
 
-  const userJoinRequestRef = useMemoFirebase(() => user && id ? doc(firestore, 'communities', id, 'joinRequests', user.uid) : null, [user, id]);
+  const userJoinRequestRef = useMemoFirebase(() => user && id && firestore ? doc(firestore, 'communities', id, 'joinRequests', user.uid) : null, [user, id]);
   const [userJoinRequest, isRequestLoading] = useDocumentData<JoinRequest>(userJoinRequestRef);
 
   const hasPendingRequest = userJoinRequest?.status === 'pending';
@@ -784,7 +797,7 @@ export default function CommunityProfilePage() {
   }, [allProfiles, allMembers]);
 
   const handleRequestToJoin = async () => {
-    if (!user || !id || !userProfile) {
+    if (!user || !id || !userProfile || !firestore) {
         toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in and have a profile to join.' });
         return;
     }
@@ -831,7 +844,7 @@ export default function CommunityProfilePage() {
   };
 
   const handleGenerateFlag = async () => {
-    if (!community || !communityDocRef || !user) {
+    if (!community || !communityDocRef || !user || !firestore) {
       toast({
         variant: 'destructive',
         title: 'Missing Information',
