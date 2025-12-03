@@ -9,7 +9,7 @@ import * as z from "zod";
 import Link from "next/link";
 import { useUser, useMemoFirebase } from "@/firebase";
 import { firestore } from "@/firebase/config";
-import { collection, doc, query, where, orderBy, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { collection, doc, query, where, orderBy, onSnapshot, Unsubscribe, getDocs } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LogIn, PlusCircle, LoaderCircle, Search, User, Flag, Sparkles } from "lucide-react";
@@ -301,20 +301,22 @@ function CommunitySearchResults({ searchTerm, profiles }: { searchTerm: string, 
             return;
         }
         setIsLoading(true);
-        const q = query(
-            collection(firestore, 'communities'), 
-            where('name', '>=', searchTerm), 
-            where('name', '<=', searchTerm + '\uf8ff')
-        );
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            setCommunities(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community)));
-            setIsLoading(false);
-        }, (err) => {
-            setError(err);
-            setIsLoading(false);
-        });
-
-        return () => unsubscribe();
+        const fetchCommunities = async () => {
+            try {
+                const q = query(
+                    collection(firestore, 'communities'), 
+                    where('name', '>=', searchTerm), 
+                    where('name', '<=', searchTerm + '\uf8ff')
+                );
+                const snapshot = await getDocs(q);
+                setCommunities(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community)));
+            } catch (err: any) {
+                setError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchCommunities();
     }, [searchTerm]);
 
     return (
@@ -336,15 +338,18 @@ function PublicCommunityList({ profiles }: { profiles: CommunityProfile[] | unde
     useEffect(() => {
         if (!firestore) return;
         setIsLoading(true);
-        const q = query(collection(firestore, 'communities'), orderBy('name', 'asc'));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            setCommunities(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community)));
-            setIsLoading(false);
-        }, (err) => {
-            setError(err);
-            setIsLoading(false);
-        });
-        return () => unsubscribe();
+        const fetchCommunities = async () => {
+            try {
+                const q = query(collection(firestore, 'communities'), orderBy('name', 'asc'));
+                const snapshot = await getDocs(q);
+                setCommunities(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community)));
+            } catch (err: any) {
+                setError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchCommunities();
     }, []);
 
     return (
@@ -373,15 +378,18 @@ export default function CommunityPage() {
           return;
       }
       setIsLoadingUserCommunities(true);
-      const q = query(collection(firestore, 'communities'), where('ownerId', '==', user.uid));
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-          setUserCommunities(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community)));
-          setIsLoadingUserCommunities(false);
-      }, (err) => {
-          setUserCommunitiesError(err);
-          setIsLoadingUserCommunities(false);
-      });
-      return () => unsubscribe();
+      const fetchUserCommunities = async () => {
+          try {
+              const q = query(collection(firestore, 'communities'), where('ownerId', '==', user.uid));
+              const snapshot = await getDocs(q);
+              setUserCommunities(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community)));
+          } catch (err: any) {
+              setUserCommunitiesError(err);
+          } finally {
+              setIsLoadingUserCommunities(false);
+          }
+      };
+      fetchUserCommunities();
   }, [user]);
 
   const [allProfiles, setAllProfiles] = useState<CommunityProfile[]>([]);
@@ -389,12 +397,18 @@ export default function CommunityPage() {
 
   useEffect(() => {
       if (!firestore) return;
-      const q = query(collection(firestore, 'community-profiles'));
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-          setAllProfiles(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CommunityProfile)));
-          setIsLoadingProfiles(false);
-      });
-      return () => unsubscribe();
+      const fetchAllProfiles = async () => {
+          try {
+              const q = query(collection(firestore, 'community-profiles'));
+              const snapshot = await getDocs(q);
+              setAllProfiles(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CommunityProfile)));
+          } catch (err: any) {
+              // Silently fail on profiles, not critical
+          } finally {
+              setIsLoadingProfiles(false);
+          }
+      };
+      fetchAllProfiles();
   }, []);
 
   if (isUserLoading || isLoadingProfiles) {
@@ -456,7 +470,7 @@ export default function CommunityPage() {
         ) : (
             <Card className="w-full text-center shadow-lg">
                 <CardHeader>
-                    <CardTitle>Join the Federation</CardTitle>
+                    <CardTitle>Join/Enter the Federation</CardTitle>
                     <CardDescription>Log in to create your own communities and see the ones you've created.</CardDescription>
                 </CardHeader>
                 <CardContent>

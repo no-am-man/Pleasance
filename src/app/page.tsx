@@ -33,7 +33,7 @@ export default function Home() {
 
        <Card className="max-w-3xl mx-auto shadow-lg mb-12 border-2 border-primary bg-primary/5">
         <CardHeader className="items-center text-center">
-            <CardTitle className="text-2xl">Join the Federation</CardTitle>
+            <CardTitle className="text-2xl">Join/Enter the Federation</CardTitle>
             <CardDescription>Become a sovereign soul in the republic.</CardDescription>
         </CardHeader>
         <CardContent className="text-center space-y-4">
@@ -43,7 +43,7 @@ export default function Home() {
             <Button asChild size="lg">
                 <Link href="/login">
                     <LogIn className="mr-2 h-5 w-5" />
-                    Join the Federation
+                    Join/Enter the Federation
                 </Link>
             </Button>
         </CardContent>
