@@ -280,7 +280,7 @@ const KanbanColumn = ({ id, title, cards, children }: RoadmapColumnType & { chil
     </div>
     <div className="flex-grow space-y-4 rounded-lg p-3 bg-muted/50 min-h-[200px]">
         {children}
-      <SortableContext id={id} items={cards.map(c => c.id)} strategy={verticalListSortingStrategy}>
+      <SortableContext id={id} items={cards?.map(c => c.id) || []} strategy={verticalListSortingStrategy}>
         {cards && cards.length > 0 ? (
           cards.map(card => <SortableKanbanCard key={card.id} card={card} columnId={id} />)
         ) : (
@@ -432,7 +432,7 @@ export default function RoadmapPage() {
         </Card>
       )}
 
-      {!isLoading && !error && (
+      {!isLoading && !error && columns.length > 0 && (
          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-11 gap-6 items-start">
                 <KanbanColumn {...columns[0]}>
