@@ -105,7 +105,7 @@ export const FederationDiagram = () => {
         <DiagramNode label="Treasury" x="300" y="225" delay={600} />
 
         {/* Bottom Layer: Action & Community */}
-        <DiagramNode label="Manifestation" x="240" y="360" delay={800} />
+        <DiagramNode label="Workshop of Manifestation" x="240" y="360" delay={800} />
         <DiagramNode label="Federation" x="360" y="360" delay={1000} />
         
         {/* Right-Side Layer: Guiding Systems */}

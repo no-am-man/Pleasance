@@ -178,13 +178,13 @@ export default function Svg3dPage() {
           ...data,
           creatorId: user.uid,
           creatorName: user.displayName || 'Anonymous',
-          // No community ID needed for the personal workshop
+          communityId: "personal-workshop",
       });
 
       if (result.error) {
         setError(result.error);
-      } else if (result.pixels) {
-        setPixels(result.pixels);
+      } else if (result.success && result.creation) {
+        setPixels(result.creation.pixels);
       }
     } catch (e) {
       const message = e instanceof Error ? e.message : 'An unknown error occurred.';
@@ -198,7 +198,7 @@ export default function Svg3dPage() {
     <main className="container mx-auto max-w-4xl py-8">
        <div className="text-center mb-8">
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-          <Beaker className="w-10 h-10" /> AI Workshop
+          <Beaker className="w-10 h-10" /> Personal Workshop
         </h1>
         <p className="text-lg text-muted-foreground mt-2">A private space to experiment with generative AI tools.</p>
       </div>

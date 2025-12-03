@@ -114,8 +114,8 @@ export default function Home() {
         </div>
 
         <FeatureCard
-          icon={<Beaker className="h-8 w-8 text-primary" />}
-          title="AI Workshop"
+          icon={<GalleryHorizontal className="h-8 w-8 text-primary" />}
+          title="Community Gallery"
           imageUrl="https://picsum.photos/seed/105/600/400"
           imageHint="art gallery"
           href="/svg3d"

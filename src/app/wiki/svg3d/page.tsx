@@ -62,9 +62,9 @@ export default function Svg3dGuidePage() {
                 </ul>
                  <div className="flex justify-center p-4">
                     <Button asChild>
-                        <Link href="/workshop">
+                        <Link href="/svg3d">
                             <Beaker className="mr-2 h-4 w-4" />
-                            Try it in the Gallery
+                            Try it in the Personal Workshop
                         </Link>
                     </Button>
                 </div>
