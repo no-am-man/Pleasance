@@ -437,8 +437,10 @@ export async function declareAssetWithFile(formData: FormData) {
             const storageFile = bucket.file(storagePath);
             await storageFile.save(fileBuffer, {
                 metadata: { contentType: file.type },
-                public: true, // Make file publicly readable
             });
+            
+            await storageFile.makePublic();
+            
             fileUrl = `https://storage.googleapis.com/${bucket.name}/${storagePath}`;
         }
 
