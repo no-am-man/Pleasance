@@ -38,12 +38,12 @@ Community Name: "${input.communityName}"
 Community Description: "${input.communityDescription}"
 
 Requirements:
-1.  The SVG must be a single, self-contained string. Do not wrap it in markdown or any other characters.
+1.  The SVG must be a single, self-contained string.
 2.  The SVG should have a 16:9 aspect ratio. A viewBox of "0 0 160 90" is ideal.
 3.  The design must be abstract, geometric, and symbolic. DO NOT include any text, letters, or numbers.
-4.  Use a modern, professional color palette. Use 2-3 colors that are harmonious.
+4.  Use a modern, professional color palette. Use 2-3 harmonious colors.
 5.  The background of the SVG should be a solid color.
-6.  Your entire response MUST be ONLY the raw SVG code, starting with '<svg' and ending with '</svg>'.
+6.  Your ENTIRE response MUST be ONLY the raw SVG code, starting with '<svg' and ending with '</svg>'. Do not include any other text, explanations, or markdown formatting like \`\`\`json or \`\`\`xml.
 
 Example of a good response format:
 <svg width="160" height="90" viewBox="0 0 160 90" fill="none" xmlns="http://www.w3.org/2000/svg">...</svg>
@@ -53,14 +53,14 @@ Now, generate the SVG based on the provided community details.`;
     const { output } = await ai.generate({
         model: 'googleai/gemini-pro',
         prompt: promptText,
-        output: {
-            schema: GenerateFlagOutputSchema,
-        },
     });
     
-    if (!output) {
-        throw new Error("The AI failed to generate an SVG string.");
+    const svgText = output?.text || '';
+
+    if (!svgText.startsWith('<svg')) {
+        throw new Error("The AI failed to generate a valid SVG string.");
     }
-    return output;
+    
+    return { svg: svgText };
   }
 );
