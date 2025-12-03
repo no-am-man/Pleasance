@@ -1,4 +1,3 @@
-
 // src/app/community/[id]/roadmap/page.tsx
 'use client';
 
@@ -264,22 +263,20 @@ export default function CommunityRoadmapPage() {
   const roadmapQuery = useMemoFirebase(() => communityId ? query(collection(firestore, `communities/${communityId}/roadmap`)) : null, [communityId]);
   const [columnsData, isLoading, error] = useCollectionData<RoadmapColumnType>(roadmapQuery, { idField: 'id' });
   
-  const memberProfiles: CommunityProfile[] = useMemo(() => {
+  const memberUserIds = useMemo(() => {
     if (!community?.members) return [];
     return community.members
-      .filter((m: any) => m.type === 'human')
-      .map((m: any) => ({
-        id: m.userId,
-        name: m.name,
-        bio: m.bio,
-        avatarUrl: m.avatarUrl,
-        // Add other required fields for CommunityProfile, even if empty
-        nativeLanguage: '',
-        learningLanguage: '',
-        userId: m.userId
-      }));
-  }, [community?.members]);
+        .filter((m: any) => m.type === 'human' && m.userId)
+        .map((m: any) => m.userId);
+    }, [community?.members]);
 
+  const allProfilesQuery = useMemoFirebase(() => 
+    memberUserIds && memberUserIds.length > 0 
+        ? query(collection(firestore, 'community-profiles'), where('userId', 'in', memberUserIds)) 
+        : null
+    , [memberUserIds]);
+
+  const [memberProfiles] = useCollectionData<CommunityProfile>(allProfilesQuery);
 
   const [columns, setColumns] = useState<RoadmapColumnType[]>([]);
   const columnOrder = useMemo(() => ['ideas', 'nextUp', 'inProgress', 'alive'], []);
@@ -370,7 +367,7 @@ export default function CommunityRoadmapPage() {
                         key={col.id}
                         {...col}
                         onMoveCard={handleMoveCard}
-                        allProfiles={memberProfiles}
+                        allProfiles={memberProfiles || []}
                         onUpdateAssignees={handleUpdateAssignees}
                         isOwner={isOwner}
                     >
@@ -404,4 +401,3 @@ export default function CommunityRoadmapPage() {
     </main>
   );
 }
-
