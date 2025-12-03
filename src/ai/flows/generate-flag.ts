@@ -27,6 +27,7 @@ const generateFlagPrompt = ai.definePrompt(
   {
     name: 'generateFlagPrompt',
     input: { schema: GenerateFlagInputSchema },
+    output: { schema: GenerateFlagOutputSchema },
     prompt: `You are an expert graphic designer who specializes in creating symbolic, minimalist, and modern vector art for flags.
 
 Task: Generate a complete, valid SVG string for a flag representing an online community.
@@ -40,7 +41,7 @@ Requirements:
 3.  The design must be abstract, geometric, and symbolic. DO NOT include any text, letters, or numbers.
 4.  Use a modern, professional color palette. Use 2-3 harmonious colors.
 5.  The background of the SVG should be a solid color.
-6.  Your ENTIRE response MUST be ONLY the raw SVG code, starting with '<svg' and ending with '</svg>'. Do not include any other text, explanations, or markdown formatting like \`\`\`xml.`,
+6.  Your ENTIRE response MUST be ONLY the raw JSON object adhering to the schema. Do not include any other text, explanations, or markdown formatting.`,
   }
 );
 
