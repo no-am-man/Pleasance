@@ -47,7 +47,7 @@ export default function WikiPageDisplay() {
     const collectionPath = isCommunityWiki ? `communities/${communityId}/wiki` : 'wiki';
     const finalPageId = isNewPage ? title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') : pageId;
 
-    const pageDocRef = useMemoFirebase(() => !isNewPage ? doc(firestore, collectionPath, pageId) : null, [collectionPath, pageId, isNewPage]);
+    const pageDocRef = useMemoFirebase(() => !isNewPage ? doc(firestore, collectionPath, pageId) : null, [firestore, collectionPath, pageId, isNewPage]);
     const [page, isLoading, error] = useDocumentData<WikiPage>(pageDocRef);
 
     useEffect(() => {
@@ -163,8 +163,8 @@ export default function WikiPageDisplay() {
                     {isEditing ? (
                         <WikiEditor
                             title={title}
-                            content={content}
                             onTitleChange={setTitle}
+                            content={content}
                             onContentChange={setContent}
                             isNewPage={isNewPage}
                         />
@@ -188,5 +188,3 @@ export default function WikiPageDisplay() {
         </main>
     );
 }
-
-    
