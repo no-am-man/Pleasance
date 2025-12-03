@@ -42,7 +42,7 @@ Existing Description: "{{description}}"
 Generate a refined description. It should be a single paragraph.
 `,
     config: {
-        model: "gemini-pro",
+        model: "googleai/gemini-1.5-pro-latest",
     },
 });
 

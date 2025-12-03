@@ -9,7 +9,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { getFirestore } from 'firebase-admin/firestore';
-import { RoadmapCardSchema, RoadmapColumnSchema } from '@/lib/types';
+import { RoadmapColumnSchema } from '@/lib/types';
 
 
 const GetRoadmapColumnInputSchema = z.object({

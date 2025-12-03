@@ -16,12 +16,12 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { conductSuperAgent } from '../actions';
 import { marked } from 'marked';
+import { type ContentPart } from 'genkit/generate';
+
 
 type Message = {
     role: 'user' | 'model';
-    text: string;
-    tool?: string;
-    toolResult?: string;
+    content: ContentPart[];
     timestamp: any;
 };
 
@@ -30,17 +30,17 @@ type ConductorData = {
     history: Message[];
 };
 
-function ToolCall({ tool, toolResult }: { tool?: string; toolResult?: string }) {
-    if (!tool || !toolResult) return null;
+function ToolCall({ part }: { part: ContentPart }) {
+    if (part.type !== 'toolRequest') return null;
 
     return (
         <Card className="my-2 bg-muted/50 border-dashed border-primary/50">
             <CardHeader className="p-2">
-                <p className="text-xs font-mono text-primary">[Tool Call: {tool}]</p>
+                <p className="text-xs font-mono text-primary">[Tool Call: {part.toolRequest.name}]</p>
             </CardHeader>
             <CardContent className="p-2 pt-0">
                 <pre className="text-xs bg-background p-2 rounded-md overflow-x-auto">
-                    <code>{toolResult}</code>
+                    <code>{JSON.stringify(part.toolRequest.input, null, 2)}</code>
                 </pre>
             </CardContent>
         </Card>
@@ -63,12 +63,12 @@ export default function ConductorPage() {
 
         const userMessage: Message = {
             role: 'user',
-            text: input,
+            content: [{ text: input }],
             timestamp: new Date(),
         };
 
-        const updatedHistory = [...history, userMessage];
-        await setDoc(conductorDocRef, { id: user.uid, history: updatedHistory }, { merge: true });
+        // Optimistically update the UI with the user's message
+        await setDoc(conductorDocRef, { history: [...history, userMessage] }, { merge: true });
         
         setInput('');
         setIsThinking(true);
@@ -80,11 +80,10 @@ export default function ConductorPage() {
         if (result.error) {
             const errorMessage: Message = {
                 role: 'model',
-                text: `I encountered an error: ${result.error}`,
+                content: [{ text: `I encountered an error: ${result.error}` }],
                 timestamp: new Date(),
             };
-            const finalHistory = [...updatedHistory, errorMessage];
-            await setDoc(conductorDocRef, { id: user.uid, history: finalHistory }, { merge: true });
+             await setDoc(conductorDocRef, { history: [...history, userMessage, errorMessage] }, { merge: true });
         }
     };
     
@@ -142,8 +141,15 @@ export default function ConductorPage() {
                                     </Avatar>
                                 )}
                                 <div className={cn("rounded-lg px-4 py-2 max-w-[85%] prose prose-sm dark:prose-invert prose-p:my-2", msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
-                                    <div dangerouslySetInnerHTML={{ __html: marked(msg.text) }} />
-                                    <ToolCall tool={msg.tool} toolResult={msg.toolResult} />
+                                    {msg.content.map((part, partIndex) => {
+                                        if (part.type === 'text') {
+                                            return <div key={partIndex} dangerouslySetInnerHTML={{ __html: marked(part.text) }} />;
+                                        }
+                                        if (part.type === 'toolRequest') {
+                                            return <ToolCall key={partIndex} part={part} />;
+                                        }
+                                        return null;
+                                    })}
                                 </div>
                                 {msg.role === 'user' && user && (
                                     <Avatar className="w-9 h-9">

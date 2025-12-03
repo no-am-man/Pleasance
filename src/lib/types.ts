@@ -41,3 +41,16 @@ export const RoadmapColumnSchema = z.object({
     cards: z.array(RoadmapCardSchema),
 });
 export type RoadmapColumn = z.infer<typeof RoadmapColumnSchema>;
+
+
+// Schema for Community Profile
+export const CommunityProfileSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  name: z.string(),
+  bio: z.string(),
+  nativeLanguage: z.string(),
+  learningLanguage: z.string(),
+  avatarUrl: z.string().optional(),
+});
+export type CommunityProfile = z.infer<typeof CommunityProfileSchema>;

@@ -26,7 +26,12 @@ export async function conductorFlow(input: z.infer<typeof ConductorInputSchema>)
     const firestore = getFirestore(adminApp);
     const conductorDocRef = firestore.collection('conductor').doc(input.userId);
     const conductorDoc = await conductorDocRef.get();
-    const history = conductorDoc.exists ? conductorDoc.data()?.history : [];
+    
+    // Ensure the document exists before trying to read from it
+    if (!conductorDoc.exists) {
+        await conductorDocRef.set({ history: [] });
+    }
+    const history = conductorDoc.exists ? conductorDoc.data()?.history || [] : [];
     
     const systemPrompt = `You are the Conductor, a super-agent for the Pleasance federation.
 Your purpose is to assist users by orchestrating actions and retrieving information using your available tools.
@@ -43,11 +48,13 @@ The current user's name is ${input.userName} and their ID is ${input.userId}. Yo
         tools: [getRoadmapColumnTool, addBugReportTool, getCommunityDetailsTool],
     });
 
+    // The entire response includes the user prompt and the model's reply.
+    // We need to add both to the history to maintain context.
+    const userMessagePart = { role: 'user', content: [{ text: input.prompt }] };
     const responseContent = response.content();
-
-    // Add model's response to history
+    
     await conductorDocRef.update({
-        history: FieldValue.arrayUnion(...responseContent),
+        history: FieldValue.arrayUnion(userMessagePart, ...responseContent),
     });
 
     return responseContent;
