@@ -19,7 +19,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <div className="fixed top-16 left-0 right-0 z-40 bg-background/80 backdrop-blur-sm">
             <PresenceBar />
         </div>
-        <div className="pt-12 pb-5">{children}</div>
+        <div className="pt-12 pb-12">{children}</div>
       </main>
       <div className="fixed bottom-0 left-0 right-0 h-1 w-full ant-trail z-50" />
       <footer className="text-center p-4 border-t space-y-4 bg-background relative z-40">
