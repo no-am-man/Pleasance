@@ -12,7 +12,7 @@ import { firestore } from '@/firebase/config';
 import { collection, query } from 'firebase/firestore';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType } from '@/lib/types';
-import { LoaderCircle, PlusCircle, Trash2 } from 'lucide-react';
+import { LoaderCircle, PlusCircle, Trash2, Sparkles } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -30,11 +30,11 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { updateRoadmapCardColumn, addRoadmapCard, deleteRoadmapCard } from '../actions';
+import { updateRoadmapCardColumn, addRoadmapCard, deleteRoadmapCard, refineCardDescription } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
-import { useForm } from 'react-hook-form';
+import { useForm, type UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
@@ -61,6 +61,7 @@ const AddIdeaSchema = z.object({
 function AddIdeaForm() {
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isRefining, setIsRefining] = useState(false);
     
     const form = useForm<z.infer<typeof AddIdeaSchema>>({
         resolver: zodResolver(AddIdeaSchema),
@@ -84,6 +85,30 @@ function AddIdeaForm() {
             form.reset();
         }
         setIsSubmitting(false);
+    }
+
+    const handleRefineDescription = async () => {
+        const title = form.getValues('title');
+        if (!title) {
+            toast({
+                variant: 'destructive',
+                title: 'Title is required',
+                description: 'Please enter a title before refining with AI.',
+            });
+            return;
+        }
+        setIsRefining(true);
+        const result = await refineCardDescription({ title, description: form.getValues('description') });
+        if (result.error) {
+            toast({
+                variant: 'destructive',
+                title: 'AI Refinement Failed',
+                description: result.error,
+            });
+        } else if (result.refinedDescription) {
+            form.setValue('description', result.refinedDescription, { shouldValidate: true });
+        }
+        setIsRefining(false);
     }
     
     return (
@@ -111,9 +136,30 @@ function AddIdeaForm() {
                             name="description"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormControl>
-                                        <Textarea placeholder="Refine Description with AI" {...field} />
-                                    </FormControl>
+                                    <div className="relative">
+                                        <FormControl>
+                                            <Textarea placeholder="Describe your idea or..." {...field} className="pr-10"/>
+                                        </FormControl>
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button 
+                                                        type="button" 
+                                                        variant="ghost" 
+                                                        size="icon" 
+                                                        className="absolute top-1 right-1 h-8 w-8"
+                                                        onClick={handleRefineDescription}
+                                                        disabled={isRefining}
+                                                    >
+                                                        {isRefining ? <LoaderCircle className="h-4 w-4 animate-spin"/> : <Sparkles className="h-4 w-4 text-primary" />}
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>Refine with AI</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    </div>
                                     <FormMessage />
                                 </FormItem>
                             )}

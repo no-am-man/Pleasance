@@ -10,6 +10,7 @@ import { generateSpeech } from '@/ai/flows/generate-speech';
 import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
 import { generateSvg3d as generateSvg3dFlow } from '@/ai/flows/generate-svg3d';
+import { refineRoadmapCard } from '@/ai/flows/refine-roadmap-card';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { firebaseConfig } from '@/firebase/config';
 import admin from 'firebase-admin';
@@ -607,5 +608,31 @@ export async function deleteRoadmapCard(cardId: string, columnId: string) {
         console.error('Delete Roadmap Card Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
         return { error: `Failed to delete card: ${message}` };
+    }
+}
+
+const RefineCardSchema = z.object({
+  title: z.string().min(3, "Title must be at least 3 characters long."),
+  description: z.string().optional(),
+});
+
+export async function refineCardDescription(values: z.infer<typeof RefineCardSchema>) {
+    try {
+        const validatedFields = RefineCardSchema.safeParse(values);
+        if (!validatedFields.success) {
+            return { error: 'Invalid input for refinement.' };
+        }
+
+        const result = await refineRoadmapCard(validatedFields.data);
+
+        if (!result.refinedDescription) {
+            return { error: 'AI failed to generate a description.' };
+        }
+
+        return { refinedDescription: result.refinedDescription };
+    } catch (e) {
+        console.error('Refine Card Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Failed to refine description: ${message}` };
     }
 }
