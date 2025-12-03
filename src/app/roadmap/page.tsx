@@ -12,7 +12,7 @@ import { firestore } from '@/firebase/config';
 import { collection, query } from 'firebase/firestore';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType } from '@/lib/types';
-import { LoaderCircle, PlusCircle, Trash2, Sparkles } from 'lucide-react';
+import { LoaderCircle, PlusCircle, Trash2, Sparkles, ArrowRight } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -274,7 +274,7 @@ const SortableKanbanCard = ({ card, columnId }: { card: RoadmapCardType; columnI
 }
 
 const KanbanColumn = ({ id, title, cards, children }: RoadmapColumnType & { children?: React.ReactNode }) => (
-  <div className="flex flex-col gap-4">
+  <div className="flex flex-col gap-4 lg:col-span-2">
     <div className="px-3 py-2">
       <h2 className="text-lg font-semibold text-foreground">{title}</h2>
     </div>
@@ -294,6 +294,13 @@ const KanbanColumn = ({ id, title, cards, children }: RoadmapColumnType & { chil
     </div>
   </div>
 );
+
+const WorkflowArrow = () => (
+    <div className="hidden lg:flex items-center justify-center h-full">
+        <ArrowRight className="h-8 w-8 text-muted-foreground" />
+    </div>
+);
+
 
 export default function RoadmapPage() {
   const { user } = useUser();
@@ -427,12 +434,22 @@ export default function RoadmapPage() {
 
       {!isLoading && !error && (
          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
-                {columns.map(column => (
-                    <KanbanColumn key={column.id} {...column}>
-                        {column.id === 'ideas' && isFounder && <AddIdeaForm />}
-                    </KanbanColumn>
-                ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-11 gap-6 items-start">
+                <KanbanColumn {...columns[0]}>
+                    {columns[0]?.id === 'ideas' && isFounder && <AddIdeaForm />}
+                </KanbanColumn>
+                
+                <WorkflowArrow />
+
+                <KanbanColumn {...columns[1]} />
+
+                <WorkflowArrow />
+                
+                <KanbanColumn {...columns[2]} />
+
+                <WorkflowArrow />
+
+                <KanbanColumn {...columns[3]} />
             </div>
          </DndContext>
       )}
