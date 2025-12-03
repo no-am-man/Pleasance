@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useUser, useMemoFirebase } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { collection, query } from 'firebase/firestore';
+import { collection, query, where, serverTimestamp, doc } from 'firebase/firestore';
 import { declareAssetWithFile } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,9 +16,12 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { LoaderCircle, LogIn, Coins, BrainCircuit, Box, PlusCircle, Eye, Warehouse, Upload, FileArchive } from 'lucide-react';
+import { LoaderCircle, LogIn, Coins, BrainCircuit, Box, PlusCircle, Eye, Warehouse, Upload, FileArchive, CheckCircle, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { Badge } from '@/components/ui/badge';
+import { useSearchParams } from 'next/navigation';
 
 const AssetSchema = z.object({
   name: z.string().min(2, 'Asset name must be at least 2 characters.'),
@@ -34,6 +37,21 @@ type Asset = z.infer<typeof AssetSchema> & {
     createdAt: { seconds: number; nanoseconds: number; } | null;
     fileUrl?: string;
 };
+
+type FabricationOrder = {
+    id: string;
+    userId: string;
+    assetId: string;
+    assetName: string;
+    fileUrl: string;
+    supplier: string;
+    status: 'pending' | 'in_progress' | 'completed' | 'shipped' | 'cancelled';
+    cost: number;
+    notes?: string;
+    createdAt: any;
+    updatedAt: any;
+}
+
 
 function AddAssetForm() {
     const { user } = useUser();
@@ -260,6 +278,78 @@ function AssetList() {
             </CardContent>
         </Card>
     );
+}
+
+function OrderList() {
+    const { user } = useUser();
+    const ordersQuery = useMemoFirebase(() => user ? query(collection(firestore, 'fabricationOrders'), where('userId', '==', user.uid)) : null, [user]);
+    const [orders, isLoading, error] = useCollectionData<FabricationOrder>(ordersQuery, { idField: 'id' });
+
+    const getStatusVariant = (status: FabricationOrder['status']) => {
+        switch (status) {
+            case 'completed':
+            case 'shipped':
+                return 'default';
+            case 'in_progress':
+                return 'secondary';
+            case 'cancelled':
+                return 'destructive'
+            default:
+                return 'outline';
+        }
+    }
+    
+    const getStatusIcon = (status: FabricationOrder['status']) => {
+        switch (status) {
+            case 'completed':
+            case 'shipped':
+                return <CheckCircle className="h-4 w-4" />;
+            case 'in_progress':
+                return <LoaderCircle className="h-4 w-4 animate-spin" />;
+            default:
+                return <Clock className="h-4 w-4" />;
+        }
+    }
+
+
+    if (isLoading) {
+        return <div className="flex justify-center p-8"><LoaderCircle className="w-8 h-8 animate-spin text-primary" /></div>;
+    }
+
+    if (error) {
+        return <p className="text-destructive text-center">Error loading fabrication orders: {error.message}</p>;
+    }
+
+    return (
+        <Card className="shadow-lg">
+            <CardHeader>
+                <CardTitle>Your Fabrication Orders</CardTitle>
+                <CardDescription>Track the status of your fabrication orders.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {orders && orders.length > 0 ? (
+                    <div className="space-y-4">
+                        {orders.map(order => (
+                            <div key={order.id} className="flex items-center gap-4 rounded-md border p-4">
+                                <div className="flex-1">
+                                    <h3 className="font-semibold">{order.assetName}</h3>
+                                    <p className="text-sm text-muted-foreground">Supplier: {order.supplier} | Cost: ${order.cost?.toFixed(2) ?? 'N/A'}</p>
+                                </div>
+                                <Badge variant={getStatusVariant(order.status)} className="flex items-center gap-1.5">
+                                    {getStatusIcon(order.status)}
+                                    <span className="capitalize">{order.status.replace('_', ' ')}</span>
+                                </Badge>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                        <p>You have no active fabrication orders.</p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    )
 }
 
 
