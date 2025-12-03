@@ -61,3 +61,14 @@ export const CommunityProfileSchema = z.object({
   avatarUrl: z.string().optional(),
 });
 export type CommunityProfile = z.infer<typeof CommunityProfileSchema>;
+
+
+// Schema for Community
+export const CommunitySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  ownerId: z.string(),
+  members: z.array(MemberSchema),
+});
+export type Community = z.infer<typeof CommunitySchema>;

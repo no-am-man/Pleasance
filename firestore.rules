@@ -94,6 +94,14 @@ service cloud.firestore {
             && d.description is string && d.description.size() > 19;
     }
 
+    // --- Creation Validation ---
+    function isValidCreation() {
+        let d = request.resource.data;
+        return d.creatorId == request.auth.uid
+            && d.prompt is string && d.prompt.size() > 2
+            && d.pixels is list && d.pixels.size() > 0;
+    }
+
 
     //================================================================================
     // Collection Rules
@@ -196,22 +204,14 @@ service cloud.firestore {
     }
     
     /**
-     * @description Manages collaborative workshop spaces.
-     * @path /workshops/{workshopId}
-     * @allow Read is public. Write is for signed-in users.
+     * @description Stores generative artworks from the Community Gallery.
+     * @path /creations/{creationId}
+     * @allow Publicly readable. Writable by any authenticated user.
      */
-    match /workshops/{workshopId} {
-        allow read: if true;
-        allow write: if isSignedIn();
-
-        /**
-         * @description Manages user presence within a workshop.
-         * @path /workshops/{workshopId}/present_users/{userId}
-         */
-        match /present_users/{userId} {
-            allow read: if true;
-            allow write, delete: if isOwner(userId); // Only a user can manage their own presence.
-        }
+    match /creations/{creationId} {
+        allow get, list: if true;
+        allow create: if isSignedIn() && isValidCreation();
+        allow update, delete: if isFounder(); // Only founder can moderate
     }
     
     /**

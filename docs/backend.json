@@ -318,20 +318,24 @@
         },
         "required": ["id", "userId", "userName", "userBio", "status", "createdAt"]
     },
-    "Workshop": {
+    "Creation": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Workshop",
+      "title": "Creation",
       "type": "object",
-      "description": "Represents a collaborative workshop space.",
+      "description": "Represents a single generative artwork from the Community Gallery.",
       "properties": {
-        "id": { "type": "string", "description": "Unique identifier for the workshop." },
-        "latestPrompt": { "type": "string", "description": "The last prompt used to generate art." },
+        "id": { "type": "string", "description": "Unique identifier for the creation." },
+        "creatorId": { "type": "string", "description": "The UID of the user who created it." },
+        "creatorName": { "type": "string", "description": "The name of the creator." },
+        "creatorAvatarUrl": { "type": "string", "format": "uri", "description": "The avatar URL of the creator." },
+        "prompt": { "type": "string", "description": "The prompt used to generate the artwork." },
+        "createdAt": { "type": "string", "format": "date-time" },
         "pixels": {
           "type": "array",
           "items": { "$ref": "#/backend/entities/ColorPixel" }
         }
       },
-      "required": ["id"]
+      "required": ["id", "creatorId", "creatorName", "prompt", "createdAt", "pixels"]
     },
     "ColorPixel": {
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -591,26 +595,14 @@
         }
       },
       {
-        "path": "/workshops/{workshopId}",
+        "path": "/creations/{creationId}",
         "definition": {
-          "entityName": "Workshop",
-          "schema": { "$ref": "#/backend/entities/Workshop" },
-          "description": "Stores the state of a collaborative workshop. Publicly readable and writable by signed-in users.",
+          "entityName": "Creation",
+          "schema": { "$ref": "#/backend/entities/Creation" },
+          "description": "Stores generated artworks from the Community Gallery. Publicly readable, writable by any signed-in user.",
           "params": [
-            { "name": "workshopId", "description": "The unique ID for the workshop." }
+            { "name": "creationId", "description": "The unique ID for the artwork." }
           ]
-        }
-      },
-      {
-        "path": "/workshops/{workshopId}/present_users/{userId}",
-        "definition": {
-            "entityName": "PresentUser",
-            "schema": { "$ref": "#/backend/entities/PresentUser" },
-            "description": "Stores information about users currently active in a workshop.",
-            "params": [
-                { "name": "workshopId", "description": "The ID of the workshop." },
-                { "name": "userId", "description": "The ID of the user." }
-            ]
         }
       },
       {
@@ -669,6 +661,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities`, `workshops`, `fabricationOrders`, `bugs`, and `leaderboard` in top-level collections, they become queryable. User-specific data is nested under `/users/{userId}` to ensure privacy. Public profiles are in `/community-profiles` to allow discoverability without exposing private account details. The roadmap is migrated to Firestore for reliable public read access. The new /conductor/{userId} collection stores conversation history privately for each user."
+    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities`, `creations`, `fabricationOrders`, `bugs`, and `leaderboard` in top-level collections, they become queryable. User-specific data is nested under `/users/{userId}` to ensure privacy. Public profiles are in `/community-profiles` to allow discoverability without exposing private account details. The roadmap is migrated to Firestore for reliable public read access. The new /conductor/{userId} collection stores conversation history privately for each user."
   }
 }

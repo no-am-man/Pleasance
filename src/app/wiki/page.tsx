@@ -78,7 +78,7 @@ export default function WikiPage() {
             imageHint="art gallery"
             href="/workshop"
         >
-            A real-time, collaborative space. Any member can join and experiment with generative tools together. Witness collective imagination as you generate art from a prompt, and watch as the creation updates live for all.
+            Explore a persistent gallery of generative artworks. Any member can contribute a creation, adding to the collective visual history of the republic.
         </FeatureCard>
         
         <FeatureCard

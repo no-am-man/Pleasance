@@ -187,26 +187,59 @@ export async function runMemberSync() {
     }
 }
 
-export async function generateSvg3d(values: GenerateSvg3dInput) {
+
+const generateSvg3dSchema = GenerateSvg3dInputSchema.extend({
+    creatorId: z.string(),
+    creatorName: z.string(),
+    creatorAvatarUrl: z.string().url().optional(),
+});
+
+export async function generateSvg3d(values: z.infer<typeof generateSvg3dSchema>) {
     try {
-        const validatedFields = GenerateSvg3dInputSchema.safeParse(values);
+        const validatedFields = generateSvg3dSchema.safeParse(values);
         if (!validatedFields.success) {
             return { error: 'Invalid input for SVG3D generation.' };
         }
 
+        // 1. Generate the pixels from the AI flow
         const result = await generateSvg3dFlow(validatedFields.data);
-
-        if (!result.pixels) {
-            return { error: 'Could not generate SVG3D image.' };
+        if (!result.pixels || result.pixels.length === 0) {
+            return { error: 'The AI could not generate any pixels for this prompt.' };
         }
+        
+        // 2. Save the result as a new Creation document in Firestore
+        const adminApp = initializeAdminApp();
+        const firestore = getFirestore(adminApp);
 
-        return { pixels: result.pixels };
+        const newCreationRef = firestore.collection('creations').doc();
+        const newCreation = {
+            id: newCreationRef.id,
+            creatorId: validatedFields.data.creatorId,
+            creatorName: validatedFields.data.creatorName,
+            creatorAvatarUrl: validatedFields.data.creatorAvatarUrl || '',
+            prompt: validatedFields.data.prompt,
+            createdAt: FieldValue.serverTimestamp(),
+            pixels: result.pixels,
+        };
+
+        await newCreationRef.set(newCreation);
+        
+        // 3. Return the new creation data to the client
+        return { 
+            success: true,
+            creation: {
+                ...newCreation,
+                createdAt: new Date().toISOString(), // Provide a client-side friendly timestamp
+            }
+        };
+
     } catch (e) {
-        console.error('SVG3D Generation Error:', e);
+        console.error('SVG3D Generation/Save Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
-        return { error: `SVG3D generation failed: ${message}` };
+        return { error: `SVG3D creation failed: ${message}` };
     }
 }
+
 
 const saveSvgAssetSchema = z.object({
     userId: z.string(),
