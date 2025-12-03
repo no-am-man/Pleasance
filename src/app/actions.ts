@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -20,6 +21,7 @@ import { generateCommunity } from '@/ai/flows/generate-community';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
+import JSZip from 'jszip';
 import {
     GenerateSvg3dInputSchema,
     type GenerateSvg3dInput,
@@ -500,6 +502,67 @@ export async function declareAssetWithFile(formData: FormData) {
         return { error: `Failed to declare asset: ${message}` };
     }
 }
+
+export async function importFromKeep(formData: FormData) {
+    try {
+        const adminApp = initializeAdminApp();
+        const firestore = getFirestore(adminApp);
+
+        const userId = formData.get('userId') as string;
+        const zipFile = formData.get('file') as File | null;
+
+        if (!userId) throw new Error('User ID is missing.');
+        if (!zipFile) throw new Error('Zip file is missing.');
+
+        const zip = new JSZip();
+        const zipData = await zip.loadAsync(await zipFile.arrayBuffer());
+        
+        const batch = firestore.batch();
+        let notesImported = 0;
+
+        for (const fileName in zipData.files) {
+            if (fileName.endsWith('.html')) {
+                const file = zipData.files[fileName];
+                const content = await file.async('string');
+                
+                // Extract title and text from Keep's HTML structure
+                const titleMatch = content.match(/<div class="title">(.*?)<\/div>/);
+                const textMatch = content.match(/<div class="content">(.*?)<\/div>/);
+
+                const name = titleMatch ? titleMatch[1].trim() : 'Untitled Note';
+                const description = textMatch ? textMatch[1].replace(/<br \/>/g, '\n').trim() : 'No content';
+
+                const newAssetRef = firestore.collection('users').doc(userId).collection('assets').doc();
+                const newAsset = {
+                    id: newAssetRef.id,
+                    ownerId: userId,
+                    name,
+                    description,
+                    type: 'ip' as const,
+                    value: 0,
+                    fileUrl: undefined,
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                };
+                batch.set(newAssetRef, newAsset);
+                notesImported++;
+            }
+        }
+
+        if (notesImported === 0) {
+            return { error: 'No valid HTML notes found in the provided .zip file.' };
+        }
+
+        await batch.commit();
+
+        return { success: true, count: notesImported };
+
+    } catch (e) {
+        console.error('Import from Keep Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Failed to import from Keep: ${message}` };
+    }
+}
+
 
 export async function updateRoadmapCardColumn(
   cardId: string,
