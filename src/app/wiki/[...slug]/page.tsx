@@ -17,8 +17,8 @@ import { WikiEditor } from '@/components/wiki-editor';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
-import { seedWikiData } from '../actions';
-import { FOUNDER_EMAIL } from '../admin/page';
+import { seedWikiData } from '@/app/actions';
+import { FOUNDER_EMAIL } from '@/app/admin/page';
 
 type WikiPage = {
     id: string;
