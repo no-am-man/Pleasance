@@ -1,7 +1,7 @@
 // src/components/federation-diagram.tsx
 'use client';
 
-import { Beaker, BookOpen, Banknote, Users, User, ArrowRight } from 'lucide-react';
+import { Beaker, BookOpen, Banknote, Users, User } from 'lucide-react';
 import React from 'react';
 
 const DiagramNode = ({
@@ -99,9 +99,9 @@ export const FederationDiagram = () => {
         />
 
         {/* Nodes */}
-        <DiagramNode icon={User} label="The Citizen" x="80" y="250" delay={0} />
+        <DiagramNode icon={User} label="The Sovereign Soul" x="80" y="250" delay={0} />
         <DiagramNode icon={BookOpen} label="Nuncy Lingua" x="250" y="80" delay={200} />
-        <DiagramNode icon={Beaker} label="Crucible" x="420" y="80" delay={400} />
+        <DiagramNode icon={Beaker} label="Crucible of Creation" x="420" y="80" delay={400} />
         <DiagramNode icon={Banknote} label="Treasury" x="420" y="420" delay={600} />
         <DiagramNode icon={Users} label="Federation" x="80" y="420" delay={800} />
         
