@@ -22,6 +22,7 @@ import { generateCommunity } from '@/ai/flows/generate-community';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import { ai } from '@/ai/genkit';
+import { generateCommunityFlag } from '@/ai/flows/generate-flag';
 import {
     GenerateSvg3dInputSchema,
     type GenerateSvg3dInput,
@@ -776,81 +777,15 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
     }
   }
 
-const flagSchema = z.object({
+const flagActionSchema = z.object({
     communityId: z.string(),
     communityName: z.string(),
     communityDescription: z.string(),
     idToken: z.string(),
 });
 
-export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) {
-    try {
-        const adminApp = initializeAdminApp();
-        
-        const validatedFields = flagSchema.safeParse(values);
-        if (!validatedFields.success) {
-            const errorMessage = validatedFields.error.issues[0]?.message || 'Invalid input.';
-            return { error: errorMessage };
-        }
-        
-        const { communityId, communityName, communityDescription, idToken } = validatedFields.data;
-
-        const decodedIdToken = await adminApp.auth().verifyIdToken(idToken);
-        const uid = decodedIdToken.uid;
-
-        const communityDoc = await adminApp.firestore().collection('communities').doc(communityId).get();
-        if (!communityDoc.exists || communityDoc.data()?.ownerId !== uid) {
-            return { error: "Unauthorized: You are not the owner of this community." };
-        }
-
-        const GenerateFlagInputSchema = z.object({
-          communityName: z.string(),
-          communityDescription: z.string(),
-        });
-        
-        const GenerateFlagOutputSchema = z.object({
-          svg: z.string(),
-        });
-
-        const generateFlagPrompt = ai.definePrompt({
-          name: 'generateFlagPrompt',
-          input: { schema: GenerateFlagInputSchema },
-          output: { schema: GenerateFlagOutputSchema },
-          config: {
-            model: 'googleai/gemini-pro',
-          },
-          prompt: `You are an expert graphic designer who specializes in creating symbolic, minimalist, and modern vector art for flags.
-        
-        Task: Generate a complete, valid SVG string for a flag representing an online community.
-        
-        Community Name: "{{communityName}}"
-        Community Description: "{{communityDescription}}"
-        
-        Your ENTIRE response MUST be ONLY the raw JSON object adhering to the output schema.`,
-        });
-
-        const { output } = await generateFlagPrompt({ communityName, communityDescription });
-        if (!output || !output.svg) {
-            throw new Error('Failed to generate a flag SVG from the AI flow.');
-        }
-
-        const svgBase64 = Buffer.from(output.svg, 'utf-8').toString('base64');
-        const svgDataUri = `data:image/svg+xml;base64,${svgBase64}`;
-
-        return {
-            data: {
-                flagUrl: svgDataUri,
-            }
-        };
-
-    } catch (e) {
-        console.error('Flag Generation Action Error:', e);
-        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
-        if (message.includes('ID token has expired') || message.includes('verifyIdToken')) {
-            return { error: "Your session has expired. Please log in again."}
-        }
-        return { error: `Flag generation failed: ${message}` };
-    }
+export async function generateCommunityFlagAction(values: z.infer<typeof flagActionSchema>) {
+    return generateCommunityFlag(values);
 }
     
 

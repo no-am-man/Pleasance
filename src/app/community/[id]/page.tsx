@@ -22,7 +22,7 @@ import { HumanIcon } from '@/components/icons/human-icon';
 import { AiIcon } from '@/components/icons/ai-icon';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import Image from 'next/image';
-import { getAiChatResponse, generateCommunityFlag } from '@/app/actions';
+import { getAiChatResponse, generateCommunityFlagAction } from '@/app/actions';
 import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
 import { type ChatHistory } from 'genkit';
 
@@ -764,7 +764,7 @@ export default function CommunityProfilePage() {
 
     try {
       const idToken = await user.getIdToken();
-      const result = await generateCommunityFlag({
+      const result = await generateCommunityFlagAction({
         communityId: community.id,
         communityName: community.name,
         communityDescription: community.description,
