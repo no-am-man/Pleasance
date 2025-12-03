@@ -357,6 +357,32 @@
             "lastSeen": { "type": "string", "format": "date-time" }
         },
         "required": ["userId", "name", "lastSeen"]
+    },
+    "RoadmapCard": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "RoadmapCard",
+      "type": "object",
+      "description": "Represents a card on the project roadmap.",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "assignees": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["id", "title", "description"]
+    },
+    "RoadmapColumn": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "RoadmapColumn",
+      "type": "object",
+      "description": "Represents a column on the roadmap, containing multiple cards.",
+      "properties": {
+        "id": { "type": "string", "enum": ["ideas", "nextUp", "inProgress", "alive"] },
+        "title": { "type": "string" },
+        "cards": { "type": "array", "items": { "$ref": "#/backend/entities/RoadmapCard" } }
+      },
+      "required": ["id", "title", "cards"]
     }
   },
   "auth": {
@@ -535,8 +561,19 @@
             { "name": "orderId", "description": "The unique ID for the fabrication order." }
           ]
         }
+      },
+      {
+        "path": "/roadmap/{columnId}",
+        "definition": {
+          "entityName": "RoadmapColumn",
+          "schema": { "$ref": "#/backend/entities/RoadmapColumn" },
+          "description": "Stores roadmap columns and their cards. This collection is publicly readable.",
+          "params": [
+            { "name": "columnId", "description": "The unique ID for the roadmap column (e.g., 'ideas')." }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities`, `workshops`, and `fabricationOrders` in top-level collections, they become queryable. User-specific data is nested under `/users/{userId}` to ensure privacy. Public profiles are in `/community-profiles` to allow discoverability without exposing private account details."
+    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities`, `workshops`, and `fabricationOrders` in top-level collections, they become queryable. User-specific data is nested under `/users/{userId}` to ensure privacy. Public profiles are in `/community-profiles` to allow discoverability without exposing private account details. The roadmap is migrated to Firestore for reliable public read access."
   }
 }

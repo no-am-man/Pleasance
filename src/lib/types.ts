@@ -25,17 +25,19 @@ export const MemberSchema = z.object({
   type: z.enum(['AI', 'human']).describe('The type of member.'),
 });
 
-// Schema for the Roadmap Kanban board
-export type RoadmapCard = {
-  id: string;
-  title: string;
-  description: string;
-  tags?: string[];
-  assignees?: string[];
-};
+// Schema for the Roadmap Kanban board (Firestore version)
+export const RoadmapCardSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  tags: z.array(z.string()).optional(),
+  assignees: z.array(z.string()).optional(),
+});
+export type RoadmapCard = z.infer<typeof RoadmapCardSchema>;
 
-export type RoadmapColumn = 'ideas' | 'nextUp' | 'inProgress' | 'alive';
-
-export type RoadmapData = {
-  [key in RoadmapColumn]: Record<string, RoadmapCard>;
-};
+export const RoadmapColumnSchema = z.object({
+    id: z.string(),
+    title: z.string(),
+    cards: z.array(RoadmapCardSchema),
+});
+export type RoadmapColumn = z.infer<typeof RoadmapColumnSchema>;

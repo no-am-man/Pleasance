@@ -14,15 +14,15 @@ import { initializeAdminApp } from '@/firebase/config-admin';
 import { firebaseConfig } from '@/firebase/config';
 import admin from 'firebase-admin';
 import { generateCommunity } from '@/ai/flows/generate-community';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, writeBatch } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
-import { getDatabase } from 'firebase-admin/database';
 import wav from 'wav';
 import {
     GenerateSvg3dInputSchema,
     type GenerateSvg3dInput,
     MemberSchema,
-    type RoadmapData
+    RoadmapCardSchema,
+    RoadmapColumnSchema
 } from '@/lib/types';
 
 
@@ -363,10 +363,9 @@ export async function saveSvgAsset(values: z.infer<typeof saveSvgAssetSchema>) {
         
         await file.save(jsonBuffer, {
             metadata: { contentType: 'application/json' },
-            public: true, // Make the file publicly accessible
         });
 
-        // The public URL does not require signing.
+        await file.makePublic();
         const publicUrl = `https://storage.googleapis.com/${bucketName}/${storagePath}`;
 
         const assetData = {
@@ -394,31 +393,36 @@ export async function saveSvgAsset(values: z.infer<typeof saveSvgAssetSchema>) {
 export async function seedRoadmapData() {
     try {
         const adminApp = initializeAdminApp();
-        const db = getDatabase(adminApp);
-        const ref = db.ref('roadmap');
+        const firestore = getFirestore(adminApp);
+        const batch = writeBatch(firestore);
 
-        const initialData: RoadmapData = {
-            ideas: {
-                '-N_idea1': { id: '-N_idea1', title: "Gamify Language Learning", description: "Add points, streaks, and leaderboards to Nuncy Lingua.", tags: ["Nuncy Lingua", "UX"] },
-                '-N_idea2': { id: '-N_idea2', title: "Decentralized Identity", description: "Explore using DIDs for user profiles.", tags: ["Identity", "Web3"] },
-            },
-            nextUp: {
-                '-N_nextUp1': { id: '-N_nextUp1', title: "Dynamic Kanban Board", description: "Connect this roadmap to a database for real-time updates.", tags: ["Roadmap", "Backend"], assignees: ["Gemini"] },
-                '-N_nextUp2': { id: '-N_nextUp2', title: "Community Moderation Tools", description: "Allow community owners to manage posts and members.", tags: ["Community"], assignees: ["Noam"] },
-            },
-            inProgress: {
-                '-N_inProgress1': { id: '-N_inProgress1', title: "Fabrication Ticketing System", description: "Build the UI and backend for managing fabrication orders.", tags: ["Fabrication"], assignees: ["Noam", "Gemini"] },
-            },
-            alive: {
-                '-N_alive1': { id: '-N_alive1', title: "Collaborative AI Workshop", description: "A real-time, shared space for generative AI experimentation.", tags: ["Workshop", "AI"], assignees: ["Gemini"] },
-                '-N_alive2': { id: '-N_alive2', title: "Community Federation", description: "Create and manage your own sovereign communities.", tags: ["Community"], assignees: ["Noam"] },
-                '-N_alive3': { id: '-N_alive3', title: "Nuncy Lingua Story Generator", description: "AI-powered story and speech generation for language learning.", tags: ["Nuncy Lingua"], assignees: ["Gemini"] },
-            },
-        };
+        const initialData = [
+            { id: 'ideas', title: '💡 Ideas', cards: [
+                { id: 'idea1', title: "Gamify Language Learning", description: "Add points, streaks, and leaderboards to Nuncy Lingua.", tags: ["Nuncy Lingua", "UX"] },
+                { id: 'idea2', title: "Decentralized Identity", description: "Explore using DIDs for user profiles.", tags: ["Identity", "Web3"] },
+            ]},
+            { id: 'nextUp', title: '🚀 Next Up!', cards: [
+                { id: 'next1', title: "Dynamic Kanban Board", description: "Connect this roadmap to a database for real-time updates.", tags: ["Roadmap", "Backend"], assignees: ["Gemini"] },
+                { id: 'next2', title: "Community Moderation Tools", description: "Allow community owners to manage posts and members.", tags: ["Community"], assignees: ["Noam"] },
+            ]},
+            { id: 'inProgress', title: '🏗️ In Progress', cards: [
+                { id: 'prog1', title: "Fabrication Ticketing System", description: "Build the UI and backend for managing fabrication orders.", tags: ["Fabrication"], assignees: ["Noam", "Gemini"] },
+            ]},
+            { id: 'alive', title: '✅ Alive', cards: [
+                { id: 'alive1', title: "Collaborative AI Workshop", description: "A real-time, shared space for generative AI experimentation.", tags: ["Workshop", "AI"], assignees: ["Gemini"] },
+                { id: 'alive2', title: "Community Federation", description: "Create and manage your own sovereign communities.", tags: ["Community"], assignees: ["Noam"] },
+                { id: 'alive3', title: "Nuncy Lingua Story Generator", description: "AI-powered story and speech generation for language learning.", tags: ["Nuncy Lingua"], assignees: ["Gemini"] },
+            ]},
+        ];
 
-        await ref.set({ cards: initialData });
+        initialData.forEach(column => {
+            const docRef = firestore.collection('roadmap').doc(column.id);
+            batch.set(docRef, column);
+        });
 
-        return { success: true, message: 'Roadmap data seeded successfully.' };
+        await batch.commit();
+
+        return { success: true, message: 'Roadmap data seeded to Firestore successfully.' };
 
     } catch (e) {
         console.error('Seeding Error:', e);

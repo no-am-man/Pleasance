@@ -7,10 +7,10 @@ import { KanbanIcon } from '@/components/icons/kanban-icon';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { database } from '@/firebase/config';
-import { ref } from 'firebase/database';
-import { useObjectVal } from 'react-firebase-hooks/database';
-import type { RoadmapCard as RoadmapCardType, RoadmapData } from '@/lib/types';
+import { firestore } from '@/firebase/config';
+import { collection, query, orderBy } from 'firebase/firestore';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType } from '@/lib/types';
 import { LoaderCircle } from 'lucide-react';
 
 const KanbanCard = ({ title, description, tags, assignees }: RoadmapCardType) => (
@@ -54,7 +54,7 @@ const KanbanColumn = ({ title, cards }: { title: string, cards: RoadmapCardType[
       <h2 className="text-lg font-semibold text-foreground">{title}</h2>
     </div>
     <div className="flex-grow space-y-4 rounded-lg p-3 bg-muted/50 min-h-[200px]">
-      {cards ? (
+      {cards && cards.length > 0 ? (
         cards.map(card => <KanbanCard key={card.id} {...card} />)
       ) : (
         <div className="flex items-center justify-center h-full">
@@ -66,13 +66,14 @@ const KanbanColumn = ({ title, cards }: { title: string, cards: RoadmapCardType[
 );
 
 export default function RoadmapPage() {
-  const roadmapRef = useMemo(() => ref(database, 'roadmap/cards'), []);
-  const [roadmapData, isLoading, error] = useObjectVal<RoadmapData>(roadmapRef);
+  const roadmapQuery = useMemo(() => query(collection(firestore, 'roadmap'), orderBy('id')), []);
+  const [columns, isLoading, error] = useCollectionData<RoadmapColumnType>(roadmapQuery);
 
-  const getCardsForColumn = (column: keyof RoadmapData) => {
-    if (!roadmapData || !roadmapData[column]) return [];
-    return Object.values(roadmapData[column]);
-  };
+  const orderedColumns = useMemo(() => {
+    if (!columns) return [];
+    const order = ['ideas', 'nextUp', 'inProgress', 'alive'];
+    return columns.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+  }, [columns]);
 
   return (
     <main className="container mx-auto min-h-screen py-8">
@@ -103,10 +104,9 @@ export default function RoadmapPage() {
 
       {!isLoading && !error && (
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
-            <KanbanColumn title="💡 Ideas" cards={getCardsForColumn('ideas')} />
-            <KanbanColumn title="🚀 Next Up!" cards={getCardsForColumn('nextUp')} />
-            <KanbanColumn title="🏗️ In Progress" cards={getCardsForColumn('inProgress')} />
-            <KanbanColumn title="✅ Alive" cards={getCardsForColumn('alive')} />
+            {orderedColumns.map(column => (
+                <KanbanColumn key={column.id} title={column.title} cards={column.cards} />
+            ))}
         </div>
       )}
     </main>

@@ -1,8 +1,0 @@
-{
-  "rules": {
-    "roadmap": {
-      ".read": "true",
-      ".write": "auth != null && auth.token.email == 'gg.el0ai.com@gmail.com'"
-    }
-  }
-}

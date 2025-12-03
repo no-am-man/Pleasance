@@ -219,6 +219,16 @@ service cloud.firestore {
       allow update: if isSupplier() && !('userId' in request.resource.data); // Supplier can update status, cost, etc.
       allow delete: if isOwner(resource.data.userId); // User can cancel their own order.
     }
+    
+    /**
+     * @description Manages the public project roadmap.
+     * @path /roadmap/{columnId}
+     * @allow Public read access for all, write access restricted to the founder.
+     */
+    match /roadmap/{columnId} {
+        allow get, list: if true;
+        allow write: if isFounder();
+    }
 
     /**
      * @description Secure storage for administrative data, like service account keys.
