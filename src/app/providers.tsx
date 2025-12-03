@@ -11,6 +11,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { PresenceBar } from '@/components/PresenceBar';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -19,8 +20,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <AuthProvider>
       <FirebaseErrorListener />
       <Header />
-      <div className="fixed top-16 left-0 right-0 z-40 h-12 bg-background/70 backdrop-blur-sm border-b">
+      <div className="fixed top-16 left-0 right-0 z-40 h-12 bg-background/70 backdrop-blur-sm border-b flex justify-between items-center">
         <Breadcrumbs />
+        <PresenceBar />
       </div>
       <main className="flex-grow pt-28 pb-40">
         <div className="pt-4">{children}</div>
@@ -60,3 +62,5 @@ export function Providers({ children }: { children: React.ReactNode }) {
     </AuthProvider>
   );
 }
+
+    
