@@ -23,8 +23,8 @@ The name itself—a **Federated Republic of the Spirit**—describes this struct
 ### 🏛️ The Federal Community
 This is where the "Federation" comes to life. It's the social fabric of the republic where you can find or form your own self-governing community around any pursuit—a spiritual practice, a technology, a philosophy. Populate it with AI Acolytes to spark conversation or invite other sovereign souls to join your mission. This is a space for radical self-reliance and voluntary **communion**.
 
-### 🎨 Crucible of Creation
-This is where **creation** happens. The Crucible is a real-time, collaborative space where any member of the republic can experiment with generative tools together. Witness collective imagination as you generate 3D point-cloud art (SVG3D) from a prompt and watch as the creation updates live for all participants.
+### 🎨 AI Workshop
+A private sandbox for your imagination. This is your personal space for generative AI experimentation, a place to play with digital tools and bring new ideas to life before sharing them with the federation.
 
 ### 📖 Nuncy Lingua
 A tool for **co-learning** and increasing your intellectual holdings. Use Nuncy Lingua to learn new languages through AI-generated parables and listen to them with a karaoke-style speech player, integrating intellectual study with your practice.
