@@ -1,9 +1,10 @@
+
 // src/app/wiki/page.tsx
 'use client';
 
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, BookOpen, Warehouse, Banknote, Info, PartyPopper, Github, Beaker, Bug } from 'lucide-react';
+import { Users, BookOpen, Warehouse, Banknote, Info, PartyPopper, Github, Beaker, Bug, GalleryHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { KanbanIcon } from '@/components/icons/kanban-icon';
@@ -71,10 +72,10 @@ export default function WikiPage() {
         </FeatureCard>
 
         <FeatureCard 
-            icon={<Beaker className="h-8 w-8 text-primary" />} 
-            title="Crucible of Creation"
+            icon={<GalleryHorizontal className="h-8 w-8 text-primary" />} 
+            title="Community Gallery"
             imageUrl="https://picsum.photos/seed/105/600/400"
-            imageHint="ai collaboration"
+            imageHint="art gallery"
             href="/workshop"
         >
             A real-time, collaborative space. Any member can join and experiment with generative tools together. Witness collective imagination as you generate art from a prompt, and watch as the creation updates live for all.

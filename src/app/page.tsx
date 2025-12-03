@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +15,7 @@ import {
   ArrowRight,
   Banknote,
   Beaker,
+  GalleryHorizontal,
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import Image from 'next/image';
@@ -113,14 +115,13 @@ export default function Home() {
         </div>
 
         <FeatureCard
-          icon={<Beaker className="h-8 w-8 text-primary" />}
-          title="Crucible of Creation"
+          icon={<GalleryHorizontal className="h-8 w-8 text-primary" />}
+          title="Community Gallery"
           imageUrl="https://picsum.photos/seed/105/600/400"
-          imageHint="ai collaboration"
+          imageHint="art gallery"
           href="/workshop"
         >
-          A real-time, collaborative space where members can join and
-          experiment with generative tools together.
+          Explore a collection of generative artworks created by the community in the Crucible of Creation.
         </FeatureCard>
 
         <FeatureCard

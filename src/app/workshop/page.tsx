@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { LoaderCircle, Sparkles, Save, Beaker, Users, LogIn, Download, Book } from 'lucide-react';
+import { LoaderCircle, Sparkles, Save, Beaker, Users, LogIn, Download, GalleryHorizontal } from 'lucide-react';
 import { generateSvg3d as generateSvg3dAction, saveSvgAsset } from '@/app/actions';
 import { GenerateSvg3dInputSchema, type ColorPixel } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -340,7 +340,7 @@ export default function WorkshopPage() {
         <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
             <Card className="w-full max-w-md text-center shadow-lg">
                 <CardHeader>
-                    <CardTitle>Enter the Crucible of Creation</CardTitle>
+                    <CardTitle>Enter the Community Gallery</CardTitle>
                     <CardDescription>Log in to collaborate with other members in real-time.</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -359,7 +359,7 @@ export default function WorkshopPage() {
     <main className="container mx-auto max-w-4xl py-8">
        <div className="text-center mb-8">
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3 font-headline">
-          <Beaker className="w-10 h-10" /> Crucible of Creation
+          <GalleryHorizontal className="w-10 h-10" /> Community Gallery
         </h1>
         <p className="text-lg text-muted-foreground mt-2">A collaborative space to channel the creative spark.</p>
       </div>
