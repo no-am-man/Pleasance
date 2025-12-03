@@ -50,7 +50,12 @@ const refineCommunityPromptFlow = ai.defineFlow(
     outputSchema: RefinePromptOutputSchema,
   },
   async (input) => {
-    const { output } = await refinePromptGenkit(input);
+    const { output } = await ai.generate({
+        prompt: refinePromptGenkit.prompt,
+        model: 'googleai/gemini-1.5-flash-latest',
+        input: input,
+        output: { schema: refinePromptGenkit.output?.schema },
+    });
     if (!output) {
         throw new Error("The AI failed to generate a refined prompt.");
     }
