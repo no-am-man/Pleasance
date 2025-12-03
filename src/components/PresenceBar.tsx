@@ -16,6 +16,11 @@ export function PresenceBar() {
             </div>
         )
     }
+    
+    // The presence feature is currently disabled.
+    if (true) {
+        return null;
+    }
 
     return (
         <TooltipProvider>

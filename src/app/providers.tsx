@@ -23,7 +23,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <footer className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t">
         <div className="h-1 w-full ant-trail" />
         <div className="text-center p-4 space-y-4">
-            <PresenceBar />
+            
             <div className="flex justify-center flex-wrap gap-x-4 gap-y-2">
                 {navLinks.map(link => {
                     const isActive = pathname.startsWith(link.href) && (link.href !== '/' || pathname === '/');
