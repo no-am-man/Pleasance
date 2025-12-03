@@ -15,17 +15,18 @@ export const firebaseConfig = {
   "databaseURL": "https://studio-2441219031-242ae-default-rtdb.firebaseio.com/"
 };
 
-// Initialize Firebase and export the services
-let firebaseApp: FirebaseApp;
-if (!getApps().length) {
-  firebaseApp = initializeApp(firebaseConfig);
-} else {
-  firebaseApp = getApp();
+// This function ensures a single instance of Firebase is initialized.
+function getFirebaseApp(): FirebaseApp {
+    if (!getApps().length) {
+        return initializeApp(firebaseConfig);
+    }
+    return getApp();
 }
 
-const auth: Auth = getAuth(firebaseApp);
-const firestore: Firestore = getFirestore(firebaseApp);
-const storage: FirebaseStorage = getStorage(firebaseApp);
-const database: Database = getDatabase(firebaseApp);
+const firebaseApp: FirebaseApp = getFirebaseApp();
 
-export { firebaseApp, auth, firestore, storage, database };
+// Export singleton instances of Firebase services.
+export const auth: Auth = getAuth(firebaseApp);
+export const firestore: Firestore = getFirestore(firebaseApp);
+export const storage: FirebaseStorage = getStorage(firebaseApp);
+export const database: Database = getDatabase(firebaseApp);

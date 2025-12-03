@@ -2,7 +2,6 @@
 'use client';
 
 import { AuthProvider } from '@/firebase/auth-provider';
-import { FirebaseErrorListener } from '@/firebase';
 import { Header } from '@/components/header';
 import { Toaster } from '@/components/ui/toaster';
 import Link from 'next/link';
@@ -17,7 +16,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthProvider>
-      <FirebaseErrorListener />
       <Header />
       <main className="flex-grow pt-16 pb-40">
         <div className="fixed top-16 left-0 right-0 z-40 bg-background/80 backdrop-blur-sm">

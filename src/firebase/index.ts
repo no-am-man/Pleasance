@@ -6,14 +6,12 @@ export { firebaseApp, auth, firestore, storage, database } from './config';
 
 // Export non-blocking update helpers
 export * from './non-blocking-updates';
-export * from './non-blocking-login';
 
 // Export error handling utilities
 export * from './errors';
 export * from './error-emitter';
 
-// Explicitly export the listener and user hook
-export { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+// Explicitly export the user hook
 export { useUser } from './use-user';
 
 
