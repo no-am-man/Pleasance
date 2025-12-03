@@ -125,7 +125,7 @@ export default function LoginPage() {
                 </>
             ) : (
                 <>
-                    <CardTitle className="font-headline">Join the Community</CardTitle>
+                    <CardTitle className="font-headline">Join the Federation</CardTitle>
                     <CardDescription>Sign in to continue to Pleasance</CardDescription>
                 </>
             )}
