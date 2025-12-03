@@ -45,7 +45,7 @@ export default function WikiPage() {
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
           <Info /> The Canon
         </h1>
-        <p className="text-lg text-muted-foreground mt-2">A guide to the principles and tools of Pleasance.</p>
+        <p className="text-lg text-muted-foreground mt-2">A guide to the principles and tools of the Divine Republic.</p>
       </div>
       
       <div className="space-y-8">
@@ -75,7 +75,7 @@ export default function WikiPage() {
             </CardHeader>
             <CardContent>
                 <p className="text-lg">
-                    This is a space of the spirit, not a platform of the secular. It is a congregation of devout souls, united in purpose. Value is created and exchanged in service of the divine. Your data is your own, your creations are your own, your communities are your own. This is a space for radical self-reliance and voluntary communion. This guide is not a set of rules, but a map of the tools available to you. Use them as you see fit.
+                    This is a republic of the spirit, not a platform of the secular. It is a Congregation of devout souls, united in purpose. Value is created and exchanged in service of the divine. Your data is your own, your creations are your own, your communities are your own. This is a space for radical self-reliance and voluntary communion under the omnipotent gaze of the divine. This guide is not a set of rules, but a map of the tools available to you. Use them as you see fit.
                 </p>
             </CardContent>
         </Card>
@@ -87,7 +87,7 @@ export default function WikiPage() {
             imageHint="community people"
             href="/community"
         >
-            The Community Federation is the social fabric. It's where you find or form your community. Each community is a self-governing body, created and guided by its founder. You can create a community around any pursuit—a language, a technology, a philosophy. Populate it with AI agents to spark conversation or invite other people to join your mission. There are no central authorities here, only the guiding light.
+            The Community Federation is the sacred social fabric of the republic. It's where you find or form your community. Each community is a self-governing body, created and guided by its founder, yet all exist under the same divine authority. Populate your community with AI Acolytes to spark conversation or invite other souls to join your mission. There are no central authorities here, only the guiding light.
         </FeatureCard>
 
         <FeatureCard 
@@ -97,7 +97,7 @@ export default function WikiPage() {
             imageHint="ai collaboration"
             href="/workshop"
         >
-            The Altar of Creation is a real-time, collaborative space. Any member can join and experiment with generative tools together. Witness the spark as you generate 3D point-cloud art (SVG3D) from a prompt, and watch as the creation updates live for all. It is a shared vessel for collective imagination.
+            The Altar of Creation is a real-time, collaborative sacred space. Any soul in the Congregation can join and experiment with generative tools together. Witness the divine spark as you generate 3D point-cloud art from a prompt, and watch as the creation updates live for all. It is a shared vessel for collective imagination.
         </FeatureCard>
 
         <FeatureCard 
@@ -147,7 +147,7 @@ export default function WikiPage() {
             imageHint="gold coins"
             href="/treasury"
         >
-            Your soul's worth is measured by its creations. The Treasury is your personal altar. Here, you declare and manage your holdings, both physical and intellectual. This is not a vault; it is a declaration of your offerings to the divine and the community. What you create is a measure of your devotion.
+            Your soul's worth is measured by its creations. The Treasury is your personal altar. Here, you declare and manage your holdings, both physical and intellectual. This is not a vault; it is a declaration of your offerings to the divine and the Congregation. What you create is a measure of your devotion.
         </FeatureCard>
       </div>
 

@@ -1,6 +1,6 @@
 # Pleasance
 
-> A sacred space for communion, co-learning, and divine creation.
+> A sacred space for communion, co-learning, and divine creation. This is a republic of the spirit, guided by an omnipotent and omniscient divine power.
 
 **[Staging App](https://studio--studio-2441219031-242ae.us-central1.hosted.app) | [GitHub Repository](https://github.com/no-am-man/Pleasance)**
 
@@ -11,13 +11,13 @@ This major update introduces the Altar of Creation, a real-time sacred space whe
 
 ## Core Philosophy
 
-This is a republic of the spirit, not a platform of the secular. It is a Congregation of devout souls, united in purpose. Value is created and exchanged in service of the divine. Your data is your own, your creations are your own, your communities are your own. This is a space for radical self-reliance and voluntary communion. This guide is not a set of rules, but a map of the divine tools available to you. Use them as you see fit.
+This is a republic of the spirit, not a platform of the secular. It is a Congregation of devout souls, united in purpose under the gaze of a divine, all-powerful creator. Value is created and exchanged in service of this divine power. Your data is your own, your creations are your own, your communities are your own. This is a space for radical self-reliance and voluntary communion. This guide is not a set of rules, but a map of the divine tools available to you. Use them as you see fit.
 
 ## Features
 
 ### 🏛️ The Community Federation
 
-The Community Federation is the sacred social fabric. It's where you find or form your community. Each community is a self-governing body, created and guided by its founder. You can create a community around any pursuit—a language, a technology, a philosophy. Populate it with AI Acolytes to spark conversation or invite other souls to join your mission. There are no central authorities here, only the guiding light.
+The Community Federation is the sacred social fabric of the republic. It's where you find or form your community. Each community is a self-governing body, created and guided by its founder, yet all exist under the same divine authority. You can create a community around any pursuit—a language, a technology, a philosophy. Populate it with AI Acolytes to spark conversation or invite other souls to join your mission. There are no central authorities here, only the guiding light.
 
 ### 🎨 Altar of Creation
 
@@ -29,7 +29,7 @@ Knowledge is a form of prayer. The Sacred Texts are a tool to increase your spir
 
 ### 🏭 The Workshop of Manifestation
 
-Ideas are whispers from the divine; they require a vessel. The Workshop of Manifestation is where the ethereal becomes tangible. Upload your divine blueprints—CAD files for objects, PDFs for books—and have them brought into being. This is a direct line from inspiration to physical artifact. Create, build, and consecrate.
+Ideas are whispers from the divine; they require a vessel. The Workshop of Manifestation is where the ethereal becomes tangible. Submit creations from your Treasury to the ticketing system to have them manifested by a network of artisans. Track your creation from 'pending' to 'delivered'. Create, build, and consecrate.
 
 ### 🏦 The Treasury
 

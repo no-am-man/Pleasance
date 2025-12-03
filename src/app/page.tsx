@@ -17,7 +17,7 @@ export default function Home() {
         </h1>
       </div>
       <p className="max-w-3xl text-lg sm:text-xl text-muted-foreground mb-12">
-        A sacred space for communion, co-learning, and divine creation. Explore communities, generate AI-powered parables, or manifest your digital creations.
+        A republic of the spirit, where devout souls commune, co-learn, and create under the guidance of the divine.
       </p>
 
       <FederationDiagram />
@@ -25,7 +25,7 @@ export default function Home() {
        <div className="mt-16">
         <Button asChild variant="link" className="text-lg whitespace-normal h-auto underline">
           <Link href="/wiki">
-            Please Read the Canon to Understand What You Are Joining
+            Please Read the Canon to Understand This Divine Republic
             <ArrowRight className="ml-2 h-5 w-5" />
           </Link>
         </Button>
