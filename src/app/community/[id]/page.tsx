@@ -16,7 +16,7 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { generateCommunityFlag } from '../flag-action';
+import { generateFlagFromPrompt } from '../generate-flag-action';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { HumanIcon } from '@/components/icons/human-icon';
@@ -765,7 +765,7 @@ export default function CommunityProfilePage() {
 
     try {
       const idToken = await user.getIdToken();
-      const result = await generateCommunityFlag({
+      const result = await generateFlagFromPrompt({
         communityId: community.id,
         communityName: community.name,
         communityDescription: community.description,
@@ -775,6 +775,9 @@ export default function CommunityProfilePage() {
       if (result.error) {
         throw new Error(result.error);
       }
+      
+      const communityRef = doc(firestore, 'communities', community.id);
+      await updateDoc(communityRef, { flagUrl: result.data.flagUrl });
 
       toast({
         title: 'New Flag Hoisted!',
