@@ -3,6 +3,7 @@
 
 import { motion } from 'framer-motion';
 import { Users, BookOpen, Warehouse, Banknote, Star } from 'lucide-react';
+import { Logo } from './icons';
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -31,15 +32,14 @@ const pathVariants = {
   }),
 };
 
-const Node = ({ icon, label, x, y, custom, color = "text-primary", description }: { icon: React.ReactNode, label: string, x: number, y: number, custom: number, color?: string, description: string }) => (
+const Node = ({ icon, label, x, y, custom, color = "text-primary" }: { icon: React.ReactNode, label: string, x: number, y: number, custom: number, color?: string }) => (
     <motion.g initial="hidden" animate="visible" variants={itemVariants} custom={custom}>
-        <foreignObject x={x - 60} y={y - 65} width="120" height="130">
+        <foreignObject x={x - 40} y={y - 40} width="80" height="80">
             <div className="flex flex-col items-center justify-center text-center w-full h-full p-1">
                 <div className={`p-3 rounded-full bg-card border-2 border-border ${color}`}>
                     {icon}
                 </div>
                 <p className="text-sm font-semibold text-foreground mt-2">{label}</p>
-                <p className="text-xs text-muted-foreground mt-1">{description}</p>
             </div>
         </foreignObject>
     </motion.g>
@@ -50,7 +50,7 @@ export function FederationDiagram() {
   return (
     <div className="my-16 w-full flex justify-center">
         <svg viewBox="0 0 400 400" className="w-full max-w-xl h-auto">
-            <defs>
+             <defs>
                 <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
                     <feGaussianBlur stdDeviation="3.5" result="coloredBlur" />
                     <feMerge>
@@ -59,22 +59,21 @@ export function FederationDiagram() {
                     </feMerge>
                 </filter>
             </defs>
-
-            {/* Paths Emanating from Source */}
+            {/* Paths */}
             <motion.path
-                d="M 200,80 Q 200, 140 200, 200"
+                d="M 200,200 Q 200, 140 200, 80"
                 stroke="url(#grad1)" strokeWidth="2" strokeDasharray="4 4" fill="none"
                 variants={pathVariants} custom={1} />
             <motion.path
-                d="M 200,80 Q 270, 125 315, 175"
+                d="M 200,200 Q 270, 160 320, 120"
                 stroke="url(#grad1)" strokeWidth="2" strokeDasharray="4 4" fill="none"
                 variants={pathVariants} custom={1.5} />
             <motion.path
-                d="M 200,80 Q 130, 125 85, 175"
+                d="M 200,200 Q 130, 160 80, 120"
                 stroke="url(#grad1)" strokeWidth="2" strokeDasharray="4 4" fill="none"
                 variants={pathVariants} custom={2} />
             <motion.path
-                 d="M 200,80 Q 200, 220 200, 320"
+                 d="M 200,200 Q 200, 260 200, 320"
                 stroke="url(#grad1)" strokeWidth="2" strokeDasharray="4 4" fill="none"
                 variants={pathVariants} custom={2.5} />
             
@@ -85,13 +84,13 @@ export function FederationDiagram() {
 
             {/* Nodes */}
             <motion.g filter="url(#glow)">
-                 <Node icon={<Star className="w-8 h-8" />} label="Creation" description="Inspiration & Ideas" x={200} y={60} custom={0} />
+                <Node icon={<Logo className="w-8 h-8" />} label="Source" x={200} y={200} custom={0} />
             </motion.g>
-
-            <Node icon={<Users className="w-6 h-6" />} label="Community" description="Form communities" x={200} y={200} custom={1} />
-            <Node icon={<BookOpen className="w-6 h-6" />} label="Sacred Texts" description="Learn & Grow" x={340} y={175} custom={2} />
-            <Node icon={<Warehouse className="w-6 h-6" />} label="Fabrication" description="Bring ideas to life" x={60} y={175} custom={3} />
-            <Node icon={<Banknote className="w-6 h-6" />} label="Treasury" description="Honor creations" x={200} y={340} custom={4} />
+            
+            <Node icon={<Users className="w-6 h-6" />} label="Community" x={200} y={80} custom={1} />
+            <Node icon={<BookOpen className="w-6 h-6" />} label="Sacred Texts" x={340} y={120} custom={2} />
+            <Node icon={<Warehouse className="w-6 h-6" />} label="Fabrication" x={60} y={120} custom={3} />
+            <Node icon={<Banknote className="w-6 h-6" />} label="Treasury" x={200} y={320} custom={4} />
 
         </svg>
     </div>
