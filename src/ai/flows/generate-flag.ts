@@ -28,7 +28,7 @@ const flagActionSchema = z.object({
     idToken: z.string(),
 });
 
-// 2. Genkit Prompt (Correctly defined at the top level)
+// 2. Genkit Prompt
 const generateFlagPrompt = ai.definePrompt({
   name: 'generateFlagPrompt',
   input: { schema: GenerateFlagInputSchema },
@@ -51,26 +51,8 @@ Design Constraints:
 - Ensure the output is a raw JSON object containing the SVG string, with no additional text, explanations, or markdown.`,
 });
 
-// 3. Genkit Flow (Wraps the prompt)
-const generateFlagFlow = ai.defineFlow(
-  {
-    name: 'generateFlagFlow',
-    inputSchema: GenerateFlagInputSchema,
-    outputSchema: GenerateFlagOutputSchema,
-  },
-  async (input) => {
-    // Correctly call the defined prompt function
-    const { output } = await generateFlagPrompt(input);
-    
-    if (!output) {
-      throw new Error('AI failed to generate SVG output.');
-    }
-    return output;
-  }
-);
 
-
-// 4. Server Action (The main entry point called by the client)
+// 3. Server Action (The main entry point called by the client)
 export async function generateCommunityFlag(values: z.infer<typeof flagActionSchema>) {
     
     try {
@@ -92,8 +74,8 @@ export async function generateCommunityFlag(values: z.infer<typeof flagActionSch
             return { error: "Unauthorized: You are not the owner of this community." };
         }
 
-        // Call the Genkit Flow, which in turn calls the configured prompt
-        const output = await generateFlagFlow({ communityName, communityDescription });
+        // Call the Genkit Prompt directly
+        const { output } = await generateFlagPrompt({ communityName, communityDescription });
         
         if (!output || !output.svg) {
             throw new Error('Failed to generate a flag SVG from the AI flow.');
