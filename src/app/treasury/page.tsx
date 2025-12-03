@@ -16,7 +16,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { LoaderCircle, LogIn, Coins, BrainCircuit, Box, PlusCircle, Eye } from 'lucide-react';
+import { LoaderCircle, LogIn, Coins, BrainCircuit, Box, PlusCircle, Eye, Warehouse } from 'lucide-react';
 import Link from 'next/link';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 
@@ -31,7 +31,7 @@ type Asset = z.infer<typeof AssetSchema> & {
     id: string;
     ownerId: string;
     createdAt: { seconds: number; nanoseconds: number; } | null;
-    fileUrl?: string; // Add fileUrl to the type
+    fileUrl?: string;
 };
 
 function AddAssetForm() {
@@ -192,24 +192,35 @@ function AssetList() {
                     <div className="space-y-4">
                         {assets.map(asset => {
                             const isViewableVirtualAsset = (asset.type === 'virtual' || asset.type === 'ip') && asset.fileUrl;
+                             const isFabricatable = !!asset.fileUrl;
                             return (
-                                <div key={asset.id} className="flex items-start gap-4 rounded-md border p-4">
-                                    {asset.type === 'physical' ? <Box className="h-8 w-8 text-primary mt-1" /> : <BrainCircuit className="h-8 w-8 text-primary mt-1" />}
+                                <div key={asset.id} className="flex flex-col sm:flex-row items-start gap-4 rounded-md border p-4">
+                                    {asset.type === 'physical' ? <Box className="h-8 w-8 text-primary mt-1 flex-shrink-0" /> : <BrainCircuit className="h-8 w-8 text-primary mt-1 flex-shrink-0" />}
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex justify-between items-center">
+                                        <div className="flex justify-between items-start">
                                             <h3 className="font-semibold">{asset.name}</h3>
-                                            <p className="font-mono text-primary font-bold text-lg">${asset.value.toLocaleString()}</p>
+                                            <p className="font-mono text-primary font-bold text-lg whitespace-nowrap pl-4">${asset.value.toLocaleString()}</p>
                                         </div>
-                                        <p className="text-sm text-muted-foreground break-words">{asset.description}</p>
+                                        <p className="text-sm text-muted-foreground break-words whitespace-pre-wrap">{asset.description}</p>
                                     </div>
-                                    {isViewableVirtualAsset && (
-                                        <Button asChild variant="outline" size="sm">
-                                            <Link href={`/svg3d?assetUrl=${encodeURIComponent(asset.fileUrl!)}`}>
-                                                <Eye className="mr-2 h-4 w-4" />
-                                                View
-                                            </Link>
-                                        </Button>
-                                    )}
+                                    <div className="flex gap-2 self-start sm:self-center flex-shrink-0">
+                                        {isViewableVirtualAsset && (
+                                            <Button asChild variant="outline" size="sm">
+                                                <Link href={`/workshop?assetUrl=${encodeURIComponent(asset.fileUrl!)}`}>
+                                                    <Eye className="mr-2 h-4 w-4" />
+                                                    View
+                                                </Link>
+                                            </Button>
+                                        )}
+                                        {isFabricatable && (
+                                            <Button asChild variant="secondary" size="sm">
+                                                <Link href={`/fabrication?assetId=${asset.id}`}>
+                                                    <Warehouse className="mr-2 h-4 w-4" />
+                                                    Fabricate
+                                                </Link>
+                                            </Button>
+                                        )}
+                                    </div>
                                 </div>
                             );
                         })}

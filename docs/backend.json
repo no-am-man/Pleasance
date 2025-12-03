@@ -276,11 +276,31 @@
         "ownerId": { "type": "string", "description": "The UID of the user who owns the asset." },
         "name": { "type": "string", "description": "The name of the asset." },
         "description": { "type": "string", "description": "A detailed description of the asset." },
-        "type": { "type": "string", "enum": ["physical", "virtual", "ip"], "description": "The type of asset (physical, virtual, or intellectual property)." },
+        "type": { "type": "string", "enum": ["physical", "virtual", "ip"], "description": "The type of asset." },
         "value": { "type": "number", "description": "The estimated value of the asset in USD." },
         "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the asset was declared." }
       },
       "required": ["id", "ownerId", "name", "description", "type", "value", "createdAt"]
+    },
+    "FabricationOrder": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "FabricationOrder",
+      "type": "object",
+      "description": "Represents a ticket or order for asset fabrication.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the fabrication order." },
+        "userId": { "type": "string", "description": "The UID of the user who placed the order." },
+        "assetId": { "type": "string", "description": "Reference to the asset being fabricated from the user's Treasury." },
+        "assetName": { "type": "string", "description": "The name of the asset being fabricated." },
+        "fileUrl": { "type": "string", "format": "uri", "description": "URL to the design file (e.g., STL, OBJ, PDF)." },
+        "supplier": { "type": "string", "description": "The chosen supplier for fabrication (e.g., 'NNO.Studio')." },
+        "status": { "type": "string", "enum": ["pending", "in_progress", "completed", "shipped", "cancelled"], "description": "Current status of the fabrication order." },
+        "cost": { "type": "number", "description": "The total cost of the fabrication order in USD." },
+        "notes": { "type": "string", "description": "Special instructions or notes for the order." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of order creation." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Timestamp of the last status update." }
+      },
+      "required": ["id", "userId", "assetId", "assetName", "fileUrl", "supplier", "status", "cost", "createdAt"]
     },
     "JoinRequest": {
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -503,8 +523,19 @@
                 { "name": "userId", "description": "The ID of the user." }
             ]
         }
+      },
+      {
+        "path": "/fabricationOrders/{orderId}",
+        "definition": {
+          "entityName": "FabricationOrder",
+          "schema": { "$ref": "#/backend/entities/FabricationOrder" },
+          "description": "Stores fabrication orders as a top-level collection. Users can read their own orders, and create new ones. Suppliers can update status.",
+          "params": [
+            { "name": "orderId", "description": "The unique ID for the fabrication order." }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities` in a top-level collection, they become publicly queryable, which is essential for search and join features. User-specific data, including stories and assets, is nested under `/users/{userId}` to ensure data privacy and allow for simple, secure queries. Public profiles are in `/community-profiles` to allow discoverability without exposing private user account details. Messages are stored in a subcollection under each community to keep them organized and contextual."
+    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities`, `workshops`, and `fabricationOrders` in top-level collections, they become queryable. User-specific data is nested under `/users/{userId}` to ensure privacy. Public profiles are in `/community-profiles` to allow discoverability without exposing private account details."
   }
 }
