@@ -12,6 +12,9 @@ import {
 import {
   ArrowRight,
   LogIn,
+  Landmark,
+  Scaling,
+  Wind,
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { FederationDiagram } from '@/components/federation-diagram';
@@ -27,9 +30,45 @@ export default function Home() {
           </h1>
         </div>
         <p className="max-w-3xl mx-auto text-lg sm:text-xl text-foreground/80">
-          A Federated Republic of the Spirit. A decentralized network for interdisciplinary spirituality, conscious development, and creation.
+          A Federated Republic of the Spirit for communion, co-learning, and creation.
         </p>
       </div>
+
+       <Card className="max-w-3xl mx-auto shadow-lg mb-12">
+        <CardHeader>
+          <CardTitle className="text-2xl">Interpreting "A Federated Republic of the Spirit"</CardTitle>
+          <CardDescription>This term combines three concepts to define the organization's structure and mission.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+            <div className="flex items-start gap-4">
+                <div className="bg-primary/10 p-2 rounded-full">
+                    <Landmark className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                    <h3 className="font-semibold">Republic (Community)</h3>
+                    <p className="text-muted-foreground">Implies a community governed by its members, emphasizing autonomy, shared governance, and the equality of all participants in their spiritual journey.</p>
+                </div>
+            </div>
+             <div className="flex items-start gap-4">
+                <div className="bg-primary/10 p-2 rounded-full">
+                    <Scaling className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                    <h3 className="font-semibold">Federated (Structure)</h3>
+                    <p className="text-muted-foreground">An association of independent units that unite under a common umbrella while retaining unique identities. Pleasance is not a single rigid doctrine but a network that respects and integrates diverse spiritual paths.</p>
+                </div>
+            </div>
+             <div className="flex items-start gap-4">
+                 <div className="bg-primary/10 p-2 rounded-full">
+                    <Wind className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                    <h3 className="font-semibold">Of the Spirit (Purpose)</h3>
+                    <p className="text-muted-foreground">Defines the core focus on matters of meaning, consciousness, transcendence, and well-being, rather than material or political concerns.</p>
+                </div>
+            </div>
+        </CardContent>
+      </Card>
 
        <Card className="max-w-3xl mx-auto shadow-lg mb-12 border-2 border-primary bg-primary/5">
         <CardHeader className="items-center text-center">
