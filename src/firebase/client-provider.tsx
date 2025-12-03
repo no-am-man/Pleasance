@@ -85,9 +85,5 @@ export const useUser = (): AuthContextState => {
 // This hook is for memoizing Firebase queries/references.
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const memoized = useMemo(factory, deps);
-  if(memoized && typeof memoized === 'object') {
-    (memoized as T & {__memo?: boolean}).__memo = true;
-  }
-  return memoized;
+  return useMemo(factory, deps);
 }
