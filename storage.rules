@@ -43,5 +43,13 @@ service firebase.storage {
     match /communities/{communityId}/flag.png {
       allow write: if true;
     }
+    
+    //====================================================================
+    // Public Wiki Images: Allow server-side writes for generated images.
+    // Public read is handled by the generic rule above.
+    //====================================================================
+    match /wiki/images/{imageId} {
+        allow write: if true; // Allow server-side actions to write images
+    }
   }
 }

@@ -968,7 +968,29 @@ export async function refineWikiPageAction(values: z.infer<typeof RefineWikiPage
             return { error: 'AI failed to generate refined content.' };
         }
 
-        return { refinedContent: result.refinedContent };
+        let finalContent = result.refinedContent;
+
+        if (result.image) {
+            const adminApp = initializeAdminApp();
+            const storage = getStorage(adminApp);
+            const bucket = storage.bucket(firebaseConfig.storageBucket);
+
+            const imageBuffer = Buffer.from(result.image.split(',')[1], 'base64');
+            const imageId = adminApp.firestore().collection('_').doc().id;
+            const storagePath = `wiki/images/${imageId}.png`;
+
+            const file = bucket.file(storagePath);
+            await file.save(imageBuffer, {
+                metadata: { contentType: 'image/png' },
+                public: true,
+            });
+            const publicUrl = `https://storage.googleapis.com/${bucket.name}/${storagePath}`;
+            
+            finalContent = `![${validatedFields.data.title}](${publicUrl})\n\n${finalContent}`;
+        }
+        
+        return { refinedContent: finalContent };
+
     } catch (e) {
         console.error('Refine Wiki Page Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
@@ -982,3 +1004,4 @@ export async function refineWikiPageAction(values: z.infer<typeof RefineWikiPage
     
 
     
+
