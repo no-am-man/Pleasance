@@ -10,12 +10,14 @@ import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
     <AuthProvider>
+      <FirebaseErrorListener />
       <Header />
       <div className="fixed top-16 left-0 right-0 z-40 h-12 bg-background/70 backdrop-blur-sm border-b">
         <Breadcrumbs />
