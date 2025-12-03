@@ -339,8 +339,12 @@ export default function CommunityRoadmapPage() {
       </div>
 
       <div className="text-center mb-12">
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3 font-headline">
-          <KanbanIcon className="w-10 h-10" /> {community?.name} Roadmap
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight flex items-center justify-center gap-3 font-headline">
+          <KanbanIcon className="w-10 h-10 text-primary" />
+          <span>
+            <span className="text-foreground">{community?.name}</span>
+            <span className="text-primary"> Roadmap</span>
+          </span>
         </h1>
         <p className="text-lg text-muted-foreground mt-2">The private development plan for this community.</p>
       </div>
