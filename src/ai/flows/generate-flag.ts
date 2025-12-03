@@ -27,9 +27,6 @@ const generateFlagPrompt = ai.definePrompt(
   {
     name: 'generateFlagPrompt',
     input: { schema: GenerateFlagInputSchema },
-    config: {
-        model: 'googleai/gemini-1.5-pro-latest',
-    },
     prompt: `You are an expert graphic designer who specializes in creating symbolic, minimalist, and modern vector art for flags.
 
 Task: Generate a complete, valid SVG string for a flag representing an online community.
@@ -55,7 +52,23 @@ const generateFlagFlow = ai.defineFlow(
     outputSchema: GenerateFlagOutputSchema,
   },
   async (input) => {
-    const { output } = await generateFlagPrompt(input);
+    const { output } = await ai.generate({
+        model: 'googleai/gemini-pro',
+        prompt: `You are an expert graphic designer who specializes in creating symbolic, minimalist, and modern vector art for flags.
+
+Task: Generate a complete, valid SVG string for a flag representing an online community.
+
+Community Name: "${input.communityName}"
+Community Description: "${input.communityDescription}"
+
+Requirements:
+1.  The SVG must be a single, self-contained string.
+2.  The SVG should have a 16:9 aspect ratio. A viewBox of "0 0 160 90" is ideal.
+3.  The design must be abstract, geometric, and symbolic. DO NOT include any text, letters, or numbers.
+4.  Use a modern, professional color palette. Use 2-3 harmonious colors.
+5.  The background of the SVG should be a solid color.
+6.  Your ENTIRE response MUST be ONLY the raw SVG code, starting with '<svg' and ending with '</svg>'. Do not include any other text, explanations, or markdown formatting like \`\`\`xml.`
+    });
     const svgText = output?.text || '';
 
     if (!svgText.startsWith('<svg')) {

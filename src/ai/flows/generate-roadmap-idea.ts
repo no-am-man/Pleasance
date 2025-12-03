@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A flow to generate a new roadmap card idea from a simple prompt.
@@ -34,7 +35,7 @@ User's Idea: "{{prompt}}"
 Generate a single roadmap card.
 `,
     config: {
-        model: "googleai/gemini-1.5-pro-latest",
+        model: "googleai/gemini-pro",
     },
 });
 

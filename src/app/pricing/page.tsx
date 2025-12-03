@@ -12,12 +12,13 @@ const tiers = [
     name: 'Congregation',
     price: '$0',
     frequency: '/ forever',
-    description: 'Join the flock and participate in the divine creation.',
+    description: 'Join the flock and participate in the divine creation on the free tier.',
     features: [
       'Access to the Community Federation',
       'Learn with Nuncy Lingua',
       'View the Project Roadmap & Bug Tracker',
       'Declare assets in your Treasury',
+      'Uses standard AI models',
     ],
     cta: 'Join the Congregation',
     href: '/login',
@@ -31,7 +32,7 @@ const tiers = [
     features: [
       'All Congregation features',
       'Create and lead your own Communities',
-      'Utilize advanced AI models (Gemini Pro)',
+      'Utilize advanced AI models (Gemini 1.5 Pro)',
       'Generate flags, avatars, and art',
       'Priority access to the Fabrication workshop',
     ],
@@ -119,8 +120,8 @@ export default function PricingPage() {
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
-              The 'Clergy' and 'Founder' tiers provide access to advanced generative models like Gemini Pro.
-              An active subscription is required to cover the associated Google Genkit API costs to ensure the highest quality results for your creations.
+              The 'Clergy' and 'Founder' tiers are required to access advanced generative models like Gemini 1.5 Pro.
+              An active subscription covers the associated Google Genkit API costs, ensuring the highest quality results for your creations. The free 'Congregation' tier uses standard models.
             </p>
           </CardContent>
         </Card>
