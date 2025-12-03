@@ -59,12 +59,7 @@ const generateCommunityFlow = ai.defineFlow(
     outputSchema: GenerateCommunityOutputSchema,
   },
   async input => {
-    const {output} = await ai.generate({
-        prompt: generateCommunityPrompt.prompt,
-        model: 'googleai/gemini-1.5-flash-latest',
-        input: input,
-        output: { schema: generateCommunityPrompt.output?.schema },
-    });
+    const {output} = await generateCommunityPrompt(input);
     return output!;
   }
 );
