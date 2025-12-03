@@ -191,7 +191,7 @@ function TextCommentForm({ communityId, messageId }: { communityId: string, mess
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!text.trim() || !user) return;
+        if (!text.trim() || !user || !messageId || !communityId) return;
 
         setIsSubmitting(true);
         const commentsColRef = collection(firestore, `communities/${communityId}/messages/${messageId}/comments`);
@@ -224,14 +224,15 @@ function TextCommentForm({ communityId, messageId }: { communityId: string, mess
     );
 }
 
-function CommentCard({ comment, canManage }: { comment: Comment; canManage: boolean; }) {
+function CommentCard({ comment, communityId, messageId, canManage }: { comment: Comment; communityId: string; messageId: string, canManage: boolean; }) {
     const { toast } = useToast();
     const [isUpdating, setIsUpdating] = useState(false);
     const isDeleted = comment.deleted;
 
     const handleDelete = async () => {
+        if(!comment.id || !communityId || !messageId) return;
         setIsUpdating(true);
-        const commentDocRef = doc(firestore, `communities/${useParams().id}/messages/${useParams().messageId}/comments`, comment.id);
+        const commentDocRef = doc(firestore, `communities/${communityId}/messages/${messageId}/comments`, comment.id);
         
         const updatePayload = {
             deleted: true,
@@ -273,7 +274,7 @@ function CommentCard({ comment, canManage }: { comment: Comment; canManage: bool
             {canManage && (
                  <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" disabled={isUpdating} aria-label="Delete comment" className="opacity-0 group-hover:opacity-100">
+                        <Button variant="ghost" size="icon" disabled={isUpdating || !comment.id} aria-label="Delete comment" className="opacity-0 group-hover:opacity-100">
                             <Ban className="w-4 h-4 text-muted-foreground hover:text-destructive" />
                         </Button>
                     </AlertDialogTrigger>
@@ -299,12 +300,14 @@ function CommentCard({ comment, canManage }: { comment: Comment; canManage: bool
 
 function CommentThread({ message, comments, isLoading, canManage }: { message: Message, comments: Comment[] | undefined, isLoading: boolean, canManage: boolean }) {
     const { user } = useUser();
+    const params = useParams();
+    const communityId = Array.isArray(params.id) ? params.id[0] : params.id;
 
     return (
         <div className="pl-12 pr-4 pb-4 space-y-4">
             <div className="max-h-60 overflow-y-auto space-y-3 pr-2">
                 {isLoading && <LoaderCircle className="mx-auto animate-spin" />}
-                {comments && comments.length > 0 && comments.map(comment => <CommentCard key={comment.id} comment={comment} canManage={canManage} />)}
+                {comments && comments.length > 0 && comments.map(comment => <CommentCard key={comment.id} comment={comment} communityId={communityId} messageId={message.id} canManage={canManage} />)}
             </div>
             {user && <TextCommentForm communityId={message.communityId} messageId={message.id} />}
         </div>
@@ -314,17 +317,20 @@ function CommentThread({ message, comments, isLoading, canManage }: { message: M
 function MessageCard({ message, canManage }: { message: Message; canManage: boolean; }) {
     const { toast } = useToast();
     const [isUpdating, setIsUpdating] = useState(false);
+    const { user } = useUser();
 
     const isDone = message.status === 'done';
     const isDeleted = message.deleted;
+    const isReady = !!message.id && !!message.communityId;
     
-    const commentsQuery = useMemo(() => query(collection(firestore, `communities/${message.communityId}/messages/${message.id}/comments`), orderBy('createdAt', 'asc')), [message.communityId, message.id]);
+    const commentsQuery = useMemo(() => isReady ? query(collection(firestore, `communities/${message.communityId}/messages/${message.id}/comments`), orderBy('createdAt', 'asc')) : null, [isReady, message.communityId, message.id]);
     const [comments, isLoadingComments] = useCollectionData<Comment>(commentsQuery, {
       idField: 'id'
     });
     const commentCount = comments?.filter(c => !c.deleted).length || 0;
 
     const handleToggleStatus = async () => {
+        if (!isReady) return;
         setIsUpdating(true);
         const newStatus = isDone ? 'active' : 'done';
         const messageDocRef = doc(firestore, 'communities', message.communityId, 'messages', message.id);
@@ -336,6 +342,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
     };
 
     const handleDelete = async () => {
+        if (!isReady) return;
         setIsUpdating(true);
         const messageDocRef = doc(firestore, `communities/${message.communityId}/messages`, message.id);
 
@@ -372,7 +379,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                     <span className="font-semibold text-sm text-muted-foreground">{message.userName}'s message marked as done.</span>
                 </div>
                 {canManage && (
-                    <Button variant="ghost" size="icon" onClick={handleToggleStatus} disabled={isUpdating}>
+                    <Button variant="ghost" size="icon" onClick={handleToggleStatus} disabled={isUpdating || !isReady}>
                          {isUpdating ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Undo2 className="w-4 h-4 text-muted-foreground" />}
                     </Button>
                 )}
@@ -404,7 +411,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                                 <>
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
-                                            <Button variant="ghost" size="icon" disabled={isUpdating} aria-label="Delete message">
+                                            <Button variant="ghost" size="icon" disabled={isUpdating || !isReady} aria-label="Delete message">
                                                 <Ban className="w-4 h-4 text-muted-foreground hover:text-destructive" />
                                             </Button>
                                         </AlertDialogTrigger>
@@ -423,7 +430,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                                             </AlertDialogFooter>
                                         </AlertDialogContent>
                                     </AlertDialog>
-                                    <Button variant="ghost" size="icon" onClick={handleToggleStatus} disabled={isUpdating} aria-label="Mark as done">
+                                    <Button variant="ghost" size="icon" onClick={handleToggleStatus} disabled={isUpdating || !isReady} aria-label="Mark as done">
                                         {isUpdating ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Circle className="w-4 h-4 text-muted-foreground" />}
                                     </Button>
                                 </>
@@ -436,7 +443,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                     <CardFooter className="bg-muted/50 p-2">
                         <div className="flex items-center gap-2">
                             <CollapsibleTrigger asChild>
-                                <Button variant="ghost" size="sm" className="relative">
+                                <Button variant="ghost" size="sm" className="relative" disabled={!isReady}>
                                     <MessageSquare className="mr-2 h-4 w-4" />
                                     Comment
                                     {commentCount > 0 && (
@@ -450,7 +457,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                     </CardFooter>
                 </div>
                 <CollapsibleContent>
-                   <CommentThread message={message} comments={comments} isLoading={isLoadingComments} canManage={canManage} />
+                   <CommentThread message={message} comments={comments} isLoading={isLoadingComments} canManage={canManage || user?.uid === message.userId} />
                 </CollapsibleContent>
             </Card>
         </Collapsible>
@@ -971,5 +978,3 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
-
-    
