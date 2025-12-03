@@ -394,7 +394,7 @@ export async function seedRoadmapData() {
     try {
         const adminApp = initializeAdminApp();
         const firestore = getFirestore(adminApp);
-        const batch = writeBatch(firestore);
+        const batch = firestore.batch();
 
         const initialData = [
             { id: 'ideas', title: '💡 Ideas', cards: [
