@@ -212,7 +212,7 @@ function AddAssetForm() {
 
 function AssetList() {
     const { user } = useUser();
-    const assetsQuery = useMemoFirebase(() => user ? query(collection(firestore, 'users', user.uid, 'assets')) : null, [user]);
+    const assetsQuery = useMemoFirebase(() => user ? query(collection(firestore, 'users', user.uid, 'assets')) : null, [user, firestore]);
     const [assets, isLoading, error] = useCollectionData<Asset>(assetsQuery, {
       idField: 'id'
     });
