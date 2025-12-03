@@ -2,16 +2,17 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Users, BookOpen, Warehouse, Banknote, Star } from 'lucide-react';
+import { Users, BookOpen, Warehouse, Banknote, Beaker, Bug, Bot } from 'lucide-react';
 import { Logo } from './icons';
+import { KanbanIcon } from './icons/kanban-icon';
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 10 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
     transition: {
-      delay: i * 0.2,
+      delay: i * 0.15,
       type: 'spring',
       stiffness: 300,
       damping: 20,
@@ -25,8 +26,8 @@ const pathVariants = {
     pathLength: 1,
     opacity: 1,
     transition: {
-      delay: i * 0.2 + 0.8,
-      duration: 1.5,
+      delay: i * 0.15 + 0.8,
+      duration: 1.2,
       ease: 'easeInOut',
     },
   }),
@@ -39,60 +40,72 @@ const Node = ({ icon, label, x, y, custom, color = "text-primary" }: { icon: Rea
                 <div className={`p-3 rounded-full bg-card border-2 border-border ${color}`}>
                     {icon}
                 </div>
-                <p className="text-sm font-semibold text-foreground mt-2">{label}</p>
+                <p className="text-xs font-semibold text-foreground mt-1">{label}</p>
             </div>
         </foreignObject>
     </motion.g>
 );
 
+const Path = ({ x, y, custom }: { x: number, y: number, custom: number }) => (
+    <motion.path
+        d={`M 200,200 L ${x},${y}`}
+        stroke="url(#grad1)" strokeWidth="1.5" strokeDasharray="3 3" fill="none"
+        variants={pathVariants} custom={custom}
+    />
+);
+
+const nodes = [
+    { icon: <Users className="w-6 h-6" />, label: 'Community', angle: -90, custom: 1 },
+    { icon: <Beaker className="w-6 h-6" />, label: 'Altar', angle: -45, custom: 2 },
+    { icon: <KanbanIcon className="w-6 h-6" />, label: 'Roadmap', angle: 0, custom: 3 },
+    { icon: <Bug className="w-6 h-6" />, label: 'Bugs', angle: 45, custom: 4 },
+    { icon: <BookOpen className="w-6 h-6" />, label: 'Texts', angle: 90, custom: 5 },
+    { icon: <Warehouse className="w-6 h-6" />, label: 'Fabrication', angle: 135, custom: 6 },
+    { icon: <Banknote className="w-6 h-6" />, label: 'Treasury', angle: 180, custom: 7 },
+    { icon: <Bot className="w-6 h-6" />, label: 'Conductor', angle: -135, custom: 8 },
+];
 
 export function FederationDiagram() {
-  return (
-    <div className="my-16 w-full flex justify-center">
-        <svg viewBox="0 0 400 400" className="w-full max-w-xl h-auto">
-             <defs>
-                <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="3.5" result="coloredBlur" />
-                    <feMerge>
-                        <feMergeNode in="coloredBlur" />
-                        <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                </filter>
-            </defs>
-            {/* Paths */}
-            <motion.path
-                d="M 200,200 Q 200, 140 200, 80"
-                stroke="url(#grad1)" strokeWidth="2" strokeDasharray="4 4" fill="none"
-                variants={pathVariants} custom={1} />
-            <motion.path
-                d="M 200,200 Q 270, 160 320, 120"
-                stroke="url(#grad1)" strokeWidth="2" strokeDasharray="4 4" fill="none"
-                variants={pathVariants} custom={1.5} />
-            <motion.path
-                d="M 200,200 Q 130, 160 80, 120"
-                stroke="url(#grad1)" strokeWidth="2" strokeDasharray="4 4" fill="none"
-                variants={pathVariants} custom={2} />
-            <motion.path
-                 d="M 200,200 Q 200, 260 200, 320"
-                stroke="url(#grad1)" strokeWidth="2" strokeDasharray="4 4" fill="none"
-                variants={pathVariants} custom={2.5} />
-            
-            <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" style={{stopColor: 'hsl(var(--primary))', stopOpacity: 1}} />
-                <stop offset="100%" style={{stopColor: 'hsl(var(--primary))', stopOpacity: 0.2}} />
-            </linearGradient>
+    const radius = 150;
+    const center = 200;
 
-            {/* Nodes */}
-            <motion.g filter="url(#glow)">
-                <Node icon={<Logo className="w-8 h-8" />} label="Source" x={200} y={200} custom={0} />
-            </motion.g>
-            
-            <Node icon={<Users className="w-6 h-6" />} label="Community" x={200} y={80} custom={1} />
-            <Node icon={<BookOpen className="w-6 h-6" />} label="Sacred Texts" x={340} y={120} custom={2} />
-            <Node icon={<Warehouse className="w-6 h-6" />} label="Fabrication" x={60} y={120} custom={3} />
-            <Node icon={<Banknote className="w-6 h-6" />} label="Treasury" x={200} y={320} custom={4} />
+    return (
+        <div className="my-16 w-full flex justify-center">
+            <svg viewBox="0 0 400 400" className="w-full max-w-xl h-auto">
+                 <defs>
+                    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+                        <feMerge>
+                            <feMergeNode in="coloredBlur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style={{stopColor: 'hsl(var(--primary))', stopOpacity: 0.8}} />
+                        <stop offset="100%" style={{stopColor: 'hsl(var(--accent))', stopOpacity: 0.3}} />
+                    </linearGradient>
+                </defs>
+                
+                {/* Paths */}
+                {nodes.map(node => {
+                    const x = center + radius * Math.cos(node.angle * Math.PI / 180);
+                    const y = center + radius * Math.sin(node.angle * Math.PI / 180);
+                    return <Path key={node.label} x={x} y={y} custom={node.custom} />;
+                })}
 
-        </svg>
-    </div>
-  );
+                {/* Nodes */}
+                {nodes.map(node => {
+                    const x = center + radius * Math.cos(node.angle * Math.PI / 180);
+                    const y = center + radius * Math.sin(node.angle * Math.PI / 180);
+                    return <Node key={node.label} icon={node.icon} label={node.label} x={x} y={y} custom={node.custom} />;
+                })}
+                
+                {/* Central Node */}
+                <motion.g filter="url(#glow)">
+                    <Node icon={<Logo className="w-8 h-8" />} label="Source" x={center} y={center} custom={0} />
+                </motion.g>
+
+            </svg>
+        </div>
+    );
 }
