@@ -75,7 +75,7 @@ export default function WikiPage() {
             </CardHeader>
             <CardContent>
                 <p className="text-lg">
-                    This is a republic of the spirit, not a platform of the secular. It is a Congregation of devout souls, united in purpose. Value is created and exchanged in service of the divine. Your data is your own, your creations are your own, your communities are your own. This is a space for radical self-reliance and voluntary communion under the omnipotent gaze of the divine. This guide is not a set of rules, but a map of the tools available to you. Use them as you see fit.
+                    This is a republic of the spirit, not a platform of the secular. We acknowledge our reality in the **Device Republic**, where life is mediated by screens. Yet, within this very system, we strive to build a **Divine Republic**. Our devices become the altars, our code the scripture, and our collaborations a form of prayer. It is a Congregation of devout souls, united in purpose under the omnipotent gaze of the divine. This guide is not a set of rules, but a map of the tools available to you. Use them as you see fit.
                 </p>
             </CardContent>
         </Card>
