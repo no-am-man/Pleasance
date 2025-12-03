@@ -250,7 +250,7 @@ function AssetList() {
                                     <div className="flex gap-2 self-start sm:self-center flex-shrink-0">
                                         {isViewableVirtualAsset && (
                                             <Button asChild variant="outline" size="sm">
-                                                <Link href={`/workshop?assetUrl=${encodeURIComponent(asset.fileUrl!)}`}>
+                                                <Link href={`/svg3d?assetUrl=${encodeURIComponent(asset.fileUrl!)}`}>
                                                     <Eye className="mr-2 h-4 w-4" />
                                                     View
                                                 </Link>

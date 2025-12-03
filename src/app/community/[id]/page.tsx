@@ -1,5 +1,3 @@
-
-
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -9,11 +7,11 @@ import { firestore } from '@/firebase/config';
 import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, setDoc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, GalleryHorizontal, Camera, Presentation, Share, Paintbrush, KanbanIcon } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
@@ -23,16 +21,12 @@ import { HumanIcon } from '@/components/icons/human-icon';
 import { AiIcon } from '@/components/icons/ai-icon';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import Image from 'next/image';
-import { getAiChatResponse, generateCommunityFlagAction, generateSvg3d, saveSvgAsset, createHistorySnapshot } from '@/app/actions';
+import { getAiChatResponse, generateCommunityFlagAction } from '@/app/actions';
 import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
 import { type ChatHistory } from 'genkit';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { Svg3dCube } from '@/components/icons/svg3d-cube';
-import { formatDistanceToNow } from 'date-fns';
-import { GenerateSvg3dInputSchema, type ColorPixel } from '@/lib/types';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
+import { SaveToTreasuryForm } from '@/components/community/SaveToTreasuryForm';
 
 
 type Member = {
@@ -110,66 +104,12 @@ type Creation = {
     pixels: ColorPixel[];
 };
 
-type Story = {
-    id: string;
-    userId: string;
-    level: string;
-    sourceLanguage: string;
-    targetLanguage: string;
-    nativeText: string;
-    translatedText: string;
-    createdAt: { seconds: number; nanoseconds: number; } | null;
-    audioUrl?: string; 
-    status?: 'processing' | 'complete' | 'failed';
+type ColorPixel = {
+    x: number;
+    y: number;
+    z: number;
+    color: string;
 };
-
-type HistorySnapshot = {
-    id: string;
-    userId: string;
-    createdAt: { seconds: number; nanoseconds: number; } | null;
-    storyCount: number;
-    stories: Story[];
-};
-
-const Svg3dSchema = GenerateSvg3dInputSchema;
-
-const SaveAssetSchema = z.object({
-    assetName: z.string().min(2, 'Asset name must be at least 2 characters.'),
-    value: z.coerce.number().min(0, 'Value must be a positive number.'),
-});
-
-function SnapshotViewer({ snapshot }: { snapshot: HistorySnapshot }) {
-  return (
-    <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
-      <DialogHeader>
-        <DialogTitle>Story Snapshot from {snapshot.createdAt ? new Date(snapshot.createdAt.seconds * 1000).toLocaleString() : 'a past time'}</DialogTitle>
-        <DialogDescription>
-          A view of your {snapshot.storyCount} stories from this point in time.
-        </DialogDescription>
-      </DialogHeader>
-      <div className="flex-grow overflow-y-auto pr-4 space-y-4">
-        {snapshot.stories.map((story, index) => (
-          <Card key={`${story.id}-${index}`} className="bg-muted/50">
-            <CardHeader>
-                <CardTitle className="text-base">{story.nativeText.substring(0, 100)}...</CardTitle>
-                <CardDescription className="text-xs">
-                    {story.level} &middot; {story.sourceLanguage} to {story.targetLanguage}
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                 <p className="text-sm text-muted-foreground italic whitespace-pre-wrap">{story.translatedText}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-       <DialogClose asChild>
-          <Button type="button" variant="secondary">
-            Close
-          </Button>
-        </DialogClose>
-    </DialogContent>
-  );
-}
 
 
 function MemberCard({ member, communityId }: { member: Member; communityId: string;}) {
@@ -699,138 +639,6 @@ function JoinRequests({ communityId, communityDocRef }: { communityId: string, c
     );
 }
 
-const convertPixelsToObj = (pixels: ColorPixel[]): string => {
-    let objContent = '# 3D Point Cloud generated by the Pleasance Community Gallery\n';
-
-    const hexToRgb = (hex: string) => {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        if (!result) return '1 1 1'; // Default to white if parse fails
-        const r = parseInt(result[1], 16) / 255;
-        const g = parseInt(result[2], 16) / 255;
-        const b = parseInt(result[3], 16) / 255;
-        return `${r.toFixed(4)} ${g.toFixed(4)} ${b.toFixed(4)}`;
-    };
-
-    for (const pixel of pixels) {
-        // OBJ format: v x y z r g b
-        objContent += `v ${pixel.x.toFixed(4)} ${pixel.y.toFixed(4)} ${pixel.z.toFixed(4)} ${hexToRgb(pixel.color)}\n`;
-    }
-
-    return objContent;
-};
-
-
-function SaveToTreasuryForm({ creation }: { creation: Creation }) {
-    const { user } = useUser();
-    const { toast } = useToast();
-    const [isSaving, setIsSaving] = useState(false);
-
-    const form = useForm<z.infer<typeof SaveAssetSchema>>({
-        resolver: zodResolver(SaveAssetSchema),
-        defaultValues: { assetName: creation.prompt || '', value: 10 },
-    });
-
-    useEffect(() => {
-        form.setValue('assetName', creation.prompt);
-    }, [creation.prompt, form]);
-
-    async function onSubmit(data: z.infer<typeof SaveAssetSchema>) {
-        if (!user) {
-            toast({ variant: 'destructive', title: 'You must be logged in to save an asset.' });
-            return;
-        }
-        setIsSaving(true);
-        try {
-            const result = await saveSvgAsset({
-                userId: user.uid,
-                assetName: data.assetName,
-                value: data.value,
-                pixels: creation.pixels,
-            });
-
-            if (result.error) {
-                throw new Error(result.error);
-            }
-            toast({
-                title: 'Asset Saved!',
-                description: `"${data.assetName}" has been added to your Treasury.`,
-            });
-            form.reset();
-        } catch (e) {
-            const message = e instanceof Error ? e.message : 'An unknown error occurred.';
-            toast({ variant: 'destructive', title: 'Failed to Save Asset', description: message });
-        } finally {
-            setIsSaving(false);
-        }
-    }
-    
-     const handleDownloadObj = () => {
-        const objData = convertPixelsToObj(creation.pixels);
-        const blob = new Blob([objData], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        const fileName = creation.prompt.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'creation';
-        a.download = `${fileName}.obj`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        toast({ title: 'Downloading .obj file...' });
-    };
-
-    if (!user) return null;
-
-    return (
-        <Card className="mt-4 bg-muted/50">
-            <CardHeader>
-                <CardTitle className="text-lg">Export & Save</CardTitle>
-                <CardDescription>Download for fabrication or save this creation to your Treasury.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="space-y-4">
-                    <Button onClick={handleDownloadObj} variant="secondary" className="w-full">
-                        <Download className="mr-2 h-4 w-4" />
-                        Download .obj File for Fabrication
-                    </Button>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4 border-t">
-                        <FormField
-                            control={form.control}
-                            name="assetName"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Creation Name</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="e.g., 'Digital Sunrise'" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="value"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Creation Value (USD)</FormLabel>
-                                    <FormControl>
-                                        <Input type="number" placeholder="100.00" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <Button type="submit" disabled={isSaving}>
-                            {isSaving ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                            Save Creation to Treasury
-                        </Button>
-                    </form>
-                </div>
-            </CardContent>
-        </Card>
-    );
-}
-
 function PresentationHall({ communityId }: { communityId: string }) {
     const publishedCreationsQuery = useMemoFirebase(() => query(collection(firestore, `communities/${communityId}/creations`), where('status', '==', 'published'), orderBy('createdAt', 'desc')), [communityId]);
     const [creations, isLoading, error] = useCollectionData<Creation>(publishedCreationsQuery, {
@@ -897,7 +705,6 @@ function PresentationHall({ communityId }: { communityId: string }) {
 
 export default function CommunityProfilePage() {
   const params = useParams();
-  const router = useRouter();
   const { user } = useUser();
   const { toast } = useToast();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -1200,7 +1007,7 @@ export default function CommunityProfilePage() {
             <Separator className="my-12" />
              <Card className="shadow-lg">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Paintbrush /> Community Workshop</CardTitle>
+                    <CardTitle className="flex items-center gap-2"><Sparkles /> Community Workshop</CardTitle>
                     <CardDescription>The private creative space for members of {community.name}.</CardDescription>
                 </CardHeader>
                 <CardContent>

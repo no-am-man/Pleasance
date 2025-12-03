@@ -1,4 +1,3 @@
-
 // src/app/svg3d/page.tsx
 'use client';
 
@@ -27,15 +26,19 @@ const SaveAssetSchema = z.object({
     value: z.coerce.number().min(0, 'Value must be a positive number.'),
 });
 
-function SaveToTreasuryForm({ pixels }: { pixels: ColorPixel[] }) {
+function SaveToTreasuryForm({ pixels, prompt }: { pixels: ColorPixel[], prompt: string }) {
     const { user } = useUser();
     const { toast } = useToast();
     const [isSaving, setIsSaving] = useState(false);
 
     const form = useForm<z.infer<typeof SaveAssetSchema>>({
         resolver: zodResolver(SaveAssetSchema),
-        defaultValues: { assetName: '', value: 0 },
+        defaultValues: { assetName: prompt || '', value: 10 },
     });
+
+    useEffect(() => {
+        form.setValue('assetName', prompt);
+    }, [prompt, form]);
 
     async function onSubmit(data: z.infer<typeof SaveAssetSchema>) {
         if (!user) {
@@ -283,7 +286,7 @@ export default function Svg3dPage() {
                 </CardContent>
             </Card>
             
-            {pixels && pixels.length > 0 && <SaveToTreasuryForm pixels={pixels} />}
+            {pixels && pixels.length > 0 && <SaveToTreasuryForm pixels={pixels} prompt={form.getValues('prompt')} />}
         </div>
         
         <div className="lg:sticky lg:top-24">
