@@ -1,7 +1,7 @@
 // src/app/bugs/page.tsx
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -56,7 +56,7 @@ async function submitBugReport(values: z.infer<typeof BugSchema>, user: { uid: s
     await setDoc(newBugRef, newBug);
 }
 
-function AddBugForm() {
+function AddBugForm({ onBugAdded }: { onBugAdded: () => void }) {
     const { user } = useUser();
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
@@ -77,6 +77,7 @@ function AddBugForm() {
             await submitBugReport(data, user);
             toast({ title: 'Bug Report Received', description: 'Thank you for your contribution.' });
             form.reset();
+            onBugAdded(); // Call the callback to trigger a refresh
         } catch (e) {
              const message = e instanceof Error ? e.message : 'An unknown error occurred';
             toast({ variant: 'destructive', title: 'Failed to submit bug report', description: message });
@@ -157,29 +158,7 @@ function AddBugForm() {
     );
 }
 
-function BugList() {
-    const [bugs, setBugs] = useState<Bug[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<Error | null>(null);
-
-    useEffect(() => {
-        if (!firestore) return;
-        
-        const fetchBugs = async () => {
-            try {
-                const bugsQuery = query(collection(firestore, 'bugs'), orderBy('createdAt', 'desc'));
-                const querySnapshot = await getDocs(bugsQuery);
-                const bugsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Bug));
-                setBugs(bugsData);
-            } catch (err: any) {
-                setError(err);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchBugs();
-    }, []);
-
+function BugList({ bugs, isLoading, error }: { bugs: Bug[], isLoading: boolean, error: Error | null }) {
     const getStatusVariant = (status: Bug['status']) => {
         switch (status) {
             case 'done': return 'default';
@@ -243,6 +222,28 @@ function BugList() {
 
 export default function BugsPage() {
   const { user, isUserLoading } = useUser();
+  const [bugs, setBugs] = useState<Bug[]>([]);
+  const [isLoadingBugs, setIsLoadingBugs] = useState(true);
+  const [errorBugs, setErrorBugs] = useState<Error | null>(null);
+
+  const fetchBugs = useCallback(async () => {
+    if (!firestore) return;
+    setIsLoadingBugs(true);
+    try {
+        const bugsQuery = query(collection(firestore, 'bugs'), orderBy('createdAt', 'desc'));
+        const querySnapshot = await getDocs(bugsQuery);
+        const bugsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Bug));
+        setBugs(bugsData);
+    } catch (err: any) {
+        setErrorBugs(err);
+    } finally {
+        setIsLoadingBugs(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchBugs();
+  }, [fetchBugs]);
 
   if (isUserLoading) {
     return (
@@ -263,7 +264,7 @@ export default function BugsPage() {
 
       <div className="space-y-8">
         {user ? (
-            <AddBugForm />
+            <AddBugForm onBugAdded={fetchBugs} />
         ) : (
             <Card className="w-full text-center shadow-lg">
                 <CardHeader>
@@ -279,7 +280,7 @@ export default function BugsPage() {
                 </CardContent>
             </Card>
         )}
-        <BugList />
+        <BugList bugs={bugs} isLoading={isLoadingBugs} error={errorBugs} />
       </div>
     </main>
   );
