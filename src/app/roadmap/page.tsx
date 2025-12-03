@@ -1,4 +1,3 @@
-
 // src/app/roadmap/page.tsx
 'use client';
 
@@ -12,7 +11,7 @@ import { firestore } from '@/firebase/config';
 import { collection, query } from 'firebase/firestore';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType } from '@/lib/types';
-import { LoaderCircle, PlusCircle, Trash2, Sparkles, ArrowRight } from 'lucide-react';
+import { LoaderCircle, PlusCircle, Trash2, Sparkles, ArrowRight, ArrowLeft } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -138,7 +137,7 @@ function AddIdeaForm() {
                                 <FormItem>
                                     <div className="relative">
                                         <FormControl>
-                                            <Textarea placeholder="Describe your idea or..." {...field} className="pr-10"/>
+                                            <Textarea placeholder="Refine Description with AI" {...field} className="pr-10"/>
                                         </FormControl>
                                         <TooltipProvider>
                                             <Tooltip>
@@ -274,7 +273,7 @@ const SortableKanbanCard = ({ card, columnId }: { card: RoadmapCardType; columnI
 }
 
 const KanbanColumn = ({ id, title, cards, children }: RoadmapColumnType & { children?: React.ReactNode }) => (
-  <div className="flex flex-col gap-4 lg:col-span-2">
+  <div className="flex flex-col gap-4 lg:col-span-3">
     <div className="px-3 py-2">
       <h2 className="text-lg font-semibold text-foreground">{title}</h2>
     </div>
@@ -295,9 +294,12 @@ const KanbanColumn = ({ id, title, cards, children }: RoadmapColumnType & { chil
   </div>
 );
 
-const WorkflowArrow = () => (
+const WorkflowArrows = ({ showLeft, showRight }: { showLeft: boolean; showRight: boolean; }) => (
     <div className="hidden lg:flex items-center justify-center h-full">
-        <ArrowRight className="h-8 w-8 text-muted-foreground" />
+        <div className="flex items-center justify-between w-full px-2">
+            {showLeft ? <ArrowLeft className="h-8 w-8 text-muted-foreground" /> : <div className="w-8" />}
+            {showRight ? <ArrowRight className="h-8 w-8 text-muted-foreground" /> : <div className="w-8" />}
+        </div>
     </div>
 );
 
@@ -434,21 +436,25 @@ export default function RoadmapPage() {
 
       {!isLoading && !error && columns.length > 0 && (
          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-11 gap-6 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-15 gap-4 items-start">
+                {/* Ideas Column */}
                 <KanbanColumn {...columns[0]}>
                     {columns[0]?.id === 'ideas' && isFounder && <AddIdeaForm />}
                 </KanbanColumn>
                 
-                <WorkflowArrow />
+                <WorkflowArrows showLeft={false} showRight={true} />
 
+                {/* Next Up Column */}
                 <KanbanColumn {...columns[1]} />
 
-                <WorkflowArrow />
+                <WorkflowArrows showLeft={true} showRight={true} />
                 
+                {/* In Progress Column */}
                 <KanbanColumn {...columns[2]} />
 
-                <WorkflowArrow />
+                <WorkflowArrows showLeft={true} showRight={true} />
 
+                {/* Alive Column */}
                 <KanbanColumn {...columns[3]} />
             </div>
          </DndContext>
