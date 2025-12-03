@@ -564,14 +564,6 @@ export default function RoadmapPage() {
         return newColumns;
       });
 
-    } else {
-      // Moving between columns
-      const sourceColumn = columns.find(col => col.id === activeContainerId);
-      const targetColumn = columns.find(col => col.id === overContainerId);
-
-      if (sourceColumn && targetColumn && sourceColumn.id !== targetColumn.id) {
-         // For now, only handle with move buttons to avoid complex drag-and-drop state logic between columns
-      }
     }
     
     // If reordered, call server action

@@ -12,8 +12,6 @@ export const firebaseConfig = {
   "messagingSenderId": "865373195178",
   "projectId": "studio-2441219031-242ae",
   "storageBucket": "pleasance_bucket",
-  "databaseURL": "https://studio-2441219031-242ae-default-rtdb.firebaseio.com/",
-  "measurementId": "G-MEASUREMENT_ID"
 };
 
 // Initialize Firebase
