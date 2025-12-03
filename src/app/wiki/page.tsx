@@ -6,8 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Users, BookOpen, Warehouse, Banknote, Info, PartyPopper, Github, Beaker } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
+import { KanbanIcon } from '@/components/icons/kanban-icon';
 
-const FeatureCard = ({ icon, title, imageUrl, imageHint, children }: { icon: React.ReactNode, title: string, imageUrl: string, imageHint: string, children: React.ReactNode }) => (
+const FeatureCard = ({ icon, title, imageUrl, imageHint, href, children }: { icon: React.ReactNode, title: string, imageUrl: string, imageHint: string, href: string, children: React.ReactNode }) => (
     <Card className="shadow-lg flex flex-col">
         <CardHeader className="flex flex-row items-center gap-4">
             <div className="bg-primary/10 rounded-full p-3 w-fit">
@@ -27,6 +28,11 @@ const FeatureCard = ({ icon, title, imageUrl, imageHint, children }: { icon: Rea
             </div>
             <p className="text-muted-foreground leading-relaxed pt-4">{children}</p>
         </CardContent>
+        <div className="p-6 pt-0">
+            <Button asChild>
+                <Link href={href}>Explore {title}</Link>
+            </Button>
+        </div>
     </Card>
 );
 
@@ -78,6 +84,7 @@ export default function WikiPage() {
             title="Community Federation"
             imageUrl="https://picsum.photos/seed/101/600/400"
             imageHint="community people"
+            href="/community"
         >
             The Federation is the social fabric. It's where you find or form your tribe. Each community is a self-governing entity, created and owned by its founder. You can create a community around any interest—a language, a technology, a philosophy. Populate it with AI members to spark conversation or invite other sovereign individuals to join your cause. There are no central authorities here.
         </FeatureCard>
@@ -87,8 +94,19 @@ export default function WikiPage() {
             title="AI Workshop"
             imageUrl="https://picsum.photos/seed/105/600/400"
             imageHint="ai collaboration"
+            href="/workshop"
         >
             The AI Workshop is a real-time, collaborative creative space. Anyone in the Federation can join and experiment with generative AI tools together. See who's currently in the workshop, generate 3D point-cloud art (SVG3D) from a prompt, and watch as the creation updates live for everyone. It's a shared sandbox for collective imagination.
+        </FeatureCard>
+
+        <FeatureCard 
+            icon={<KanbanIcon className="h-8 w-8 text-primary" />} 
+            title="Federation Roadmap"
+            imageUrl="https://picsum.photos/seed/106/600/400"
+            imageHint="kanban board"
+            href="/roadmap"
+        >
+            Follow the public development plan for the Pleasance project on our real-time Kanban board. See what ideas are being considered, what's next up, what's in progress, and what's already alive in the federation.
         </FeatureCard>
         
         <FeatureCard 
@@ -96,6 +114,7 @@ export default function WikiPage() {
             title="Nuncy Lingua"
             imageUrl="https://picsum.photos/seed/102/600/400"
             imageHint="language books"
+            href="/story"
         >
             Knowledge is a form of capital. Nuncy Lingua is a tool to increase your intellectual wealth. Use it to learn new languages through AI-generated stories and listen to them with a karaoke-style speech player. The more you know, the more you are worth.
         </FeatureCard>
@@ -105,6 +124,7 @@ export default function WikiPage() {
             title="Fabrication Service"
             imageUrl="https://picsum.photos/seed/103/600/400"
             imageHint="3d printer"
+            href="/fabrication"
         >
             Ideas are worthless without execution. The Fabrication service is where the digital becomes physical. Submit assets from your Treasury to the ticketing system to have them manufactured by a network of suppliers. Track your order from 'pending' to 'shipped'. Create, build, and own.
         </FeatureCard>
@@ -114,6 +134,7 @@ export default function WikiPage() {
             title="The Treasury"
             imageUrl="https://picsum.photos/seed/104/600/400"
             imageHint="gold coins"
+            href="/treasury"
         >
             Your sovereignty is backed by your assets. The Treasury is your personal ledger. Here, you declare and manage your holdings, both physical and intellectual. This is not a bank; it is a declaration of your personal value within the Federation. What you own is a measure of your influence and independence.
         </FeatureCard>
