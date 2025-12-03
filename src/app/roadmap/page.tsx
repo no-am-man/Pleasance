@@ -16,7 +16,7 @@ import { updateRoadmapCardColumn, addRoadmapCard, deleteRoadmapCard, refineCardD
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
-import { useForm, type UseFormReturn } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
@@ -157,7 +157,7 @@ function AddIdeaForm() {
     )
 }
 
-const KanbanCard = ({ card, columnId, onMove }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, direction: 'left' | 'right') => void; }) => {
+const KanbanCard = ({ card, columnId, onMove }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; }) => {
   const { user } = useUser();
   const isFounder = user?.email === 'gg.el0ai.com@gmail.com';
   const { toast } = useToast();
@@ -195,12 +195,12 @@ const KanbanCard = ({ card, columnId, onMove }: { card: RoadmapCardType; columnI
         {isFounder && (
             <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
                  {canMoveLeft && (
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(card.id, 'left')}>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(card.id, columnId, 'left')}>
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
                 )}
                 {canMoveRight && (
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(card.id, 'right')}>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(card.id, columnId, 'right')}>
                         <ArrowRight className="h-4 w-4" />
                     </Button>
                 )}
@@ -265,7 +265,7 @@ const KanbanCard = ({ card, columnId, onMove }: { card: RoadmapCardType; columnI
   );
 }
 
-const KanbanColumn = ({ id, title, cards, children, onMoveCard }: RoadmapColumnType & { children?: React.ReactNode; onMoveCard: (cardId: string, direction: 'left' | 'right') => void; }) => (
+const KanbanColumn = ({ id, title, cards, children, onMoveCard }: RoadmapColumnType & { children?: React.ReactNode; onMoveCard: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; }) => (
   <div className="flex flex-col gap-4">
     <div className="px-3 py-2">
       <h2 className="text-lg font-semibold text-foreground">{title}</h2>
@@ -303,27 +303,22 @@ export default function RoadmapPage() {
   }, [columnsData, columnOrder]);
 
 
-  const handleMoveCard = async (cardId: string, direction: 'left' | 'right') => {
+  const handleMoveCard = async (cardId: string, oldColumnId: string, direction: 'left' | 'right') => {
     if (!isFounder) {
         toast({ variant: 'destructive', title: 'Permission Denied' });
         return;
     }
 
-    let sourceColumn: RoadmapColumnType | undefined;
-    let cardToMove: RoadmapCardType | undefined;
-    let sourceColumnIndex = -1;
-
-    for (let i = 0; i < columns.length; i++) {
-        const card = columns[i].cards.find(c => c.id === cardId);
-        if (card) {
-            sourceColumn = columns[i];
-            cardToMove = card;
-            sourceColumnIndex = i;
-            break;
-        }
+    const sourceColumnIndex = columns.findIndex(c => c.id === oldColumnId);
+    if (sourceColumnIndex === -1) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Source column not found.' });
+        return;
     }
 
-    if (!sourceColumn || !cardToMove || sourceColumnIndex === -1) {
+    const sourceColumn = columns[sourceColumnIndex];
+    const cardToMove = sourceColumn.cards.find(c => c.id === cardId);
+
+    if (!cardToMove) {
         toast({ variant: 'destructive', title: 'Error', description: 'Card not found.' });
         return;
     }
@@ -339,12 +334,12 @@ export default function RoadmapPage() {
     
     // Optimistic UI update
     setColumns(prev => {
-        const newColumns = [...prev];
+        const newColumns = prev.map(c => ({...c, cards: [...c.cards]}));
         const currentSourceCol = newColumns[sourceColumnIndex];
         const currentTargetCol = newColumns[targetColumnIndex];
 
         currentSourceCol.cards = currentSourceCol.cards.filter(c => c.id !== cardId);
-        currentTargetCol.cards = [cardToMove!, ...currentTargetCol.cards];
+        currentTargetCol.cards = [cardToMove, ...currentTargetCol.cards];
         
         return newColumns;
     });
