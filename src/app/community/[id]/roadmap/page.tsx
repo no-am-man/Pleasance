@@ -251,7 +251,7 @@ function KanbanColumn({ id, title, cards, children, onMoveCard, allProfiles, onU
 
 
 export default function CommunityRoadmapPage() {
-  const { user } = useuseUser();
+  const { user } = useUser();
   const { toast } = useToast();
   const params = useParams();
   const communityId = params.id as string;
@@ -356,4 +356,3 @@ export default function CommunityRoadmapPage() {
     </main>
   );
 }
-
