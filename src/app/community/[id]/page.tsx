@@ -307,7 +307,7 @@ function CommentThread({ message, comments, isLoading, canManage }: { message: M
         <div className="pl-12 pr-4 pb-4 space-y-4">
             <div className="max-h-60 overflow-y-auto space-y-3 pr-2">
                 {isLoading && <LoaderCircle className="mx-auto animate-spin" />}
-                {comments && comments.length > 0 && comments.map(comment => <CommentCard key={comment.id} comment={comment} communityId={communityId} messageId={message.id} canManage={canManage} />)}
+                {comments && comments.length > 0 && comments.map(comment => <CommentCard key={comment.id} comment={comment} communityId={communityId} messageId={message.id} canManage={canManage || user?.uid === message.userId} />)}
             </div>
             {user && <TextCommentForm communityId={message.communityId} messageId={message.id} />}
         </div>
@@ -460,11 +460,11 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                    <CommentThread message={message} comments={comments} isLoading={isLoadingComments} canManage={canManage || user?.uid === message.userId} />
                 </CollapsibleContent>
             </Card>
-        </Collapsible>
-    )
+        )
+    }
 }
 
-function Chat({ communityId, isOwner, allMembers }: { communityId: string; isOwner: boolean, allMembers: Member[] }) {
+function Network({ communityId, isOwner, allMembers }: { communityId: string; isOwner: boolean, allMembers: Member[] }) {
     const { user } = useUser();
 
     const messagesQuery = useMemo(() => query(collection(firestore, `communities/${communityId}/messages`), orderBy('createdAt', 'desc')), [communityId]);
@@ -478,13 +478,13 @@ function Chat({ communityId, isOwner, allMembers }: { communityId: string; isOwn
         const aiMembers = allMembers.filter(m => m.type === 'AI');
         if (aiMembers.length === 0) return;
         
-        // Select an AI member consistently to avoid hydration issues.
+        // Select the first AI member to respond for consistency.
         const aiMemberToRespond = aiMembers[0];
 
-        // Get chat history
+        // Get chat history for context, ensuring oldest are first
         const chatHistory = (messages || [])
-            .slice(0, 10) // Get last 10 messages for context
-            .reverse() // Oldest first
+            .slice(0, 10)
+            .reverse() 
             .map(msg => ({
                 role: msg.userId.startsWith('ai_') ? 'model' : 'user' as 'user' | 'model',
                 content: [{ text: msg.text || '' }],
@@ -517,8 +517,8 @@ function Chat({ communityId, isOwner, allMembers }: { communityId: string; isOwn
     return (
         <Card className="shadow-lg">
             <CardHeader>
-                <CardTitle>Community Chat</CardTitle>
-                <CardDescription>Share messages with the community.</CardDescription>
+                <CardTitle className="flex items-center gap-2"><MessageSquare /> Community Network</CardTitle>
+                <CardDescription>The central feed for community activity and messages.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 {isLoading && <LoaderCircle className="mx-auto animate-spin" />}
@@ -912,7 +912,7 @@ export default function CommunityProfilePage() {
       </Card>
       
        <div className="my-12">
-        <Chat communityId={community.id} isOwner={isOwner} allMembers={allMembers} />
+        <Network communityId={community.id} isOwner={isOwner} allMembers={allMembers} />
        </div>
       
       {isOwner && (
