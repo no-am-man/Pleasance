@@ -59,8 +59,15 @@ const generateFlagFlow = ai.defineFlow(
     outputSchema: GenerateFlagOutputSchema,
   },
   async (input) => {
-    // Correctly call the defined prompt object, which includes the model and renders the template.
-    const { output } = await generateFlagPrompt(input);
+    // Explicitly call ai.generate with all required parameters
+    const { output } = await ai.generate({
+        prompt: generateFlagPrompt.prompt,
+        model: 'googleai/gemini-1.5-flash-latest',
+        input: input,
+        output: {
+            schema: GenerateFlagOutputSchema,
+        },
+    });
     
     if (!output) {
       throw new Error('AI failed to generate a flag SVG.');
