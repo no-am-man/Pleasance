@@ -26,8 +26,8 @@ const pathVariants = {
     pathLength: 1,
     opacity: 1,
     transition: {
-      delay: i * 0.15 + 0.8,
-      duration: 1.2,
+      delay: i * 0.2 + 0.5,
+      duration: 1.0,
       ease: 'easeInOut',
     },
   }),
@@ -46,28 +46,54 @@ const Node = ({ icon, label, x, y, custom, color = "text-primary" }: { icon: Rea
     </motion.g>
 );
 
-const Path = ({ x, y, custom }: { x: number, y: number, custom: number }) => (
+const Path = ({ d, custom }: { d: string, custom: number }) => (
     <motion.path
-        d={`M 200,200 L ${x},${y}`}
-        stroke="url(#grad1)" strokeWidth="1.5" strokeDasharray="3 3" fill="none"
+        d={d}
+        stroke="url(#grad1)" strokeWidth="1.5" fill="none"
+        markerEnd="url(#arrow)"
         variants={pathVariants} custom={custom}
     />
 );
 
 const nodes = [
     { icon: <Users className="w-6 h-6" />, label: 'Community', angle: -90, custom: 1 },
-    { icon: <Beaker className="w-6 h-6" />, label: 'Altar', angle: -45, custom: 2 },
-    { icon: <KanbanIcon className="w-6 h-6" />, label: 'Roadmap', angle: 0, custom: 3 },
-    { icon: <Bug className="w-6 h-6" />, label: 'Bugs', angle: 45, custom: 4 },
-    { icon: <BookOpen className="w-6 h-6" />, label: 'Texts', angle: 90, custom: 5 },
-    { icon: <Warehouse className="w-6 h-6" />, label: 'Fabrication', angle: 135, custom: 6 },
-    { icon: <Banknote className="w-6 h-6" />, label: 'Treasury', angle: 180, custom: 7 },
+    { icon: <BookOpen className="w-6 h-6" />, label: 'Texts', angle: -45, custom: 2 },
+    { icon: <Beaker className="w-6 h-6" />, label: 'Altar', angle: 0, custom: 3 },
+    { icon: <Banknote className="w-6 h-6" />, label: 'Treasury', angle: 45, custom: 4 },
+    { icon: <Warehouse className="w-6 h-6" />, label: 'Fabrication', angle: 90, custom: 5 },
+];
+
+const metaNodes = [
+    { icon: <KanbanIcon className="w-6 h-6" />, label: 'Roadmap', angle: 180, custom: 6 },
+    { icon: <Bug className="w-6 h-6" />, label: 'Bugs', angle: 225, custom: 7 },
     { icon: <Bot className="w-6 h-6" />, label: 'Conductor', angle: -135, custom: 8 },
 ];
 
 export function FederationDiagram() {
     const radius = 150;
     const center = 200;
+
+    const getNodePos = (angle: number) => ({
+        x: center + radius * Math.cos(angle * Math.PI / 180),
+        y: center + radius * Math.sin(angle * Math.PI / 180),
+    });
+
+    const getControlPoints = (startPos: {x: number, y: number}, endPos: {x: number, y: number}) => {
+        const midX = (startPos.x + endPos.x) / 2;
+        const midY = (startPos.y + endPos.y) / 2;
+        const dx = endPos.x - startPos.x;
+        const dy = endPos.y - startPos.y;
+
+        // Add curvature by offsetting control points perpendicular to the line between start and end
+        const curveFactor = 0.2;
+        const ctrl1X = midX - dy * curveFactor;
+        const ctrl1Y = midY + dx * curveFactor;
+        const ctrl2X = midX - dy * curveFactor;
+        const ctrl2Y = midY + dx * curveFactor;
+        
+        return `C ${ctrl1X},${ctrl1Y} ${ctrl2X},${ctrl2Y}`;
+    }
+
 
     return (
         <div className="my-16 w-full flex justify-center">
@@ -84,20 +110,51 @@ export function FederationDiagram() {
                         <stop offset="0%" style={{stopColor: 'hsl(var(--primary))', stopOpacity: 0.8}} />
                         <stop offset="100%" style={{stopColor: 'hsl(var(--accent))', stopOpacity: 0.3}} />
                     </linearGradient>
+                    <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5"
+                        markerWidth="4" markerHeight="4"
+                        orient="auto-start-reverse">
+                      <path d="M 0 0 L 10 5 L 0 10 z" fill="hsl(var(--primary))" />
+                    </marker>
                 </defs>
                 
-                {/* Paths */}
-                {nodes.map(node => {
-                    const x = center + radius * Math.cos(node.angle * Math.PI / 180);
-                    const y = center + radius * Math.sin(node.angle * Math.PI / 180);
-                    return <Path key={node.label} x={x} y={y} custom={node.custom} />;
+                {/* Paths with Arrows */}
+                {nodes.map((node, i) => {
+                    const nextNode = nodes[(i + 1) % nodes.length];
+                    const startPos = getNodePos(node.angle);
+                    const endPos = getNodePos(nextNode.angle);
+                    const controlPoints = getControlPoints(startPos, endPos);
+
+                    const d = `M ${startPos.x},${startPos.y} ${controlPoints} ${endPos.x},${endPos.y}`;
+                    
+                    // Don't draw arrow from last node back to first
+                    if (i < nodes.length - 1) {
+                      return <Path key={`path-${i}`} d={d} custom={node.custom} />;
+                    }
+                    return null;
                 })}
+
+                {/* Dashed lines for meta nodes */}
+                 {metaNodes.map(node => {
+                    const pos = getNodePos(node.angle);
+                    return (
+                        <motion.path
+                            key={`meta-path-${node.label}`}
+                            d={`M ${center},${center} L ${pos.x},${pos.y}`}
+                            stroke="url(#grad1)" strokeWidth="1.5" strokeDasharray="3 3" fill="none"
+                            variants={pathVariants} custom={node.custom}
+                        />
+                    );
+                 })}
+
 
                 {/* Nodes */}
                 {nodes.map(node => {
-                    const x = center + radius * Math.cos(node.angle * Math.PI / 180);
-                    const y = center + radius * Math.sin(node.angle * Math.PI / 180);
-                    return <Node key={node.label} icon={node.icon} label={node.label} x={x} y={y} custom={node.custom} />;
+                    const pos = getNodePos(node.angle);
+                    return <Node key={node.label} icon={node.icon} label={node.label} x={pos.x} y={pos.y} custom={node.custom} />;
+                })}
+                {metaNodes.map(node => {
+                    const pos = getNodePos(node.angle);
+                    return <Node key={node.label} icon={node.icon} label={node.label} x={pos.x} y={pos.y} custom={node.custom} />;
                 })}
                 
                 {/* Central Node */}
