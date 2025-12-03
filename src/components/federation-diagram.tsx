@@ -99,7 +99,7 @@ export const FederationDiagram = () => {
         
         {/* Top Layer: Creation & Learning Tools */}
         <DiagramNode label="Nuncy Lingua" x="240" y="90" delay={200} />
-        <DiagramNode label="Crucible of Creation" x="360" y="90" delay={400} />
+        <DiagramNode label="AI Workshop" x="360" y="90" delay={400} />
         
         {/* Mid Layer: Declaration */}
         <DiagramNode label="Treasury" x="300" y="225" delay={600} />
