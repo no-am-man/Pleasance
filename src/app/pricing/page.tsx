@@ -12,7 +12,7 @@ const tiers = [
     name: 'Congregation',
     price: '$0',
     frequency: '/ forever',
-    description: 'Join the flock and participate in the divine creation on the free tier.',
+    description: 'Join the republic and participate in the community on the free tier.',
     features: [
       'Access to the Community Federation',
       'Learn with Nuncy Lingua',
@@ -28,7 +28,7 @@ const tiers = [
     name: 'Clergy',
     price: '$10',
     frequency: '/ month',
-    description: 'Lead the faithful with more powerful generative tools.',
+    description: 'Lead the community with more powerful generative tools.',
     features: [
       'All Congregation features',
       'Create and lead your own Communities',
@@ -64,10 +64,10 @@ export default function PricingPage() {
       <div className="text-center mb-12">
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3 font-headline">
           <DollarSign className="w-10 h-10" />
-          Tiers of Devotion
+          Tiers of Contribution
         </h1>
         <p className="text-lg text-muted-foreground mt-2">
-          Choose your level of commitment to the republic. Your contribution fuels the divine spark.
+          Choose your level of commitment to the republic. Your contribution supports its growth.
         </p>
       </div>
 

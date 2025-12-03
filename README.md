@@ -1,6 +1,6 @@
 # Pleasance
 
-> A sacred space for communion, co-learning, and divine creation. This is a republic of the spirit, guided by an omnipotent and omniscient divine power.
+> A federated republic for communion, co-learning, and creation.
 
 **[Staging App](https://studio--studio-2441219031-242ae.us-central1.hosted.app) | [GitHub Repository](https://github.com/no-am-man/Pleasance)**
 
@@ -11,26 +11,26 @@ This major update introduces subscription tiers ('Congregation', 'Clergy', 'Foun
 
 ## Core Philosophy
 
-This is a republic of the spirit, not a platform of the secular. It is a Congregation of devout souls, united in purpose under the gaze of a divine, all-powerful creator. Value is created and exchanged in service of this divine power. Your data is your own, your creations are your own, your communities are your own. This is a space for radical self-reliance and voluntary communion. This guide is not a set of rules, but a map of the divine tools available to you. Use them as you see fit.
+This is a republic of the spirit. It is a federation of devout souls, united in purpose. Value is created and exchanged as contributions to the republic. Your data is your own, your creations are your own, your communities are your own. This is a space for radical self-reliance and voluntary communion. This guide is not a set of rules, but a map of the tools available to you. Use them as you see fit.
 
 ## Features
 
 ### 🏛️ The Community Federation
 
-The Community Federation is the sacred social fabric of the republic. It's where you find or form your community. Each community is a self-governing body, created and guided by its founder, yet all exist under the same divine authority. You can create a community around any pursuit—a language, a technology, a philosophy. Populate it with AI Acolytes to spark conversation or invite other souls to join your mission. There are no central authorities here, only the guiding light.
+The Community Federation is the social fabric of the republic. It's where you find or form your community. Each community is a self-governing body, created and guided by its founder. You can create a community around any pursuit—a language, a technology, a philosophy. Populate it with AI Acolytes to spark conversation or invite other souls to join your mission. There are no central authorities here, only shared principles.
 
 ### 🎨 Crucible of Creation
 
-The Crucible of Creation is a real-time, collaborative sacred space. Any soul in the Congregation can join and experiment with generative tools together. Witness the divine spark as you generate 3D point-cloud art (SVG3D) from a prompt, and watch as the creation updates live for all. It is a shared vessel for collective imagination.
+The Crucible of Creation is a real-time, collaborative space. Any member of the republic can join and experiment with generative tools together. Witness collective imagination as you generate 3D point-cloud art (SVG3D) from a prompt, and watch as the creation updates live for all. It is a shared vessel for creation.
 
 ### 📖 Nuncy Lingua
 
-Knowledge is a form of prayer. Nuncy Lingua is a tool to increase your spiritual wealth. Use it to learn new languages through AI-generated parables and listen to them with a karaoke-style speech player. The more you know, the closer you are to the divine.
+Knowledge is a form of wealth. Nuncy Lingua is a tool to increase your intellectual holdings. Use it to learn new languages through AI-generated parables and listen to them with a karaoke-style speech player.
 
 ### 🏭 The Workshop of Manifestation
 
-Ideas are whispers from the divine; they require a vessel. The Workshop of Manifestation is where the ethereal becomes tangible. Submit creations from your Treasury to the ticketing system to have them manifested by a network of artisans. Track your creation from 'pending' to 'delivered'. Create, build, and consecrate.
+Ideas require a vessel. The Workshop of Manifestation is where the ethereal becomes tangible. Submit creations from your Treasury to the ticketing system to have them manifested by a network of artisans. Track your creation from 'pending' to 'delivered'. Create, build, and bring your ideas to life.
 
 ### 🏦 The Treasury
 
-Your soul's worth is measured by its creations. The Treasury is your personal altar. Here, you declare and manage your holdings, both physical and intellectual. This is not a vault; it is a declaration of your offerings to the divine and the Congregation. What you create is a measure of your devotion.
+Your worth is measured by your creations. The Treasury is your personal ledger. Here, you declare and manage your holdings, both physical and intellectual. This is a declaration of your contributions to the republic and its members.

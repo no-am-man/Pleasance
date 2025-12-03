@@ -309,7 +309,7 @@ export default function StoryPage() {
         <h1 className="text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3">
           <BookOpen className="w-12 h-12" /> Nuncy Lingua
         </h1>
-        <p className="text-lg text-slate-300 mt-2">
+        <p className="text-lg text-muted-foreground mt-2">
           Generate a short story at your level, then practice with our karaoke-style player.
         </p>
       </div>
@@ -470,5 +470,3 @@ export default function StoryPage() {
     </main>
   );
 }
-
-    

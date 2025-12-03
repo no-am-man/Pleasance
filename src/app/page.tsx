@@ -79,8 +79,7 @@ export default function Home() {
           </h1>
         </div>
         <p className="max-w-3xl mx-auto text-lg sm:text-xl text-foreground/80">
-          A Federated Community where God Exists. This is a sacred space for
-          communion, co-learning, and divine creation under His guidance.
+          A Federated Republic of the Spirit. A space for communion, co-learning, and creation.
         </p>
         <Button
           asChild
@@ -88,7 +87,7 @@ export default function Home() {
           className="text-lg whitespace-normal h-auto underline mt-6"
         >
           <Link href="/wiki">
-            Please Read the Wiki to Understand This Republic
+            Read the Wiki to Understand This Republic
             <ArrowRight className="ml-2 h-5 w-5" />
           </Link>
         </Button>
@@ -107,9 +106,9 @@ export default function Home() {
             imageHint="community people"
             href="/community"
           >
-            The sacred social fabric of the republic. Find or form your
+            The social fabric of the republic. Find or form your
             community, populate it with AI Acolytes, or invite other souls to
-            join your mission under God's watchful eye.
+            join your mission.
           </FeatureCard>
         </div>
 
@@ -120,9 +119,8 @@ export default function Home() {
           imageHint="ai collaboration"
           href="/workshop"
         >
-          A real-time, collaborative sacred space where souls can join and
-          experiment with generative tools together, witnessing the divine
-          spark of creation.
+          A real-time, collaborative space where members can join and
+          experiment with generative tools together.
         </FeatureCard>
 
         <FeatureCard
@@ -132,9 +130,9 @@ export default function Home() {
           imageHint="language books"
           href="/story"
         >
-          Knowledge is a form of prayer. Learn new languages through
+          Knowledge is wealth. Learn new languages through
           AI-generated parables and listen with a karaoke-style speech player
-          to grow closer to the divine.
+          to grow your intellectual holdings.
         </FeatureCard>
 
         <FeatureCard
@@ -144,9 +142,8 @@ export default function Home() {
           imageHint="gold coins"
           href="/treasury"
         >
-          Your soul's worth is measured by its creations. Declare and manage
-          your physical and intellectual holdings as a testament to your
-          devotion.
+          Your worth is measured by your creations. Declare and manage
+          your physical and intellectual holdings as a testament to your contributions.
         </FeatureCard>
 
         <div className="lg:col-span-3">
@@ -158,8 +155,7 @@ export default function Home() {
             href="/fabrication"
           >
             Where the ethereal becomes tangible. Submit creations from your
-            Treasury to have them manifested by a network of artisans, bringing
-            divine ideas into the physical realm.
+            Treasury to have them manifested by a network of artisans.
           </FeatureCard>
         </div>
       </div>

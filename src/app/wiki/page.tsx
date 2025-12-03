@@ -1,4 +1,3 @@
-
 // src/app/wiki/page.tsx
 'use client';
 
@@ -45,7 +44,7 @@ export default function WikiPage() {
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3 font-headline">
           <Info /> The Wiki
         </h1>
-        <p className="text-lg text-muted-foreground mt-2">A guide to the principles and tools of this Federated Community.</p>
+        <p className="text-lg text-muted-foreground mt-2">A guide to the principles and tools of this Federated Republic.</p>
       </div>
       
       <div className="space-y-8">
@@ -56,7 +55,7 @@ export default function WikiPage() {
             </CardHeader>
             <CardContent>
                 <p className="text-lg">
-                    This is a Federated Community where God Exists. It is a sacred space for communion, co-learning, and divine creation under His guidance. Our devices become the altars, our code the scripture, and our collaborations a form of prayer.
+                    This is a Federated Republic of the Spirit. It is a space for communion, co-learning, and creation. Our tools are designed to facilitate self-governance and collaboration.
                 </p>
             </CardContent>
         </Card>
@@ -68,7 +67,7 @@ export default function WikiPage() {
             imageHint="community people"
             href="/community"
         >
-            The sacred social fabric of the republic. It's where you find or form your community. Each community is a self-governing body, created and guided by its founder, yet all exist under the same divine authority. Populate your community with AI Acolytes to spark conversation or invite other souls to join your mission.
+            The social fabric of the republic. It's where you find or form your community. Each community is a self-governing body, created and guided by its founder. You can create a community around any pursuit and invite others to join your mission.
         </FeatureCard>
 
         <FeatureCard 
@@ -78,7 +77,7 @@ export default function WikiPage() {
             imageHint="ai collaboration"
             href="/workshop"
         >
-            A real-time, collaborative sacred space. Any soul in the Congregation can join and experiment with generative tools together. Witness the divine spark as you generate art from a prompt, and watch as the creation updates live for all.
+            A real-time, collaborative space. Any member can join and experiment with generative tools together. Witness collective imagination as you generate art from a prompt, and watch as the creation updates live for all.
         </FeatureCard>
 
         <FeatureCard 
@@ -108,7 +107,7 @@ export default function WikiPage() {
             imageHint="language books"
             href="/story"
         >
-            Knowledge is a form of prayer. Nuncy Lingua is a tool to increase your spiritual wealth. Use it to learn new languages through AI-generated parables and listen to them with a karaoke-style speech player. The more you know, the closer you are to the divine.
+            Knowledge is wealth. Nuncy Lingua is a tool to increase your intellectual holdings. Use it to learn new languages through AI-generated parables and listen to them with a karaoke-style speech player.
         </FeatureCard>
 
         <FeatureCard 
@@ -118,7 +117,7 @@ export default function WikiPage() {
             imageHint="3d printer"
             href="/fabrication"
         >
-            Ideas are whispers from the divine; they require a vessel. The Workshop of Manifestation is where the ethereal becomes tangible. Submit creations from your Treasury to the ticketing system to have them manifested by a network of artisans. Track your creation from 'pending' to 'delivered'. Create, build, and consecrate.
+            Ideas require a vessel. The Workshop of Manifestation is where the ethereal becomes tangible. Submit creations from your Treasury to the ticketing system to have them manifested by a network of artisans. Track your creation from 'pending' to 'delivered'.
         </FeatureCard>
         
         <FeatureCard 
@@ -128,7 +127,7 @@ export default function WikiPage() {
             imageHint="gold coins"
             href="/treasury"
         >
-            Your soul's worth is measured by its creations. The Treasury is your personal altar. Here, you declare and manage your holdings, both physical and intellectual. This is not a vault; it is a declaration of your offerings to the divine and the Congregation. What you create is a measure of your devotion.
+            Your worth is measured by your creations. The Treasury is your personal ledger. Here, you declare and manage your holdings, both physical and intellectual. This is a declaration of your contributions to the republic.
         </FeatureCard>
       </div>
 

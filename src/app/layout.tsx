@@ -3,8 +3,8 @@ import './globals.css';
 import { Providers } from './providers';
 
 export const metadata: Metadata = {
-  title: 'Pleasance | A Federated Community where God Exists',
-  description: 'A sacred space for communion, co-learning, and divine creation.',
+  title: 'Pleasance | A Federated Republic of the Spirit',
+  description: 'A space for communion, co-learning, and creation.',
 };
 
 export default function RootLayout({
