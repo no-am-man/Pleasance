@@ -5,15 +5,14 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth';
-import { useUser, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { auth, firestore } from '@/firebase/config';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoaderCircle, LogIn, LogOut, MailPlus } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { doc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import Link from 'next/link';
-import { useDocumentData } from 'react-firebase-hooks/firestore';
 
 const GoogleIcon = () => (
     <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -41,6 +40,8 @@ export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [profileExists, setProfileExists] = useState<boolean | null>(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
 
   // Handle redirect result on page load
   useEffect(() => {
@@ -61,8 +62,23 @@ export default function LoginPage() {
     processRedirectResult();
   }, []);
 
-  const profileRef = useMemoFirebase(() => user ? doc(firestore, 'community-profiles', user.uid) : null, [user]);
-  const [profile, isProfileLoading] = useDocumentData(profileRef);
+  useEffect(() => {
+    if (!user) {
+        setIsProfileLoading(false);
+        setProfileExists(null);
+        return;
+    }
+
+    const checkProfile = async () => {
+        setIsProfileLoading(true);
+        const profileRef = doc(firestore, 'community-profiles', user.uid);
+        const docSnap = await getDoc(profileRef);
+        setProfileExists(docSnap.exists());
+        setIsProfileLoading(false);
+    };
+
+    checkProfile();
+  }, [user]);
 
   const handleGoogleSignIn = async () => {
     setIsSigningIn(true);
@@ -90,16 +106,16 @@ export default function LoginPage() {
   useEffect(() => {
     if (!isUserLoading && !isProfileLoading) {
       if (user) {
-        if (profile) {
+        if (profileExists) {
           router.push('/community');
-        } else {
+        } else if (profileExists === false) {
           router.push('/profile');
         }
       }
     }
-  }, [user, isUserLoading, profile, isProfileLoading, router]);
+  }, [user, isUserLoading, profileExists, isProfileLoading, router]);
   
-  if (isUserLoading || isProfileLoading || isSigningIn || (user && !isSigningIn)) {
+  if (isUserLoading || isProfileLoading || isSigningIn || (user && profileExists === null)) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
