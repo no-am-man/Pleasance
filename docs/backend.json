@@ -350,19 +350,6 @@
         },
         "required": ["x", "y", "z", "color"]
     },
-    "PresentUser": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "title": "PresentUser",
-        "type": "object",
-        "description": "Represents a user currently active in the application.",
-        "properties": {
-            "userId": { "type": "string" },
-            "name": { "type": "string" },
-            "avatarUrl": { "type": "string", "format": "uri" },
-            "lastSeen": { "type": "string", "format": "date-time" }
-        },
-        "required": ["userId", "name", "lastSeen"]
-    },
     "RoadmapCard": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "RoadmapCard",
@@ -711,21 +698,8 @@
             { "name": "pageId", "description": "The unique ID (slug) for the wiki page." }
           ]
         }
-      },
-      {
-        "path": "/presence/{userId}",
-        "definition": {
-          "entityName": "PresentUser",
-          "schema": { "$ref": "#/backend/entities/PresentUser" },
-          "description": "Stores the online presence status for each user. Publicly readable, but only the user can write to their own record.",
-          "params": [
-            { "name": "userId", "description": "The user's ID." }
-          ]
-        }
       }
     ],
     "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities`, `fabricationOrders`, `bugs`, `leaderboard`, and `presence` in top-level collections, they become queryable. User-specific data is nested under `/users/{userId}` to ensure privacy. Public profiles are in `/community-profiles` to allow discoverability without exposing private account details. The public roadmap is migrated to Firestore for reliable public read access. The new /conductor/{userId} collection stores conversation history privately for each user. Community-specific data like creations, roadmaps and wikis are nested under `/communities/{communityId}` for privacy and organization. A new top-level `/wiki` collection is added for the public wiki."
   }
 }
-
-    

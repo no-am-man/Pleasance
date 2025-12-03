@@ -332,16 +332,5 @@ service cloud.firestore {
         allow read, write: if isFounder();
         allow list: if false; // Disallow listing documents for security.
     }
-
-    /**
-     * @description Manages user presence. Publicly readable, but writable only by the user.
-     * @path /presence/{userId}
-     */
-    match /presence/{userId} {
-      allow get, list: if true;
-      allow write: if isOwner(userId);
-    }
   }
 }
-
-    
