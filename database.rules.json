@@ -1,0 +1,15 @@
+{
+  "rules": {
+    "users": {
+      ".read": true,
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "lastOnline": {
+      "$uid": {
+         ".write": "auth != null && auth.uid === $uid"
+      }
+    }
+  }
+}
