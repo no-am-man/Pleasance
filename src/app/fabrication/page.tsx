@@ -49,8 +49,8 @@ type FabricationOrder = {
 }
 
 const OrderSchema = z.object({
-  assetId: z.string().min(1, "You must select an asset to fabricate."),
-  supplier: z.string().min(1, "Please select a supplier."),
+  assetId: z.string().min(1, "You must select a creation to manifest."),
+  supplier: z.string().min(1, "Please select an artisan."),
   notes: z.string().max(500, 'Notes cannot exceed 500 characters.').optional(),
 });
 
@@ -92,14 +92,14 @@ function OrderList() {
     }
 
     if (error) {
-        return <p className="text-destructive text-center">Error loading orders: {error.message}</p>;
+        return <p className="text-destructive text-center">Error loading manifestations: {error.message}</p>;
     }
 
     return (
         <Card className="shadow-lg">
             <CardHeader>
-                <CardTitle>Your Fabrication Orders</CardTitle>
-                <CardDescription>Track the status of your manufacturing tickets.</CardDescription>
+                <CardTitle>Your Manifestations</CardTitle>
+                <CardDescription>Track the status of your creations.</CardDescription>
             </CardHeader>
             <CardContent>
                 {orders && orders.length > 0 ? (
@@ -108,7 +108,7 @@ function OrderList() {
                             <div key={order.id} className="flex items-center gap-4 rounded-md border p-4">
                                 <div className="flex-1">
                                     <h3 className="font-semibold">{order.assetName}</h3>
-                                    <p className="text-sm text-muted-foreground">Supplier: {order.supplier} | Cost: ${order.cost?.toFixed(2) ?? 'N/A'}</p>
+                                    <p className="text-sm text-muted-foreground">Artisan: {order.supplier} | Offering: ${order.cost?.toFixed(2) ?? 'N/A'}</p>
                                 </div>
                                 <Badge variant={getStatusVariant(order.status)} className="flex items-center gap-1.5">
                                     {getStatusIcon(order.status)}
@@ -119,7 +119,7 @@ function OrderList() {
                     </div>
                 ) : (
                     <div className="text-center py-8 text-muted-foreground">
-                        <p>You have no active fabrication orders.</p>
+                        <p>You have no active manifestations.</p>
                     </div>
                 )}
             </CardContent>
@@ -155,7 +155,7 @@ function NewOrderForm({ assets }: { assets: Asset[] }) {
 
         const selectedAsset = assets.find(a => a.id === data.assetId);
         if (!selectedAsset || !selectedAsset.fileUrl) {
-            toast({ variant: 'destructive', title: "Asset file not found." });
+            toast({ variant: 'destructive', title: "Creation's blueprint not found." });
             return;
         }
         
@@ -170,7 +170,7 @@ function NewOrderForm({ assets }: { assets: Asset[] }) {
                 fileUrl: selectedAsset.fileUrl,
                 supplier: data.supplier,
                 status: 'pending',
-                cost: 0, // Supplier will update this
+                cost: 0, // Artisan will update this
                 notes: data.notes,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
@@ -178,7 +178,7 @@ function NewOrderForm({ assets }: { assets: Asset[] }) {
 
             setDocumentNonBlocking(newOrderRef, { ...newOrder, id: newOrderRef.id }, { merge: false });
 
-            toast({ title: 'Order Submitted!', description: `Your ticket for "${selectedAsset.name}" has been created.` });
+            toast({ title: 'Manifestation Submitted!', description: `Your request for "${selectedAsset.name}" has been created.` });
             form.reset();
         } catch (e) {
              const message = e instanceof Error ? e.message : 'An unknown error occurred';
@@ -191,8 +191,8 @@ function NewOrderForm({ assets }: { assets: Asset[] }) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Create a Fabrication Ticket</CardTitle>
-                <CardDescription>Select an asset from your Treasury to submit for fabrication.</CardDescription>
+                <CardTitle>Begin a Manifestation</CardTitle>
+                <CardDescription>Select a creation from your Sanctuary to bring into the physical world.</CardDescription>
             </CardHeader>
             <CardContent>
                 <Form {...form}>
@@ -202,11 +202,11 @@ function NewOrderForm({ assets }: { assets: Asset[] }) {
                             name="assetId"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Asset to Fabricate</FormLabel>
+                                    <FormLabel>Creation to Manifest</FormLabel>
                                     <Select onValueChange={field.onChange} value={field.value}>
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select an asset from your Treasury..." />
+                                                <SelectValue placeholder="Select a creation from your Sanctuary..." />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
@@ -224,11 +224,11 @@ function NewOrderForm({ assets }: { assets: Asset[] }) {
                             name="supplier"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Supplier</FormLabel>
+                                    <FormLabel>Artisan</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select a supplier" />
+                                                <SelectValue placeholder="Select an artisan" />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
@@ -245,9 +245,9 @@ function NewOrderForm({ assets }: { assets: Asset[] }) {
                             name="notes"
                             render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Special Instructions (Optional)</FormLabel>
+                                <FormLabel>Sacred Instructions (Optional)</FormLabel>
                                 <FormControl>
-                                <Textarea placeholder="Any specific requirements for printing, materials, etc." {...field} />
+                                <Textarea placeholder="Any specific requirements for materials, colors, etc." {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -255,7 +255,7 @@ function NewOrderForm({ assets }: { assets: Asset[] }) {
                         />
                         <Button type="submit" disabled={isLoading}>
                              {isLoading ? <LoaderCircle className="mr-2 animate-spin" /> : <ShoppingCart className="mr-2" />}
-                            Submit Order
+                            Submit Manifestation Request
                         </Button>
                     </form>
                 </Form>
@@ -283,8 +283,8 @@ export default function FabricationPage() {
         <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
             <Card className="w-full max-w-md text-center shadow-lg">
                 <CardHeader>
-                    <CardTitle>Access Fabrication</CardTitle>
-                    <CardDescription>Log in to create and manage fabrication orders.</CardDescription>
+                    <CardTitle>Enter the Workshop</CardTitle>
+                    <CardDescription>Log in to create and track manifestations.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Button asChild>
@@ -304,13 +304,13 @@ export default function FabricationPage() {
         <Card className="shadow-lg text-center">
           <CardHeader>
             <Info className="mx-auto h-12 w-12 text-primary" />
-            <CardTitle>Your Treasury is Empty</CardTitle>
-            <CardDescription>You must first declare an asset in your Treasury before you can create a fabrication order.</CardDescription>
+            <CardTitle>Your Sanctuary is Empty</CardTitle>
+            <CardDescription>You must first consecrate a creation in your Sanctuary before it can be manifested.</CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild>
               <Link href="/treasury">
-                <PlusCircle className="mr-2 h-4 w-4" /> Go to Treasury
+                <PlusCircle className="mr-2 h-4 w-4" /> Go to Sanctuary
               </Link>
             </Button>
           </CardContent>
@@ -322,10 +322,10 @@ export default function FabricationPage() {
   return (
     <main className="container mx-auto max-w-2xl py-8">
       <div className="text-center mb-8">
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-          <Warehouse /> Fabrication Service
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3 font-headline">
+          <Warehouse /> Workshop of Manifestation
         </h1>
-        <p className="text-lg text-muted-foreground mt-2">Create and track manufacturing orders for your assets.</p>
+        <p className="text-lg text-muted-foreground mt-2">Create and track manifestations for your sacred creations.</p>
       </div>
       <div className="space-y-8">
         <NewOrderForm assets={assets} />

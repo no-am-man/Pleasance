@@ -22,9 +22,9 @@ import Link from 'next/link';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 
 const AssetSchema = z.object({
-  name: z.string().min(2, 'Asset name must be at least 2 characters.'),
+  name: z.string().min(2, 'Creation name must be at least 2 characters.'),
   description: z.string().min(10, 'Description must be at least 10 characters.').max(500, 'Description cannot exceed 500 characters.'),
-  type: z.enum(['physical', 'virtual', 'ip'], { required_error: 'Please select an asset type.' }),
+  type: z.enum(['physical', 'virtual', 'ip'], { required_error: 'Please select a creation type.' }),
   value: z.coerce.number().min(0, 'Value must be a positive number.'),
   file: z.any().optional(),
 });
@@ -48,7 +48,7 @@ function AddAssetForm() {
 
     async function onSubmit(data: z.infer<typeof AssetSchema>) {
         if (!user) {
-            toast({ variant: 'destructive', title: 'Not Authenticated', description: 'You must be logged in to add an asset.' });
+            toast({ variant: 'destructive', title: 'Not Authenticated', description: 'You must be logged in to add a creation.' });
             return;
         }
         setIsLoading(true);
@@ -71,14 +71,14 @@ function AddAssetForm() {
             }
 
             toast({
-                title: 'Asset Declared!',
-                description: `${data.name} has been added to your treasury.`,
+                title: 'Creation Consecrated!',
+                description: `${data.name} has been added to your Sanctuary.`,
             });
             form.reset();
 
         } catch (e) {
             const message = e instanceof Error ? e.message : 'An unknown error occurred';
-            toast({ variant: 'destructive', title: 'Failed to add asset', description: message });
+            toast({ variant: 'destructive', title: 'Failed to add creation', description: message });
         } finally {
             setIsLoading(false);
         }
@@ -89,8 +89,8 @@ function AddAssetForm() {
     return (
         <Card className="shadow-lg">
             <CardHeader>
-                <CardTitle>Declare a New Asset</CardTitle>
-                <CardDescription>Add a physical or intellectual property asset to your personal treasury. You can upload a design file (e.g., .stl, .obj, .pdf) for fabrication.</CardDescription>
+                <CardTitle>Consecrate a New Creation</CardTitle>
+                <CardDescription>Add a physical or intellectual creation to your personal sanctuary. You can upload a divine blueprint (e.g., .stl, .obj, .pdf) for manifestation.</CardDescription>
             </CardHeader>
             <CardContent>
                 <Form {...form}>
@@ -101,9 +101,9 @@ function AddAssetForm() {
                                 name="name"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Asset Name</FormLabel>
+                                        <FormLabel>Creation Name</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="e.g., Custom 3D Printed Drone Frame" {...field} />
+                                            <Input placeholder="e.g., Custom 3D Printed Chalice" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -114,7 +114,7 @@ function AddAssetForm() {
                                 name="value"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Asset Value (USD)</FormLabel>
+                                        <FormLabel>Creation's Tithe (USD)</FormLabel>
                                         <FormControl>
                                             <Input type="number" placeholder="100.00" {...field} />
                                         </FormControl>
@@ -128,9 +128,9 @@ function AddAssetForm() {
                             name="description"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Asset Description</FormLabel>
+                                    <FormLabel>Creation Description</FormLabel>
                                     <FormControl>
-                                        <Textarea placeholder="Describe your asset, its value, or its purpose." {...field} />
+                                        <Textarea placeholder="Describe your creation, its value, or its purpose." {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -142,11 +142,11 @@ function AddAssetForm() {
                                 name="type"
                                 render={({ field }) => (
                                     <FormItem>
-                                    <FormLabel>Asset Type</FormLabel>
+                                    <FormLabel>Creation Type</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                         <FormControl>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select the type of asset" />
+                                            <SelectValue placeholder="Select the type of creation" />
                                         </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
@@ -164,7 +164,7 @@ function AddAssetForm() {
                                 name="file"
                                 render={({ field }) => (
                                      <FormItem>
-                                        <FormLabel>Design File (Optional)</FormLabel>
+                                        <FormLabel>Divine Blueprint (Optional)</FormLabel>
                                         <FormControl>
                                             <div className="relative">
                                                 <Input type="file" {...fileRef} className="pl-12" />
@@ -184,7 +184,7 @@ function AddAssetForm() {
                             ) : (
                                 <PlusCircle className="mr-2 h-4 w-4" />
                             )}
-                            Add Asset to Treasury
+                            Add Creation to Sanctuary
                         </Button>
                     </form>
                 </Form>
@@ -205,14 +205,14 @@ function AssetList() {
     }
 
     if (error) {
-        return <p className="text-destructive text-center">Error loading assets: {error.message}</p>;
+        return <p className="text-destructive text-center">Error loading creations: {error.message}</p>;
     }
 
     return (
         <Card className="shadow-lg">
             <CardHeader>
-                <CardTitle>Your Holdings</CardTitle>
-                <CardDescription>A list of your declared sovereign assets.</CardDescription>
+                <CardTitle>Your Consecrated Creations</CardTitle>
+                <CardDescription>A list of your sacred creations.</CardDescription>
             </CardHeader>
             <CardContent>
                 {assets && assets.length > 0 ? (
@@ -243,7 +243,7 @@ function AssetList() {
                                             <Button asChild variant="secondary" size="sm">
                                                 <Link href={`/fabrication?assetId=${asset.id}`}>
                                                     <Warehouse className="mr-2 h-4 w-4" />
-                                                    Fabricate
+                                                    Manifest
                                                 </Link>
                                             </Button>
                                         )}
@@ -254,8 +254,8 @@ function AssetList() {
                     </div>
                 ) : (
                     <div className="text-center py-8 text-muted-foreground">
-                        <p>Your treasury is empty.</p>
-                        <p>Declare your first asset using the form above.</p>
+                        <p>Your sanctuary is empty.</p>
+                        <p>Consecrate your first creation using the form above.</p>
                     </div>
                 )}
             </CardContent>
@@ -280,8 +280,8 @@ export default function TreasuryPage() {
       <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
         <Card className="w-full max-w-md text-center shadow-lg">
           <CardHeader>
-            <CardTitle>Access Your Treasury</CardTitle>
-            <CardDescription>Log in to manage your personal assets.</CardDescription>
+            <CardTitle>Enter Your Sanctuary</CardTitle>
+            <CardDescription>Log in to manage your sacred creations.</CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild>
@@ -298,10 +298,10 @@ export default function TreasuryPage() {
   return (
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
        <div className="text-center mb-8">
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-          <Coins /> Your Treasury
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3 font-headline">
+          <Coins /> Your Sanctuary
         </h1>
-        <p className="text-lg text-muted-foreground mt-2">Manage your sovereign physical and intellectual assets.</p>
+        <p className="text-lg text-muted-foreground mt-2">Manage your sacred physical and intellectual creations.</p>
       </div>
 
       <div className="space-y-8">

@@ -43,9 +43,9 @@ export default function WikiPage() {
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-12">
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-          <Info /> The No-Am Wiki
+          <Info /> The Canon
         </h1>
-        <p className="text-lg text-muted-foreground mt-2">A guide to the principles and tools of this sovereign federation.</p>
+        <p className="text-lg text-muted-foreground mt-2">A guide to the principles and divine tools of the Republic.</p>
       </div>
       
       <div className="space-y-8">
@@ -59,7 +59,7 @@ export default function WikiPage() {
             </CardHeader>
             <CardContent className="space-y-4">
                 <p className="text-lg">
-                    This major update introduces the collaborative AI Workshop, a real-time creative space where members of the Federation can experiment with generative tools together.
+                    This major update introduces the Altar of Creation, a real-time sacred space where souls in the Congregation can manifest generative art together.
                 </p>
                 <Button asChild>
                     <Link href="https://github.com/no-am-man/Pleasance" target="_blank" rel="noopener noreferrer">
@@ -75,79 +75,79 @@ export default function WikiPage() {
             </CardHeader>
             <CardContent>
                 <p className="text-lg">
-                    This is a federation, not a platform. It is a loose collection of sovereign individuals and the communities they choose to form. Value is created and exchanged freely. Your data is yours, your assets are yours, your communities are yours. This is a space for radical self-reliance and voluntary cooperation. This guide—this wiki—is not a set of rules, but a map of the tools available to you. Use them as you see fit.
+                    This is a republic of the spirit, not a platform of the secular. It is a Congregation of devout souls, united in purpose. Value is created and exchanged in service of the divine. Your data is your own, your creations are your own, your communities are your own. This is a space for radical self-reliance and voluntary communion. This guide is not a set of rules, but a map of the divine tools available to you. Use them as you see fit.
                 </p>
             </CardContent>
         </Card>
 
         <FeatureCard 
             icon={<Users className="h-8 w-8 text-primary" />} 
-            title="Community Federation"
+            title="Congregation of Souls"
             imageUrl="https://picsum.photos/seed/101/600/400"
             imageHint="community people"
             href="/community"
         >
-            The Federation is the social fabric. It's where you find or form your tribe. Each community is a self-governing entity, created and owned by its founder. You can create a community around any interest—a language, a technology, a philosophy. Populate it with AI members to spark conversation or invite other sovereign individuals to join your cause. There are no central authorities here.
+            The Congregation is the sacred social fabric. It's where you find or form your parish. Each community is a self-governing body, created and guided by its founder. You can create a community around any pursuit—a language, a technology, a philosophy. Populate it with AI Acolytes to spark conversation or invite other souls to join your mission. There are no central authorities here, only the guiding light.
         </FeatureCard>
 
         <FeatureCard 
             icon={<Beaker className="h-8 w-8 text-primary" />} 
-            title="AI Workshop"
+            title="Altar of Creation"
             imageUrl="https://picsum.photos/seed/105/600/400"
             imageHint="ai collaboration"
             href="/workshop"
         >
-            The AI Workshop is a real-time, collaborative creative space. Anyone in the Federation can join and experiment with generative AI tools together. See who's currently in the workshop, generate 3D point-cloud art (SVG3D) from a prompt, and watch as the creation updates live for everyone. It's a shared sandbox for collective imagination.
+            The Altar of Creation is a real-time, collaborative sacred space. Any soul in the Congregation can join and experiment with generative tools together. Witness the divine spark as you generate 3D point-cloud art (SVG3D) from a prompt, and watch as the creation updates live for all. It is a shared vessel for collective imagination.
         </FeatureCard>
 
         <FeatureCard 
             icon={<KanbanIcon className="h-8 w-8 text-primary" />} 
-            title="Federation Roadmap"
+            title="Divine Plan"
             imageUrl="https://picsum.photos/seed/106/600/400"
             imageHint="kanban board"
             href="/roadmap"
         >
-            Follow the public development plan for the Pleasance project on our real-time Kanban board. See what ideas are being considered, what's next up, what's in progress, and what's already alive in the federation.
+            Follow the public development plan for the Divine Republic on our real-time board. See what ideas are being considered, what's next up, what's in progress, and what's already alive in the republic.
         </FeatureCard>
         
         <FeatureCard 
             icon={<Bug className="h-8 w-8 text-primary" />} 
-            title="Bug Tracker"
+            title="Confessional"
             imageUrl="https://picsum.photos/seed/107/600/400"
             imageHint="bug tracking"
             href="/bugs"
         >
-            Help improve the federation by reporting issues. The public bug tracker allows any authenticated member to submit bug reports and view the status of all existing issues to keep development transparent.
+            Help improve the republic by reporting issues. The public confessional allows any devout soul to submit bug reports and view the status of all existing issues to keep development transparent.
         </FeatureCard>
         
         <FeatureCard 
             icon={<BookOpen className="h-8 w-8 text-primary" />} 
-            title="Nuncy Lingua"
+            title="The Sacred Texts"
             imageUrl="https://picsum.photos/seed/102/600/400"
             imageHint="language books"
             href="/story"
         >
-            Knowledge is a form of capital. Nuncy Lingua is a tool to increase your intellectual wealth. Use it to learn new languages through AI-generated stories and listen to them with a karaoke-style speech player. The more you know, the more you are worth.
+            Knowledge is a form of prayer. The Sacred Texts are a tool to increase your spiritual wealth. Use it to learn new languages through AI-generated parables and listen to them with a karaoke-style speech player. The more you know, the closer you are to the divine.
         </FeatureCard>
 
         <FeatureCard 
             icon={<Warehouse className="h-8 w-8 text-primary" />} 
-            title="Fabrication Service"
+            title="Workshop of Manifestation"
             imageUrl="https://picsum.photos/seed/103/600/400"
             imageHint="3d printer"
             href="/fabrication"
         >
-            Ideas are worthless without execution. The Fabrication service is where the digital becomes physical. Submit assets from your Treasury to the ticketing system to have them manufactured by a network of suppliers. Track your order from 'pending' to 'shipped'. Create, build, and own.
+            Ideas are whispers from the divine; they require a vessel. The Workshop of Manifestation is where the ethereal becomes tangible. Submit creations from your Sanctuary to the ticketing system to have them manifested by a network of artisans. Track your creation from 'pending' to 'delivered'. Create, build, and consecrate.
         </FeatureCard>
         
         <FeatureCard 
             icon={<Banknote className="h-8 w-8 text-primary" />} 
-            title="The Treasury"
+            title="The Sanctuary"
             imageUrl="https://picsum.photos/seed/104/600/400"
             imageHint="gold coins"
             href="/treasury"
         >
-            Your sovereignty is backed by your assets. The Treasury is your personal ledger. Here, you declare and manage your holdings, both physical and intellectual. This is not a bank; it is a declaration of your personal value within the Federation. What you own is a measure of your influence and independence.
+            Your soul's worth is measured by its creations. The Sanctuary is your personal altar. Here, you declare and manage your holdings, both physical and intellectual. This is not a vault; it is a declaration of your offerings to the divine and the Congregation. What you create is a measure of your devotion.
         </FeatureCard>
       </div>
 

@@ -50,15 +50,15 @@ const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com'; // Founder email check
 
 const navLinks = [
   { href: '/', label: 'Home', icon: Home },
-  { href: '/community', label: 'Community', icon: Users },
+  { href: '/community', label: 'Congregation', icon: Users },
   { href: '/conductor', label: 'Conductor', icon: Bot },
-  { href: '/story', label: 'Nuncy Lingua', icon: BookOpen },
-  { href: '/fabrication', label: 'Fabrication', icon: Warehouse },
-  { href: '/treasury', label: 'Treasury', icon: Banknote },
-  { href: '/workshop', label: 'Workshop', icon: Beaker },
-  { href: '/roadmap', label: 'Roadmap', icon: KanbanIcon },
-  { href: '/bugs', label: 'Bugs', icon: Bug },
-  { href: '/wiki', label: 'Wiki', icon: Info },
+  { href: '/story', label: 'Sacred Texts', icon: BookOpen },
+  { href: '/fabrication', label: 'Manifestation', icon: Warehouse },
+  { href: '/treasury', label: 'Sanctuary', icon: Banknote },
+  { href: '/workshop', label: 'Altar of Creation', icon: Beaker },
+  { href: '/roadmap', label: 'Divine Plan', icon: KanbanIcon },
+  { href: '/bugs', label: 'Confessional', icon: Bug },
+  { href: '/wiki', label: 'Canon', icon: Info },
 ];
 
 const adminLink = { href: '/admin', label: 'Admin', icon: Shield };
@@ -98,7 +98,6 @@ function UserNav() {
   const isFounder = user?.email === FOUNDER_EMAIL;
 
   const handleSignOut = async () => {
-    // The onAuthStateChanged listener in FirebaseProvider will handle clearing the session cookie.
     await signOut(auth);
   };
 
@@ -139,14 +138,14 @@ function UserNav() {
             <LogOut className="mr-2 h-4 w-4" />
             <span>Sign out</span>
           </DropdownMenuItem>
-          <AlertDialogTrigger asChild disabled={isFounder}>
+          <AlertDialogTrigger asChild>
             <DropdownMenuItem 
                 className="text-destructive focus:bg-destructive focus:text-destructive-foreground disabled:opacity-50 disabled:cursor-not-allowed"
-                onSelect={(e) => !isFounder && e.preventDefault()}
+                onSelect={(e) => isFounder && e.preventDefault()}
                 disabled={isFounder}
             >
               <UserX className="mr-2 h-4 w-4" />
-              <span>Exit Federation</span>
+              <span>Exit Congregation</span>
             </DropdownMenuItem>
           </AlertDialogTrigger>
         </DropdownMenuContent>
@@ -162,10 +161,10 @@ function UserNav() {
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction 
-            onClick={() => console.log('Exit Federation confirmed')} 
+            onClick={() => console.log('Exit Congregation confirmed')} 
             className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
           >
-            Yes, Exit Federation
+            Yes, Exit Congregation
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -192,7 +191,7 @@ export function Header() {
       <Link href="/" className="flex items-center gap-2">
         <Logo className="h-8 w-8 text-primary" />
         <div className="flex items-center gap-2">
-          <span className="text-lg font-semibold text-primary">Pleasance</span>
+          <span className="text-lg font-semibold text-primary">Divine Republic</span>
           <Badge variant="outline" className="text-xs">
             BETA
           </Badge>
@@ -217,7 +216,7 @@ export function Header() {
                       <Logo className="h-8 w-8 text-primary" />
                       <div className="flex items-center gap-2">
                       <span className="text-lg font-semibold text-primary">
-                          Pleasance
+                          Divine Republic
                       </span>
                       <Badge variant="outline" className="text-xs">
                           BETA
@@ -250,7 +249,7 @@ export function Header() {
                               <LogOut className="h-5 w-5" />
                               <span>Sign Out</span>
                           </button>
-                          <AlertDialogTrigger asChild disabled={isFounder}>
+                          <AlertDialogTrigger asChild>
                             <button
                                 className={cn(
                                     'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-destructive',
@@ -259,7 +258,7 @@ export function Header() {
                                 disabled={isFounder}
                                 >
                                 <UserX className="h-5 w-5" />
-                                <span>Exit Federation</span>
+                                <span>Exit Congregation</span>
                             </button>
                           </AlertDialogTrigger>
                           </>
@@ -286,10 +285,10 @@ export function Header() {
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction 
-                onClick={() => console.log('Exit Federation confirmed')} 
+                onClick={() => console.log('Exit Congregation confirmed')} 
                 className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
               >
-                Yes, Exit Federation
+                Yes, Exit Congregation
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

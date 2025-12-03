@@ -3,8 +3,8 @@ import './globals.css';
 import { Providers } from './providers';
 
 export const metadata: Metadata = {
-  title: 'Pleasance',
-  description: 'A federated universe for co-learning, creation, and fabrication.',
+  title: 'Divine Republic',
+  description: 'A sacred space for communion, co-learning, and divine creation.',
 };
 
 export default function RootLayout({
@@ -22,7 +22,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Roboto:wght@400;500&display=swap"
           rel="stylesheet"
         />
       </head>

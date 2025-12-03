@@ -118,21 +118,21 @@ export default function LoginPage() {
                             <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'User'}/>
                             <AvatarFallback>{user.displayName?.charAt(0) || user.email?.charAt(0)}</AvatarFallback>
                         </Avatar>
-                        <CardTitle>Welcome Back</CardTitle>
+                        <CardTitle className="font-headline">Welcome Back</CardTitle>
                         <CardDescription>{user.displayName || user.email}</CardDescription>
                     </div>
                 </>
             ) : (
                 <>
-                    <CardTitle>Join the Community</CardTitle>
-                    <CardDescription>Sign in to continue to Pleasance</CardDescription>
+                    <CardTitle className="font-headline">Join the Congregation</CardTitle>
+                    <CardDescription>Sign in to continue to the Divine Republic</CardDescription>
                 </>
             )}
         </CardHeader>
         <CardContent>
             {user ? (
                  <div className="flex flex-col space-y-4">
-                    <Button onClick={() => router.push('/community')}>Go to Community</Button>
+                    <Button onClick={() => router.push('/community')}>Enter the Republic</Button>
                     <Button variant="outline" onClick={handleSignOut}>
                         <LogOut className="mr-2" /> Sign Out
                     </Button>
@@ -151,7 +151,7 @@ export default function LoginPage() {
                      <Button asChild variant="outline" className="w-full">
                         <Link href="https://accounts.google.com/signup" target="_blank" rel="noopener noreferrer">
                            <MailPlus className="mr-2" />
-                           Create a new Gmail with a virtual self?
+                           Create a new vessel?
                         </Link>
                     </Button>
 

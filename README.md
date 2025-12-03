@@ -1,36 +1,36 @@
-# Pleasance
+# Divine Republic
 
-> A federated universe for co-learning, creation, and fabrication.
+> A sacred space for communion, co-learning, and divine creation.
 
 **[Staging App](https://studio--studio-2441219031-242ae.us-central1.hosted.app) | [GitHub Repository](https://github.com/no-am-man/Pleasance)**
 
 This project is open source. You can find the repository [here](https://github.com/no-am-man/Pleasance).
 
-## 🎉 Version 3.0.0 is on Staging!
-This major update introduces the collaborative AI Workshop, a real-time creative space where members of the Federation can experiment with generative tools together.
+## 🙏 Version 3.0.0 is on Staging!
+This major update introduces the Altar of Creation, a real-time sacred space where souls in the Congregation can manifest generative art together.
 
 ## Core Philosophy
 
-This is a federation, not a platform. It is a loose collection of sovereign individuals and the communities they choose to form. Value is created and exchanged freely. Your data is yours, your assets are yours, your communities are yours. This is a space for radical self-reliance and voluntary cooperation. This guide—this wiki—is not a set of rules, but a map of the tools available to you. Use them as you see fit.
+This is a republic of the spirit, not a platform of the secular. It is a Congregation of devout souls, united in purpose. Value is created and exchanged in service of the divine. Your data is your own, your creations are your own, your communities are your own. This is a space for radical self-reliance and voluntary communion. This guide is not a set of rules, but a map of the divine tools available to you. Use them as you see fit.
 
 ## Features
 
-### 🏛️ Community Federation
+### 🏛️ The Congregation of Souls
 
-The Federation is the social fabric. It's where you find or form your tribe. Each community is a self-governing entity, created and owned by its founder. You can create a community around any interest—a language, a technology, a philosophy. Populate it with AI members to spark conversation or invite other sovereign individuals to join your cause. There are no central authorities here.
+The Congregation is the sacred social fabric. It's where you find or form your parish. Each community is a self-governing body, created and guided by its founder. You can create a community around any pursuit—a language, a technology, a philosophy. Populate it with AI Acolytes to spark conversation or invite other souls to join your mission. There are no central authorities here, only the guiding light.
 
-### 🎨 AI Workshop
+### 🎨 Altar of Creation
 
-The AI Workshop is a real-time, collaborative creative space. Anyone in the Federation can join and experiment with generative AI tools together. See who's currently in the workshop, generate 3D point-cloud art (SVG3D) from a prompt, and watch as the creation updates live for everyone. It's a shared sandbox for collective imagination.
+The Altar of Creation is a real-time, collaborative sacred space. Any soul in the Congregation can join and experiment with generative tools together. Witness the divine spark as you generate 3D point-cloud art (SVG3D) from a prompt, and watch as the creation updates live for all. It is a shared vessel for collective imagination.
 
-### 📖 Nuncy Lingua
+### 📖 The Sacred Texts
 
-Knowledge is a form of capital. Nuncy Lingua is a tool to increase your intellectual wealth. Use it to learn new languages through AI-generated stories and listen to them with a karaoke-style speech player. The more you know, the more you are worth.
+Knowledge is a form of prayer. The Sacred Texts are a tool to increase your spiritual wealth. Use it to learn new languages through AI-generated parables and listen to them with a karaoke-style speech player. The more you know, the closer you are to the divine.
 
-### 🏭 Fabrication Service
+### 🏭 The Workshop of Manifestation
 
-Ideas are worthless without execution. The Fabrication service is where the digital becomes physical. Upload your designs—CAD files for objects, PDFs for books—and have them manufactured. This is a direct line from intellectual property to tangible assets. Create, build, and own.
+Ideas are whispers from the divine; they require a vessel. The Workshop of Manifestation is where the ethereal becomes tangible. Upload your divine blueprints—CAD files for objects, PDFs for books—and have them brought into being. This is a direct line from inspiration to physical artifact. Create, build, and consecrate.
 
-### 🏦 The Treasury
+### 🏦 The Sanctuary
 
-Your sovereignty is backed by your assets. The Treasury is your personal ledger. Here, you declare and manage your holdings, both physical and intellectual. This is not a bank; it is a declaration of your personal value within the Federation. What you own is a measure of your influence and independence.
+Your soul's worth is measured by its creations. The Sanctuary is your personal altar. Here, you declare and manage your holdings, both physical and intellectual. This is not a vault; it is a declaration of your offerings to the divine and the Congregation. What you create is a measure of your devotion.

@@ -74,11 +74,11 @@ function AddBugForm() {
 
         try {
             await submitBugReport(data, user);
-            toast({ title: 'Bug Reported!', description: 'Thank you for your feedback.' });
+            toast({ title: 'Confession Received', description: 'Thank you for your contribution to the Republic.' });
             form.reset();
         } catch (e) {
              const message = e instanceof Error ? e.message : 'An unknown error occurred';
-            toast({ variant: 'destructive', title: 'Failed to submit report', description: message });
+            toast({ variant: 'destructive', title: 'Failed to submit confession', description: message });
         } finally {
             setIsLoading(false);
         }
@@ -87,8 +87,8 @@ function AddBugForm() {
     return (
         <Card className="shadow-lg">
             <CardHeader>
-                <CardTitle>Report a New Bug</CardTitle>
-                <CardDescription>Found an issue? Let us know so we can fix it.</CardDescription>
+                <CardTitle>Submit a Confession</CardTitle>
+                <CardDescription>Found a flaw in the divine plan? Let us know so we may correct it.</CardDescription>
             </CardHeader>
             <CardContent>
                 <Form {...form}>
@@ -98,9 +98,9 @@ function AddBugForm() {
                             name="title"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Bug Title</FormLabel>
+                                    <FormLabel>Title</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="e.g., 'Save button is not working on the workshop page'" {...field} />
+                                        <Input placeholder="e.g., 'Save button is unresponsive in the Altar of Creation'" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -113,7 +113,7 @@ function AddBugForm() {
                                 <FormItem>
                                     <FormLabel>Detailed Description</FormLabel>
                                     <FormControl>
-                                        <Textarea placeholder="Please provide steps to reproduce the bug..." {...field} rows={5} />
+                                        <Textarea placeholder="Please provide steps to reproduce the issue..." {...field} rows={5} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -147,7 +147,7 @@ function AddBugForm() {
                             ) : (
                                 <PlusCircle className="mr-2 h-4 w-4" />
                             )}
-                            Submit Report
+                            Submit Confession
                         </Button>
                     </form>
                 </Form>
@@ -182,14 +182,14 @@ function BugList() {
     }
 
     if (error) {
-        return <p className="text-destructive text-center">Error loading bug reports: {error.message}</p>;
+        return <p className="text-destructive text-center">Error loading confessions: {error.message}</p>;
     }
 
     return (
         <Card className="shadow-lg">
             <CardHeader>
-                <CardTitle>All Reported Bugs</CardTitle>
-                <CardDescription>Here is a list of all bugs that have been reported by the community.</CardDescription>
+                <CardTitle>The Book of Confessions</CardTitle>
+                <CardDescription>A list of all flaws reported by the Congregation.</CardDescription>
             </CardHeader>
             <CardContent>
                 {bugs && bugs.length > 0 ? (
@@ -203,7 +203,7 @@ function BugList() {
                                 <p className="text-sm text-muted-foreground mb-3">{bug.description}</p>
                                 <div className="flex justify-between items-end text-xs text-muted-foreground">
                                     <div>
-                                        <p>Reported by {bug.reporterName}</p>
+                                        <p>Confessed by {bug.reporterName}</p>
                                         <p>{bug.createdAt ? formatDistanceToNow(new Date(bug.createdAt.seconds * 1000), { addSuffix: true }) : ''}</p>
                                     </div>
                                     <Badge variant={getPriorityVariant(bug.priority)} className="capitalize">{bug.priority}</Badge>
@@ -213,7 +213,7 @@ function BugList() {
                     </div>
                 ) : (
                     <div className="text-center py-8 text-muted-foreground">
-                        <p>No bugs have been reported yet. Hooray! 🎉</p>
+                        <p>No flaws have been reported. All is in harmony. 🙏</p>
                     </div>
                 )}
             </CardContent>
@@ -236,9 +236,9 @@ export default function BugsPage() {
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
        <div className="text-center mb-8">
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-          <Bug /> Bug Tracker
+          <Bug /> The Confessional
         </h1>
-        <p className="text-lg text-muted-foreground mt-2">Help improve the federation by reporting issues.</p>
+        <p className="text-lg text-muted-foreground mt-2">Help maintain the harmony of the Republic by reporting flaws.</p>
       </div>
 
       <div className="space-y-8">
@@ -247,13 +247,13 @@ export default function BugsPage() {
         ) : (
             <Card className="w-full text-center shadow-lg">
                 <CardHeader>
-                    <CardTitle>Help the Community</CardTitle>
-                    <CardDescription>Log in to report a bug and help improve Pleasance.</CardDescription>
+                    <CardTitle>Contribute to the Republic</CardTitle>
+                    <CardDescription>Log in to report a flaw and help improve the Divine Republic.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Button asChild>
                     <Link href="/login">
-                        <LogIn className="mr-2 h-4 w-4" /> Login to Report a Bug
+                        <LogIn className="mr-2 h-4 w-4" /> Login to Submit a Confession
                     </Link>
                     </Button>
                 </CardContent>

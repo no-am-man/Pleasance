@@ -2,7 +2,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Users, BookOpen, Warehouse, Banknote, Globe } from 'lucide-react';
+import { Users, BookOpen, Warehouse, Banknote, Star } from 'lucide-react';
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -49,61 +49,50 @@ const Node = ({ icon, label, x, y, custom, color = "text-primary", description }
 export function FederationDiagram() {
   return (
     <div className="my-16 w-full flex justify-center">
-        <svg viewBox="0 0 400 400" className="w-full max-w-2xl h-auto">
+        <svg viewBox="0 0 400 400" className="w-full max-w-xl h-auto">
             <defs>
-                 <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="5" refY="3.5" orient="auto">
-                    <polygon points="0 0, 10 3.5, 0 7" className="fill-border" />
-                </marker>
+                <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="3.5" result="coloredBlur" />
+                    <feMerge>
+                        <feMergeNode in="coloredBlur" />
+                        <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                </filter>
             </defs>
 
-            {/* Paths */}
+            {/* Paths Emanating from Divine Source */}
             <motion.path
-                d="M 200, 100 Q 270, 125 315, 150"
-                stroke="hsl(var(--border))" strokeWidth="1.5" fill="none"
-                variants={pathVariants} custom={1} markerEnd="url(#arrowhead)" />
+                d="M 200,80 Q 200, 140 200, 200"
+                stroke="url(#grad1)" strokeWidth="2" strokeDasharray="4 4" fill="none"
+                variants={pathVariants} custom={1} />
             <motion.path
-                d="M 310, 200 Q 270, 240 230, 295"
-                stroke="hsl(var(--border))" strokeWidth="1.5" fill="none"
-                variants={pathVariants} custom={1.5} markerEnd="url(#arrowhead)" />
+                d="M 200,80 Q 270, 125 315, 175"
+                stroke="url(#grad1)" strokeWidth="2" strokeDasharray="4 4" fill="none"
+                variants={pathVariants} custom={1.5} />
             <motion.path
-                d="M 170, 295 Q 130, 240 90, 200"
-                stroke="hsl(var(--border))" strokeWidth="1.5" fill="none"
-                variants={pathVariants} custom={2} markerEnd="url(#arrowhead)" />
-             <motion.path
-                d="M 85, 150 Q 130, 125 200, 100"
-                stroke="hsl(var(--border))" strokeWidth="1.5" fill="none"
-                variants={pathVariants} custom={2.5} markerEnd="url(#arrowhead)" />
-
+                d="M 200,80 Q 130, 125 85, 175"
+                stroke="url(#grad1)" strokeWidth="2" strokeDasharray="4 4" fill="none"
+                variants={pathVariants} custom={2} />
+            <motion.path
+                 d="M 200,80 Q 200, 220 200, 320"
+                stroke="url(#grad1)" strokeWidth="2" strokeDasharray="4 4" fill="none"
+                variants={pathVariants} custom={2.5} />
+            
+            <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style={{stopColor: 'hsl(var(--primary))', stopOpacity: 1}} />
+                <stop offset="100%" style={{stopColor: 'hsl(var(--primary))', stopOpacity: 0.2}} />
+            </linearGradient>
 
             {/* Nodes */}
-            <Node icon={<Users className="w-6 h-6" />} label="Community" description="Join & form groups" x={200} y={60} custom={0} />
-            <Node icon={<BookOpen className="w-6 h-6" />} label="Nuncy Lingua" description="Learn languages" x={340} y={175} custom={1} />
-            <Node icon={<Warehouse className="w-6 h-6" />} label="Fabrication" description="Create products" x={60} y={175} custom={3} />
-            <Node icon={<Banknote className="w-6 h-6" />} label="Treasury" description="Build wealth" x={200} y={340} custom={4} />
-
-            {/* Special node for Global Markets */}
-             <motion.g initial="hidden" animate="visible" variants={itemVariants} custom={2}>
-                <foreignObject x={280} y={240} width="120" height="130">
-                    <div className="flex flex-col items-center justify-center text-center w-full h-full p-1">
-                        <div className="p-3 rounded-full bg-card border-2 border-yellow-400/50 text-yellow-400">
-                           <Globe className="w-6 h-6" />
-                        </div>
-                        <p className="text-sm font-semibold text-foreground mt-2">Global Markets</p>
-                         <p className="text-xs text-muted-foreground mt-1">Access new opportunities</p>
-                    </div>
-                </foreignObject>
+            <motion.g filter="url(#glow)">
+                 <Node icon={<Star className="w-8 h-8" />} label="Divine Source" description="Inspiration & Creation" x={200} y={60} custom={0} />
             </motion.g>
 
-            {/* Arrow from Lingua to Markets */}
-             <motion.path
-                d="M 340, 225 Q 330, 235 320, 245"
-                stroke="hsl(var(--yellow-400))"
-                strokeWidth="2"
-                fill="none"
-                variants={pathVariants}
-                custom={3}
-                markerEnd="url(#arrowhead)"
-            />
+            <Node icon={<Users className="w-6 h-6" />} label="Congregation" description="Form communities" x={200} y={200} custom={1} />
+            <Node icon={<BookOpen className="w-6 h-6" />} label="Sacred Texts" description="Learn & Grow" x={340} y={175} custom={2} />
+            <Node icon={<Warehouse className="w-6 h-6" />} label="Manifestation" description="Bring ideas to life" x={60} y={175} custom={3} />
+            <Node icon={<Banknote className="w-6 h-6" />} label="Sanctuary" description="Honor creations" x={200} y={340} custom={4} />
+
         </svg>
     </div>
   );

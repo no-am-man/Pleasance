@@ -86,13 +86,13 @@ function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void
     return (
         <Card className="shadow-lg bg-background/80 backdrop-blur-sm">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-2xl font-serif"><History /> Your Storybook</CardTitle>
-                <CardDescription>Revisit stories you've generated in the past.</CardDescription>
+                <CardTitle className="flex items-center gap-2 text-2xl font-headline"><History /> Your Book of Parables</CardTitle>
+                <CardDescription>Revisit parables you've generated in the past.</CardDescription>
             </CardHeader>
             <CardContent>
                 {isLoading && <LoaderCircle className="animate-spin mx-auto" />}
                 {error && <p className="text-destructive">Error loading history: {error.message}</p>}
-                {stories && stories.length === 0 && <p className="text-muted-foreground text-center">You haven't generated any stories yet.</p>}
+                {stories && stories.length === 0 && <p className="text-muted-foreground text-center">You haven't generated any parables yet.</p>}
                 {stories && stories.length > 0 && (
                     <ul className="space-y-2 max-h-80 overflow-y-auto">
                         {stories.map((story, index) => (
@@ -119,9 +119,9 @@ function SnapshotViewer({ snapshot }: { snapshot: HistorySnapshot }) {
   return (
     <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
       <DialogHeader>
-        <DialogTitle>Snapshot from {snapshot.createdAt ? new Date(snapshot.createdAt.seconds * 1000).toLocaleString() : 'a past time'}</DialogTitle>
+        <DialogTitle>Parable Snapshot from {snapshot.createdAt ? new Date(snapshot.createdAt.seconds * 1000).toLocaleString() : 'a past time'}</DialogTitle>
         <DialogDescription>
-          A view of your {snapshot.storyCount} stories from this point in time.
+          A view of your {snapshot.storyCount} parables from this point in time.
         </DialogDescription>
       </DialogHeader>
       <div className="flex-grow overflow-y-auto pr-4 space-y-4">
@@ -165,7 +165,7 @@ function TimeMachine() {
         if (result.error) {
             toast({ variant: 'destructive', title: 'Snapshot Failed', description: result.error });
         } else {
-            toast({ title: 'Snapshot Created!', description: `Saved ${result.storyCount} stories to your Time Machine.` });
+            toast({ title: 'Snapshot Created!', description: `Saved ${result.storyCount} parables to your Time Machine.` });
         }
         setIsCreating(false);
     };
@@ -184,7 +184,7 @@ function TimeMachine() {
         <Card className="shadow-lg">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Clock /> Time Machine</CardTitle>
-                <CardDescription>Create and view snapshots of your story history.</CardDescription>
+                <CardDescription>Create and view snapshots of your parable history.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                  <Button onClick={handleCreateSnapshot} disabled={isCreating}>
@@ -203,7 +203,7 @@ function TimeMachine() {
                                     <DialogTrigger asChild>
                                         <button className="flex-grow text-left">
                                             <p className="font-semibold">{snapshot.createdAt ? new Date(snapshot.createdAt.seconds * 1000).toLocaleString() : 'Snapshot'}</p>
-                                            <p className="text-sm text-muted-foreground">{snapshot.storyCount} stories captured</p>
+                                            <p className="text-sm text-muted-foreground">{snapshot.storyCount} parables captured</p>
                                         </button>
                                     </DialogTrigger>
                                     <Button variant="ghost" size="sm" onClick={() => handleDeleteSnapshot(snapshot.id)}>Delete</Button>
@@ -257,7 +257,7 @@ export default function StoryPage() {
 
   async function onSubmit(data: z.infer<typeof StoryFormSchema>) {
     if (!user) {
-        setError("You must be logged in to generate a story.");
+        setError("You must be logged in to generate a parable.");
         return;
     }
     setIsLoading(true);
@@ -274,9 +274,9 @@ export default function StoryPage() {
     
     if (result.storyData) {
         setActiveStory(result.storyData as Story);
-        toast({ title: "Story Generated!", description: "Your new story is ready."});
+        toast({ title: "Parable Generated!", description: "Your new parable is ready."});
     } else {
-      setError('An unknown error occurred while generating the story.');
+      setError('An unknown error occurred while generating the parable.');
     }
   }
 
@@ -297,15 +297,14 @@ export default function StoryPage() {
       <div 
         className="text-center mb-12 p-8 rounded-lg"
         style={{
-            background: 'radial-gradient(circle, rgba(10,40,60,1) 0%, rgba(0,20,40,1) 100%)',
-            border: '2px solid rgba(255,255,255,0.1)',
-            boxShadow: '0 0 20px rgba(255,215,0,0.2)'
+            background: 'radial-gradient(circle, hsl(var(--accent) / 0.2) 0%, transparent 70%)',
+            border: '1px solid hsl(var(--border))',
         }}>
-        <h1 className="text-5xl font-serif font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-          <BookOpen className="w-12 h-12" /> Nuncy Lingua
+        <h1 className="text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3">
+          <BookOpen className="w-12 h-12" /> The Sacred Texts
         </h1>
         <p className="text-lg text-slate-300 mt-2">
-          Generate a short story at your level, then practice with our karaoke-style player.
+          Generate a short parable at your level, then practice with our karaoke-style player.
         </p>
       </div>
       
@@ -313,7 +312,7 @@ export default function StoryPage() {
         {isLoading && (
             <div className="flex justify-center p-8">
                 <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
-                <p className="ml-4 text-muted-foreground self-center">Generating your story and audio...</p>
+                <p className="ml-4 text-muted-foreground self-center">Generating your parable and audio...</p>
             </div>
         )}
         {error && (
@@ -336,8 +335,8 @@ export default function StoryPage() {
       {!user ? (
          <Card className="w-full max-w-md mx-auto text-center shadow-lg bg-background/80 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle>Welcome to the Language Lab</CardTitle>
-            <CardDescription>Log in to generate stories and save your progress.</CardDescription>
+            <CardTitle>Welcome to the Scriptorium</CardTitle>
+            <CardDescription>Log in to generate parables and save your progress.</CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild>
@@ -358,7 +357,7 @@ export default function StoryPage() {
                     border: '4px solid #6b4a39'
                 }}>
                 <CardHeader className="text-white">
-                    <CardTitle className="text-3xl font-serif flex items-center gap-2"><PencilRuler/> New Lesson</CardTitle>
+                    <CardTitle className="text-3xl font-headline flex items-center gap-2"><PencilRuler/> New Lesson</CardTitle>
                     <CardDescription className="text-slate-300">Choose your languages and difficulty.</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -370,14 +369,14 @@ export default function StoryPage() {
                         name="sourceLanguage"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel className="text-white font-serif">Your Language</FormLabel>
+                            <FormLabel className="text-white font-headline">Your Language</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
-                                <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-sans">
+                                <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-body">
                                     <SelectValue placeholder="Select your language" />
                                 </SelectTrigger>
                                 </FormControl>
-                                <SelectContent className="bg-slate-800 text-white border-slate-600 font-sans">
+                                <SelectContent className="bg-slate-800 text-white border-slate-600 font-body">
                                 {LANGUAGES.map((lang) => (
                                     <SelectItem key={lang.value} value={lang.value}>
                                     {lang.label}
@@ -394,14 +393,14 @@ export default function StoryPage() {
                         name="targetLanguage"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel className="text-white font-serif">Language to Learn</FormLabel>
+                            <FormLabel className="text-white font-headline">Language to Learn</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
-                                <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-sans">
+                                <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-body">
                                     <SelectValue placeholder="Select a language" />
                                 </SelectTrigger>
                                 </FormControl>
-                                <SelectContent className="bg-slate-800 text-white border-slate-600 font-sans">
+                                <SelectContent className="bg-slate-800 text-white border-slate-600 font-body">
                                 {LANGUAGES.map((lang) => (
                                     <SelectItem key={lang.value} value={lang.value}>
                                     {lang.label}
@@ -418,14 +417,14 @@ export default function StoryPage() {
                         name="difficulty"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel className="text-white font-serif">Difficulty</FormLabel>
+                            <FormLabel className="text-white font-headline">Difficulty</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
-                                <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-sans">
+                                <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-body">
                                     <SelectValue placeholder="Select difficulty" />
                                 </SelectTrigger>
                                 </FormControl>
-                                <SelectContent className="bg-slate-800 text-white border-slate-600 font-sans">
+                                <SelectContent className="bg-slate-800 text-white border-slate-600 font-body">
                                     <SelectItem value="beginner">Beginner</SelectItem>
                                     <SelectItem value="intermediate">Intermediate</SelectItem>
                                     <SelectItem value="advanced">Advanced</SelectItem>
@@ -436,13 +435,13 @@ export default function StoryPage() {
                         )}
                         />
                     </div>
-                    <Button type="submit" disabled={isLoading} size="lg" className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold font-sans">
+                    <Button type="submit" disabled={isLoading} size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold font-body">
                         {isLoading ? (
                             <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                         ) : (
                             <Sparkles className="mr-2 h-4 w-4" />
                         )}
-                        Generate Story
+                        Generate Parable
                     </Button>
                     </form>
                 </Form>

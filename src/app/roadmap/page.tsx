@@ -63,13 +63,13 @@ function AddIdeaForm() {
         if (result.error) {
             toast({
                 variant: 'destructive',
-                title: 'Error adding idea',
+                title: 'Error adding inspiration',
                 description: result.error,
             });
         } else {
             toast({
-                title: 'Idea Added!',
-                description: 'Your new idea has been added to the board.',
+                title: 'Inspiration Added!',
+                description: 'Your new inspiration has been added to the board.',
             });
             form.reset();
         }
@@ -103,7 +103,7 @@ function AddIdeaForm() {
     return (
         <Card className="mb-4 bg-card/70">
             <CardHeader className="p-4">
-                <CardTitle className="text-base">Add a New Idea</CardTitle>
+                <CardTitle className="text-base">Add a New Inspiration</CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
                 <Form {...form}>
@@ -114,7 +114,7 @@ function AddIdeaForm() {
                             render={({ field }) => (
                                 <FormItem>
                                     <FormControl>
-                                        <Input placeholder="Idea title..." {...field} />
+                                        <Input placeholder="Inspiration title..." {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -155,7 +155,7 @@ function AddIdeaForm() {
                         />
                         <Button type="submit" size="sm" className="w-full" disabled={isSubmitting}>
                             {isSubmitting ? <LoaderCircle className="animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
-                            Add Idea
+                            Add Inspiration
                         </Button>
                     </form>
                 </Form>
@@ -182,13 +182,13 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, dr
     if (result.error) {
         toast({
             variant: 'destructive',
-            title: 'Error deleting idea',
+            title: 'Error deleting inspiration',
             description: result.error,
         });
     } else {
         toast({
-            title: 'Idea Deleted!',
-            description: 'The idea has been removed from the board.',
+            title: 'Inspiration Removed',
+            description: 'The inspiration has been removed from the board.',
         });
     }
   };
@@ -232,7 +232,7 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, dr
                             <AlertDialogHeader>
                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                             <AlertDialogDescription>
-                                This will permanently delete the idea "{card.title}". This action cannot be undone.
+                                This will permanently delete the inspiration "{card.title}". This action cannot be undone.
                             </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -423,7 +423,7 @@ export default function RoadmapPage() {
         // Revert UI on failure
         setColumns(columnsData ? [...columnsData].sort((a, b) => columnOrder.indexOf(a.id) - columnOrder.indexOf(b.id)) : []);
     } else {
-        toast({ title: 'Card Moved!', description: 'Roadmap has been updated.' });
+        toast({ title: 'Card Moved!', description: 'Plan has been updated.' });
     }
   };
   
@@ -503,17 +503,17 @@ export default function RoadmapPage() {
         // Revert UI on failure
         setColumns(columnsData ? [...columnsData].sort((a, b) => columnOrder.indexOf(a.id) - columnOrder.indexOf(b.id)) : []);
     } else {
-        toast({ title: shouldAssign ? 'User Assigned' : 'User Unassigned' });
+        toast({ title: shouldAssign ? 'Soul Assigned' : 'Soul Unassigned' });
     }
   }
 
   return (
     <main className="container mx-auto min-h-screen py-8">
       <div className="text-center mb-12">
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-          <KanbanIcon className="w-10 h-10" /> Federation Roadmap
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3 font-headline">
+          <KanbanIcon className="w-10 h-10" /> The Divine Plan
         </h1>
-        <p className="text-lg text-muted-foreground mt-2">The public development plan for the Pleasance project.</p>
+        <p className="text-lg text-muted-foreground mt-2">The public development plan for the Divine Republic.</p>
       </div>
 
       {(isLoading || profilesLoading) && (
@@ -525,8 +525,8 @@ export default function RoadmapPage() {
       {error && (
         <Card className="max-w-md mx-auto bg-destructive/20 border-destructive">
             <CardHeader>
-                <CardTitle className="text-destructive">Failed to Load Roadmap</CardTitle>
-                <CardDescription>There was an error connecting to the database.</CardDescription>
+                <CardTitle className="text-destructive">Failed to Load Plan</CardTitle>
+                <CardDescription>There was an error connecting to the divine source.</CardDescription>
             </CardHeader>
             <CardContent>
                 <pre className="text-xs mt-2">{error.message}</pre>
@@ -550,7 +550,7 @@ export default function RoadmapPage() {
                     </KanbanColumn>
                     ))
                 ) : (
-                    <p className="text-center text-muted-foreground col-span-4">Could not load roadmap columns.</p>
+                    <p className="text-center text-muted-foreground col-span-4">Could not load the Divine Plan.</p>
                 )}
             </div>
          </DndContext>
