@@ -191,6 +191,8 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees }: 
         });
     }
   };
+  
+  const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
 
   return (
     <Card className="bg-card/70 hover:bg-card transition-all group relative">
@@ -199,19 +201,19 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees }: 
         {isFounder && (
             <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
                 {canMoveLeft && (
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(card.id, columnId, 'left')}>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(card.id, columnId, 'left')} onMouseDown={stopPropagation}>
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
                 )}
                 {canMoveRight && (
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(card.id, columnId, 'right')}>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(card.id, columnId, 'right')} onMouseDown={stopPropagation}>
                         <ArrowRight className="h-4 w-4" />
                     </Button>
                 )}
                 {columnId === 'ideas' && (
                     <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onMouseDown={stopPropagation}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                     </AlertDialogTrigger>
@@ -270,7 +272,7 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees }: 
              {isFounder && (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onMouseDown={stopPropagation}>
                             <UserPlus className="h-4 w-4"/>
                         </Button>
                     </DropdownMenuTrigger>
@@ -387,7 +389,7 @@ export default function RoadmapPage() {
 
         if (currentSourceCol && currentTargetCol) {
             currentSourceCol.cards = currentSourceCol.cards.filter(c => c.id !== cardId);
-            currentTargetCol.cards = [cardToMove, ...currentTargetCol.cards];
+            currentTargetCol.cards.unshift(cardToMove); // Add to the top of the new column
         }
         
         return newColumns;
