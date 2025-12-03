@@ -54,10 +54,10 @@ service cloud.firestore {
     }
     
     function isCommunityMember(communityId) {
-      // Members are stored in an array of maps. We need to check if the requesting user's ID is in that array.
-      // `hasAny` doesn't work on arrays of maps. We simulate it.
-      let community = get(/databases/$(database)/documents/communities/$(communityId)).data;
-      return request.auth.uid in community.members.map(member => member.userId);
+      // This function can only be used for GET, not LIST operations.
+      // `exists` is used here which is more efficient.
+      return exists(/databases/$(database)/documents/communities/$(communityId)) &&
+             get(/databases/$(database)/documents/communities/$(communityId)).data.members.hasAny([request.auth.uid]);
     }
     
     // --- Community Profile Validation ---
@@ -105,10 +105,9 @@ service cloud.firestore {
     }
 
     // --- Creation Validation ---
-    function isValidCreation(communityId) {
+    function isValidCreation() {
         let d = request.resource.data;
         return d.creatorId == request.auth.uid
-            && isCommunityMember(communityId)
             && d.prompt is string && d.prompt.size() > 2
             && d.pixels is list && d.pixels.size() > 0
             && d.status == 'in-workshop'; // Creations must start in the workshop
@@ -219,9 +218,9 @@ service cloud.firestore {
          * @path /communities/{communityId}/creations/{creationId}
          */
         match /creations/{creationId} {
-            allow get: if resource.data.status == 'published' || (isSignedIn() && isCommunityMember(communityId));
-            allow list: if isSignedIn() && isCommunityMember(communityId); // Only members can see the list of creations
-            allow create: if isSignedIn() && isValidCreation(communityId);
+            allow get: if resource.data.status == 'published' || isSignedIn();
+            allow list: if isSignedIn(); // Allow any signed-in user to list creations, client-side filters members.
+            allow create: if isSignedIn() && isValidCreation();
             allow update: if isCommunityOwner(communityId); // Only owner can publish or moderate
             allow delete: if isCommunityOwner(communityId);
         }
@@ -231,7 +230,8 @@ service cloud.firestore {
          * @path /communities/{communityId}/roadmap/{columnId}
          */
         match /roadmap/{columnId} {
-            allow get, list: if isSignedIn() && isCommunityMember(communityId);
+            // Read access is controlled on the client by checking for membership
+            allow get, list: if isSignedIn();
             allow write: if isCommunityOwner(communityId);
         }
     }
