@@ -1,3 +1,4 @@
+
 // src/app/fabrication/page.tsx
 'use client';
 
@@ -232,6 +233,7 @@ function NewOrderForm({ assets }: { assets: Asset[] }) {
                                         </FormControl>
                                         <SelectContent>
                                             <SelectItem value="NNO.Studio">NNO.Studio (3D Printing)</SelectItem>
+                                            <SelectItem value="MiLaShem Publisher">MiLaShem Publisher (Print on Demand)</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
