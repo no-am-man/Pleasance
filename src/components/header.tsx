@@ -8,7 +8,6 @@ import {
   BookOpen,
   ChevronDown,
   Home,
-  Info,
   LogOut,
   Menu,
   Shield,
@@ -21,7 +20,6 @@ import {
   Bot,
   DollarSign,
   Landmark,
-  GalleryHorizontal,
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -64,7 +62,6 @@ export const navLinks = [
   { href: '/roadmap', label: 'Roadmap', icon: KanbanIcon },
   { href: '/bugs', label: 'Bug Tracker', icon: Bug },
   { href: '/pricing', label: 'Pricing', icon: DollarSign },
-  { href: '/wiki', label: 'Wiki', icon: Info },
 ];
 
 const adminLink = { href: '/admin', label: 'Admin', icon: Shield };

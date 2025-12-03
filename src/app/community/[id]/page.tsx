@@ -1158,7 +1158,7 @@ export default function CommunityProfilePage() {
                 <CardTitle className="flex items-center gap-2"><Wrench /> Available Tools</CardTitle>
                 <CardDescription>Use these tools to collaborate and create within the community.</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Button asChild variant="outline" className="h-auto py-4">
                     <Link href={`/community/${id}/workshop`} className="flex flex-col items-center gap-2">
                         <Sparkles className="w-8 h-8 text-primary" />
@@ -1171,13 +1171,6 @@ export default function CommunityProfilePage() {
                         <KanbanIcon className="w-8 h-8 text-primary" />
                         <span className="font-semibold">Roadmap</span>
                         <span className="text-xs text-center text-muted-foreground">View the private community roadmap.</span>
-                    </Link>
-                </Button>
-                 <Button asChild variant="outline" className="h-auto py-4">
-                    <Link href={`/community/${id}/wiki/home`} className="flex flex-col items-center gap-2">
-                        <Info className="w-8 h-8 text-primary" />
-                        <span className="font-semibold">Wiki</span>
-                        <span className="text-xs text-center text-muted-foreground">Access the private community wiki.</span>
                     </Link>
                 </Button>
             </CardContent>

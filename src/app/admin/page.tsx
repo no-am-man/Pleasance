@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, ShieldCheck, AlertTriangle, CheckCircle, Bone, Database, Info } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { runMemberSync, seedRoadmapData, seedWikiData } from '../actions';
+import { runMemberSync, seedRoadmapData } from '../actions';
 
 // This is a simple check. In a real-world app, this should be a secure custom claim.
 export const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com';
@@ -26,10 +26,6 @@ function AdminDashboard() {
     const [seedIsLoading, setSeedIsLoading] = useState(false);
     const [seedError, setSeedError] = useState<string | null>(null);
     const [seedResult, setSeedResult] = useState<string | null>(null);
-
-    const [wikiSeedIsLoading, setWikiSeedIsLoading] = useState(false);
-    const [wikiSeedError, setWikiSeedError] = useState<string | null>(null);
-    const [wikiSeedResult, setWikiSeedResult] = useState<string | null>(null);
 
     const handleSync = async () => {
         setSyncIsLoading(true);
@@ -69,26 +65,6 @@ function AdminDashboard() {
         }
 
         setSeedIsLoading(false);
-    };
-
-    const handleWikiSeed = async () => {
-        setWikiSeedIsLoading(true);
-        setWikiSeedError(null);
-        setWikiSeedResult(null);
-
-        try {
-            const result = await seedWikiData();
-            if (result.error) {
-                setWikiSeedError(result.error);
-            } else if (result.message) {
-                setWikiSeedResult(result.message);
-            }
-        } catch (e) {
-            const message = e instanceof Error ? e.message : 'An unknown error occurred.';
-            setWikiSeedError(`The wiki seeding process failed: ${message}`);
-        }
-
-        setWikiSeedIsLoading(false);
     };
 
     return (
@@ -169,42 +145,6 @@ function AdminDashboard() {
                                 <AlertTitle className="text-green-500">Seeding Complete</AlertTitle>
                                 <AlertDescription className="text-green-500/80">
                                    {seedResult}
-                                </AlertDescription>
-                            </Alert>
-                        )}
-                    </CardContent>
-                </Card>
-                 <Card className="bg-muted/50">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                           <Info /> Seed Public Wiki
-                        </CardTitle>
-                        <CardDescription>
-                            This action will populate the public Firestore wiki with the initial set of pages, including the SVG3D guide and core concepts. Run this to restore the original wiki content.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Button onClick={handleWikiSeed} disabled={wikiSeedIsLoading}>
-                            {wikiSeedIsLoading ? (
-                                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                            ) : (
-                                <Info className="mr-2 h-4 w-4" />
-                            )}
-                            Seed Wiki
-                        </Button>
-                         {wikiSeedError && (
-                            <Alert variant="destructive" className="mt-4">
-                                <AlertTriangle className="h-4 w-4" />
-                                <AlertTitle>Wiki Seeding Error</AlertTitle>
-                                <AlertDescription>{wikiSeedError}</AlertDescription>
-                            </Alert>
-                        )}
-                        {wikiSeedResult && (
-                            <Alert variant="default" className="mt-4 bg-green-500/10 border-green-500/50">
-                                <CheckCircle className="h-4 w-4 text-green-500" />
-                                <AlertTitle className="text-green-500">Wiki Seeding Complete</AlertTitle>
-                                <AlertDescription className="text-green-500/80">
-                                   {wikiSeedResult}
                                 </AlertDescription>
                             </Alert>
                         )}

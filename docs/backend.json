@@ -437,21 +437,6 @@
             "lastActivity": { "type": "string", "format": "date-time" }
         },
         "required": ["userId", "userName", "score", "lastActivity"]
-    },
-    "WikiPage": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "WikiPage",
-      "type": "object",
-      "description": "Represents a single page within a wiki.",
-      "properties": {
-        "id": { "type": "string", "description": "Unique identifier for the wiki page (often a slug)." },
-        "title": { "type": "string" },
-        "content": { "type": "string", "description": "The markdown content of the page." },
-        "lastModifiedByUserId": { "type": "string" },
-        "lastModifiedByUserName": { "type": "string" },
-        "lastModifiedAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "title", "content", "lastModifiedAt", "lastModifiedByUserId", "lastModifiedByUserName"]
     }
   },
   "auth": {
@@ -622,18 +607,6 @@
         }
       },
       {
-        "path": "/communities/{communityId}/wiki/{pageId}",
-        "definition": {
-          "entityName": "WikiPage",
-          "schema": { "$ref": "#/backend/entities/WikiPage" },
-          "description": "Stores wiki pages for a specific community.",
-          "params": [
-            { "name": "communityId", "description": "The ID of the community." },
-            { "name": "pageId", "description": "The unique ID (slug) for the wiki page." }
-          ]
-        }
-      },
-      {
         "path": "/fabricationOrders/{orderId}",
         "definition": {
           "entityName": "FabricationOrder",
@@ -687,19 +660,8 @@
             { "name": "userId", "description": "The user's ID." }
           ]
         }
-      },
-      {
-        "path": "/wiki/{pageId}",
-        "definition": {
-          "entityName": "WikiPage",
-          "schema": { "$ref": "#/backend/entities/WikiPage" },
-          "description": "Stores the public wiki pages for the entire project.",
-          "params": [
-            { "name": "pageId", "description": "The unique ID (slug) for the wiki page." }
-          ]
-        }
       }
     ],
-    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities`, `fabricationOrders`, `bugs`, `leaderboard`, and `presence` in top-level collections, they become queryable. User-specific data is nested under `/users/{userId}` to ensure privacy. Public profiles are in `/community-profiles` to allow discoverability without exposing private account details. The public roadmap is migrated to Firestore for reliable public read access. The new /conductor/{userId} collection stores conversation history privately for each user. Community-specific data like creations, roadmaps and wikis are nested under `/communities/{communityId}` for privacy and organization. A new top-level `/wiki` collection is added for the public wiki."
+    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities`, `fabricationOrders`, `bugs`, `leaderboard`, and `presence` in top-level collections, they become queryable. User-specific data is nested under `/users/{userId}` to ensure privacy. Public profiles are in `/community-profiles` to allow discoverability without exposing private account details. The public roadmap is migrated to Firestore for reliable public read access. The new /conductor/{userId} collection stores conversation history privately for each user. Community-specific data like creations and roadmaps are nested under `/communities/{communityId}` for privacy and organization. The wiki has been removed."
   }
 }
