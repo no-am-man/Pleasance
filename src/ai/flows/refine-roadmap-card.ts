@@ -51,7 +51,10 @@ const refineRoadmapCardFlow = ai.defineFlow(
     outputSchema: RefineCardOutputSchema,
   },
   async (input) => {
-    const { output } = await refineCardPrompt(input);
+    const { output } = await ai.generate({
+        prompt: refineCardPrompt,
+        input: input,
+    });
     if (!output) {
         throw new Error("The AI failed to generate a refined description.");
     }
