@@ -361,8 +361,9 @@ function CommentThread({ message, canManage }: { message: Message; canManage: bo
     }, [message.communityId, message.id]);
     
     useEffect(() => {
+        if (!firestore || !message.communityId || !message.id) return;
         fetchComments();
-    }, [fetchComments]);
+    }, [firestore, message.communityId, message.id, fetchComments]);
 
     return (
         <div className="pl-12 pr-4 pb-4 space-y-4">
@@ -537,8 +538,9 @@ function Network({ communityId, isOwner, allMembers }: { communityId: string; is
     }, [communityId]);
     
     useEffect(() => {
+        if (!firestore || !communityId) return;
         fetchMessages();
-    }, [fetchMessages]);
+    }, [firestore, communityId, fetchMessages]);
 
     const handleMessageSent = () => {
         // Trigger a re-fetch of messages after a new one is sent
@@ -609,8 +611,9 @@ function JoinRequests({ communityId }: { communityId: string }) {
     }, [communityId]);
 
     useEffect(() => {
+        if (!firestore || !communityId) return;
         fetchRequests();
-    }, [fetchRequests]);
+    }, [firestore, communityId, fetchRequests]);
 
     const handleRequest = async (request: JoinRequest, newStatus: 'approved' | 'rejected') => {
         if (!firestore) {
@@ -1033,7 +1036,7 @@ export default function CommunityProfilePage() {
               <Button asChild variant="outline">
               <Link href="/community">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Community Federation
+                Back to Federal Community
               </Link>
             </Button>
             </CardContent>
