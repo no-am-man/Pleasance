@@ -85,6 +85,15 @@ service cloud.firestore {
       // For now, we'll keep it simple and check for a specific email.
       return isFounder();
     }
+    
+    // --- Bug Report Validation ---
+    function isValidBugReport() {
+        let d = request.resource.data;
+        return d.reporterId == request.auth.uid
+            && d.status == 'new'
+            && d.title is string && d.title.size() > 4
+            && d.description is string && d.description.size() > 19;
+    }
 
 
     //================================================================================
@@ -227,6 +236,17 @@ service cloud.firestore {
     match /roadmap/{columnId} {
         allow get, list: if true;
         allow write: if isFounder();
+    }
+    
+    /**
+     * @description Manages bug reports.
+     * @path /bugs/{bugId}
+     * @allow Publicly readable. Any signed-in user can create. Only founder can update/delete.
+     */
+    match /bugs/{bugId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && isValidBugReport();
+      allow update, delete: if isFounder();
     }
 
     /**

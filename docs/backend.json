@@ -383,6 +383,23 @@
         "cards": { "type": "array", "items": { "$ref": "#/backend/entities/RoadmapCard" } }
       },
       "required": ["id", "title", "cards"]
+    },
+    "Bug": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Bug",
+      "type": "object",
+      "description": "Represents a bug report or issue in the system.",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["new", "in_progress", "done", "wont_fix"] },
+        "priority": { "type": "string", "enum": ["low", "medium", "high"] },
+        "reporterId": { "type": "string" },
+        "reporterName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "description", "status", "priority", "reporterId", "reporterName", "createdAt"]
     }
   },
   "auth": {
@@ -572,8 +589,19 @@
             { "name": "columnId", "description": "The unique ID for the roadmap column (e.g., 'ideas')." }
           ]
         }
+      },
+      {
+        "path": "/bugs/{bugId}",
+        "definition": {
+          "entityName": "Bug",
+          "schema": { "$ref": "#/backend/entities/Bug" },
+          "description": "Stores bug reports. This collection is publicly readable, and any authenticated user can create a new bug report.",
+          "params": [
+            { "name": "bugId", "description": "The unique ID for the bug report." }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities`, `workshops`, and `fabricationOrders` in top-level collections, they become queryable. User-specific data is nested under `/users/{userId}` to ensure privacy. Public profiles are in `/community-profiles` to allow discoverability without exposing private account details. The roadmap is migrated to Firestore for reliable public read access."
+    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities`, `workshops`, `fabricationOrders`, and now `bugs` in top-level collections, they become queryable. User-specific data is nested under `/users/{userId}` to ensure privacy. Public profiles are in `/community-profiles` to allow discoverability without exposing private account details. The roadmap is migrated to Firestore for reliable public read access."
   }
 }

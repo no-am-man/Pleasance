@@ -16,6 +16,7 @@ import {
   Users,
   Warehouse,
   Beaker,
+  Bug,
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -51,6 +52,7 @@ const navLinks = [
   { href: '/treasury', label: 'Treasury', icon: Banknote },
   { href: '/workshop', label: 'Workshop', icon: Beaker },
   { href: '/roadmap', label: 'Roadmap', icon: KanbanIcon },
+  { href: '/bugs', label: 'Bugs', icon: Bug },
   { href: '/wiki', label: 'Wiki', icon: Info },
 ];
 
