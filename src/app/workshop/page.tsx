@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -132,7 +132,6 @@ const convertPixelsToObj = (pixels: ColorPixel[]): string => {
     };
 
     for (const pixel of pixels) {
-        const color = hexToRgb(pixel.color);
         // OBJ format: v x y z r g b
         objContent += `v ${pixel.x.toFixed(4)} ${pixel.y.toFixed(4)} ${pixel.z.toFixed(4)} ${color}\n`;
     }
@@ -258,6 +257,7 @@ export default function WorkshopPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { user } = useUser();
   
   const workshopDocRef = useMemo(() => doc(firestore, 'workshops', WORKSHOP_ID), []);
@@ -292,6 +292,8 @@ export default function WorkshopPage() {
       if (data.pixels) {
         // Set the loaded pixels in the shared workshop document
         await updateDoc(workshopDocRef, { pixels: data.pixels, latestPrompt: 'Loaded from Treasury' });
+        // Remove the query param from the URL
+        router.replace('/workshop', undefined);
       } else {
         throw new Error('Invalid asset data format.');
       }
@@ -301,7 +303,7 @@ export default function WorkshopPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [workshopDocRef]);
+  }, [workshopDocRef, router]);
   
   useEffect(() => {
     const assetUrl = searchParams.get('assetUrl');

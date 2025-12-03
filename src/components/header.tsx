@@ -39,6 +39,7 @@ import { useUser, auth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import useIsMobile from '@/hooks/use-is-mobile';
+import { KanbanIcon } from './icons/kanban-icon';
 
 const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com'; // Founder email check
 
@@ -48,7 +49,8 @@ const navLinks = [
   { href: '/story', label: 'Nuncy Lingua', icon: BookOpen },
   { href: '/fabrication', label: 'Fabrication', icon: Warehouse },
   { href: '/treasury', label: 'Treasury', icon: Banknote },
-  { href: '/svg3d', label: 'Workshop', icon: Beaker },
+  { href: '/workshop', label: 'Workshop', icon: Beaker },
+  { href: '/roadmap', label: 'Roadmap', icon: KanbanIcon },
   { href: '/wiki', label: 'Wiki', icon: Info },
 ];
 
