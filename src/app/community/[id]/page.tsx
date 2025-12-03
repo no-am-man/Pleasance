@@ -129,13 +129,16 @@ function MemberCard({ member, communityId }: { member: Member; communityId: stri
             "shadow-md transition-all h-full hover:shadow-lg hover:-translate-y-1 hover:bg-muted/50 cursor-pointer"
         )}>
             <CardHeader className="flex flex-row items-start gap-4">
-                <div className="w-16 h-16 flex items-center justify-center rounded-lg bg-background border-2 border-primary/20">
-                    {isHuman ? (
-                        <HumanIcon className="w-10 h-10 text-primary" />
-                    ) : (
-                        <AiIcon className="w-10 h-10 text-primary" />
-                    )}
-                </div>
+                <Avatar className="w-16 h-16 rounded-lg bg-background border-2 border-primary/20">
+                    <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
+                    <AvatarFallback>
+                        {isHuman ? (
+                            <HumanIcon className="w-10 h-10 text-primary" />
+                        ) : (
+                            <AiIcon className="w-10 h-10 text-primary" />
+                        )}
+                    </AvatarFallback>
+                </Avatar>
             <div className="flex-1 space-y-1">
                 <CardTitle className="text-xl underline">{member.name}</CardTitle>
                 <CardDescription className="text-primary font-medium">{member.role}</CardDescription>
@@ -749,13 +752,13 @@ export default function CommunityProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const [allProfiles, setAllProfiles] = useState<CommunityProfile[]>([]);
-  const [profilesLoading, setProfilesLoading] = useState(true);
-
   const [userProfile, setUserProfile] = useState<CommunityProfile | null>(null);
 
   const [userJoinRequest, setUserJoinRequest] = useState<JoinRequest | null>(null);
   const [isRequestLoading, setIsRequestLoading] = useState(true);
+  
+  const [suggestedUsers, setSuggestedUsers] = useState<CommunityProfile[]>([]);
+
 
   useEffect(() => {
     if (!id || !firestore) return;
@@ -768,12 +771,19 @@ export default function CommunityProfilePage() {
 
   useEffect(() => {
     if (!firestore) return;
-    const unsubscribe = onSnapshot(collection(firestore, 'community-profiles'), (snapshot) => {
-        setAllProfiles(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CommunityProfile)));
-        setProfilesLoading(false);
-    }, setError);
+    const q = query(collection(firestore, 'community-profiles'));
+    const unsubscribe = onSnapshot(q, snapshot => {
+        const profiles = snapshot.docs.map(doc => doc.data() as CommunityProfile);
+        if (community) {
+            const memberIds = new Set(community.members.map(m => m.userId));
+            setSuggestedUsers(profiles.filter(p => !memberIds.has(p.userId)));
+        } else {
+            setSuggestedUsers(profiles);
+        }
+    });
     return () => unsubscribe();
-  }, []);
+}, [community]);
+
 
   useEffect(() => {
     if (user && firestore) {
@@ -802,47 +812,12 @@ export default function CommunityProfilePage() {
   const isOwner = user?.uid === community?.ownerId;
   
   const hasPendingRequest = userJoinRequest?.status === 'pending';
-
-  const allMembers = useMemo(() => {
-    if (!community) return [];
-    
-    const profilesMap = new Map(allProfiles?.map(p => [p.userId, p]));
-    const communityMembers = community.members || [];
-
-    const enrichedMembers = communityMembers.map(member => {
-        if (member.type === 'human' && member.userId) {
-            const profile = profilesMap.get(member.userId);
-            return {
-                ...member,
-                name: profile?.name || member.name,
-                bio: profile?.bio || member.bio,
-                avatarUrl: profile?.avatarUrl || '',
-            };
-        }
-        return member;
-    });
-
-    const ownerProfile = community.ownerId ? profilesMap.get(community.ownerId) : undefined;
-    if (ownerProfile && !enrichedMembers.some(m => m.userId === ownerProfile.userId)) {
-        enrichedMembers.unshift({
-            userId: ownerProfile.userId,
-            name: ownerProfile.name,
-            role: 'Founder',
-            bio: ownerProfile.bio,
-            type: 'human',
-            avatarUrl: ownerProfile.avatarUrl || '',
-        });
-    }
-    
-    return enrichedMembers;
-  }, [community, allProfiles]);
-
-  const suggestedUsers = useMemo(() => {
-    if (!allProfiles || !community) return [];
-    const memberUserIds = new Set(community.members.map(m => m.userId));
-    return allProfiles.filter(p => !memberUserIds.has(p.userId));
-  }, [allProfiles, community]);
   
+  const allMembers = useMemo(() => {
+    if (!community?.members) return [];
+    return community.members;
+  }, [community]);
+
   const isMember = useMemo(() => {
     return allMembers.some(m => m.userId === user?.uid);
   }, [allMembers, user]);
@@ -884,7 +859,7 @@ export default function CommunityProfilePage() {
         bio: profile.bio,
         role: 'Member',
         type: 'human',
-        avatarUrl: profile.avatarUrl || '', // Ensure avatarUrl is not undefined
+        avatarUrl: profile.avatarUrl || '',
     };
     const communityDocRef = doc(firestore, 'communities', community.id);
     await updateDoc(communityDocRef, {
@@ -947,7 +922,7 @@ export default function CommunityProfilePage() {
   };
 
 
-  if (isLoading || profilesLoading || isRequestLoading) {
+  if (isLoading || isRequestLoading) {
     return (
       <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
         <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
