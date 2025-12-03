@@ -23,6 +23,7 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import { ai } from '@/ai/genkit';
 import { generateCommunityFlag } from '@/ai/flows/generate-flag';
+import { refineWikiPage } from '@/ai/flows/refine-wiki-page';
 import {
     GenerateSvg3dInputSchema,
     type GenerateSvg3dInput,
@@ -946,6 +947,32 @@ export async function seedWikiData() {
         console.error('Wiki Seeding Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
         return { error: `Failed to seed wiki data: ${message}` };
+    }
+}
+
+const RefineWikiPageSchema = z.object({
+  title: z.string().min(1, "Title cannot be empty."),
+  content: z.string(),
+});
+
+export async function refineWikiPageAction(values: z.infer<typeof RefineWikiPageSchema>) {
+    try {
+        const validatedFields = RefineWikiPageSchema.safeParse(values);
+        if (!validatedFields.success) {
+            return { error: 'Invalid input for refinement.' };
+        }
+
+        const result = await refineWikiPage(validatedFields.data);
+
+        if (!result.refinedContent) {
+            return { error: 'AI failed to generate refined content.' };
+        }
+
+        return { refinedContent: result.refinedContent };
+    } catch (e) {
+        console.error('Refine Wiki Page Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Failed to refine wiki page: ${message}` };
     }
 }
     
