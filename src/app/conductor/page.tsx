@@ -2,16 +2,16 @@
 // src/app/conductor/page.tsx
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { useUser, useMemoFirebase } from '@/firebase';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Bot, User, Send, LoaderCircle, LogIn, AlertCircle } from 'lucide-react';
+import { Bot, User, Send, LoaderCircle, LogIn } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { conductSuperAgent } from '../actions';
@@ -52,29 +52,31 @@ export default function ConductorPage() {
     const [input, setInput] = useState('');
     const [isThinking, setIsThinking] = useState(false);
     const scrollAreaRef = useRef<HTMLDivElement>(null);
-
-    const conductorDocRef = useMemoFirebase(() => user ? doc(firestore, 'conductor', user.uid) : null, [user]);
     
     const [conductorData, setConductorData] = useState<ConductorData | null>(null);
     const [isLoadingConductor, setIsLoadingConductor] = useState(true);
 
     useEffect(() => {
-        if (!user) {
+        if (!user || !firestore) {
             setIsLoadingConductor(false);
             return;
         }
-        
-        const fetchHistory = async () => {
-            const docRef = doc(firestore, 'conductor', user.uid);
-            const docSnap = await getDoc(docRef);
+
+        setIsLoadingConductor(true);
+        const docRef = doc(firestore, 'conductor', user.uid);
+        const unsubscribe: Unsubscribe = onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
                 setConductorData(docSnap.data() as ConductorData);
             } else {
                 setConductorData({ id: user.uid, history: [] });
             }
             setIsLoadingConductor(false);
-        };
-        fetchHistory();
+        }, (error) => {
+            console.error("Failed to listen to conductor history:", error);
+            setIsLoadingConductor(false);
+        });
+
+        return () => unsubscribe();
 
     }, [user]);
 
@@ -82,40 +84,15 @@ export default function ConductorPage() {
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!input.trim() || !user || !conductorDocRef) return;
+        if (!input.trim() || !user) return;
 
-        const userMessage: Message = {
-            role: 'user',
-            content: [{ text: input }],
-            timestamp: new Date(),
-        };
-
-        const newHistory = [...history, userMessage];
-        // Optimistically update the UI
-        setConductorData({ id: user.uid, history: newHistory });
-        
+        const currentInput = input;
         setInput('');
         setIsThinking(true);
-
-        const result = await conductSuperAgent({ userId: user.uid, prompt: input });
+        
+        await conductSuperAgent({ userId: user.uid, prompt: currentInput });
         
         setIsThinking(false);
-
-        if (result.error) {
-            const errorMessage: Message = {
-                role: 'model',
-                content: [{ text: `I encountered an error: ${result.error}` }],
-                timestamp: new Date(),
-            };
-             await setDoc(conductorDocRef, { history: [...newHistory, errorMessage] }, { merge: true });
-        } else {
-            // The flow on the server already updated the history, so we don't need to do it here
-            // We just need to re-fetch the data to get the latest
-             const docSnap = await getDoc(conductorDocRef);
-            if (docSnap.exists()) {
-                setConductorData(docSnap.data() as ConductorData);
-            }
-        }
     };
     
     useEffect(() => {
