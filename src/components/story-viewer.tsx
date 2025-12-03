@@ -95,14 +95,9 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
     // Load new audio source when story changes
     if (story.audioUrl && audio.src !== story.audioUrl) {
       audio.src = story.audioUrl;
-      // The audio is raw PCM data, so we can't play it directly
-      // In a real app, you would convert this to a playable format (like WAV)
-      // or use the Web Audio API to play the raw data.
-      // For now, we will just load it.
       audio.load();
       if (autoplay) {
-        // We can't autoplay raw PCM, so we'll just set isPlaying to true visually
-        // In a real scenario, you'd trigger the Web Audio API playback here.
+         audio.play().catch(e => console.error("Autoplay failed:", e));
       }
     } else if (!story.audioUrl) {
         audio.currentTime = 0;
@@ -126,11 +121,7 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
     if (isPlaying) {
       audio.pause();
     } else {
-        toast({
-            variant: "destructive",
-            title: "Playback Not Supported",
-            description: "Direct playback of raw audio is not supported in this viewer. Please download the audio to play."
-        });
+        audio.play().catch(e => console.error("Playback failed:", e));
     }
   };
 

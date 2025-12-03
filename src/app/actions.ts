@@ -801,7 +801,7 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
       }
       const translatedText = translationResult.translatedText;
   
-      // --- Step 3: Generate Speech (Raw PCM Data) ---
+      // --- Step 3: Generate Speech (WAV Data) ---
       const speechResult = await generateSpeech({ text: translatedText });
       if (!speechResult.audioUrl) {
           throw new Error('Speech synthesis failed to produce audio.');
@@ -815,16 +815,16 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
       const storyId = storyDocRef.id;
   
       // --- Step 5: Upload Audio to Firebase Storage ---
-      const pcmDataUri = speechResult.audioUrl;
-      const pcmBase64 = pcmDataUri.split(',')[1];
-      const audioBuffer = Buffer.from(pcmBase64, 'base64');
+      const wavDataUri = speechResult.audioUrl;
+      const wavBase64 = wavDataUri.split(',')[1];
+      const audioBuffer = Buffer.from(wavBase64, 'base64');
       
-      const storagePath = `stories/${userId}/${storyId}.raw`;
+      const storagePath = `stories/${userId}/${storyId}.wav`;
       const bucketName = firebaseConfig.storageBucket;
       const file = storage.bucket(bucketName).file(storagePath);
       
       await file.save(audioBuffer, {
-          metadata: { contentType: 'audio/l16; rate=24000' },
+          metadata: { contentType: 'audio/wav' },
       });
   
       await file.makePublic();
