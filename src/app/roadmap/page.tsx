@@ -424,32 +424,35 @@ export default function RoadmapPage() {
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    
+
     const activeColumn = columns.find(col => col.cards.some(c => c.id === active.id));
     if (activeColumn?.id !== 'ideas') return; // Only allow reordering in 'ideas'
 
-    if (over.id === 'ideas' || columns.find(c => c.id === 'ideas')?.cards.some(card => card.id === over.id)) {
-        setColumns(prevColumns => {
-            const ideasColumn = prevColumns.find(col => col.id === 'ideas');
-            if (!ideasColumn) return prevColumns;
+    let reorderedCards: RoadmapCardType[] | undefined;
 
-            const oldIndex = ideasColumn.cards.findIndex(card => card.id === active.id);
-            const newIndex = ideasColumn.cards.findIndex(card => card.id === over.id);
+    setColumns(prevColumns => {
+      const ideasColumn = prevColumns.find(col => col.id === 'ideas');
+      if (!ideasColumn) return prevColumns;
 
-            if (oldIndex === -1 || newIndex === -1) return prevColumns;
-            
-            const reorderedCards = arrayMove(ideasColumn.cards, oldIndex, newIndex);
-            
-            updateRoadmapCardOrder('ideas', reorderedCards).then(result => {
-                if (result.error) {
-                    toast({ variant: 'destructive', title: 'Reorder Failed', description: result.error });
-                }
-            });
-            
-            return prevColumns.map(col => 
-                col.id === 'ideas' ? { ...col, cards: reorderedCards } : col
-            );
-        });
+      const oldIndex = ideasColumn.cards.findIndex(card => card.id === active.id);
+      const newIndex = ideasColumn.cards.findIndex(card => card.id === over.id);
+
+      if (oldIndex === -1 || newIndex === -1) return prevColumns;
+
+      reorderedCards = arrayMove(ideasColumn.cards, oldIndex, newIndex);
+
+      return prevColumns.map(col =>
+        col.id === 'ideas' ? { ...col, cards: reorderedCards! } : col
+      );
+    });
+
+    if (reorderedCards) {
+      const result = await updateRoadmapCardOrder('ideas', reorderedCards);
+      if (result.error) {
+        toast({ variant: 'destructive', title: 'Reorder Failed', description: result.error });
+        // Revert UI on failure by re-fetching or rolling back state
+        setColumns(columnsData ? [...columnsData].sort((a, b) => columnOrder.indexOf(a.id) - columnOrder.indexOf(b.id)) : []);
+      }
     }
   };
 
