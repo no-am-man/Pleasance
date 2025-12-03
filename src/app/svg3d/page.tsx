@@ -199,7 +199,7 @@ export default function PersonalWorkshopPage() {
     <main className="container mx-auto max-w-4xl py-8">
        <div className="text-center mb-8">
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-          <Beaker className="w-10 h-10" /> Personal Workshop
+          <Beaker className="w-10 h-10" /> Lab
         </h1>
         <p className="text-lg text-muted-foreground mt-2">A public space to experiment with generative AI tools.</p>
       </div>

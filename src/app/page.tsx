@@ -99,7 +99,7 @@ export default function Home() {
           </CardHeader>
           <CardContent className="space-y-4 text-muted-foreground">
               <p>
-                  The diagram above illustrates a decentralized architecture centered on the sovereign individual. The 'Sovereign Soul' acts as the primary node, initiating creative and intellectual endeavors within specialized modules like the 'AI Workshop' for creation and 'Nuncy Lingua' for co-learning.
+                  The diagram above illustrates a decentralized architecture centered on the sovereign individual. The 'Sovereign Soul' acts as the primary node, initiating creative and intellectual endeavors within specialized modules like the 'Lab' for creation and 'Nuncy Lingua' for co-learning.
               </p>
               <p>
                   Creations are cataloged in a personal 'Treasury'—a ledger of intellectual property. This Treasury serves as the source for two primary outputs: manifestation into physical form via the 'Workshop of Manifestation,' and contribution to the 'Federation' of self-governing communities where communion occurs.
