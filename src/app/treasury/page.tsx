@@ -9,7 +9,7 @@ import * as z from 'zod';
 import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
 import { collection, query } from 'firebase/firestore';
-import { declareAssetWithFile, importFromKeep } from '../actions';
+import { declareAssetWithFile } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,87 +35,6 @@ type Asset = z.infer<typeof AssetSchema> & {
     createdAt: { seconds: number; nanoseconds: number; } | null;
     fileUrl?: string;
 };
-
-function ImportFromKeepForm() {
-    const { user } = useUser();
-    const { toast } = useToast();
-    const [isLoading, setIsLoading] = useState(false);
-    const [fileName, setFileName] = useState('');
-
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        if (!user) {
-            toast({ variant: 'destructive', title: 'Not Authenticated' });
-            return;
-        }
-
-        const fileInput = event.currentTarget.elements.namedItem('file') as HTMLInputElement;
-        if (!fileInput?.files?.[0]) {
-            toast({ variant: 'destructive', title: 'No file selected' });
-            return;
-        }
-        
-        setIsLoading(true);
-
-        const formData = new FormData();
-        formData.append('userId', user.uid);
-        formData.append('file', fileInput.files[0]);
-
-        try {
-            const result = await importFromKeep(formData);
-            if (result.error) {
-                throw new Error(result.error);
-            }
-            toast({
-                title: 'Import Successful!',
-                description: `Successfully imported ${result.count} notes from your Google Keep archive.`,
-            });
-            setFileName('');
-            (event.target as HTMLFormElement).reset();
-        } catch (e) {
-            const message = e instanceof Error ? e.message : 'An unknown error occurred';
-            toast({ variant: 'destructive', title: 'Import Failed', description: message });
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    return (
-         <Card className="shadow-lg">
-            <CardHeader>
-                <CardTitle>Import from Google Keep</CardTitle>
-                <CardDescription>Import your ideas by uploading your Google Keep archive.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <ol className="list-decimal list-inside space-y-2 mb-4 text-sm text-muted-foreground">
-                    <li>Go to <a href="https://takeout.google.com/" target="_blank" rel="noopener noreferrer" className="underline text-primary">Google Takeout</a>.</li>
-                    <li>Click "Deselect all" and then select only "Keep".</li>
-                    <li>Follow the steps to export and download your `.zip` file.</li>
-                    <li>Upload the `.zip` file below.</li>
-                </ol>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="relative">
-                        <Input 
-                            type="file" 
-                            name="file" 
-                            accept=".zip" 
-                            className="pl-12"
-                            onChange={(e) => setFileName(e.target.files?.[0]?.name || '')}
-                        />
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-muted-foreground">
-                            <FileArchive className="h-4 w-4" />
-                        </div>
-                    </div>
-                     {fileName && <p className="text-sm text-muted-foreground">Selected: {fileName}</p>}
-                    <Button type="submit" disabled={isLoading}>
-                        {isLoading ? <LoaderCircle className="mr-2 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                        Import Notes
-                    </Button>
-                </form>
-            </CardContent>
-        </Card>
-    );
-}
 
 function AddAssetForm() {
     const { user } = useUser();
@@ -386,10 +305,11 @@ export default function TreasuryPage() {
       </div>
 
       <div className="space-y-8">
-        <ImportFromKeepForm />
         <AddAssetForm />
         <AssetList />
       </div>
     </main>
   );
 }
+
+    

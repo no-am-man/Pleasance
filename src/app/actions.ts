@@ -21,8 +21,6 @@ import admin from 'firebase-admin';
 import { generateCommunity } from '@/ai/flows/generate-community';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
-import wav from 'wav';
-import JSZip from 'jszip';
 import {
     GenerateSvg3dInputSchema,
     type GenerateSvg3dInput,
@@ -37,142 +35,6 @@ export type ChatWithMemberInput = {
     member: z.infer<typeof MemberSchema>;
     userMessage: string;
     history?: ChatHistory;
-}
-
-const storyTextSchema = z.object({
-  userId: z.string(),
-  userName: z.string(),
-  userAvatar: z.string(),
-  difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
-  sourceLanguage: z.string().min(1),
-  targetLanguage: z.string().min(1),
-});
-
-/**
- * Encodes raw PCM audio data into a WAV format buffer, then returns it as a Base64 string.
- * @param pcmData The raw PCM audio data buffer.
- * @returns A Promise that resolves to a Base64 encoded string of the WAV file.
- */
-async function toWav(pcmData: Buffer): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const writer = new wav.Writer({
-      channels: 1,       // Mono audio
-      sampleRate: 24000,   // Sample rate returned by the TTS model
-      bitDepth: 16,      // 16-bit audio
-    });
-
-    const buffers: any[] = [];
-    writer.on('data', (chunk) => buffers.push(chunk));
-    writer.on('end', () => resolve(Buffer.concat(buffers).toString('base64')));
-    writer.on('error', reject);
-
-    writer.write(pcmData);
-    writer.end();
-  });
-}
-
-
-export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSchema>) {
-  try {
-    const validatedFields = storyTextSchema.safeParse(values);
-    if (!validatedFields.success) {
-      return { error: 'Invalid input.' };
-    }
-    
-    const { userId, userName, userAvatar, difficulty, sourceLanguage, targetLanguage } = validatedFields.data;
-    
-    // --- Step 1: Generate Story Text ---
-    const storyResult = await generateStory({ difficultyLevel: difficulty, sourceLanguage });
-    if (!storyResult.story) {
-      throw new Error('Failed to generate a story.');
-    }
-    const originalStory = storyResult.story;
-    
-    // --- Step 2: Translate Story ---
-    const translationResult = await translateStory({
-      storyText: originalStory,
-      sourceLanguage: sourceLanguage,
-      targetLanguage: targetLanguage,
-    });
-
-    if (!translationResult || !translationResult.translatedText) {
-      throw new Error('Failed to translate the story.');
-    }
-    const translatedText = translationResult.translatedText;
-
-    // --- Step 3: Generate Speech (Raw PCM Data) ---
-    const speechResult = await generateSpeech({ text: translatedText });
-    if (!speechResult.audioUrl) {
-        throw new Error('Speech synthesis failed to produce audio.');
-    }
-
-    // --- Step 4: Initialize Admin App and services ---
-    const adminApp = initializeAdminApp();
-    const storage = getStorage(adminApp);
-    const firestore = getFirestore(adminApp);
-    const storyDocRef = firestore.collection('users').doc(userId).collection('stories').doc();
-    const storyId = storyDocRef.id;
-
-    // --- Step 5: Upload Audio to Firebase Storage ---
-    const pcmDataUri = speechResult.audioUrl;
-    const pcmBase64 = pcmDataUri.split(',')[1];
-    const pcmBuffer = Buffer.from(pcmBase64, 'base64');
-    const wavBase64 = await toWav(pcmBuffer);
-    const wavBuffer = Buffer.from(wavBase64, 'base64');
-    
-    const storagePath = `stories/${userId}/${storyId}.wav`;
-    const bucketName = firebaseConfig.storageBucket;
-    const file = storage.bucket(bucketName).file(storagePath);
-    
-    await file.save(wavBuffer, {
-        metadata: { contentType: 'audio/wav' },
-    });
-
-    await file.makePublic();
-    const publicUrl = file.publicUrl();
-
-    // --- Step 6: Save Final Story to Firestore ---
-    const storyData = {
-        id: storyId,
-        userId: userId,
-        level: difficulty,
-        sourceLanguage: sourceLanguage,
-        targetLanguage: targetLanguage,
-        nativeText: originalStory,
-        translatedText: translatedText,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        status: 'complete',
-        audioUrl: publicUrl,
-    };
-    
-    await storyDocRef.set(storyData);
-    
-    // --- Step 7: Update Leaderboard ---
-    const leaderboardRef = firestore.collection('leaderboard').doc(userId);
-    const points = { beginner: 10, intermediate: 20, advanced: 30 };
-    const scoreIncrement = points[difficulty];
-
-    await leaderboardRef.set({
-        userId: userId,
-        userName: userName,
-        avatarUrl: userAvatar,
-        score: FieldValue.increment(scoreIncrement),
-        lastActivity: FieldValue.serverTimestamp(),
-    }, { merge: true });
-    
-    // --- Step 8: Return immediately to the client ---
-    return {
-        storyData: {
-            ...storyData,
-            createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 },
-        }
-    };
-
-  } catch (e) {
-    console.error('Action Error:', e);
-    const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
-    return { error: `Story creation failed. ${message}` };
-  }
 }
 
 const snapshotSchema = z.object({
@@ -505,67 +367,6 @@ export async function declareAssetWithFile(formData: FormData) {
     }
 }
 
-export async function importFromKeep(formData: FormData) {
-    try {
-        const adminApp = initializeAdminApp();
-        const firestore = getFirestore(adminApp);
-
-        const userId = formData.get('userId') as string;
-        const zipFile = formData.get('file') as File | null;
-
-        if (!userId) throw new Error('User ID is missing.');
-        if (!zipFile) throw new Error('Zip file is missing.');
-
-        const zip = new JSZip();
-        const zipData = await zip.loadAsync(await zipFile.arrayBuffer());
-        
-        const batch = firestore.batch();
-        let notesImported = 0;
-
-        for (const fileName in zipData.files) {
-            if (fileName.endsWith('.html')) {
-                const file = zipData.files[fileName];
-                const content = await file.async('string');
-                
-                // Extract title and text from Keep's HTML structure
-                const titleMatch = content.match(/<div class="title">(.*?)<\/div>/);
-                const textMatch = content.match(/<div class="content">(.*?)<\/div>/);
-
-                const name = titleMatch ? titleMatch[1].trim() : 'Untitled Note';
-                const description = textMatch ? textMatch[1].replace(/<br \/>/g, '\n').trim() : 'No content';
-
-                const newAssetRef = firestore.collection('users').doc(userId).collection('assets').doc();
-                const newAsset = {
-                    id: newAssetRef.id,
-                    ownerId: userId,
-                    name,
-                    description,
-                    type: 'ip' as const,
-                    value: 0,
-                    fileUrl: undefined,
-                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                };
-                batch.set(newAssetRef, newAsset);
-                notesImported++;
-            }
-        }
-
-        if (notesImported === 0) {
-            return { error: 'No valid HTML notes found in the provided .zip file.' };
-        }
-
-        await batch.commit();
-
-        return { success: true, count: notesImported };
-
-    } catch (e) {
-        console.error('Import from Keep Error:', e);
-        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
-        return { error: `Failed to import from Keep: ${message}` };
-    }
-}
-
-
 export async function updateRoadmapCardColumn(
   cardId: string,
   oldColumnId: string,
@@ -863,3 +664,115 @@ export async function generateRoadmapIdeaAction(values: z.infer<typeof GenerateR
         return { error: `Failed to generate and add new idea: ${message}` };
     }
 }
+
+const storyTextSchema = z.object({
+    userId: z.string(),
+    userName: z.string(),
+    userAvatar: z.string(),
+    difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
+    sourceLanguage: z.string().min(1),
+    targetLanguage: z.string().min(1),
+  });
+
+export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSchema>) {
+    try {
+      const validatedFields = storyTextSchema.safeParse(values);
+      if (!validatedFields.success) {
+        return { error: 'Invalid input.' };
+      }
+      
+      const { userId, userName, userAvatar, difficulty, sourceLanguage, targetLanguage } = validatedFields.data;
+      
+      // --- Step 1: Generate Story Text ---
+      const storyResult = await generateStory({ difficultyLevel: difficulty, sourceLanguage });
+      if (!storyResult.story) {
+        throw new Error('Failed to generate a story.');
+      }
+      const originalStory = storyResult.story;
+      
+      // --- Step 2: Translate Story ---
+      const translationResult = await translateStory({
+        storyText: originalStory,
+        sourceLanguage: sourceLanguage,
+        targetLanguage: targetLanguage,
+      });
+  
+      if (!translationResult || !translationResult.translatedText) {
+        throw new Error('Failed to translate the story.');
+      }
+      const translatedText = translationResult.translatedText;
+  
+      // --- Step 3: Generate Speech (Raw PCM Data) ---
+      const speechResult = await generateSpeech({ text: translatedText });
+      if (!speechResult.audioUrl) {
+          throw new Error('Speech synthesis failed to produce audio.');
+      }
+  
+      // --- Step 4: Initialize Admin App and services ---
+      const adminApp = initializeAdminApp();
+      const storage = getStorage(adminApp);
+      const firestore = getFirestore(adminApp);
+      const storyDocRef = firestore.collection('users').doc(userId).collection('stories').doc();
+      const storyId = storyDocRef.id;
+  
+      // --- Step 5: Upload Audio to Firebase Storage ---
+      const pcmDataUri = speechResult.audioUrl;
+      const pcmBase64 = pcmDataUri.split(',')[1];
+      const audioBuffer = Buffer.from(pcmBase64, 'base64');
+      
+      const storagePath = `stories/${userId}/${storyId}.raw`;
+      const bucketName = firebaseConfig.storageBucket;
+      const file = storage.bucket(bucketName).file(storagePath);
+      
+      await file.save(audioBuffer, {
+          metadata: { contentType: 'audio/l16; rate=24000' },
+      });
+  
+      await file.makePublic();
+      const publicUrl = file.publicUrl();
+  
+      // --- Step 6: Save Final Story to Firestore ---
+      const storyData = {
+          id: storyId,
+          userId: userId,
+          level: difficulty,
+          sourceLanguage: sourceLanguage,
+          targetLanguage: targetLanguage,
+          nativeText: originalStory,
+          translatedText: translatedText,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          status: 'complete',
+          audioUrl: publicUrl,
+      };
+      
+      await storyDocRef.set(storyData);
+      
+      // --- Step 7: Update Leaderboard ---
+      const leaderboardRef = firestore.collection('leaderboard').doc(userId);
+      const points = { beginner: 10, intermediate: 20, advanced: 30 };
+      const scoreIncrement = points[difficulty];
+  
+      await leaderboardRef.set({
+          userId: userId,
+          userName: userName,
+          avatarUrl: userAvatar,
+          score: FieldValue.increment(scoreIncrement),
+          lastActivity: FieldValue.serverTimestamp(),
+      }, { merge: true });
+      
+      // --- Step 8: Return immediately to the client ---
+      return {
+          storyData: {
+              ...storyData,
+              createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 },
+          }
+      };
+  
+    } catch (e) {
+      console.error('Action Error:', e);
+      const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+      return { error: `Story creation failed. ${message}` };
+    }
+  }
+
+    
