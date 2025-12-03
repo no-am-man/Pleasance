@@ -188,20 +188,21 @@ service cloud.firestore {
     /**
      * @description Stores user presence information for the presence bar.
      * @path /presence
-     * @allow Publicly listable for all signed-in users.
+     * @allow Publicly listable for all users.
      */
     match /presence {
-      allow list: if isSignedIn();
+      allow get, list: if true;
     }
 
     /**
      * @description Stores user presence information for the presence bar.
      * @path /presence/{userId}
-     * @allow Publicly readable. Users can only write to their own presence document.
+     * @allow Users can only write to their own presence document.
      */
     match /presence/{userId} {
-      allow get: if isSignedIn();
+      allow get: if true;
       allow write: if isOwner(userId);
+      allow list: if false; // List operation should be on the collection
     }
 
     /**
@@ -353,3 +354,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
