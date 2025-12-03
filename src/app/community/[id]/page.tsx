@@ -1,4 +1,5 @@
 
+
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -379,6 +380,7 @@ function CommentThread({ message, canManage }: { message: Message; canManage: bo
 function MessageCard({ message, canManage }: { message: Message; canManage: boolean; }) {
     const { toast } = useToast();
     const [isUpdating, setIsUpdating] = useState(false);
+    const [isCollapsibleOpen, setIsCollapsibleOpen] = useState(true);
 
     const isDone = message.status === 'done';
     const isDeleted = message.deleted;
@@ -393,6 +395,9 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
         await updateDoc(messageDocRef, { status: newStatus });
         
         toast({ title: `Message Marked as ${newStatus}` });
+        if (newStatus === 'done') {
+            setIsCollapsibleOpen(false);
+        }
         setIsUpdating(false);
     };
 
@@ -443,7 +448,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
     }
 
     return (
-        <Collapsible>
+        <Collapsible open={isCollapsibleOpen} onOpenChange={setIsCollapsibleOpen}>
             <Card className={cn("flex flex-col", isUpdating && "opacity-50")}>
                 <div>
                     <CardHeader className="flex flex-row items-start gap-4 pb-4">
