@@ -62,6 +62,13 @@ service cloud.firestore {
              (community.data.ownerId == request.auth.uid || 
               (community.data.members != null && request.auth.uid in community.data.members));
     }
+
+    function isLeavingCommunity() {
+      // Allow a user to update the members list only if they are removing themselves.
+      let leavingUser = request.resource.data.members.size() == resource.data.members.size() - 1;
+      let selfRemoved = !request.auth.uid in request.resource.data.members.map(m => m.userId);
+      return leavingUser && selfRemoved;
+    }
     
     // --- Community Profile Validation ---
     function hasValidProfileData(userId) {
@@ -187,7 +194,7 @@ service cloud.firestore {
         allow get: if true;
         allow list: if true;
         allow create: if isSignedIn() && hasValidCommunityData();
-        allow update: if isCommunityOwner(communityId) && (!('ownerId' in request.resource.data) || request.resource.data.ownerId == resource.data.ownerId);
+        allow update: if isCommunityOwner(communityId) || (isCommunityMember(communityId) && isLeavingCommunity());
         allow delete: if isCommunityOwner(communityId);
 
         /**
@@ -327,5 +334,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

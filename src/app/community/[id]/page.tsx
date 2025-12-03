@@ -2,12 +2,12 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useUser, addDocumentNonBlocking } from '@/firebase';
+import { useUser, useMemoFirebase } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, updateDoc, deleteDoc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, arrayRemove, updateDoc, deleteDoc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -167,8 +167,9 @@ function TextMessageForm({ communityId, onMessageSent }: { communityId: string, 
     const [text, setText] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useUser();
+    const { toast } = useToast();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!text.trim() || !user || !firestore) return;
 
@@ -187,10 +188,16 @@ function TextMessageForm({ communityId, onMessageSent }: { communityId: string, 
             createdAt: serverTimestamp(),
         };
 
-        addDocumentNonBlocking(messagesColRef, newMessage);
-        onMessageSent(text.trim());
-        setText('');
-        setIsSubmitting(false);
+        try {
+            await addDoc(messagesColRef, newMessage);
+            onMessageSent(text.trim());
+            setText('');
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
+            toast({ variant: 'destructive', title: 'Failed to send message', description: message });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -212,6 +219,7 @@ function TextCommentForm({ communityId, messageId }: { communityId: string, mess
     const [text, setText] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useUser();
+    const { toast } = useToast();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -227,9 +235,15 @@ function TextCommentForm({ communityId, messageId }: { communityId: string, mess
             text: text.trim(),
             createdAt: serverTimestamp(),
         };
-        addDocumentNonBlocking(commentsColRef, newComment);
-        setText('');
-        setIsSubmitting(false);
+        try {
+            await addDoc(commentsColRef, newComment);
+            setText('');
+        } catch(error) {
+            const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
+            toast({ variant: 'destructive', title: 'Failed to send reply', description: message });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -547,7 +561,7 @@ function Network({ communityId, isOwner, allMembers }: { communityId: string; is
                 createdAt: serverTimestamp(),
             };
             const messagesColRef = collection(firestore, `communities/${communityId}/messages`);
-            addDocumentNonBlocking(messagesColRef, aiMessage);
+            addDoc(messagesColRef, aiMessage);
         }
     };
 
@@ -757,8 +771,8 @@ export default function CommunityProfilePage() {
   const [userJoinRequest, setUserJoinRequest] = useState<JoinRequest | null>(null);
   const [isRequestLoading, setIsRequestLoading] = useState(true);
   
-  const [suggestedUsers, setSuggestedUsers] = useState<CommunityProfile[]>([]);
-
+  const [allProfiles, setAllProfiles] = useState<CommunityProfile[]>([]);
+  const [isLoadingProfiles, setIsLoadingProfiles] = useState(true);
 
   useEffect(() => {
     if (!id || !firestore) return;
@@ -771,18 +785,23 @@ export default function CommunityProfilePage() {
 
   useEffect(() => {
     if (!firestore) return;
-    const q = query(collection(firestore, 'community-profiles'));
-    const unsubscribe = onSnapshot(q, snapshot => {
+    const profilesQuery = query(collection(firestore, 'community-profiles'));
+    const unsubscribe = onSnapshot(profilesQuery, (snapshot) => {
         const profiles = snapshot.docs.map(doc => doc.data() as CommunityProfile);
-        if (community) {
-            const memberIds = new Set(community.members.map(m => m.userId));
-            setSuggestedUsers(profiles.filter(p => !memberIds.has(p.userId)));
-        } else {
-            setSuggestedUsers(profiles);
-        }
+        setAllProfiles(profiles);
+        setIsLoadingProfiles(false);
+    }, (error) => {
+        console.error("Error fetching all profiles:", error);
+        setIsLoadingProfiles(false);
     });
     return () => unsubscribe();
-}, [community]);
+  }, []);
+
+  const suggestedUsers = useMemo(() => {
+    if (!community || !allProfiles) return [];
+    const memberIds = new Set(community.members.map(m => m.userId));
+    return allProfiles.filter(p => !memberIds.has(p.userId));
+  }, [community, allProfiles]);
 
 
   useEffect(() => {
@@ -872,6 +891,31 @@ export default function CommunityProfilePage() {
     })
   };
 
+  const handleLeaveCommunity = async () => {
+    if (!user || !community || !isMember || isOwner) {
+        toast({ variant: "destructive", title: "Cannot leave community."});
+        return;
+    }
+
+    const memberToRemove = community.members.find(m => m.userId === user.uid);
+    if (!memberToRemove) {
+        toast({ variant: "destructive", title: "You are not a member of this community."});
+        return;
+    }
+
+    const communityDocRef = doc(firestore, 'communities', community.id);
+    try {
+        await updateDoc(communityDocRef, {
+            members: arrayRemove(memberToRemove)
+        });
+        toast({ title: "You have left the community."});
+    } catch(e) {
+        const message = e instanceof Error ? e.message : "An unexpected error occurred.";
+        toast({ variant: "destructive", title: "Failed to leave community.", description: message });
+    }
+  };
+
+
   const handleGenerateFlag = async () => {
     if (!community || !user || !firestore) {
       toast({
@@ -922,7 +966,7 @@ export default function CommunityProfilePage() {
   };
 
 
-  if (isLoading || isRequestLoading) {
+  if (isLoading || isRequestLoading || isLoadingProfiles) {
     return (
       <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
         <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
@@ -982,7 +1026,31 @@ export default function CommunityProfilePage() {
     if (!user) {
         return <Button asChild><Link href="/login"><LogIn className="mr-2 h-4 w-4" />Login to Join</Link></Button>
     }
-    if (isOwner || isMember) return null;
+    if (isOwner) return null;
+
+    if (isMember) {
+        return (
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button variant="destructive"><LogOut className="mr-2 h-4 w-4" />Leave Community</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure you want to leave?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            You will lose access to this community's private content. You can always request to join again later.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleLeaveCommunity} className="bg-destructive hover:bg-destructive/90">
+                            Leave
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        )
+    }
 
     if (hasPendingRequest) {
         return <Button disabled><Hourglass className="mr-2 h-4 w-4 animate-spin" />Request Pending</Button>
@@ -1130,7 +1198,9 @@ export default function CommunityProfilePage() {
             <Separator className="my-12" />
             <div>
                 <h2 className="text-3xl font-bold text-center mb-8">Invite Members</h2>
-                {suggestedUsers.length > 0 ? (
+                {isLoadingProfiles ? (
+                    <LoaderCircle className="animate-spin mx-auto" />
+                ) : suggestedUsers.length > 0 ? (
                     <div className="space-y-4">
                         {suggestedUsers.map(profile => (
                             <Card key={profile.id} className="flex items-center p-4">
@@ -1151,7 +1221,7 @@ export default function CommunityProfilePage() {
                     </div>
                 ) : (
                     <Card className="flex items-center justify-center p-8">
-                        <p className="text-muted-foreground">No new users to invite right now.</p>
+                        <p className="text-muted-foreground">All users are already members of this community.</p>
                     </Card>
                 )}
             </div>
