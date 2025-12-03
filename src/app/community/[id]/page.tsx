@@ -1,17 +1,18 @@
+
 // src/app/community/[id]/page.tsx
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, arrayRemove, updateDoc, getDoc, setDoc, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, arrayRemove, updateDoc, getDoc, getDocs, setDoc, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
@@ -164,7 +165,7 @@ function MemberCard({ member, communityId }: { member: Member; communityId: stri
     );
 }
 
-function TextMessageForm({ communityId, onMessageSent }: { communityId: string, onMessageSent: (messageText: string) => void }) {
+function TextMessageForm({ communityId, onMessageSent }: { communityId: string, onMessageSent: () => void }) {
     const [text, setText] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useUser();
@@ -191,8 +192,8 @@ function TextMessageForm({ communityId, onMessageSent }: { communityId: string, 
 
         try {
             await addDoc(messagesColRef, newMessage);
-            onMessageSent(text.trim());
             setText('');
+            onMessageSent(); // Trigger refresh
         } catch (error) {
             const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
             toast({ variant: 'destructive', title: 'Failed to send message', description: message });
@@ -514,69 +515,49 @@ function Network({ communityId, isOwner, allMembers }: { communityId: string; is
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
-    useEffect(() => {
+    const fetchMessages = useCallback(async () => {
         if (!firestore || !communityId) return;
-        const messagesQuery = query(collection(firestore, `communities/${communityId}/messages`), orderBy('createdAt', 'desc'));
-        const unsubscribe = onSnapshot(messagesQuery, (querySnapshot) => {
-            const messagesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
+        setIsLoading(true);
+        setError(null);
+        try {
+            const messagesQuery = query(collection(firestore, `communities/${communityId}/messages`), orderBy('createdAt', 'desc'));
+            const snapshot = await getDocs(messagesQuery);
+            const messagesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
             setMessages(messagesData);
+        } catch (e: any) {
+            setError(e);
+        } finally {
             setIsLoading(false);
-        }, setError);
-        return () => unsubscribe();
+        }
     }, [communityId]);
     
-    const triggerAiResponse = async (userMessage: string) => {
-        if (!user) return;
-        
-        const aiMembers = allMembers.filter(m => m.type === 'AI');
-        if (aiMembers.length === 0) return;
-        
-        // Select the first AI member to respond for consistency.
-        const aiMemberToRespond = aiMembers[0];
+    useEffect(() => {
+        fetchMessages();
+    }, [fetchMessages]);
 
-        // Get chat history for context, ensuring oldest are first
-        const chatHistory: ChatHistory = (messages || [])
-            .slice(0, 10)
-            .reverse() 
-            .map(msg => ({
-                role: msg.userName === aiMemberToRespond.name ? 'model' : 'user' as 'user' | 'model',
-                content: [{ text: msg.text || '' }],
-            }));
-            
-        // Generate AI response
-        const result = await getAiChatResponse({
-            member: aiMemberToRespond,
-            userMessage,
-            history: chatHistory,
-        });
-        
-        if (result.response && firestore) {
-            const aiMessage = {
-                communityId,
-                userId: `ai_${aiMemberToRespond.name.toLowerCase().replace(/\s/g, '_')}`,
-                userName: aiMemberToRespond.name,
-                userAvatarUrl: `https://i.pravatar.cc/150?u=${aiMemberToRespond.name}`,
-                type: 'text' as const,
-                text: result.response,
-                status: 'active' as const,
-                createdAt: serverTimestamp(),
-            };
-            const messagesColRef = collection(firestore, `communities/${communityId}/messages`);
-            addDoc(messagesColRef, aiMessage);
-        }
-    };
-
+    const handleMessageSent = () => {
+        // Trigger a re-fetch of messages after a new one is sent
+        fetchMessages();
+    }
 
     return (
         <Card className="shadow-lg">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2"><MessageSquare /> Community Network</CardTitle>
-                <CardDescription>The central feed for community activity and messages.</CardDescription>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <CardTitle className="flex items-center gap-2"><MessageSquare /> Community Network</CardTitle>
+                        <CardDescription>The central feed for community activity and messages.</CardDescription>
+                    </div>
+                    <Button onClick={fetchMessages} variant="outline" size="sm" disabled={isLoading}>
+                        <RefreshCw className={cn("mr-2 h-4 w-4", isLoading && "animate-spin")} />
+                        Refresh Feed
+                    </Button>
+                </div>
             </CardHeader>
             <CardContent className="space-y-4">
                 {isLoading && <LoaderCircle className="mx-auto animate-spin" />}
                 {error && <p className="text-destructive">Error loading messages: {error.message}</p>}
-                {messages && messages.length === 0 && <p className="text-muted-foreground text-center py-8">No messages yet. Be the first!</p>}
+                {!isLoading && messages && messages.length === 0 && <p className="text-muted-foreground text-center py-8">No messages yet. Be the first!</p>}
                 <div className="max-h-[40rem] overflow-y-auto space-y-4 pr-2">
                     {messages?.map(msg => {
                         const key = msg.id || `${msg.userId}-${msg.createdAt?.seconds || Date.now()}`;
@@ -586,7 +567,7 @@ function Network({ communityId, isOwner, allMembers }: { communityId: string; is
             </CardContent>
             {user ? (
                 <div className="border-t p-4 space-y-4">
-                    <TextMessageForm communityId={communityId} onMessageSent={triggerAiResponse} />
+                    <TextMessageForm communityId={communityId} onMessageSent={handleMessageSent} />
                 </div>
             ) : (
                 <div className="border-t p-4 text-center">
