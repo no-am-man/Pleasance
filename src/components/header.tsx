@@ -17,6 +17,7 @@ import {
   Warehouse,
   Beaker,
   Bug,
+  UserX,
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -133,6 +134,10 @@ function UserNav() {
           <LogOut className="mr-2 h-4 w-4" />
           <span>Sign out</span>
         </DropdownMenuItem>
+        <DropdownMenuItem className="text-destructive focus:bg-destructive focus:text-destructive-foreground">
+          <UserX className="mr-2 h-4 w-4" />
+          <span>Exit Federation</span>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -213,6 +218,14 @@ export function Header() {
                             >
                             <LogOut className="h-5 w-5" />
                             <span>Sign Out</span>
+                        </button>
+                        <button
+                            className={cn(
+                                'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-destructive'
+                            )}
+                            >
+                            <UserX className="h-5 w-5" />
+                            <span>Exit Federation</span>
                         </button>
                         </>
                     ) : (
