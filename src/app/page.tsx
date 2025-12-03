@@ -55,7 +55,7 @@ export default function Home() {
                 </div>
                 <div>
                     <h3 className="font-semibold">Federated (Structure)</h3>
-                    <p className="text-muted-foreground">An association of independent units that unite under a common umbrella while retaining unique identities. Pleasance is not a single rigid doctrine but a network that respects and integrates diverse spiritual paths.</p>
+                    <p className="text-muted-foreground">An association of independent units that unite under a common umbrella while retaining unique identities. In Hebrew, this is known as "פדרציה קהילתית" (Community Federation), where groups pool resources and gain collective strength without sacrificing their internal autonomy. Pleasance is not a single rigid doctrine but a network that respects and integrates diverse spiritual paths.</p>
                 </div>
             </div>
              <div className="flex items-start gap-4">
