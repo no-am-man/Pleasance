@@ -13,6 +13,7 @@ import { generateSvg3d as generateSvg3dFlow } from '@/ai/flows/generate-svg3d';
 import { refineRoadmapCard } from '@/ai/flows/refine-roadmap-card';
 import { refineCommunityPrompt } from '@/ai/flows/refine-community-prompt';
 import { updateCardAssignees } from '@/ai/flows/update-card-assignees';
+import { generateRoadmapIdea } from '@/ai/flows/generate-roadmap-idea';
 import { conductorFlow } from '@/ai/flows/conductor-flow';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { firebaseConfig } from '@/firebase/config';
@@ -27,7 +28,8 @@ import {
     type GenerateSvg3dInput,
     MemberSchema,
     RoadmapCardSchema,
-    RoadmapColumnSchema
+    RoadmapColumnSchema,
+    GenerateRoadmapIdeaOutputSchema
 } from '@/lib/types';
 
 
@@ -819,5 +821,45 @@ export async function conductSuperAgent(values: z.infer<typeof ConductSuperAgent
         console.error('Conductor Action Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
         return { error: `Conductor action failed: ${message}` };
+    }
+}
+
+
+const GenerateRoadmapIdeaSchema = z.object({
+    prompt: z.string().min(3, "Prompt must be at least 3 characters long."),
+});
+
+export async function generateRoadmapIdeaAction(values: z.infer<typeof GenerateRoadmapIdeaSchema>) {
+    try {
+        const validatedFields = GenerateRoadmapIdeaSchema.safeParse(values);
+        if (!validatedFields.success) {
+            return { error: 'Invalid input for idea generation.' };
+        }
+
+        const result = await generateRoadmapIdea(validatedFields.data);
+        
+        const adminApp = initializeAdminApp();
+        const firestore = getFirestore(adminApp);
+        const newCardId = firestore.collection('tmp').doc().id;
+        
+        const newCard: z.infer<typeof RoadmapCardSchema> = {
+            id: newCardId,
+            title: result.title,
+            description: result.description,
+            tags: result.tags,
+            assignees: [],
+        };
+        
+        const ideasColumnRef = firestore.collection('roadmap').doc('ideas');
+        await ideasColumnRef.update({
+            cards: FieldValue.arrayUnion(newCard)
+        });
+
+        return { success: true, card: newCard };
+
+    } catch (e) {
+        console.error('Generate Roadmap Idea Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Failed to generate and add new idea: ${message}` };
     }
 }

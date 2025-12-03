@@ -13,14 +13,14 @@ import { collection, query, doc } from 'firebase/firestore';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType, CommunityProfile } from '@/lib/types';
 import { GripVertical, LoaderCircle, PlusCircle, Trash2, Sparkles, ArrowLeft, ArrowRight, UserPlus, Check } from 'lucide-react';
-import { addRoadmapCard, deleteRoadmapCard, refineCardDescription, updateRoadmapCardAssignees, updateRoadmapCardColumn, updateRoadmapCardOrder } from '../actions';
+import { addRoadmapCard, deleteRoadmapCard, refineCardDescription, updateRoadmapCardAssignees, updateRoadmapCardColumn, updateRoadmapCardOrder, generateRoadmapIdeaAction } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -46,6 +46,70 @@ const AddIdeaSchema = z.object({
     title: z.string().min(3, "Title must be at least 3 characters long."),
     description: z.string().min(10, "Description must be at least 10 characters long."),
 });
+
+const GenerateIdeaSchema = z.object({
+    prompt: z.string().min(3, "Prompt must be at least 3 characters long."),
+});
+
+
+function GenerateIdeaForm() {
+    const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    const form = useForm<z.infer<typeof GenerateIdeaSchema>>({
+        resolver: zodResolver(GenerateIdeaSchema),
+        defaultValues: { prompt: '' },
+    });
+
+    async function onSubmit(values: z.infer<typeof GenerateIdeaSchema>) {
+        setIsSubmitting(true);
+        const result = await generateRoadmapIdeaAction(values);
+        if (result.error) {
+            toast({
+                variant: 'destructive',
+                title: 'Error generating idea',
+                description: result.error,
+            });
+        } else {
+            toast({
+                title: 'AI Idea Generated!',
+                description: `"${result.card?.title}" has been added to the board.`,
+            });
+            form.reset();
+        }
+        setIsSubmitting(false);
+    }
+    
+    return (
+        <Card className="mb-4 bg-card/70">
+            <CardHeader className="p-4">
+                <CardTitle className="text-base">Generate New Idea with AI</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="prompt"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormControl>
+                                        <Input placeholder="AI to auto-assign tasks..." {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <Button type="submit" size="sm" className="w-full" disabled={isSubmitting}>
+                            {isSubmitting ? <LoaderCircle className="animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                            Generate Idea
+                        </Button>
+                    </form>
+                </Form>
+            </CardContent>
+        </Card>
+    )
+}
 
 function AddIdeaForm() {
     const { toast } = useToast();
@@ -103,7 +167,7 @@ function AddIdeaForm() {
     return (
         <Card className="mb-4 bg-card/70">
             <CardHeader className="p-4">
-                <CardTitle className="text-base">Add a New Idea</CardTitle>
+                <CardTitle className="text-base">Add a New Idea Manually</CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
                 <Form {...form}>
@@ -546,7 +610,12 @@ export default function RoadmapPage() {
                         allProfiles={allProfiles || []}
                         onUpdateAssignees={handleUpdateAssignees}
                     >
-                        {col.id === 'ideas' && isFounder && <AddIdeaForm />}
+                        {col.id === 'ideas' && isFounder && (
+                            <>
+                                <GenerateIdeaForm />
+                                <AddIdeaForm />
+                            </>
+                        )}
                     </KanbanColumn>
                     ))
                 ) : (

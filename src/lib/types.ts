@@ -35,6 +35,13 @@ export const RoadmapCardSchema = z.object({
 });
 export type RoadmapCard = z.infer<typeof RoadmapCardSchema>;
 
+export const GenerateRoadmapIdeaOutputSchema = z.object({
+    title: z.string().describe('The concise, action-oriented title for the card.'),
+    description: z.string().describe('A detailed description of the feature, explaining the what and why.'),
+    tags: z.array(z.string()).describe('An array of 2-3 relevant keywords.'),
+});
+export type GenerateRoadmapIdeaOutput = z.infer<typeof GenerateRoadmapIdeaOutputSchema>;
+
 export const RoadmapColumnSchema = z.object({
     id: z.string(),
     title: z.string(),
