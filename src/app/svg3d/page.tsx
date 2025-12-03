@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { LoaderCircle, Sparkles, Save, Beaker, Download } from 'lucide-react';
+import { LoaderCircle, Sparkles, Save, Download, Warehouse } from 'lucide-react';
 import { generateSvg3d } from '@/app/actions';
 import { GenerateSvg3dInputSchema, type ColorPixel } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -179,7 +179,7 @@ function AboutSvg3d() {
                      <div className="flex justify-center p-4">
                         <Button asChild>
                             <Link href="/fabrication">
-                                <Beaker className="mr-2 h-4 w-4" />
+                                <Warehouse className="mr-2 h-4 w-4" />
                                 Go to the Workshop of Manifestation
                             </Link>
                         </Button>
@@ -268,9 +268,9 @@ export default function PersonalWorkshopPage() {
     <main className="container mx-auto max-w-4xl py-8">
        <div className="text-center mb-8">
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-          <Beaker className="w-10 h-10" /> Lab
+          <Sparkles className="w-10 h-10" /> AI Workshop
         </h1>
-        <p className="text-lg text-muted-foreground mt-2">A public space to experiment with generative AI tools.</p>
+        <p className="text-lg text-muted-foreground mt-2">A public sandbox to experiment with generative AI tools.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">

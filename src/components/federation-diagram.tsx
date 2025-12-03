@@ -1,8 +1,7 @@
-
 // src/components/federation-diagram.tsx
 'use client';
 
-import { Beaker, BookOpen, Banknote, Users, User, Warehouse, Info, Bot, Bug } from 'lucide-react';
+import { Sparkles, BookOpen, Banknote, Users, User, Warehouse, Info, Bot, Bug } from 'lucide-react';
 import React from 'react';
 import { KanbanIcon } from './icons/kanban-icon';
 
@@ -100,7 +99,7 @@ export const FederationDiagram = () => {
         
         {/* Top Layer: Creation & Learning Tools */}
         <DiagramNode label="Nuncy Lingua" x="250" y="90" delay={200} />
-        <DiagramNode label="Lab" x="410" y="90" delay={400} />
+        <DiagramNode label="AI Workshop" x="410" y="90" delay={400} />
         
         {/* Mid Layer: Declaration */}
         <DiagramNode label="Treasury" x="330" y="225" delay={600} />
