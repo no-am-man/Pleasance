@@ -60,11 +60,9 @@ const generateFlagFlow = ai.defineFlow(
   },
   async (input) => {
     // This is the corrected call.
-    // We use ai.generate, pass the prompt object, and the input.
-    const { output } = await ai.generate({
-      prompt: generateFlagPrompt,
-      input: input,
-    });
+    // The `generateFlagPrompt` object is an executable function that already
+    // contains the model configuration. We call it directly.
+    const { output } = await generateFlagPrompt(input);
     
     if (!output) {
       throw new Error('AI failed to generate a flag SVG.');
