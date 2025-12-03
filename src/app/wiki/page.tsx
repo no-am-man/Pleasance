@@ -1,9 +1,10 @@
+
 // src/app/wiki/page.tsx
 'use client';
 
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, BookOpen, Warehouse, Banknote, Info, PartyPopper, Github, Beaker } from 'lucide-react';
+import { Users, BookOpen, Warehouse, Banknote, Info, PartyPopper, Github, Beaker, Bug } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { KanbanIcon } from '@/components/icons/kanban-icon';
@@ -107,6 +108,16 @@ export default function WikiPage() {
             href="/roadmap"
         >
             Follow the public development plan for the Pleasance project on our real-time Kanban board. See what ideas are being considered, what's next up, what's in progress, and what's already alive in the federation.
+        </FeatureCard>
+        
+        <FeatureCard 
+            icon={<Bug className="h-8 w-8 text-primary" />} 
+            title="Bug Tracker"
+            imageUrl="https://picsum.photos/seed/107/600/400"
+            imageHint="bug tracking"
+            href="/bugs"
+        >
+            Help improve the federation by reporting issues. The public bug tracker allows any authenticated member to submit bug reports and view the status of all existing issues to keep development transparent.
         </FeatureCard>
         
         <FeatureCard 
