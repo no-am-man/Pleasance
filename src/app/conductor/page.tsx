@@ -108,7 +108,7 @@ export default function ConductorPage() {
                 <Card className="w-full max-w-md text-center shadow-lg">
                     <CardHeader>
                         <CardTitle>Conductor SuperAgent</CardTitle>
-                        <CardDescription>Log in to interact with the federation's central AI.</CardDescription>
+                        <CardDescription>Log in to interact with the application's central AI.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Button asChild>
@@ -128,7 +128,7 @@ export default function ConductorPage() {
                 <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
                     <Bot /> Conductor SuperAgent
                 </h1>
-                <p className="text-lg text-muted-foreground mt-2">Your conversational interface to the federation.</p>
+                <p className="text-lg text-muted-foreground mt-2">Your conversational interface to the application.</p>
             </div>
 
             <Card className="flex-grow flex flex-col shadow-lg">

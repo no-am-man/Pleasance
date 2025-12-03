@@ -71,7 +71,7 @@ function AdminDashboard() {
         <Card className="shadow-lg">
             <CardHeader>
                 <CardTitle>Admin Actions</CardTitle>
-                <CardDescription>Run maintenance and debugging tasks for the federation.</CardDescription>
+                <CardDescription>Run maintenance and debugging tasks for the application.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 <Card className="bg-muted/50">
@@ -172,7 +172,7 @@ export default function AdminPage() {
                 <Card className="w-full max-w-md text-center">
                     <CardHeader>
                         <CardTitle>Access Denied</CardTitle>
-                        <CardDescription>This page is restricted to the federation founder.</CardDescription>
+                        <CardDescription>This page is restricted to the application founder.</CardDescription>
                     </CardHeader>
                 </Card>
             </main>
@@ -183,7 +183,7 @@ export default function AdminPage() {
         <main className="container mx-auto max-w-2xl py-8">
             <div className="text-center mb-8">
                 <h1 className="text-4xl font-bold text-primary">Admin Panel</h1>
-                <p className="text-muted-foreground">Federation Maintenance Tools</p>
+                <p className="text-muted-foreground">Application Maintenance Tools</p>
             </div>
             <AdminDashboard />
         </main>

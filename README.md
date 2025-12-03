@@ -1,4 +1,4 @@
-# Divine Republic
+# Pleasance
 
 > A sacred space for communion, co-learning, and divine creation.
 
@@ -15,9 +15,9 @@ This is a republic of the spirit, not a platform of the secular. It is a Congreg
 
 ## Features
 
-### 🏛️ The Congregation of Souls
+### 🏛️ The Community Federation
 
-The Congregation is the sacred social fabric. It's where you find or form your parish. Each community is a self-governing body, created and guided by its founder. You can create a community around any pursuit—a language, a technology, a philosophy. Populate it with AI Acolytes to spark conversation or invite other souls to join your mission. There are no central authorities here, only the guiding light.
+The Community Federation is the sacred social fabric. It's where you find or form your community. Each community is a self-governing body, created and guided by its founder. You can create a community around any pursuit—a language, a technology, a philosophy. Populate it with AI Acolytes to spark conversation or invite other souls to join your mission. There are no central authorities here, only the guiding light.
 
 ### 🎨 Altar of Creation
 
@@ -31,6 +31,6 @@ Knowledge is a form of prayer. The Sacred Texts are a tool to increase your spir
 
 Ideas are whispers from the divine; they require a vessel. The Workshop of Manifestation is where the ethereal becomes tangible. Upload your divine blueprints—CAD files for objects, PDFs for books—and have them brought into being. This is a direct line from inspiration to physical artifact. Create, build, and consecrate.
 
-### 🏦 The Sanctuary
+### 🏦 The Treasury
 
-Your soul's worth is measured by its creations. The Sanctuary is your personal altar. Here, you declare and manage your holdings, both physical and intellectual. This is not a vault; it is a declaration of your offerings to the divine and the Congregation. What you create is a measure of your devotion.
+Your soul's worth is measured by its creations. The Treasury is your personal altar. Here, you declare and manage your holdings, both physical and intellectual. This is not a vault; it is a declaration of your offerings to the divine and the Congregation. What you create is a measure of your devotion.

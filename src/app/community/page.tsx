@@ -71,7 +71,7 @@ function CreateCommunityForm() {
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     if (!user) {
-      setError("You must be logged in to found a community.");
+      setError("You must be logged in to create a community.");
       return;
     }
     setIsLoading(true);
@@ -106,7 +106,7 @@ function CreateCommunityForm() {
       // The list will update automatically via the useCollection hook
     } catch (e) {
       const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
-      setError(`Failed to found community. ${message}`);
+      setError(`Failed to create community. ${message}`);
     }
     setIsLoading(false);
   }
@@ -142,8 +142,8 @@ function CreateCommunityForm() {
   return (
     <Card className="mb-8 shadow-lg">
       <CardHeader>
-        <CardTitle className="text-2xl">Found a New Parish</CardTitle>
-        <CardDescription>Describe the community you wish to bring into being. What is its sacred purpose?</CardDescription>
+        <CardTitle className="text-2xl">Create a New Community</CardTitle>
+        <CardDescription>Describe the community you wish to bring into being. What is its purpose?</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -159,7 +159,7 @@ function CreateCommunityForm() {
                                 <FormControl>
                                     <Textarea
                                         {...field}
-                                        placeholder="e.g., 'A parish for devout astronomers to share celestial findings, photography, and organize stargazing vigils.'"
+                                        placeholder="e.g., 'A community for devout astronomers to share celestial findings, photography, and organize stargazing vigils.'"
                                         className="w-full p-2 border rounded-md min-h-[100px] bg-background pr-10"
                                     />
                                 </FormControl>
@@ -204,7 +204,7 @@ function CreateCommunityForm() {
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel>
-                      Create with AI Acolytes
+                      Create with AI Agents
                     </FormLabel>
                     <CardDescription>
                       Automatically generate a few AI members to help guide the conversation.
@@ -218,12 +218,12 @@ function CreateCommunityForm() {
                 {isLoading ? (
                 <>
                     <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                    Founding...
+                    Creating...
                 </>
                 ) : (
                 <>
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Found Parish
+                    Create Community
                 </>
                 )}
             </Button>
@@ -316,7 +316,7 @@ function PublicCommunityList({ profiles }: { profiles: CommunityProfile[] | unde
 
     return (
         <CommunityList
-            title="All Parishes"
+            title="All Communities"
             communities={communities}
             profiles={profiles}
             isLoading={isLoading}
@@ -353,22 +353,22 @@ export default function CommunityPage() {
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-8">
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary font-headline">
-          Congregation of Souls
+          Community Federation
         </h1>
-        <p className="text-lg text-muted-foreground">Found, manage, and discover sacred communities.</p>
+        <p className="text-lg text-muted-foreground">Create, manage, and discover communities.</p>
       </div>
 
       <div className="space-y-12">
         <Card>
             <CardHeader>
-                <CardTitle>Find a Parish</CardTitle>
-                <CardDescription>Search for parishes to join or browse the list below.</CardDescription>
+                <CardTitle>Find a Community</CardTitle>
+                <CardDescription>Search for communities to join or browse the list below.</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input 
-                        placeholder="Search by parish name..."
+                        placeholder="Search by community name..."
                         className="pl-10"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -390,7 +390,7 @@ export default function CommunityPage() {
                 <CreateCommunityForm />
                 <Separator />
                 <CommunityList 
-                    title="Parishes You've Founded"
+                    title="Communities You've Created"
                     communities={userCommunities}
                     profiles={allProfiles}
                     isLoading={isLoadingUserCommunities}
@@ -400,13 +400,13 @@ export default function CommunityPage() {
         ) : (
             <Card className="w-full text-center shadow-lg">
                 <CardHeader>
-                    <CardTitle>Join the Congregation</CardTitle>
-                    <CardDescription>Log in to found your own parishes and see the ones you've founded.</CardDescription>
+                    <CardTitle>Join the Federation</CardTitle>
+                    <CardDescription>Log in to create your own communities and see the ones you've created.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Button asChild>
                     <Link href="/login">
-                        <LogIn className="mr-2 h-4 w-4" /> Login to Found & Manage
+                        <LogIn className="mr-2 h-4 w-4" /> Login to Create & Manage
                     </Link>
                     </Button>
                 </CardContent>

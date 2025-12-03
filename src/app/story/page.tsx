@@ -86,13 +86,13 @@ function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void
     return (
         <Card className="shadow-lg bg-background/80 backdrop-blur-sm">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-2xl font-headline"><History /> Your Book of Parables</CardTitle>
-                <CardDescription>Revisit parables you've generated in the past.</CardDescription>
+                <CardTitle className="flex items-center gap-2 text-2xl font-headline"><History /> Your Story History</CardTitle>
+                <CardDescription>Revisit stories you've generated in the past.</CardDescription>
             </CardHeader>
             <CardContent>
                 {isLoading && <LoaderCircle className="animate-spin mx-auto" />}
                 {error && <p className="text-destructive">Error loading history: {error.message}</p>}
-                {stories && stories.length === 0 && <p className="text-muted-foreground text-center">You haven't generated any parables yet.</p>}
+                {stories && stories.length === 0 && <p className="text-muted-foreground text-center">You haven't generated any stories yet.</p>}
                 {stories && stories.length > 0 && (
                     <ul className="space-y-2 max-h-80 overflow-y-auto">
                         {stories.map((story, index) => (
@@ -119,9 +119,9 @@ function SnapshotViewer({ snapshot }: { snapshot: HistorySnapshot }) {
   return (
     <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
       <DialogHeader>
-        <DialogTitle>Parable Snapshot from {snapshot.createdAt ? new Date(snapshot.createdAt.seconds * 1000).toLocaleString() : 'a past time'}</DialogTitle>
+        <DialogTitle>Story Snapshot from {snapshot.createdAt ? new Date(snapshot.createdAt.seconds * 1000).toLocaleString() : 'a past time'}</DialogTitle>
         <DialogDescription>
-          A view of your {snapshot.storyCount} parables from this point in time.
+          A view of your {snapshot.storyCount} stories from this point in time.
         </DialogDescription>
       </DialogHeader>
       <div className="flex-grow overflow-y-auto pr-4 space-y-4">
@@ -165,7 +165,7 @@ function TimeMachine() {
         if (result.error) {
             toast({ variant: 'destructive', title: 'Snapshot Failed', description: result.error });
         } else {
-            toast({ title: 'Snapshot Created!', description: `Saved ${result.storyCount} parables to your Time Machine.` });
+            toast({ title: 'Snapshot Created!', description: `Saved ${result.storyCount} stories to your Time Machine.` });
         }
         setIsCreating(false);
     };
@@ -184,7 +184,7 @@ function TimeMachine() {
         <Card className="shadow-lg">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Clock /> Time Machine</CardTitle>
-                <CardDescription>Create and view snapshots of your parable history.</CardDescription>
+                <CardDescription>Create and view snapshots of your story history.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                  <Button onClick={handleCreateSnapshot} disabled={isCreating}>
@@ -203,7 +203,7 @@ function TimeMachine() {
                                     <DialogTrigger asChild>
                                         <button className="flex-grow text-left">
                                             <p className="font-semibold">{snapshot.createdAt ? new Date(snapshot.createdAt.seconds * 1000).toLocaleString() : 'Snapshot'}</p>
-                                            <p className="text-sm text-muted-foreground">{snapshot.storyCount} parables captured</p>
+                                            <p className="text-sm text-muted-foreground">{snapshot.storyCount} stories captured</p>
                                         </button>
                                     </DialogTrigger>
                                     <Button variant="ghost" size="sm" onClick={() => handleDeleteSnapshot(snapshot.id)}>Delete</Button>
@@ -257,7 +257,7 @@ export default function StoryPage() {
 
   async function onSubmit(data: z.infer<typeof StoryFormSchema>) {
     if (!user) {
-        setError("You must be logged in to generate a parable.");
+        setError("You must be logged in to generate a story.");
         return;
     }
     setIsLoading(true);
@@ -274,9 +274,9 @@ export default function StoryPage() {
     
     if (result.storyData) {
         setActiveStory(result.storyData as Story);
-        toast({ title: "Parable Generated!", description: "Your new parable is ready."});
+        toast({ title: "Story Generated!", description: "Your new story is ready."});
     } else {
-      setError('An unknown error occurred while generating the parable.');
+      setError('An unknown error occurred while generating the story.');
     }
   }
 
@@ -301,10 +301,10 @@ export default function StoryPage() {
             border: '1px solid hsl(var(--border))',
         }}>
         <h1 className="text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-          <BookOpen className="w-12 h-12" /> The Sacred Texts
+          <BookOpen className="w-12 h-12" /> Sacred Texts
         </h1>
         <p className="text-lg text-slate-300 mt-2">
-          Generate a short parable at your level, then practice with our karaoke-style player.
+          Generate a short story at your level, then practice with our karaoke-style player.
         </p>
       </div>
       
@@ -312,7 +312,7 @@ export default function StoryPage() {
         {isLoading && (
             <div className="flex justify-center p-8">
                 <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
-                <p className="ml-4 text-muted-foreground self-center">Generating your parable and audio...</p>
+                <p className="ml-4 text-muted-foreground self-center">Generating your story and audio...</p>
             </div>
         )}
         {error && (
@@ -336,7 +336,7 @@ export default function StoryPage() {
          <Card className="w-full max-w-md mx-auto text-center shadow-lg bg-background/80 backdrop-blur-sm">
           <CardHeader>
             <CardTitle>Welcome to the Scriptorium</CardTitle>
-            <CardDescription>Log in to generate parables and save your progress.</CardDescription>
+            <CardDescription>Log in to generate stories and save your progress.</CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild>
@@ -441,7 +441,7 @@ export default function StoryPage() {
                         ) : (
                             <Sparkles className="mr-2 h-4 w-4" />
                         )}
-                        Generate Parable
+                        Generate Story
                     </Button>
                     </form>
                 </Form>

@@ -50,14 +50,14 @@ const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com'; // Founder email check
 
 const navLinks = [
   { href: '/', label: 'Home', icon: Home },
-  { href: '/community', label: 'Congregation', icon: Users },
+  { href: '/community', label: 'Community', icon: Users },
   { href: '/conductor', label: 'Conductor', icon: Bot },
   { href: '/story', label: 'Sacred Texts', icon: BookOpen },
-  { href: '/fabrication', label: 'Manifestation', icon: Warehouse },
-  { href: '/treasury', label: 'Sanctuary', icon: Banknote },
+  { href: '/fabrication', label: 'Fabrication', icon: Warehouse },
+  { href: '/treasury', label: 'Treasury', icon: Banknote },
   { href: '/workshop', label: 'Altar of Creation', icon: Beaker },
-  { href: '/roadmap', label: 'Divine Plan', icon: KanbanIcon },
-  { href: '/bugs', label: 'Confessional', icon: Bug },
+  { href: '/roadmap', label: 'Roadmap', icon: KanbanIcon },
+  { href: '/bugs', label: 'Bug Tracker', icon: Bug },
   { href: '/wiki', label: 'Canon', icon: Info },
 ];
 
@@ -145,7 +145,7 @@ function UserNav() {
                 disabled={isFounder}
             >
               <UserX className="mr-2 h-4 w-4" />
-              <span>Exit Congregation</span>
+              <span>Exit Community</span>
             </DropdownMenuItem>
           </AlertDialogTrigger>
         </DropdownMenuContent>
@@ -161,10 +161,10 @@ function UserNav() {
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction 
-            onClick={() => console.log('Exit Congregation confirmed')} 
+            onClick={() => console.log('Exit Community confirmed')} 
             className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
           >
-            Yes, Exit Congregation
+            Yes, Exit Community
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -191,7 +191,7 @@ export function Header() {
       <Link href="/" className="flex items-center gap-2">
         <Logo className="h-8 w-8 text-primary" />
         <div className="flex items-center gap-2">
-          <span className="text-lg font-semibold text-primary">Divine Republic</span>
+          <span className="text-lg font-semibold text-primary">Pleasance</span>
           <Badge variant="outline" className="text-xs">
             BETA
           </Badge>
@@ -216,7 +216,7 @@ export function Header() {
                       <Logo className="h-8 w-8 text-primary" />
                       <div className="flex items-center gap-2">
                       <span className="text-lg font-semibold text-primary">
-                          Divine Republic
+                          Pleasance
                       </span>
                       <Badge variant="outline" className="text-xs">
                           BETA
@@ -258,7 +258,7 @@ export function Header() {
                                 disabled={isFounder}
                                 >
                                 <UserX className="h-5 w-5" />
-                                <span>Exit Congregation</span>
+                                <span>Exit Community</span>
                             </button>
                           </AlertDialogTrigger>
                           </>
@@ -285,10 +285,10 @@ export function Header() {
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction 
-                onClick={() => console.log('Exit Congregation confirmed')} 
+                onClick={() => console.log('Exit Community confirmed')} 
                 className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
               >
-                Yes, Exit Congregation
+                Yes, Exit Community
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

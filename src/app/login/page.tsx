@@ -124,15 +124,15 @@ export default function LoginPage() {
                 </>
             ) : (
                 <>
-                    <CardTitle className="font-headline">Join the Congregation</CardTitle>
-                    <CardDescription>Sign in to continue to the Divine Republic</CardDescription>
+                    <CardTitle className="font-headline">Join the Community</CardTitle>
+                    <CardDescription>Sign in to continue to Pleasance</CardDescription>
                 </>
             )}
         </CardHeader>
         <CardContent>
             {user ? (
                  <div className="flex flex-col space-y-4">
-                    <Button onClick={() => router.push('/community')}>Enter the Republic</Button>
+                    <Button onClick={() => router.push('/community')}>Enter Pleasance</Button>
                     <Button variant="outline" onClick={handleSignOut}>
                         <LogOut className="mr-2" /> Sign Out
                     </Button>
@@ -151,7 +151,7 @@ export default function LoginPage() {
                      <Button asChild variant="outline" className="w-full">
                         <Link href="https://accounts.google.com/signup" target="_blank" rel="noopener noreferrer">
                            <MailPlus className="mr-2" />
-                           Create a new vessel?
+                           Create a new account?
                         </Link>
                     </Button>
 

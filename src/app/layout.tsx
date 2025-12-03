@@ -3,7 +3,7 @@ import './globals.css';
 import { Providers } from './providers';
 
 export const metadata: Metadata = {
-  title: 'Divine Republic',
+  title: 'Pleasance',
   description: 'A sacred space for communion, co-learning, and divine creation.',
 };
 
