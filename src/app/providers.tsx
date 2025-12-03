@@ -19,10 +19,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <div className="fixed top-16 left-0 right-0 z-40 bg-background/80 backdrop-blur-sm">
             <PresenceBar />
         </div>
-        <div className="pt-12">{children}</div>
+        <div className="pt-12 pb-5">{children}</div>
       </main>
-      <div className="h-1 w-full ant-trail" />
-      <footer className="text-center p-4 border-t space-y-4">
+      <div className="fixed bottom-0 left-0 right-0 h-1 w-full ant-trail z-50" />
+      <footer className="text-center p-4 border-t space-y-4 bg-background relative z-40">
         <div className="flex justify-center flex-wrap gap-x-4 gap-y-2">
             {navLinks.map(link => (
                 <Button key={link.href} variant="link" asChild className="text-muted-foreground">
