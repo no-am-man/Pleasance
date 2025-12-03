@@ -246,6 +246,15 @@ service cloud.firestore {
       allow create: if isSignedIn() && isValidBugReport();
       allow update, delete: if isFounder();
     }
+    
+    /**
+     * @description Stores conversation history with the Conductor SuperAgent.
+     * @path /conductor/{userId}
+     * @allow Users can only read and write to their own conversation history.
+     */
+    match /conductor/{userId} {
+        allow read, write: if isOwner(userId);
+    }
 
     /**
      * @description Secure storage for administrative data, like service account keys.
@@ -258,5 +267,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

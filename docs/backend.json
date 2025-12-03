@@ -400,6 +400,37 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "title", "description", "status", "priority", "reporterId", "reporterName", "createdAt"]
+    },
+    "Conductor": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Conductor",
+      "type": "object",
+      "description": "Represents the state of a conversation with the Conductor SuperAgent.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the conversation session (typically user's UID)." },
+        "history": {
+          "type": "array",
+          "description": "The chat history between the user and the Conductor.",
+          "items": {
+            "$ref": "#/backend/entities/ConductorMessage"
+          }
+        }
+      },
+      "required": ["id", "history"]
+    },
+    "ConductorMessage": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ConductorMessage",
+      "type": "object",
+      "description": "Represents a single message in a Conductor conversation.",
+      "properties": {
+        "role": { "type": "string", "enum": ["user", "model"], "description": "The role of the message sender." },
+        "text": { "type": "string", "description": "The text content of the message." },
+        "tool": { "type": "string", "description": "The name of the tool used, if any." },
+        "toolResult": { "type": "string", "description": "The result of the tool call, if any." },
+        "timestamp": { "type": "string", "format": "date-time", "description": "The timestamp of the message." }
+      },
+      "required": ["role", "text", "timestamp"]
     }
   },
   "auth": {
@@ -600,10 +631,19 @@
             { "name": "bugId", "description": "The unique ID for the bug report." }
           ]
         }
+      },
+      {
+        "path": "/conductor/{userId}",
+        "definition": {
+          "entityName": "Conductor",
+          "schema": { "$ref": "#/backend/entities/Conductor" },
+          "description": "Stores conversation history for each user with the Conductor SuperAgent. Users can only access their own history.",
+          "params": [
+            { "name": "userId", "description": "The unique identifier for the user." }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities`, `workshops`, `fabricationOrders`, and now `bugs` in top-level collections, they become queryable. User-specific data is nested under `/users/{userId}` to ensure privacy. Public profiles are in `/community-profiles` to allow discoverability without exposing private account details. The roadmap is migrated to Firestore for reliable public read access."
+    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities`, `workshops`, `fabricationOrders`, and now `bugs` in top-level collections, they become queryable. User-specific data is nested under `/users/{userId}` to ensure privacy. Public profiles are in `/community-profiles` to allow discoverability without exposing private account details. The roadmap is migrated to Firestore for reliable public read access. The new /conductor/{userId} collection stores conversation history privately for each user."
   }
 }
-
-    

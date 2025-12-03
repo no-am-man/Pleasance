@@ -18,6 +18,7 @@ import {
   Beaker,
   Bug,
   UserX,
+  Bot,
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -50,6 +51,7 @@ const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com'; // Founder email check
 const navLinks = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/community', label: 'Community', icon: Users },
+  { href: '/conductor', label: 'Conductor', icon: Bot },
   { href: '/story', label: 'Nuncy Lingua', icon: BookOpen },
   { href: '/fabrication', label: 'Fabrication', icon: Warehouse },
   { href: '/treasury', label: 'Treasury', icon: Banknote },

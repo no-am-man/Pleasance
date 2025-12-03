@@ -13,6 +13,7 @@ import { generateSvg3d as generateSvg3dFlow } from '@/ai/flows/generate-svg3d';
 import { refineRoadmapCard } from '@/ai/flows/refine-roadmap-card';
 import { refineCommunityPrompt } from '@/ai/flows/refine-community-prompt';
 import { updateCardAssignees } from '@/ai/flows/update-card-assignees';
+import { conductorFlow } from '@/ai/flows/conductor-flow';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { firebaseConfig } from '@/firebase/config';
 import admin from 'firebase-admin';
@@ -715,5 +716,35 @@ export async function updateRoadmapCardAssignees(values: z.infer<typeof UpdateAs
         console.error('Update Assignees Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
         return { error: `Failed to update assignees: ${message}` };
+    }
+}
+
+const ConductSuperAgentSchema = z.object({
+    userId: z.string(),
+    prompt: z.string(),
+});
+
+export async function conductSuperAgent(values: z.infer<typeof ConductSuperAgentSchema>) {
+    try {
+        const validatedFields = ConductSuperAgentSchema.safeParse(values);
+        if (!validatedFields.success) {
+            return { error: 'Invalid input for Conductor.' };
+        }
+        
+        const adminApp = initializeAdminApp();
+        const firestore = getFirestore(adminApp);
+        
+        const userProfileRef = firestore.collection('community-profiles').doc(validatedFields.data.userId);
+        const userProfileSnap = await userProfileRef.get();
+        const userName = userProfileSnap.exists ? userProfileSnap.data()?.name : 'Anonymous';
+
+        const result = await conductorFlow({ ...validatedFields.data, userName });
+        
+        return { data: result };
+
+    } catch (e) {
+        console.error('Conductor Action Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Conductor action failed: ${message}` };
     }
 }

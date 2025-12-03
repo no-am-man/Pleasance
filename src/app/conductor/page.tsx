@@ -1,0 +1,184 @@
+// src/app/conductor/page.tsx
+'use client';
+
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { useUser } from '@/firebase';
+import { firestore } from '@/firebase/config';
+import { doc, setDoc } from 'firebase/firestore';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Bot, User, Send, LoaderCircle, LogIn, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import Link from 'next/link';
+import { conductSuperAgent } from '../actions';
+import { marked } from 'marked';
+
+type Message = {
+    role: 'user' | 'model';
+    text: string;
+    tool?: string;
+    toolResult?: string;
+    timestamp: any;
+};
+
+type ConductorData = {
+    id: string;
+    history: Message[];
+};
+
+function ToolCall({ tool, toolResult }: { tool?: string; toolResult?: string }) {
+    if (!tool || !toolResult) return null;
+
+    return (
+        <Card className="my-2 bg-muted/50 border-dashed border-primary/50">
+            <CardHeader className="p-2">
+                <p className="text-xs font-mono text-primary">[Tool Call: {tool}]</p>
+            </CardHeader>
+            <CardContent className="p-2 pt-0">
+                <pre className="text-xs bg-background p-2 rounded-md overflow-x-auto">
+                    <code>{toolResult}</code>
+                </pre>
+            </CardContent>
+        </Card>
+    );
+}
+
+export default function ConductorPage() {
+    const { user, isUserLoading } = useUser();
+    const [input, setInput] = useState('');
+    const [isThinking, setIsThinking] = useState(false);
+    const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+    const conductorDocRef = useMemo(() => user ? doc(firestore, 'conductor', user.uid) : null, [user]);
+    const [conductorData, isLoadingConductor] = useDocumentData<ConductorData>(conductorDocRef);
+    const history = conductorData?.history || [];
+
+    const handleSendMessage = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!input.trim() || !user || !conductorDocRef) return;
+
+        const userMessage: Message = {
+            role: 'user',
+            text: input,
+            timestamp: new Date(),
+        };
+
+        const updatedHistory = [...history, userMessage];
+        await setDoc(conductorDocRef, { id: user.uid, history: updatedHistory }, { merge: true });
+        
+        setInput('');
+        setIsThinking(true);
+
+        const result = await conductSuperAgent({ userId: user.uid, prompt: input });
+        
+        setIsThinking(false);
+
+        if (result.error) {
+            const errorMessage: Message = {
+                role: 'model',
+                text: `I encountered an error: ${result.error}`,
+                timestamp: new Date(),
+            };
+            const finalHistory = [...updatedHistory, errorMessage];
+            await setDoc(conductorDocRef, { id: user.uid, history: finalHistory }, { merge: true });
+        }
+    };
+    
+    useEffect(() => {
+        if (scrollAreaRef.current) {
+            scrollAreaRef.current.scrollTo({ top: scrollAreaRef.current.scrollHeight, behavior: 'smooth' });
+        }
+    }, [history]);
+
+    if (isUserLoading || isLoadingConductor) {
+        return (
+            <main className="container mx-auto flex min-h-[80vh] items-center justify-center">
+                <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
+            </main>
+        );
+    }
+    
+    if (!user) {
+        return (
+            <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
+                <Card className="w-full max-w-md text-center shadow-lg">
+                    <CardHeader>
+                        <CardTitle>Conductor SuperAgent</CardTitle>
+                        <CardDescription>Log in to interact with the federation's central AI.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Button asChild>
+                        <Link href="/login">
+                            <LogIn className="mr-2 h-4 w-4" /> Login to Continue
+                        </Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+            </main>
+        );
+    }
+
+    return (
+        <main className="container mx-auto max-w-2xl py-8 flex flex-col h-[calc(100vh-8rem)]">
+            <div className="text-center mb-8">
+                <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
+                    <Bot /> Conductor SuperAgent
+                </h1>
+                <p className="text-lg text-muted-foreground mt-2">Your conversational interface to the federation.</p>
+            </div>
+
+            <Card className="flex-grow flex flex-col shadow-lg">
+                <ScrollArea className="flex-grow p-4" ref={scrollAreaRef}>
+                    <div className="space-y-4">
+                        {history.map((msg, index) => (
+                            <div key={index} className={cn("flex items-start gap-3", msg.role === 'user' ? 'justify-end' : 'justify-start')}>
+                                {msg.role === 'model' && (
+                                    <Avatar className="w-9 h-9 border-2 border-primary">
+                                        <AvatarFallback><Bot /></AvatarFallback>
+                                    </Avatar>
+                                )}
+                                <div className={cn("rounded-lg px-4 py-2 max-w-[85%] prose prose-sm dark:prose-invert prose-p:my-2", msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
+                                    <div dangerouslySetInnerHTML={{ __html: marked(msg.text) }} />
+                                    <ToolCall tool={msg.tool} toolResult={msg.toolResult} />
+                                </div>
+                                {msg.role === 'user' && user && (
+                                    <Avatar className="w-9 h-9">
+                                        <AvatarImage src={user.photoURL || ''} />
+                                        <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                                    </Avatar>
+                                )}
+                            </div>
+                        ))}
+                         {isThinking && (
+                            <div className="flex items-start gap-3 justify-start">
+                                <Avatar className="w-9 h-9 border-2 border-primary">
+                                    <AvatarFallback><Bot /></AvatarFallback>
+                                </Avatar>
+                                <div className="bg-muted rounded-lg px-4 py-2 flex items-center">
+                                    <LoaderCircle className="w-5 h-5 animate-spin"/>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </ScrollArea>
+                <div className="border-t p-4">
+                    <form onSubmit={handleSendMessage} className="flex gap-2">
+                        <Input
+                            value={input}
+                            onChange={e => setInput(e.target.value)}
+                            placeholder="Ask the Conductor... (e.g., 'What is being worked on right now?')"
+                            disabled={isThinking}
+                        />
+                        <Button type="submit" disabled={isThinking || !input.trim()}>
+                            <Send className="w-4 h-4" />
+                        </Button>
+                    </form>
+                </div>
+            </Card>
+        </main>
+    );
+}
