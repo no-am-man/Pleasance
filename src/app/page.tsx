@@ -94,7 +94,9 @@ export default function Home() {
         </Button>
       </div>
 
-      <FederationDiagram />
+      <div className="w-full max-w-lg mx-auto my-8">
+        <FederationDiagram />
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-16">
         <div className="lg:col-span-3">

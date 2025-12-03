@@ -49,7 +49,7 @@ const DiagramNode = ({
 
 export const FederationDiagram = () => {
   return (
-    <div className="w-full aspect-square max-w-xl mx-auto my-8">
+    <div className="w-full aspect-square">
       <style>
         {`
           @keyframes fadeIn {
