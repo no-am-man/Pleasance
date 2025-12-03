@@ -25,7 +25,7 @@ export default function Home() {
        <div className="mt-16">
         <Button asChild variant="link" className="text-lg whitespace-normal h-auto underline">
           <Link href="/wiki">
-            Please Read the Canon to Understand This Divine Republic
+            Please Read the Canon to Understand This Federated Republic
             <ArrowRight className="ml-2 h-5 w-5" />
           </Link>
         </Button>

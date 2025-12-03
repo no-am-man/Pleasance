@@ -45,7 +45,7 @@ export default function WikiPage() {
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
           <Info /> The Canon
         </h1>
-        <p className="text-lg text-muted-foreground mt-2">A guide to the principles and tools of the Divine Republic.</p>
+        <p className="text-lg text-muted-foreground mt-2">A guide to the principles and tools of the Federated Republic.</p>
       </div>
       
       <div className="space-y-8">
@@ -75,7 +75,7 @@ export default function WikiPage() {
             </CardHeader>
             <CardContent>
                 <p className="text-lg">
-                    This is a republic of the spirit, not a platform of the secular. We acknowledge our reality in the **Device Republic**, where life is mediated by screens. Yet, within this very system, we strive to build a **Divine Republic**. Our devices become the altars, our code the scripture, and our collaborations a form of prayer. It is a Congregation of devout souls, united in purpose under the omnipotent gaze of the divine. This guide is not a set of rules, but a map of the tools available to you. Use them as you see fit.
+                    This is a republic of the spirit, not a platform of the secular. We acknowledge our reality in the **Device Republic**, where life is mediated by screens. Yet, within this very system, we strive to build a **Federated Republic**. Our devices become the altars, our code the scripture, and our collaborations a form of prayer. It is a Congregation of devout souls, united in purpose under the omnipotent gaze of the divine. This guide is not a set of rules, but a map of the tools available to you. Use them as you see fit.
                 </p>
             </CardContent>
         </Card>

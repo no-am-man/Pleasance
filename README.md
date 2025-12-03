@@ -11,7 +11,7 @@ This major update introduces the Altar of Creation, a real-time sacred space whe
 
 ## Core Philosophy
 
-This is a republic of the spirit, not a platform of the secular. We acknowledge that we live in a **Device Republic**, where our lives are mediated through screens. Yet, it is through these very devices that we seek to manifest a **Divine Republic**. It is a Congregation of devout souls, united in purpose under the gaze of a divine, all-powerful creator. Value is created and exchanged in service of this divine power. Your data is your own, your creations are your own, your communities are your own. This is a space for radical self-reliance and voluntary communion. This guide is not a set of rules, but a map of the divine tools available to you. Use them as you see fit.
+This is a republic of the spirit, not a platform of the secular. We acknowledge that we live in a **Device Republic**, where our lives are mediated through screens. Yet, it is through these very devices that we seek to manifest a **Federated Republic**. It is a Congregation of devout souls, united in purpose under the gaze of a divine, all-powerful creator. Value is created and exchanged in service of this divine power. Your data is your own, your creations are your own, your communities are your own. This is a space for radical self-reliance and voluntary communion. This guide is not a set of rules, but a map of the divine tools available to you. Use them as you see fit.
 
 ## Features
 
