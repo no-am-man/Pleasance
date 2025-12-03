@@ -6,14 +6,12 @@ import React from 'react';
 import { KanbanIcon } from './icons/kanban-icon';
 
 const DiagramNode = ({
-  icon,
   label,
   x,
   y,
   delay,
   size = 40,
 }: {
-  icon: React.ElementType;
   label: string;
   x: string;
   y: string;
@@ -33,13 +31,8 @@ const DiagramNode = ({
       stroke="hsl(var(--primary))"
       strokeWidth="1.5"
     />
-    <foreignObject x={-size * 0.6} y={-size * 0.6} width={size * 1.2} height={size * 1.2}>
-      <div className="flex items-center justify-center w-full h-full">
-        {React.createElement(icon, { className: `w-8 h-8 text-primary`, style: { width: `${size * 0.5}px`, height: `${size * 0.5}px`} })}
-      </div>
-    </foreignObject>
     <text
-      y={size + 15}
+      y={size + 20}
       textAnchor="middle"
       fill="hsl(var(--foreground))"
       className="font-semibold text-sm"
@@ -63,7 +56,7 @@ const FlowArrow = ({ path, delay }: { path: string; delay: number }) => (
 
 export const FederationDiagram = () => {
   return (
-    <div className="w-full aspect-[4/3]">
+    <div className="w-full max-w-lg mx-auto my-8">
       <style>
         {`
           @keyframes fadeIn {
@@ -102,25 +95,25 @@ export const FederationDiagram = () => {
         />
 
         {/* Nodes */}
-        <DiagramNode icon={User} label="The Sovereign Soul" x="90" y="225" delay={0} />
+        <DiagramNode label="The Sovereign Soul" x="90" y="225" delay={0} />
         
         {/* Top Layer: Creation & Learning Tools */}
-        <DiagramNode icon={BookOpen} label="Nuncy Lingua" x="240" y="90" delay={200} />
-        <DiagramNode icon={Beaker} label="Crucible of Creation" x="360" y="90" delay={400} />
+        <DiagramNode label="Nuncy Lingua" x="240" y="90" delay={200} />
+        <DiagramNode label="Crucible of Creation" x="360" y="90" delay={400} />
         
         {/* Mid Layer: Declaration */}
-        <DiagramNode icon={Banknote} label="Treasury" x="300" y="225" delay={600} />
+        <DiagramNode label="Treasury" x="300" y="225" delay={600} />
 
         {/* Bottom Layer: Action & Community */}
-        <DiagramNode icon={Warehouse} label="Manifestation" x="240" y="360" delay={800} />
-        <DiagramNode icon={Users} label="Federation" x="360" y="360" delay={1000} />
+        <DiagramNode label="Manifestation" x="240" y="360" delay={800} />
+        <DiagramNode label="Federation" x="360" y="360" delay={1000} />
         
         {/* Right-Side Layer: Guiding Systems */}
         <g transform="translate(520, 225)">
-            <DiagramNode icon={Info} label="Wiki" x="0" y="-120" delay={1200} size={30} />
-            <DiagramNode icon={KanbanIcon} label="Roadmap" x="0" y="-40" delay={1400} size={30} />
-            <DiagramNode icon={Bot} label="Conductor" x="0" y="40" delay={1600} size={30} />
-            <DiagramNode icon={Bug} label="Bug Tracker" x="0" y="120" delay={1800} size={30} />
+            <DiagramNode label="Wiki" x="0" y="-120" delay={1200} size={30} />
+            <DiagramNode label="Roadmap" x="0" y="-40" delay={1400} size={30} />
+            <DiagramNode label="Conductor" x="0" y="40" delay={1600} size={30} />
+            <DiagramNode label="Bug Tracker" x="0" y="120" delay={1800} size={30} />
         </g>
         
         {/* Flow Arrows */}
