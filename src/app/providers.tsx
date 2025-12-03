@@ -11,6 +11,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { Sidebar } from '@/components/sidebar';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -18,44 +19,18 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
       <FirebaseErrorListener />
-      <Header />
-      <div className="fixed top-16 left-0 right-0 z-40 h-12 bg-background/70 backdrop-blur-sm border-b flex justify-between items-center">
-        <Breadcrumbs />
-      </div>
-      <main className="flex-grow pt-28 pb-40">
-        <div className="pt-4">{children}</div>
-      </main>
-      <footer className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t">
-        <div className="h-1 w-full ant-trail" />
-        <div className="text-center p-4 space-y-4">
-            
-            <div className="flex justify-center flex-wrap gap-x-4 gap-y-2">
-                {navLinks.map(link => {
-                    const isActive = pathname.startsWith(link.href) && (link.href !== '/' || pathname === '/');
-                    return (
-                        <Button key={link.href} variant="link" asChild className={cn("h-auto py-1 px-2", isActive ? "text-primary" : "text-muted-foreground")}>
-                            <Link href={link.href}>
-                                {link.label}
-                            </Link>
-                        </Button>
-                    )
-                })}
+      <div className="flex min-h-screen w-full">
+        <Sidebar />
+        <div className="flex flex-col flex-1 sm:pl-sidebar">
+            <Header />
+            <div className="fixed top-0 left-0 right-0 sm:left-sidebar z-40 h-12 bg-background/70 backdrop-blur-sm border-b flex justify-between items-center">
+              <Breadcrumbs />
             </div>
-            <p>
-            <Link
-                href="https://github.com/no-am-man/Pleasance"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-green-500 hover:underline text-sm"
-            >
-                Open Source Community? Fork Me!
-            </Link>
-            </p>
-            <p className="text-xs text-muted-foreground">
-            Powered by Google Firebase Studio
-            </p>
+            <main className="flex-grow pt-12">
+              <div className="pt-4">{children}</div>
+            </main>
         </div>
-      </footer>
+      </div>
       <Toaster />
     </AuthProvider>
   );

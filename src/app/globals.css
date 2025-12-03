@@ -33,6 +33,7 @@ body {
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
     --radius: 0.5rem;
+    --sidebar-width: 250px;
   }
   .dark {
     --background: 25 15% 10%; 

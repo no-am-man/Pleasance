@@ -9,6 +9,9 @@ export default {
   ],
   theme: {
     extend: {
+      spacing: {
+        'sidebar': 'var(--sidebar-width)',
+      },
       fontFamily: {
         body: ['Roboto', 'sans-serif'],
         headline: ['Merriweather', 'serif'],
@@ -56,14 +59,14 @@ export default {
           '5': 'hsl(var(--chart-5))',
         },
         sidebar: {
-          DEFAULT: 'hsl(var(--sidebar-background))',
-          foreground: 'hsl(var(--sidebar-foreground))',
-          primary: 'hsl(var(--sidebar-primary))',
-          'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-          accent: 'hsl(var(--sidebar-accent))',
-          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-          border: 'hsl(var(--sidebar-border))',
-          ring: 'hsl(var(--sidebar-ring))',
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))',
+          primary: 'hsl(var(--primary))',
+          'primary-foreground': 'hsl(var(--primary-foreground))',
+          accent: 'hsl(var(--accent) / 0.1)',
+          'accent-foreground': 'hsl(var(--primary))',
+          border: 'hsl(var(--border))',
+          ring: 'hsl(var(--ring))',
         },
       },
       borderRadius: {
