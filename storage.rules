@@ -39,7 +39,7 @@ service firebase.storage {
     //====================================================================
     // Community Flags: Allow public write access to unblock uploads.
     // This is a temporary, broader rule to fix a persistent permission error.
-    //================================a====================================
+    //====================================================================
     match /communities/{communityId}/flag.png {
       allow write: if true;
     }
