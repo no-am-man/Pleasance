@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { firestore } from '@/firebase/config';
-import { collection, query, onSnapshot } from 'firebase/firestore';
+import { collection, query, getDocs } from 'firebase/firestore';
 import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType, CommunityProfile } from '@/lib/types';
 import { GripVertical, LoaderCircle, PlusCircle, Trash2, Sparkles, ArrowLeft, ArrowRight, UserPlus, Check } from 'lucide-react';
 import { addRoadmapCard, deleteRoadmapCard, refineCardDescription, updateRoadmapCardAssignees, updateRoadmapCardColumn, updateRoadmapCardOrder, generateRoadmapIdeaAction } from '../actions';
@@ -440,40 +440,46 @@ export default function RoadmapPage() {
   const isFounder = user?.email === 'gg.el0ai.com@gmail.com';
   const { toast } = useToast();
   
-  const roadmapQuery = useMemoFirebase(() => query(collection(firestore, 'roadmap')), []);
   const [columnsData, setColumnsData] = useState<RoadmapColumnType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!roadmapQuery) {
-        setIsLoading(false);
-        return;
-    }
-    const unsubscribe = onSnapshot(roadmapQuery, (snapshot) => {
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RoadmapColumnType));
-        setColumnsData(data);
-        setIsLoading(false);
-    }, setError);
-    return () => unsubscribe();
-  }, [roadmapQuery]);
+    if (!firestore) return;
+    const fetchRoadmap = async () => {
+        try {
+            const roadmapQuery = query(collection(firestore, 'roadmap'));
+            const snapshot = await getDocs(roadmapQuery);
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RoadmapColumnType));
+            setColumnsData(data);
+        } catch (err: any) {
+            setError(err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    fetchRoadmap();
+  }, []);
 
-  const allProfilesQuery = useMemoFirebase(() => query(collection(firestore, 'community-profiles')), []);
   const [allProfiles, setAllProfiles] = useState<CommunityProfile[]>([]);
   const [profilesLoading, setProfilesLoading] = useState(true);
 
   useEffect(() => {
-    if (!allProfilesQuery) {
-        setProfilesLoading(false);
-        return;
-    }
-    const unsubscribe = onSnapshot(allProfilesQuery, (snapshot) => {
-        const data = snapshot.docs.map(doc => doc.data() as CommunityProfile);
-        setAllProfiles(data);
-        setProfilesLoading(false);
-    });
-    return () => unsubscribe();
-  }, [allProfilesQuery]);
+    if (!firestore) return;
+    const fetchProfiles = async () => {
+        try {
+            const allProfilesQuery = query(collection(firestore, 'community-profiles'));
+            const snapshot = await getDocs(allProfilesQuery);
+            const data = snapshot.docs.map(doc => doc.data() as CommunityProfile);
+            setAllProfiles(data);
+        } catch (err: any) {
+            // Silently fail on profiles
+        } finally {
+            setProfilesLoading(false);
+        }
+    };
+    fetchProfiles();
+  }, []);
 
   const [columns, setColumns] = useState<RoadmapColumnType[]>([]);
   const columnOrder = useMemo(() => ['ideas', 'nextUp', 'inProgress', 'alive'], []);

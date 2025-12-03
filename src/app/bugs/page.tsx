@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useUser, useMemoFirebase } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { collection, query, orderBy, serverTimestamp, doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { collection, query, orderBy, serverTimestamp, doc, setDoc, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -53,7 +53,6 @@ async function submitBugReport(values: z.infer<typeof BugSchema>, user: { uid: s
         createdAt: serverTimestamp(),
     };
     
-    // Using setDoc directly inside an async function is fine, as this is a user-triggered event, not a hook.
     await setDoc(newBugRef, newBug);
 }
 
@@ -159,27 +158,27 @@ function AddBugForm() {
 }
 
 function BugList() {
-    const bugsQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
-        return query(collection(firestore, 'bugs'), orderBy('createdAt', 'desc'));
-    }, []);
-
     const [bugs, setBugs] = useState<Bug[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
-        if (!bugsQuery) {
-            setIsLoading(false);
-            return;
-        }
-        const unsubscribe = onSnapshot(bugsQuery, (querySnapshot) => {
-            const bugsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Bug));
-            setBugs(bugsData);
-            setIsLoading(false);
-        }, setError);
-        return () => unsubscribe();
-    }, [bugsQuery]);
+        if (!firestore) return;
+        
+        const fetchBugs = async () => {
+            try {
+                const bugsQuery = query(collection(firestore, 'bugs'), orderBy('createdAt', 'desc'));
+                const querySnapshot = await getDocs(bugsQuery);
+                const bugsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Bug));
+                setBugs(bugsData);
+            } catch (err: any) {
+                setError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchBugs();
+    }, []);
 
     const getStatusVariant = (status: Bug['status']) => {
         switch (status) {

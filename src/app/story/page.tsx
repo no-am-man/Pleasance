@@ -16,7 +16,7 @@ import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useUser, useMemoFirebase } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { collection, query, orderBy, doc, deleteDoc, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, doc, deleteDoc, getDocs, getDoc } from 'firebase/firestore';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
@@ -67,24 +67,32 @@ type CommunityProfile = {
 
 function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void; }) {
     const { user, isUserLoading } = useUser();
-    const storiesQuery = useMemoFirebase(() => user ? query(collection(firestore, 'users', user.uid, 'stories'), orderBy('createdAt', 'desc')) : null, [user]);
     
     const [stories, setStories] = useState<Story[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
-        if (!storiesQuery) {
+        if (!user || !firestore) {
             setIsLoading(false);
             return;
         }
-        const unsubscribe = onSnapshot(storiesQuery, (snapshot) => {
-            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Story));
-            setStories(data);
-            setIsLoading(false);
-        }, setError);
-        return () => unsubscribe();
-    }, [storiesQuery]);
+
+        const fetchStories = async () => {
+            try {
+                const storiesQuery = query(collection(firestore, 'users', user.uid, 'stories'), orderBy('createdAt', 'desc'));
+                const snapshot = await getDocs(storiesQuery);
+                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Story));
+                setStories(data);
+            } catch (err: any) {
+                setError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchStories();
+    }, [user]);
 
 
     if (isUserLoading) {
@@ -167,24 +175,31 @@ function TimeMachine() {
     const { toast } = useToast();
     const [isCreating, setIsCreating] = useState(false);
 
-    const snapshotsQuery = useMemoFirebase(() => user ? query(collection(firestore, 'users', user.uid, 'historySnapshots'), orderBy('createdAt', 'desc')) : null, [user]);
-    
     const [snapshots, setSnapshots] = useState<HistorySnapshot[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
-        if (!snapshotsQuery) {
+        if (!user || !firestore) {
             setIsLoading(false);
             return;
         }
-        const unsubscribe = onSnapshot(snapshotsQuery, (snapshot) => {
-            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as HistorySnapshot));
-            setSnapshots(data);
-            setIsLoading(false);
-        }, setError);
-        return () => unsubscribe();
-    }, [snapshotsQuery]);
+
+        const fetchSnapshots = async () => {
+            try {
+                const snapshotsQuery = query(collection(firestore, 'users', user.uid, 'historySnapshots'), orderBy('createdAt', 'desc'));
+                const snapshot = await getDocs(snapshotsQuery);
+                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as HistorySnapshot));
+                setSnapshots(data);
+            } catch (err: any) {
+                setError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchSnapshots();
+    }, [user]);
 
     const handleCreateSnapshot = async () => {
         if (!user) return;
@@ -203,6 +218,7 @@ function TimeMachine() {
         const docRef = doc(firestore, `users/${user.uid}/historySnapshots/${snapshotId}`);
         await deleteDoc(docRef);
         toast({ title: 'Snapshot Deleted' });
+        setSnapshots(prev => prev.filter(s => s.id !== snapshotId));
     }
 
     if (isUserLoading) return <LoaderCircle className="w-8 h-8 animate-spin text-primary" />;
@@ -254,22 +270,22 @@ export default function StoryPage() {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   
-  const profileDocRef = useMemoFirebase(() => user ? doc(firestore, 'community-profiles', user.uid) : null, [user]);
-  
   const [profile, setProfile] = useState<CommunityProfile | null>(null);
   const [isProfileLoading, setIsProfileLoading] = useState(true);
 
   useEffect(() => {
-    if (!profileDocRef) {
+    if (!user) {
         setIsProfileLoading(false);
         return;
     }
-    const unsubscribe = onSnapshot(profileDocRef, (doc) => {
-        setProfile(doc.exists() ? doc.data() as CommunityProfile : null);
+    const fetchProfile = async () => {
+        const profileDocRef = doc(firestore, 'community-profiles', user.uid);
+        const docSnap = await getDoc(profileDocRef);
+        setProfile(docSnap.exists() ? docSnap.data() as CommunityProfile : null);
         setIsProfileLoading(false);
-    });
-    return () => unsubscribe();
-  }, [profileDocRef]);
+    };
+    fetchProfile();
+  }, [user]);
 
 
   const form = useForm<z.infer<typeof StoryFormSchema>>({

@@ -4,7 +4,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useUser, useMemoFirebase } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { collection, query, where, orderBy, doc, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, orderBy, doc, getDocs } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, AlertCircle, Landmark, Flag } from 'lucide-react';
@@ -41,31 +41,32 @@ type Community = {
 };
 
 function CommunityHall({ community }: { community: Community }) {
-    const creationsQuery = useMemoFirebase(() => 
-        query(
-            collection(firestore, `communities/${community.id}/creations`), 
-            where('status', '==', 'published'), 
-            orderBy('createdAt', 'desc')
-        ), 
-        [community.id]
-    );
-
     const [creations, setCreations] = useState<Creation[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
-        if (!creationsQuery) {
-            setIsLoading(false);
-            return;
-        }
-        const unsubscribe = onSnapshot(creationsQuery, (snapshot) => {
-            const creationsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Creation));
-            setCreations(creationsData);
-            setIsLoading(false);
-        }, setError);
-        return () => unsubscribe();
-    }, [creationsQuery]);
+        if (!firestore) return;
+        
+        const fetchCreations = async () => {
+            try {
+                const creationsQuery = query(
+                    collection(firestore, `communities/${community.id}/creations`), 
+                    where('status', '==', 'published'), 
+                    orderBy('createdAt', 'desc')
+                );
+                const snapshot = await getDocs(creationsQuery);
+                const creationsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Creation));
+                setCreations(creationsData);
+            } catch (err: any) {
+                setError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchCreations();
+    }, [community.id]);
 
 
     if (isLoading) {
@@ -129,7 +130,6 @@ function CommunityHall({ community }: { community: Community }) {
                                     <div className="aspect-square bg-muted rounded-md my-4">
                                         <Svg3dCube pixels={creation.pixels} />
                                     </div>
-                                    {/* Removed SaveToTreasuryForm as it's not needed here */}
                                 </DialogContent>
                             </Dialog>
                         ))}
@@ -142,24 +142,28 @@ function CommunityHall({ community }: { community: Community }) {
 
 
 export default function MuseumPage() {
-    const communitiesQuery = useMemoFirebase(() => query(collection(firestore, 'communities'), orderBy('name', 'asc')), []);
-    
     const [communities, setCommunities] = useState<Community[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
-        if (!communitiesQuery) {
-            setIsLoading(false);
-            return;
-        }
-        const unsubscribe = onSnapshot(communitiesQuery, (snapshot) => {
-            const communityData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community));
-            setCommunities(communityData);
-            setIsLoading(false);
-        }, setError);
-        return () => unsubscribe();
-    }, [communitiesQuery]);
+        if (!firestore) return;
+
+        const fetchCommunities = async () => {
+            try {
+                const communitiesQuery = query(collection(firestore, 'communities'), orderBy('name', 'asc'));
+                const snapshot = await getDocs(communitiesQuery);
+                const communityData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community));
+                setCommunities(communityData);
+            } catch (err: any) {
+                setError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchCommunities();
+    }, []);
 
 
     if (isLoading) {

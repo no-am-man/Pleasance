@@ -1,9 +1,8 @@
-
 'use client';
 
-import { useMemo, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { firestore } from '@/firebase';
-import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -43,18 +42,19 @@ export default function Leaderboard() {
 
     useEffect(() => {
         if (!firestore) return;
-        const leaderboardQuery = query(collection(firestore, 'leaderboard'), orderBy('score', 'desc'), limit(10));
-
-        const unsubscribe = onSnapshot(leaderboardQuery, (snapshot) => {
-            const entriesData = snapshot.docs.map(doc => ({ userId: doc.id, ...doc.data() } as LeaderboardEntry));
-            setEntries(entriesData);
-            setIsLoading(false);
-        }, (err) => {
-            setError(err);
-            setIsLoading(false);
-        });
-
-        return () => unsubscribe();
+        const fetchLeaderboard = async () => {
+            try {
+                const leaderboardQuery = query(collection(firestore, 'leaderboard'), orderBy('score', 'desc'), limit(10));
+                const snapshot = await getDocs(leaderboardQuery);
+                const entriesData = snapshot.docs.map(doc => ({ userId: doc.id, ...doc.data() } as LeaderboardEntry));
+                setEntries(entriesData);
+            } catch (err: any) {
+                setError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchLeaderboard();
     }, []);
 
     return (

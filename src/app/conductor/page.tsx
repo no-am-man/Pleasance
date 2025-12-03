@@ -4,7 +4,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useUser, useMemoFirebase } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,16 +58,24 @@ export default function ConductorPage() {
     const [isLoadingConductor, setIsLoadingConductor] = useState(true);
 
     useEffect(() => {
-        if (!conductorDocRef) {
+        if (!user) {
             setIsLoadingConductor(false);
             return;
         }
-        const unsubscribe = onSnapshot(conductorDocRef, (doc) => {
-            setConductorData(doc.exists() ? doc.data() as ConductorData : null);
+        
+        const fetchHistory = async () => {
+            const docRef = doc(firestore, 'conductor', user.uid);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                setConductorData(docSnap.data() as ConductorData);
+            } else {
+                setConductorData({ id: user.uid, history: [] });
+            }
             setIsLoadingConductor(false);
-        });
-        return () => unsubscribe();
-    }, [conductorDocRef]);
+        };
+        fetchHistory();
+
+    }, [user]);
 
     const history = conductorData?.history || [];
 
@@ -81,8 +89,9 @@ export default function ConductorPage() {
             timestamp: new Date(),
         };
 
-        // Optimistically update the UI with the user's message
-        await setDoc(conductorDocRef, { history: [...history, userMessage] }, { merge: true });
+        const newHistory = [...history, userMessage];
+        // Optimistically update the UI
+        setConductorData({ id: user.uid, history: newHistory });
         
         setInput('');
         setIsThinking(true);
@@ -97,7 +106,14 @@ export default function ConductorPage() {
                 content: [{ text: `I encountered an error: ${result.error}` }],
                 timestamp: new Date(),
             };
-             await setDoc(conductorDocRef, { history: [...history, userMessage, errorMessage] }, { merge: true });
+             await setDoc(conductorDocRef, { history: [...newHistory, errorMessage] }, { merge: true });
+        } else {
+            // The flow on the server already updated the history, so we don't need to do it here
+            // We just need to re-fetch the data to get the latest
+             const docSnap = await getDoc(conductorDocRef);
+            if (docSnap.exists()) {
+                setConductorData(docSnap.data() as ConductorData);
+            }
         }
     };
     

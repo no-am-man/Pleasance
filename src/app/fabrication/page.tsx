@@ -1,4 +1,3 @@
-
 // src/app/fabrication/page.tsx
 'use client';
 
@@ -16,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import Link from 'next/link';
 import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { collection, query, where, serverTimestamp, doc, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, serverTimestamp, doc, getDocs } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSearchParams } from 'next/navigation';
@@ -66,17 +65,20 @@ function OrderList() {
             return;
         }
 
-        const ordersQuery = query(collection(firestore, 'fabricationOrders'), where('userId', '==', user.uid));
-        const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
-            const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FabricationOrder));
-            setOrders(ordersData);
-            setIsLoading(false);
-        }, (err) => {
-            setError(err);
-            setIsLoading(false);
-        });
+        const fetchOrders = async () => {
+            try {
+                const ordersQuery = query(collection(firestore, 'fabricationOrders'), where('userId', '==', user.uid));
+                const snapshot = await getDocs(ordersQuery);
+                const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FabricationOrder));
+                setOrders(ordersData);
+            } catch (err: any) {
+                setError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-        return () => unsubscribe();
+        fetchOrders();
     }, [user]);
 
     const getStatusVariant = (status: FabricationOrder['status']) => {
@@ -293,12 +295,20 @@ export default function FabricationPage() {
         setIsAssetsLoading(false);
         return;
     }
-    const assetsQuery = query(collection(firestore, `users/${user.uid}/assets`));
-    const unsubscribe = onSnapshot(assetsQuery, (snapshot) => {
-        setAssets(snapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as Asset)));
-        setIsAssetsLoading(false);
-    });
-    return () => unsubscribe();
+    
+    const fetchAssets = async () => {
+        try {
+            const assetsQuery = query(collection(firestore, `users/${user.uid}/assets`));
+            const snapshot = await getDocs(assetsQuery);
+            setAssets(snapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as Asset)));
+        } catch (err: any) {
+            // silent fail
+        } finally {
+            setIsAssetsLoading(false);
+        }
+    };
+    
+    fetchAssets();
   }, [user]);
 
   if (isUserLoading || isAssetsLoading) {

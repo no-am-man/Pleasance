@@ -1,12 +1,11 @@
 // src/app/wiki/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useUser, useMemoFirebase } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { collection, query, orderBy } from 'firebase/firestore';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, Info, FileText, PlusCircle } from 'lucide-react';
@@ -23,9 +22,28 @@ type WikiPage = {
 export default function WikiHomePage() {
     const { user } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
+    const [pages, setPages] = useState<WikiPage[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
 
-    const wikiQuery = useMemoFirebase(() => query(collection(firestore, 'wiki'), orderBy('title', 'asc')), []);
-    const [pages, isLoading, error] = useCollectionData<WikiPage>(wikiQuery, { idField: 'id' });
+    useEffect(() => {
+        if (!firestore) return;
+        
+        const fetchPages = async () => {
+            try {
+                const wikiQuery = query(collection(firestore, 'wiki'), orderBy('title', 'asc'));
+                const snapshot = await getDocs(wikiQuery);
+                const pagesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WikiPage));
+                setPages(pagesData);
+            } catch (err: any) {
+                setError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchPages();
+    }, []);
 
     const filteredPages = pages?.filter(page =>
         page.title.toLowerCase().includes(searchTerm.toLowerCase())

@@ -1,14 +1,13 @@
-
 // src/app/treasury/page.tsx
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { collection, query, where, serverTimestamp, doc, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, serverTimestamp, doc, getDocs } from 'firebase/firestore';
 import { declareAssetWithFile } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -130,7 +129,7 @@ function AddAssetForm() {
                                 name="value"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Asset Value (Satoshis)</FormLabel>
+                                        <FormLabel>Asset Value (satoshis)</FormLabel>
                                         <FormControl>
                                             <Input type="number" placeholder="10000" {...field} />
                                         </FormControl>
@@ -221,17 +220,20 @@ function AssetList() {
             return;
         };
 
-        const assetsQuery = query(collection(firestore, 'users', user.uid, 'assets'));
-        const unsubscribe = onSnapshot(assetsQuery, (snapshot) => {
-            const assetsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Asset));
-            setAssets(assetsData);
-            setIsLoading(false);
-        }, (err) => {
-            setError(err);
-            setIsLoading(false);
-        });
+        const fetchAssets = async () => {
+            try {
+                const assetsQuery = query(collection(firestore, 'users', user.uid, 'assets'));
+                const snapshot = await getDocs(assetsQuery);
+                const assetsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Asset));
+                setAssets(assetsData);
+            } catch (err: any) {
+                setError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-        return () => unsubscribe();
+        fetchAssets();
     }, [user]);
 
     if (isLoading) {
@@ -309,17 +311,20 @@ function OrderList() {
             return;
         }
 
-        const ordersQuery = query(collection(firestore, 'fabricationOrders'), where('userId', '==', user.uid));
-        const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
-            const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FabricationOrder));
-            setOrders(ordersData);
-            setIsLoading(false);
-        }, (err) => {
-            setError(err);
-            setIsLoading(false);
-        });
+        const fetchOrders = async () => {
+            try {
+                const ordersQuery = query(collection(firestore, 'fabricationOrders'), where('userId', '==', user.uid));
+                const snapshot = await getDocs(ordersQuery);
+                const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FabricationOrder));
+                setOrders(ordersData);
+            } catch (err: any) {
+                setError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-        return () => unsubscribe();
+        fetchOrders();
     }, [user]);
 
 
