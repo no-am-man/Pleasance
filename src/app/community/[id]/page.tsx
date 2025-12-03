@@ -9,7 +9,7 @@ import { firestore } from '@/firebase/config';
 import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, arrayRemove, updateDoc, getDoc, getDocs, setDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info, LogOut } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info, LogOut, Wrench } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -1140,55 +1140,37 @@ export default function CommunityProfilePage() {
           <p className="text-lg leading-relaxed whitespace-pre-wrap">{community.welcomeMessage}</p>
         </CardContent>
       </Card>
-
+      
       {isMember && (
-          <div className="my-12 grid grid-cols-1 md:grid-cols-3 gap-8">
-             <Card className="shadow-lg">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Sparkles /> Workshop</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground mb-4 text-sm">
-                        Collaborate on generative art.
-                    </p>
-                    <Button asChild size="sm">
-                        <Link href={`/community/${id}/workshop`}>
-                            Enter Workshop
-                        </Link>
-                    </Button>
-                </CardContent>
-            </Card>
-             <Card className="shadow-lg">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><KanbanIcon /> Roadmap</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground mb-4 text-sm">
-                        View the private community roadmap.
-                    </p>
-                    <Button asChild size="sm">
-                        <Link href={`/community/${id}/roadmap`}>
-                            View Roadmap
-                        </Link>
-                    </Button>
-                </CardContent>
-            </Card>
-            <Card className="shadow-lg">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Info /> Wiki</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground mb-4 text-sm">
-                        Access the private community wiki.
-                    </p>
-                    <Button asChild size="sm">
-                        <Link href={`/community/${id}/wiki/home`}>
-                            Open Wiki
-                        </Link>
-                    </Button>
-                </CardContent>
-            </Card>
-          </div>
+        <Card className="shadow-lg my-12">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Wrench /> Available Tools</CardTitle>
+                <CardDescription>Use these tools to collaborate and create within the community.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Button asChild variant="outline" className="h-auto py-4">
+                    <Link href={`/community/${id}/workshop`} className="flex flex-col items-center gap-2">
+                        <Sparkles className="w-8 h-8 text-primary" />
+                        <span className="font-semibold">Workshop</span>
+                        <span className="text-xs text-center text-muted-foreground">Collaborate on generative art.</span>
+                    </Link>
+                </Button>
+                 <Button asChild variant="outline" className="h-auto py-4">
+                     <Link href={`/community/${id}/roadmap`} className="flex flex-col items-center gap-2">
+                        <KanbanIcon className="w-8 h-8 text-primary" />
+                        <span className="font-semibold">Roadmap</span>
+                        <span className="text-xs text-center text-muted-foreground">View the private community roadmap.</span>
+                    </Link>
+                </Button>
+                 <Button asChild variant="outline" className="h-auto py-4">
+                    <Link href={`/community/${id}/wiki/home`} className="flex flex-col items-center gap-2">
+                        <Info className="w-8 h-8 text-primary" />
+                        <span className="font-semibold">Wiki</span>
+                        <span className="text-xs text-center text-muted-foreground">Access the private community wiki.</span>
+                    </Link>
+                </Button>
+            </CardContent>
+        </Card>
       )}
       
        <div className="my-12">
