@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LoaderCircle, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { BronzeMedal, SilverMedal, GoldMedal, PlatinumMedal } from './icons/medals';
+import { useMemoFirebase } from '@/firebase';
 
 type LeaderboardEntry = {
     userId: string;
@@ -36,7 +37,7 @@ const Medal = ({ rank }: { rank: number }) => {
 
 
 export default function Leaderboard() {
-    const leaderboardQuery = useMemo(() => 
+    const leaderboardQuery = useMemoFirebase(() => 
         query(collection(firestore, 'leaderboard'), orderBy('score', 'desc'), limit(10))
     , []);
 
