@@ -42,9 +42,6 @@ Existing Description: "{{description}}"
 
 Generate a refined description. It should be a single paragraph.
 `,
-    config: {
-        model: googleAI.model("gemini-pro")
-    }
 });
 
 
@@ -56,7 +53,10 @@ const refineRoadmapCardFlow = ai.defineFlow(
   },
   async (input) => {
     // Correctly call the prompt function with the input.
-    const { output } = await refineCardPrompt(input);
+    const { output } = await refineCardPrompt({
+        input,
+        model: googleAI.model('gemini-pro'),
+    });
     if (!output) {
         throw new Error("The AI failed to generate a refined description.");
     }
