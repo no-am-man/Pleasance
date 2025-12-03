@@ -27,6 +27,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { navLinks } from '@/app/header';
 import { ScrollArea } from './ui/scroll-area';
+import { ThemeSwitcher } from './theme-switcher';
 
 const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com'; // Founder email check
 
@@ -102,6 +103,10 @@ function UserNav() {
                   </Link>
               </DropdownMenuItem>
           )}
+          <DropdownMenuSeparator />
+          <div className="px-2 py-1.5">
+            <ThemeSwitcher />
+          </div>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut}>
             <LogOut className="mr-2 h-4 w-4" />

@@ -35,6 +35,7 @@ import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { KanbanIcon } from '@/components/icons/kanban-icon';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { ThemeSwitcher } from '@/components/theme-switcher';
 
 
 const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com'; // Founder email check
@@ -140,6 +141,9 @@ export function Header() {
                                 </Avatar>
                                 <span className="truncate">{user.displayName}</span>
                             </Link>
+                             <div className="px-3">
+                                <ThemeSwitcher />
+                            </div>
                             <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start gap-3 px-3">
                                 <LogOut className="h-5 w-5" /> Sign Out
                             </Button>
