@@ -122,8 +122,7 @@ service cloud.firestore {
          * @allow A user can perform any action on their own assets.
          */
         match /assets/{assetId} {
-            allow get, write: if isOwner(userId) && hasValidSubcollectionData(userId);
-            allow list: if isOwner(userId);
+            allow read, write: if isOwner(userId);
         }
     }
 

@@ -14,7 +14,7 @@ import { initializeAdminApp } from '@/firebase/config-admin';
 import { firebaseConfig } from '@/firebase/config';
 import admin from 'firebase-admin';
 import { generateCommunity } from '@/ai/flows/generate-community';
-import { getFirestore, writeBatch } from 'firebase-admin/firestore';
+import { getFirestore, writeBatch, doc, updateDoc, arrayRemove, arrayUnion } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
 import {
@@ -485,4 +485,52 @@ export async function declareAssetWithFile(formData: FormData) {
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
         return { error: `Failed to declare asset: ${message}` };
     }
+}
+
+export async function updateRoadmapCardColumn(
+  cardId: string,
+  oldColumnId: string,
+  newColumnId: string
+) {
+  try {
+    const adminApp = initializeAdminApp();
+    const firestore = getFirestore(adminApp);
+
+    const oldColumnRef = doc(firestore, 'roadmap', oldColumnId);
+    const newColumnRef = doc(firestore, 'roadmap', newColumnId);
+
+    const oldColumnSnap = await oldColumnRef.get();
+
+    if (!oldColumnSnap.exists()) {
+      throw new Error(`Source column "${oldColumnId}" not found.`);
+    }
+
+    const oldColumnData = oldColumnSnap.data() as z.infer<typeof RoadmapColumnSchema>;
+    const cardToMove = oldColumnData.cards.find(c => c.id === cardId);
+
+    if (!cardToMove) {
+      throw new Error(`Card with ID "${cardId}" not found in column "${oldColumnId}".`);
+    }
+
+    const batch = firestore.batch();
+
+    // Remove card from old column
+    batch.update(oldColumnRef, {
+      cards: arrayRemove(cardToMove)
+    });
+
+    // Add card to new column
+    batch.update(newColumnRef, {
+      cards: arrayUnion(cardToMove)
+    });
+
+    await batch.commit();
+
+    return { success: true };
+
+  } catch (e) {
+    console.error('Update Roadmap Card Error:', e);
+    const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+    return { error: `Failed to move card: ${message}` };
+  }
 }
