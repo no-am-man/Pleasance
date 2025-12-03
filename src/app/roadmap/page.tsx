@@ -12,7 +12,7 @@ import { collection, query } from 'firebase/firestore';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType } from '@/lib/types';
 import { LoaderCircle, PlusCircle, Trash2, Sparkles, ArrowRight, ArrowLeft } from 'lucide-react';
-import { updateRoadmapCardColumn, addRoadmapCard, deleteRoadmapCard, refineCardDescription } from '../actions';
+import { updateRoadmapCardColumn, addRoadmapCard, deleteRoadmapCard, refineCardDescription, updateRoadmapCardOrder } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, useSortable, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { cn } from '@/lib/utils';
 
 
 const AddIdeaSchema = z.object({
@@ -157,7 +161,7 @@ function AddIdeaForm() {
     )
 }
 
-const KanbanCard = ({ card, columnId, onMove }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; }) => {
+function KanbanCard({ card, columnId, onMove }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; }) {
   const { user } = useUser();
   const isFounder = user?.email === 'gg.el0ai.com@gmail.com';
   const { toast } = useToast();
@@ -168,7 +172,6 @@ const KanbanCard = ({ card, columnId, onMove }: { card: RoadmapCardType; columnI
 
   const canMoveLeft = currentIndex > 0;
   const canMoveRight = currentIndex < columnIds.length - 1;
-
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -185,7 +188,6 @@ const KanbanCard = ({ card, columnId, onMove }: { card: RoadmapCardType; columnI
             description: 'The idea has been removed from the board.',
         });
     }
-    // No need to set isDeleting to false as the component will unmount
   };
 
   return (
@@ -194,7 +196,7 @@ const KanbanCard = ({ card, columnId, onMove }: { card: RoadmapCardType; columnI
         <CardTitle className="text-base">{card.title}</CardTitle>
         {isFounder && (
             <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                 {canMoveLeft && (
+                {canMoveLeft && (
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(card.id, columnId, 'left')}>
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
@@ -265,25 +267,50 @@ const KanbanCard = ({ card, columnId, onMove }: { card: RoadmapCardType; columnI
   );
 }
 
-const KanbanColumn = ({ id, title, cards, children, onMoveCard }: RoadmapColumnType & { children?: React.ReactNode; onMoveCard: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; }) => (
-  <div className="flex flex-col gap-4">
-    <div className="px-3 py-2">
-      <h2 className="text-lg font-semibold text-foreground">{title}</h2>
-    </div>
-    <div className="flex-grow space-y-4 rounded-lg p-3 bg-muted/50 min-h-[200px]">
-        {children}
-        {cards && cards.length > 0 ? (
-          cards.map(card => <KanbanCard key={card.id} card={card} columnId={id} onMove={onMoveCard} />)
-        ) : (
-          !children && (
-             <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-                <p>No cards in this column.</p>
-            </div>
-          )
-        )}
-    </div>
-  </div>
-);
+function SortableKanbanCard({ card, columnId, onMove }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; }) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: card.id });
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 1 : 'auto',
+    };
+
+    return (
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={cn(isDragging && 'opacity-50')}>
+            <KanbanCard card={card} columnId={columnId} onMove={onMove} />
+        </div>
+    )
+}
+
+function KanbanColumn({ id, title, cards, children, onMoveCard }: RoadmapColumnType & { children?: React.ReactNode; onMoveCard: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; }) {
+  const { user } = useUser();
+  const isFounder = user?.email === 'gg.el0ai.com@gmail.com';
+  
+  return (
+      <div className="flex flex-col gap-4">
+        <div className="px-3 py-2">
+          <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+        </div>
+        <div className="flex-grow space-y-4 rounded-lg p-3 bg-muted/50 min-h-[200px]">
+            {children}
+            {id === 'ideas' && isFounder && cards ? (
+                <SortableContext id={id} items={cards.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                    {cards.map(card => <SortableKanbanCard key={card.id} card={card} columnId={id} onMove={onMoveCard} />)}
+                </SortableContext>
+            ) : cards && cards.length > 0 ? (
+              cards.map(card => <KanbanCard key={card.id} card={card} columnId={id} onMove={onMoveCard} />)
+            ) : (
+              !children && (
+                 <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+                    <p>No cards in this column.</p>
+                </div>
+              )
+            )}
+        </div>
+      </div>
+  );
+}
+
 
 export default function RoadmapPage() {
   const { user } = useUser();
@@ -310,27 +337,16 @@ export default function RoadmapPage() {
     }
 
     const sourceColumnIndex = columns.findIndex(c => c.id === oldColumnId);
-    if (sourceColumnIndex === -1) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Source column not found.' });
-        return;
-    }
-
-    const sourceColumn = columns[sourceColumnIndex];
-    const cardToMove = sourceColumn.cards.find(c => c.id === cardId);
-
-    if (!cardToMove) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Card not found.' });
-        return;
-    }
+    if (sourceColumnIndex === -1) return;
     
     const targetColumnIndex = direction === 'right' ? sourceColumnIndex + 1 : sourceColumnIndex - 1;
+    if (targetColumnIndex < 0 || targetColumnIndex >= columns.length) return;
 
-    if (targetColumnIndex < 0 || targetColumnIndex >= columns.length) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Cannot move card further.' });
-        return;
-    }
-    
+    const sourceColumn = columns[sourceColumnIndex];
     const targetColumn = columns[targetColumnIndex];
+    const cardToMove = sourceColumn.cards.find(c => c.id === cardId);
+
+    if (!cardToMove) return;
     
     // Optimistic UI update
     setColumns(prev => {
@@ -349,10 +365,42 @@ export default function RoadmapPage() {
     const result = await updateRoadmapCardColumn(cardId, sourceColumn.id, targetColumn.id);
     if (result.error) {
         toast({ variant: 'destructive', title: 'Update Failed', description: result.error });
-        // The UI will be reverted automatically by the Firestore hook on the next data snapshot
     } else {
         toast({ title: 'Card Moved!', description: 'Roadmap has been updated.' });
     }
+  };
+  
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+    
+    // This logic only handles reordering within the 'ideas' column
+    if (over.id !== 'ideas') return;
+    
+    setColumns(prevColumns => {
+      const ideasColumn = prevColumns.find(col => col.id === 'ideas');
+      if (!ideasColumn) return prevColumns;
+
+      const oldIndex = ideasColumn.cards.findIndex(card => card.id === active.id);
+      const newIndex = ideasColumn.cards.findIndex(card => card.id === over.id || (Array.isArray(over.data.current?.sortable?.items) && over.data.current.sortable.items.includes(card.id)));
+
+      if (oldIndex === -1 || newIndex === -1) return prevColumns;
+      
+      const reorderedCards = arrayMove(ideasColumn.cards, oldIndex, newIndex);
+      
+      // Update the Firestore database
+      updateRoadmapCardOrder('ideas', reorderedCards).then(result => {
+        if (result.error) {
+          toast({ variant: 'destructive', title: 'Reorder Failed', description: result.error });
+          // The UI will revert on the next Firestore snapshot if the update fails.
+        }
+      });
+      
+      return prevColumns.map(col => 
+        col.id === 'ideas' ? { ...col, cards: reorderedCards } : col
+      );
+    });
   };
 
   return (
@@ -381,15 +429,21 @@ export default function RoadmapPage() {
             </CardContent>
         </Card>
       )}
-
-      {!isLoading && !error && columns.length > 0 && (
-         <div className="grid grid-cols-1 gap-8">
-             {columns.map(col => (
-                 <KanbanColumn key={col.id} {...col} onMoveCard={handleMoveCard}>
-                     {col.id === 'ideas' && isFounder && <AddIdeaForm />}
-                 </KanbanColumn>
-             ))}
-         </div>
+      
+      {!isLoading && !error && (
+         <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <div className="grid grid-cols-1 gap-8">
+                {columns && columns.length > 0 ? (
+                    columns.map(col => (
+                    <KanbanColumn key={col.id} {...col} onMoveCard={handleMoveCard}>
+                        {col.id === 'ideas' && isFounder && <AddIdeaForm />}
+                    </KanbanColumn>
+                    ))
+                ) : (
+                    <p className="text-center text-muted-foreground">Could not load roadmap columns.</p>
+                )}
+            </div>
+         </DndContext>
       )}
     </main>
   );

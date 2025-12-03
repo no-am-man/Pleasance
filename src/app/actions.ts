@@ -612,6 +612,31 @@ export async function deleteRoadmapCard(cardId: string, columnId: string) {
     }
 }
 
+export async function updateRoadmapCardOrder(columnId: string, orderedCards: z.infer<typeof RoadmapCardSchema>[]) {
+    try {
+        if (columnId !== 'ideas') {
+            return { error: "Reordering is only allowed in the 'Ideas' column." };
+        }
+        
+        const adminApp = initializeAdminApp();
+        const firestore = getFirestore(adminApp);
+
+        const columnRef = doc(firestore, 'roadmap', columnId);
+
+        await updateDoc(columnRef, {
+            cards: orderedCards
+        });
+
+        return { success: true };
+
+    } catch (e) {
+        console.error('Update Roadmap Card Order Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Failed to reorder cards: ${message}` };
+    }
+}
+
+
 const RefineCardSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters long."),
   description: z.string().optional(),
