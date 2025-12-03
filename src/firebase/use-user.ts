@@ -1,12 +1,12 @@
 'use client';
 
 import { useContext } from 'react';
-import { FirebaseContext, type FirebaseContextState } from './client-provider';
+import { AuthContext, type AuthContextState } from './auth-provider';
 
 export function useUser() {
-  const context = useContext(FirebaseContext);
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useUser must be used within a FirebaseClientProvider');
+    throw new Error('useUser must be used within an AuthProvider');
   }
   return { user: context.user, isUserLoading: context.isUserLoading };
 }

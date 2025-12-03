@@ -1,37 +1,19 @@
-// src/firebase/client-provider.tsx
+// src/firebase/auth-provider.tsx
 'use client';
 
 import React, { createContext, useState, useEffect, useMemo, type ReactNode } from 'react';
 import { type User, onAuthStateChanged } from 'firebase/auth';
+import { auth } from './config'; // Import the stable auth instance
 import { LoaderCircle } from 'lucide-react';
-import { auth, firebaseApp, firestore, storage } from './config';
-import { type FirebaseApp } from 'firebase/app';
-import { type Auth } from 'firebase/auth';
-import { type Firestore } from 'firebase/firestore';
-import { type FirebaseStorage } from 'firebase/storage';
 
-// Define a context for all Firebase services
-export interface FirebaseContextState {
-  app: FirebaseApp;
-  auth: Auth;
-  firestore: Firestore;
-  storage: FirebaseStorage;
+export interface AuthContextState {
   user: User | null;
   isUserLoading: boolean;
 }
 
-// React Context for all of Firebase
-export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
+export const AuthContext = createContext<AuthContextState | undefined>(undefined);
 
-// --- Create the service instances ONCE, from the config file ---
-const firebaseServices = {
-    app: firebaseApp,
-    auth: auth,
-    firestore: firestore,
-    storage: storage,
-};
-
-export function FirebaseClientProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isUserLoading, setIsUserLoading] = useState(true);
 
@@ -62,9 +44,8 @@ export function FirebaseClientProvider({ children }: { children: ReactNode }) {
 
     return () => unsubscribe();
   }, []);
-  
+
   const contextValue = useMemo(() => ({
-    ...firebaseServices,
     user,
     isUserLoading,
   }), [user, isUserLoading]);
@@ -78,8 +59,8 @@ export function FirebaseClientProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <FirebaseContext.Provider value={contextValue}>
+    <AuthContext.Provider value={contextValue}>
       {children}
-    </FirebaseContext.Provider>
+    </AuthContext.Provider>
   );
 }

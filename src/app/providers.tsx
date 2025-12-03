@@ -1,7 +1,8 @@
 
 'use client';
 
-import { FirebaseClientProvider, FirebaseErrorListener } from '@/firebase';
+import { AuthProvider } from '@/firebase/auth-provider';
+import { FirebaseErrorListener } from '@/firebase';
 import { Header } from '@/components/header';
 import { Toaster } from '@/components/ui/toaster';
 import Link from 'next/link';
@@ -15,7 +16,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <FirebaseClientProvider>
+    <AuthProvider>
       <FirebaseErrorListener />
       <Header />
       <main className="flex-grow pt-16 pb-40">
@@ -55,6 +56,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
         </div>
       </footer>
       <Toaster />
-    </FirebaseClientProvider>
+    </AuthProvider>
   );
 }

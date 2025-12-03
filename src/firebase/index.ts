@@ -4,14 +4,15 @@ import { useMemo, type DependencyList } from 'react';
 // Export config and services directly for use in hooks and components
 export { firebaseApp, auth, firestore, storage, database } from './config';
 
-// Export provider and user-related hooks
-export * from './client-provider';
+// Export non-blocking update helpers
 export * from './non-blocking-updates';
 export * from './non-blocking-login';
+
+// Export error handling utilities
 export * from './errors';
 export * from './error-emitter';
 
-// Explicitly export the listener and hook
+// Explicitly export the listener and user hook
 export { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 export { useUser } from './use-user';
 
