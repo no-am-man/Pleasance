@@ -2,7 +2,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
+import { useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { firestore } from '@/firebase/config';
 import { doc, collection, query, where, orderBy, updateDoc, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -176,9 +176,9 @@ function SaveToTreasuryForm({ creation }: { creation: Creation }) {
                             name="value"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Creation Value (USD)</FormLabel>
+                                    <FormLabel>Creation Value (satoshis)</FormLabel>
                                     <FormControl>
-                                        <Input type="number" placeholder="100.00" {...field} />
+                                        <Input type="number" placeholder="10000" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -233,14 +233,22 @@ export default function CommunityWorkshopPage() {
         if (!communityId || !firestore) return;
         setIsCreationsLoading(true);
         const workshopCreationsQuery = query(collection(firestore, `communities/${communityId}/creations`), where('status', '==', 'in-workshop'));
-        const unsubscribe = onSnapshot(workshopCreationsQuery, (snapshot) => {
-            const creationsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Creation));
-            setCreations(creationsData);
-            setIsCreationsLoading(false);
-        }, (err) => {
-            setCreationsError(err);
-            setIsCreationsLoading(false);
-        });
+        const unsubscribe = onSnapshot(workshopCreationsQuery, 
+            (snapshot) => {
+                const creationsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Creation));
+                setCreations(creationsData);
+                setIsCreationsLoading(false);
+            }, 
+            (err) => {
+                const permissionError = new FirestorePermissionError({
+                    path: `communities/${communityId}/creations`,
+                    operation: 'list',
+                });
+                errorEmitter.emit('permission-error', permissionError);
+                setCreationsError(err);
+                setIsCreationsLoading(false);
+            }
+        );
         return () => unsubscribe();
     }, [communityId]);
 
