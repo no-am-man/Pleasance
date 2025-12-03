@@ -66,7 +66,7 @@ const KanbanColumn = ({ title, cards }: { title: string, cards: RoadmapCardType[
 );
 
 export default function RoadmapPage() {
-  const roadmapQuery = useMemo(() => query(collection(firestore, 'roadmap'), orderBy('id')), []);
+  const roadmapQuery = useMemo(() => query(collection(firestore, 'roadmap')), []);
   const [columns, isLoading, error] = useCollectionData<RoadmapColumnType>(roadmapQuery);
 
   const orderedColumns = useMemo(() => {

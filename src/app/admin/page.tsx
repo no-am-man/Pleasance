@@ -120,7 +120,7 @@ function AdminDashboard() {
                            <Database /> Seed Roadmap Data
                         </CardTitle>
                         <CardDescription>
-                            This action will populate the Realtime Database with the initial set of cards for the Kanban roadmap. Run this once to get started.
+                            This action will populate the Firestore database with the initial set of cards for the Kanban roadmap. Run this once to get the roadmap to display its data.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
