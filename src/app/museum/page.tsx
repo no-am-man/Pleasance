@@ -1,4 +1,3 @@
-
 // src/app/museum/page.tsx
 'use client';
 
