@@ -1,7 +1,7 @@
 // src/components/federation-diagram.tsx
 'use client';
 
-import { Beaker, BookOpen, Banknote, Users, User, Warehouse, Info, Bot, DollarSign, Bug } from 'lucide-react';
+import { Beaker, BookOpen, Banknote, Users, User, Warehouse, Info, Bot, Bug } from 'lucide-react';
 import React from 'react';
 import { KanbanIcon } from './icons/kanban-icon';
 
