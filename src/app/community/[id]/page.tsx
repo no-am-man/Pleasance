@@ -388,7 +388,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
     }
 
     return (
-        <Collapsible asChild>
+        <Collapsible>
             <Card className={cn("flex flex-col", isUpdating && "opacity-50")}>
                 <div>
                     <CardHeader className="flex flex-row items-start gap-4 pb-4">
@@ -460,6 +460,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                    <CommentThread message={message} comments={comments} isLoading={isLoadingComments} canManage={canManage || user?.uid === message.userId} />
                 </CollapsibleContent>
             </Card>
+        </Collapsible>
         )
     }
 }
