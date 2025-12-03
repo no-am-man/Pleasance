@@ -107,7 +107,7 @@ export default function CommunityWikiPage() {
         }
     };
     
-    const pageTitle = isEditing ? (isNewPage ? 'Creating New Page' : `Editing: ${page?.title}`) : page?.title;
+    const pageTitle = isEditing ? (isNewPage ? 'Creating New Page' : `Editing: ${page?.title}`) : (page?.title || title);
 
     if (isLoading || isCommunityLoading) {
         return <div className="flex justify-center py-12"><LoaderCircle className="w-12 h-12 animate-spin text-primary" /></div>;
@@ -188,14 +188,14 @@ export default function CommunityWikiPage() {
                     ) : (
                         <div
                             className="prose dark:prose-invert max-w-none"
-                            dangerouslySetInnerHTML={{ __html: marked(content || page?.content || '') }}
+                            dangerouslySetInnerHTML={{ __html: marked(page?.content || content || '') }}
                         />
                     )}
                 </CardContent>
                 {isEditing && (
                     <CardFooter className="flex justify-end gap-2">
                         <Button variant="ghost" onClick={() => setIsEditing(false)} disabled={isSaving}>Cancel</Button>
-                        <Button onClick={handleSave} disabled={isSaving}>
+                        <Button onClick={handleSave} disabled={isSaving || !title.trim()}>
                             {isSaving ? <LoaderCircle className="mr-2 animate-spin" /> : <Save className="mr-2" />}
                             Save Page
                         </Button>
