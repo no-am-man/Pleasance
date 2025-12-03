@@ -51,7 +51,7 @@ export function FirebaseClientProvider({ children }: { children: ReactNode }) {
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, []);
+  }, [auth]); // CRITICAL FIX: Added 'auth' to the dependency array
 
   const authContextValue = useMemo(() => ({
     user,
