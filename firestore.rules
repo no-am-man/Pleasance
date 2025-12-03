@@ -191,8 +191,8 @@ service cloud.firestore {
      * @allow Publicly readable. Users can only write to their own presence document.
      */
     match /presence/{userId} {
-        allow read: if true;
-        allow write: if isOwner(userId);
+      allow list, get: if true;
+      allow write: if isOwner(userId);
     }
 
     /**
