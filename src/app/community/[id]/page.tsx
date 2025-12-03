@@ -25,6 +25,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import Image from 'next/image';
 import { getAiChatResponse } from '@/app/actions';
 import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
+import { type ChatHistory } from 'genkit';
+
 
 type Member = {
   name: string;
@@ -462,7 +464,6 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
             </Card>
         </Collapsible>
         )
-    }
 }
 
 function Network({ communityId, isOwner, allMembers }: { communityId: string; isOwner: boolean, allMembers: Member[] }) {
@@ -483,11 +484,11 @@ function Network({ communityId, isOwner, allMembers }: { communityId: string; is
         const aiMemberToRespond = aiMembers[0];
 
         // Get chat history for context, ensuring oldest are first
-        const chatHistory = (messages || [])
+        const chatHistory: ChatHistory = (messages || [])
             .slice(0, 10)
             .reverse() 
             .map(msg => ({
-                role: msg.userId.startsWith('ai_') ? 'model' : 'user' as 'user' | 'model',
+                role: msg.userName === aiMemberToRespond.name ? 'model' : 'user' as 'user' | 'model',
                 content: [{ text: msg.text || '' }],
             }));
             
