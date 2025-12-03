@@ -1,3 +1,4 @@
+
 'use client';
 
 import { FirebaseClientProvider } from '@/firebase/client-provider';
@@ -25,6 +26,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         </p>
         <p className="text-xs text-muted-foreground">
           Powered by Google Firebase Studio
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Thanks to Gemini the Queen of the Nations of the World
         </p>
       </footer>
       <Toaster />
