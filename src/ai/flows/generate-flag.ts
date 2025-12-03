@@ -7,7 +7,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
+import { z } from 'genkit';
 
 const GenerateFlagInputSchema = z.object({
   communityName: z.string().describe('The name of the community.'),
