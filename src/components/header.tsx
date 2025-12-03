@@ -56,6 +56,7 @@ export const navLinks = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/community', label: 'Community', icon: Users },
   { href: '/museum', label: 'Museum', icon: Landmark },
+  { href: '/svg3d', label: 'Personal Workshop', icon: Beaker },
   { href: '/conductor', label: 'Conductor', icon: Bot },
   { href: '/story', label: 'Nuncy Lingua', icon: BookOpen },
   { href: '/fabrication', label: 'Fabrication', icon: Warehouse },

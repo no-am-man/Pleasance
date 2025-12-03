@@ -208,6 +208,24 @@ export async function generateSvg3d(values: z.infer<typeof generateSvg3dSchema>)
             return { error: 'The AI could not generate any pixels for this prompt.' };
         }
         
+        // Don't save to Firestore if it's the personal workshop
+        if (validatedFields.data.communityId === "personal-workshop") {
+             return { 
+                success: true,
+                creation: {
+                    id: 'temp-' + Date.now(),
+                    creatorId: validatedFields.data.creatorId,
+                    creatorName: validatedFields.data.creatorName,
+                    creatorAvatarUrl: validatedFields.data.creatorAvatarUrl || '',
+                    prompt: validatedFields.data.prompt,
+                    createdAt: new Date().toISOString(),
+                    pixels: result.pixels,
+                    status: 'in-workshop'
+                }
+            };
+        }
+
+
         // 2. Save the result as a new Creation document in the community's subcollection
         const adminApp = initializeAdminApp();
         const firestore = getFirestore(adminApp);

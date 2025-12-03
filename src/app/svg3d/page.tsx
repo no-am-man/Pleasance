@@ -12,13 +12,15 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { LoaderCircle, Sparkles, Save, Beaker } from 'lucide-react';
-import { generateSvg3d, saveSvgAsset } from '@/app/actions';
+import { generateSvg3d } from '@/app/actions';
 import { GenerateSvg3dInputSchema, type ColorPixel } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Svg3dCube } from '@/components/icons/svg3d-cube';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { saveSvgAsset } from '../actions';
+
 
 const Svg3dSchema = GenerateSvg3dInputSchema;
 
@@ -120,7 +122,7 @@ function SaveToTreasuryForm({ pixels, prompt }: { pixels: ColorPixel[], prompt: 
 }
 
 
-export default function Svg3dPage() {
+export default function PersonalWorkshopPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pixels, setPixels] = useState<ColorPixel[] | null>(null);
@@ -171,17 +173,12 @@ export default function Svg3dPage() {
     setError(null);
     setPixels(null);
 
-    if (!user) {
-        toast({ variant: 'destructive', title: 'Login Required', description: 'You must be logged in to use the workshop.' });
-        setIsLoading(false);
-        return;
-    }
-
     try {
+      // The user doesn't need to be logged in to generate, so we pass dummy data for creator info.
       const result = await generateSvg3d({
           ...data,
-          creatorId: user.uid,
-          creatorName: user.displayName || 'Anonymous',
+          creatorId: 'public-user',
+          creatorName: 'Anonymous',
           communityId: "personal-workshop",
       });
 
@@ -204,7 +201,7 @@ export default function Svg3dPage() {
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
           <Beaker className="w-10 h-10" /> Personal Workshop
         </h1>
-        <p className="text-lg text-muted-foreground mt-2">A private space to experiment with generative AI tools.</p>
+        <p className="text-lg text-muted-foreground mt-2">A public space to experiment with generative AI tools.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
