@@ -184,6 +184,15 @@ service cloud.firestore {
         allow update: if isOwner(userId) && isImmutableProfileIds();
         allow delete: if isOwner(userId);
     }
+    
+    /**
+     * @description Stores user presence information for the presence bar.
+     * @path /presence
+     * @allow Publicly listable for all signed-in users.
+     */
+    match /presence {
+      allow list: if isSignedIn();
+    }
 
     /**
      * @description Stores user presence information for the presence bar.
@@ -191,7 +200,7 @@ service cloud.firestore {
      * @allow Publicly readable. Users can only write to their own presence document.
      */
     match /presence/{userId} {
-      allow list, get: if true;
+      allow get: if isSignedIn();
       allow write: if isOwner(userId);
     }
 
