@@ -1052,4 +1052,51 @@ export async function seedCommunityWikiData(values: z.infer<typeof seedCommunity
 }
 
 
+export async function updateCommunityRoadmapCardColumn(
+  communityId: string,
+  cardId: string,
+  oldColumnId: string,
+  newColumnId: string
+) {
+  try {
+    const adminApp = initializeAdminApp();
+    const firestore = getFirestore(adminApp);
+
+    const oldColumnRef = firestore.doc(`communities/${communityId}/roadmap/${oldColumnId}`);
+    const newColumnRef = firestore.doc(`communities/${communityId}/roadmap/${newColumnId}`);
+
+    const oldColumnSnap = await oldColumnRef.get();
+
+    if (!oldColumnSnap.exists) {
+      throw new Error(`Source column "${oldColumnId}" not found.`);
+    }
+
+    const oldColumnData = oldColumnSnap.data() as z.infer<typeof RoadmapColumnSchema>;
+    const cardToMove = oldColumnData.cards.find(c => c.id === cardId);
+
+    if (!cardToMove) {
+      throw new Error(`Card with ID "${cardId}" not found in column "${oldColumnId}".`);
+    }
+
+    const batch = firestore.batch();
+
+    batch.update(oldColumnRef, {
+      cards: FieldValue.arrayRemove(cardToMove)
+    });
+    batch.update(newColumnRef, {
+      cards: FieldValue.arrayUnion(cardToMove)
+    });
+
+    await batch.commit();
+
+    return { success: true };
+
+  } catch (e) {
+    console.error('Update Community Roadmap Card Error:', e);
+    const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+    return { error: `Failed to move card: ${message}` };
+  }
+}
+    
+
     

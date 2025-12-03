@@ -1,3 +1,4 @@
+
 // src/app/community/[id]/roadmap/page.tsx
 'use client';
 
@@ -8,10 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { firestore } from '@/firebase/config';
-import { collection, query, doc, getDoc, where, getDocs } from 'firebase/firestore';
+import { collection, query, doc, getDoc, where, getDocs, updateDoc, FieldValue, arrayRemove, arrayUnion } from 'firebase/firestore';
 import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType, CommunityProfile } from '@/lib/types';
 import { GripVertical, LoaderCircle, PlusCircle, Trash2, Sparkles, ArrowLeft, ArrowRight, UserPlus, Check, Database } from 'lucide-react';
-import { addRoadmapCard, deleteRoadmapCard, refineCardDescription, updateRoadmapCardAssignees, updateRoadmapCardColumn, updateRoadmapCardOrder, generateRoadmapIdeaAction, seedCommunityRoadmapData } from '@/app/actions';
+import { addRoadmapCard, deleteRoadmapCard, refineCardDescription, updateRoadmapCardAssignees, updateRoadmapCardColumn, updateRoadmapCardOrder, generateRoadmapIdeaAction, seedCommunityRoadmapData, updateCommunityRoadmapCardColumn } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -42,7 +43,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 
-function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, isOwner, dragHandleProps }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; allProfiles: CommunityProfile[]; onUpdateAssignees: (cardId: string, assigneeName: string, shouldAssign: boolean) => void; isOwner: boolean; dragHandleProps?: {listeners: SyntheticListenerMap, attributes: DraggableAttributes} }) {
+function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, isOwner, dragHandleProps, onDelete }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; allProfiles: CommunityProfile[]; onUpdateAssignees: (cardId: string, assigneeName: string, shouldAssign: boolean) => void; isOwner: boolean; dragHandleProps?: {listeners: SyntheticListenerMap, attributes: DraggableAttributes}, onDelete: (cardId: string, columnId: string) => void }) {
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
   
@@ -54,19 +55,8 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, is
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    const result = await deleteRoadmapCard(card.id, columnId);
-    if (result.error) {
-        toast({
-            variant: 'destructive',
-            title: 'Error deleting idea',
-            description: result.error,
-        });
-    } else {
-        toast({
-            title: 'Idea Removed',
-            description: 'The idea has been removed from the board.',
-        });
-    }
+    onDelete(card.id, columnId);
+    // No need for await/toast here as the parent component will handle UI updates and notifications.
   };
   
   const stopPropagation = (e: React.MouseEvent | React.FocusEvent) => e.stopPropagation();
@@ -186,7 +176,7 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, is
   );
 }
 
-function SortableKanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, isOwner }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; allProfiles: CommunityProfile[]; onUpdateAssignees: (cardId: string, assigneeName: string, shouldAssign: boolean) => void; isOwner: boolean }) {
+function SortableKanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, isOwner, onDelete }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; allProfiles: CommunityProfile[]; onUpdateAssignees: (cardId: string, assigneeName: string, shouldAssign: boolean) => void; isOwner: boolean; onDelete: (cardId: string, columnId: string) => void; }) {
     const isDraggable = columnId === 'ideas' && isOwner;
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ 
         id: card.id,
@@ -209,12 +199,13 @@ function SortableKanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssig
                 onUpdateAssignees={onUpdateAssignees}
                 isOwner={isOwner}
                 dragHandleProps={isDraggable ? {listeners, attributes} : undefined}
+                onDelete={onDelete}
             />
         </div>
     )
 }
 
-function KanbanColumn({ id, title, cards, children, onMoveCard, allProfiles, onUpdateAssignees, isOwner }: RoadmapColumnType & { children?: React.ReactNode; onMoveCard: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; allProfiles: CommunityProfile[]; onUpdateAssignees: (cardId: string, columnId: string, assigneeName: string, shouldAssign: boolean) => void; isOwner: boolean }) {
+function KanbanColumn({ id, title, cards, children, onMoveCard, allProfiles, onUpdateAssignees, isOwner, onDeleteCard }: { id: string; title: string; cards?: RoadmapCardType[]; children?: React.ReactNode; onMoveCard: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; allProfiles: CommunityProfile[]; onUpdateAssignees: (cardId: string, columnId: string, assigneeName: string, shouldAssign: boolean) => void; isOwner: boolean; onDeleteCard: (cardId: string, columnId: string) => void; }) {
   
   const columnDescriptions: { [key: string]: string } = {
     ideas: "A seed of inspiration; a potential future for the community.",
@@ -233,7 +224,7 @@ function KanbanColumn({ id, title, cards, children, onMoveCard, allProfiles, onU
             {children}
             {cards ? (
                 <SortableContext id={id} items={cards.map(c => c.id)} strategy={verticalListSortingStrategy}>
-                    {cards.map(card => <SortableKanbanCard key={card.id} card={card} columnId={id} onMove={onMoveCard} allProfiles={allProfiles} onUpdateAssignees={(cardId, assignee, shouldAssign) => onUpdateAssignees(cardId, id, assignee, shouldAssign)} isOwner={isOwner} />)}
+                    {cards.map(card => <SortableKanbanCard key={card.id} card={card} columnId={id} onMove={onMoveCard} allProfiles={allProfiles} onUpdateAssignees={(cardId, assignee, shouldAssign) => onUpdateAssignees(cardId, id, assignee, shouldAssign)} isOwner={isOwner} onDelete={onDeleteCard} />)}
                 </SortableContext>
             ) : (
               !children && (
@@ -263,6 +254,26 @@ export default function CommunityRoadmapPage() {
   const [error, setError] = useState<Error | null>(null);
 
   const [memberProfiles, setMemberProfiles] = useState<CommunityProfile[]>([]);
+  
+  const isOwner = useMemo(() => user?.uid === community?.ownerId, [user, community]);
+
+  const fetchRoadmap = async () => {
+      if (!communityId || !firestore) {
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
+      try {
+          const q = query(collection(firestore, `communities/${communityId}/roadmap`));
+          const snapshot = await getDocs(q);
+          const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RoadmapColumnType));
+          setColumnsData(data);
+      } catch (e) {
+          setError(e as Error);
+      } finally {
+          setIsLoading(false);
+      }
+  };
 
   useEffect(() => {
     if (!communityId || !firestore) {
@@ -273,64 +284,34 @@ export default function CommunityRoadmapPage() {
         setIsCommunityLoading(true);
         try {
             const communityDoc = await getDoc(doc(firestore, 'communities', communityId));
-            setCommunity(communityDoc.data());
+            const data = communityDoc.data();
+            setCommunity(data);
+
+            if (data?.members) {
+                const memberUserIds = data.members
+                    .filter((m: any) => m.type === 'human' && m.userId)
+                    .map((m: any) => m.userId);
+
+                if (memberUserIds.length > 0) {
+                    const profilesQuery = query(collection(firestore, 'community-profiles'), where('userId', 'in', memberUserIds));
+                    const profilesSnapshot = await getDocs(profilesQuery);
+                    const profiles = profilesSnapshot.docs.map(doc => doc.data() as CommunityProfile);
+                    setMemberProfiles(profiles);
+                } else {
+                    setMemberProfiles([]);
+                }
+            }
         } catch(e) {
-            // silent error
+            setError(e as Error);
         } finally {
             setIsCommunityLoading(false);
         }
     };
     fetchCommunity();
-  }, [communityId]);
-  
-  const isOwner = user?.uid === community?.ownerId;
-
-  useEffect(() => {
-    if (!communityId || !firestore) {
-        setIsLoading(false);
-        return;
-    }
-    const fetchRoadmap = async () => {
-        setIsLoading(true);
-        try {
-            const q = query(collection(firestore, `communities/${communityId}/roadmap`));
-            const snapshot = await getDocs(q);
-            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RoadmapColumnType));
-            setColumnsData(data);
-        } catch (e) {
-            setError(e as Error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
     fetchRoadmap();
   }, [communityId]);
-
-  const memberUserIds = useMemo(() => {
-    if (!community?.members) return [];
-    return community.members
-        .filter((m: any) => m.type === 'human' && m.userId)
-        .map((m: any) => m.userId);
-  }, [community?.members]);
-
-  useEffect(() => {
-    if (!firestore || !memberUserIds || memberUserIds.length === 0) {
-        setMemberProfiles([]);
-        return;
-    };
-    const fetchProfiles = async () => {
-        try {
-            const q = query(collection(firestore, 'community-profiles'), where('userId', 'in', memberUserIds));
-            const snapshot = await getDocs(q);
-            const profiles = snapshot.docs.map(doc => doc.data() as CommunityProfile);
-            setMemberProfiles(profiles);
-        } catch(e) {
-            // silent error
-        }
-    }
-    fetchProfiles();
-  }, [memberUserIds]);
-
+  
+  
   const [columns, setColumns] = useState<RoadmapColumnType[]>([]);
   const columnOrder = useMemo(() => ['ideas', 'nextUp', 'inProgress', 'alive'], []);
 
@@ -343,25 +324,100 @@ export default function CommunityRoadmapPage() {
 
 
   const handleMoveCard = async (cardId: string, oldColumnId: string, direction: 'left' | 'right') => {
-    console.log("Moving card - not implemented for community yet");
+    if (!isOwner) return;
+
+    const sourceColumnIndex = columns.findIndex(c => c.id === oldColumnId);
+    if (sourceColumnIndex === -1) return;
+    
+    const targetColumnIndex = direction === 'right' ? sourceColumnIndex + 1 : sourceColumnIndex - 1;
+    if (targetColumnIndex < 0 || targetColumnIndex >= columns.length) return;
+
+    const sourceColumn = columns[sourceColumnIndex];
+    const targetColumn = columns[targetColumnIndex];
+    const cardToMove = sourceColumn.cards.find(c => c.id === cardId);
+
+    if (!cardToMove) return;
+    
+    setColumns(prev => prev.map(c => {
+        if (c.id === sourceColumn.id) return { ...c, cards: c.cards.filter(card => card.id !== cardId) };
+        if (c.id === targetColumn.id) return { ...c, cards: [cardToMove, ...c.cards] };
+        return c;
+    }));
+
+    const result = await updateCommunityRoadmapCardColumn(communityId, cardId, sourceColumn.id, targetColumn.id);
+    if (result.error) {
+        toast({ variant: 'destructive', title: 'Update Failed', description: result.error });
+        setColumns(columnsData ? [...columnsData].sort((a, b) => columnOrder.indexOf(a.id) - columnOrder.indexOf(b.id)) : []);
+    } else {
+        toast({ title: 'Card Moved!' });
+    }
   };
   
   const handleDragEnd = async (event: DragEndEvent) => {
-    console.log("Dragging card - not implemented for community yet");
+    if (!isOwner) return;
+    const { active, over } = event;
+    if (!over || active.id === over.id || active.data.current?.sortable.containerId !== 'ideas') return;
+    
+    setColumns(prev => {
+        const ideasCol = prev.find(c => c.id === 'ideas');
+        if (!ideasCol) return prev;
+        const oldIndex = ideasCol.cards.findIndex(card => card.id === active.id);
+        const newIndex = ideasCol.cards.findIndex(card => card.id === over.id);
+        const reorderedCards = arrayMove(ideasCol.cards, oldIndex, newIndex);
+        
+        // Persist order change to Firestore
+        const columnRef = doc(firestore, `communities/${communityId}/roadmap/ideas`);
+        updateDoc(columnRef, { cards: reorderedCards });
+
+        return prev.map(c => c.id === 'ideas' ? { ...c, cards: reorderedCards } : c);
+    });
   };
 
   const handleUpdateAssignees = async (cardId: string, columnId: string, assigneeName: string, shouldAssign: boolean) => {
-     console.log("Updating assignees - not implemented for community yet");
+    if (!isOwner || !firestore) return;
+    const columnRef = doc(firestore, `communities/${communityId}/roadmap/${columnId}`);
+    const columnSnap = await getDoc(columnRef);
+    if (!columnSnap.exists()) return;
+
+    const columnData = columnSnap.data() as RoadmapColumnType;
+    const cardToUpdate = columnData.cards.find(c => c.id === cardId);
+    if (!cardToUpdate) return;
+    
+    const newAssignees = shouldAssign
+      ? [...new Set([...(cardToUpdate.assignees || []), assigneeName])]
+      : (cardToUpdate.assignees || []).filter(name => name !== assigneeName);
+
+    const updatedCards = columnData.cards.map(c => c.id === cardId ? { ...c, assignees: newAssignees } : c);
+
+    await updateDoc(columnRef, { cards: updatedCards });
+    setColumns(prev => prev.map(c => c.id === columnId ? { ...c, cards: updatedCards } : c));
+    toast({ title: shouldAssign ? 'User Assigned' : 'User Unassigned' });
   }
+
+  const handleDeleteCard = async (cardId: string, columnId: string) => {
+    if (!isOwner || !firestore) return;
+    const columnRef = doc(firestore, `communities/${communityId}/roadmap/${columnId}`);
+    const columnSnap = await getDoc(columnRef);
+    if (!columnSnap.exists()) return;
+    
+    const columnData = columnSnap.data() as RoadmapColumnType;
+    const cardToDelete = columnData.cards.find(c => c.id === cardId);
+    if (!cardToDelete) return;
+
+    await updateDoc(columnRef, { cards: arrayRemove(cardToDelete) });
+    setColumns(prev => prev.map(c => c.id === columnId ? { ...c, cards: c.cards.filter(card => card.id !== cardId) } : c));
+    toast({ title: 'Card Deleted' });
+  };
   
   const handleSeedData = async () => {
     if (!user || !communityId) return;
     setIsSeeding(true);
-    const result = await seedCommunityRoadmapData({ communityId, userId: user.uid, userName: user.displayName || 'Owner' });
+    const result = await seedCommunityRoadmapData({ communityId });
     if (result.error) {
       toast({ variant: 'destructive', title: 'Seeding Failed', description: result.error });
     } else {
       toast({ title: 'Roadmap Seeded!', description: 'Your community roadmap is ready.' });
+      fetchRoadmap(); // re-fetch data after seeding
     }
     setIsSeeding(false);
   }
@@ -415,11 +471,14 @@ export default function CommunityRoadmapPage() {
                     columns.map(col => (
                     <KanbanColumn 
                         key={col.id}
-                        {...col}
+                        id={col.id}
+                        title={col.title}
+                        cards={col.cards}
                         onMoveCard={handleMoveCard}
                         allProfiles={memberProfiles || []}
                         onUpdateAssignees={handleUpdateAssignees}
                         isOwner={isOwner}
+                        onDeleteCard={handleDeleteCard}
                     >
                     </KanbanColumn>
                     ))
@@ -450,3 +509,6 @@ export default function CommunityRoadmapPage() {
     </main>
   );
 }
+
+
+    
