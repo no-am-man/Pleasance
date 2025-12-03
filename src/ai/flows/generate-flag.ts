@@ -57,17 +57,8 @@ const generateFlagFlow = ai.defineFlow(
     outputSchema: GenerateFlagOutputSchema,
   },
   async (input) => {
-    const { output } = await ai.generate({
-        model: googleAI.model('gemini-1.5-flash-latest'),
-        prompt: {
-            text: generateFlagPrompt.prompt,
-            ...input
-        },
-        output: {
-            schema: generateFlagPrompt.output.schema
-        }
-    });
-
+    const { output } = await generateFlagPrompt(input);
+    
     if (!output) {
       throw new Error('AI failed to generate SVG output.');
     }
@@ -78,8 +69,9 @@ const generateFlagFlow = ai.defineFlow(
 
 // 4. Server Action (The main entry point called by the client)
 export async function generateCommunityFlag(values: z.infer<typeof flagActionSchema>) {
+    let adminApp;
     try {
-        const adminApp = initializeAdminApp();
+        adminApp = initializeAdminApp();
         
         const validatedFields = flagActionSchema.safeParse(values);
         if (!validatedFields.success) {
