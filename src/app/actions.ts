@@ -349,6 +349,48 @@ export async function seedRoadmapData() {
     }
 }
 
+const seedCommunityRoadmapSchema = z.object({
+  communityId: z.string(),
+});
+
+export async function seedCommunityRoadmapData(values: z.infer<typeof seedCommunityRoadmapSchema>) {
+    try {
+        const { communityId } = seedCommunityRoadmapSchema.parse(values);
+
+        const adminApp = initializeAdminApp();
+        const firestore = getFirestore(adminApp);
+        const batch = firestore.batch();
+        
+        const collectionRef = firestore.collection('communities').doc(communityId).collection('roadmap');
+
+        const initialData = [
+            { id: 'ideas', title: '💡 Ideas', cards: [
+                { id: 'idea1', title: "Community Welcome Bot", description: "Create an AI agent that greets new members.", tags: ["AI", "Onboarding"] },
+            ]},
+            { id: 'nextUp', title: '🚀 Next Up!', cards: []},
+            { id: 'inProgress', title: '🏗️ In Progress', cards: []},
+            { id: 'alive', title: '✅ Alive', cards: [
+                { id: 'alive1', title: "Establish Community", description: "Create the community and invite the first members.", tags: ["Foundation"], assignees: [] },
+            ]},
+        ];
+
+        initialData.forEach(column => {
+            const docRef = collectionRef.doc(column.id);
+            batch.set(docRef, column);
+        });
+
+        await batch.commit();
+
+        return { success: true, message: 'Community roadmap data seeded successfully.' };
+
+    } catch (e) {
+        console.error('Community Seeding Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Failed to seed community roadmap data: ${message}` };
+    }
+}
+
+
 export async function declareAssetWithFile(formData: FormData) {
     try {
         const adminApp = initializeAdminApp();
@@ -823,6 +865,8 @@ const flagActionSchema = z.object({
 export async function generateCommunityFlagAction(values: z.infer<typeof flagActionSchema>) {
     return generateCommunityFlag(values);
 }
+    
+
     
 
     

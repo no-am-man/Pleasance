@@ -12,8 +12,8 @@ import { firestore } from '@/firebase/config';
 import { collection, query, doc, getDoc } from 'firebase/firestore';
 import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
 import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType, CommunityProfile } from '@/lib/types';
-import { GripVertical, LoaderCircle, PlusCircle, Trash2, Sparkles, ArrowLeft, ArrowRight, UserPlus, Check } from 'lucide-react';
-import { addRoadmapCard, deleteRoadmapCard, refineCardDescription, updateRoadmapCardAssignees, updateRoadmapCardColumn, updateRoadmapCardOrder, generateRoadmapIdeaAction } from '@/app/actions';
+import { GripVertical, LoaderCircle, PlusCircle, Trash2, Sparkles, ArrowLeft, ArrowRight, UserPlus, Check, Database } from 'lucide-react';
+import { addRoadmapCard, deleteRoadmapCard, refineCardDescription, updateRoadmapCardAssignees, updateRoadmapCardColumn, updateRoadmapCardOrder, generateRoadmapIdeaAction, seedCommunityRoadmapData } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useMemoFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -255,6 +255,7 @@ export default function CommunityRoadmapPage() {
   const { toast } = useToast();
   const params = useParams();
   const communityId = params.id as string;
+  const [isSeeding, setIsSeeding] = useState(false);
   
   const communityDocRef = useMemoFirebase(() => communityId ? doc(firestore, 'communities', communityId) : null, [communityId]);
   const [community, isCommunityLoading] = useDocumentData(communityDocRef);
@@ -263,8 +264,20 @@ export default function CommunityRoadmapPage() {
   const roadmapQuery = useMemoFirebase(() => communityId ? query(collection(firestore, `communities/${communityId}/roadmap`)) : null, [communityId]);
   const [columnsData, isLoading, error] = useCollectionData<RoadmapColumnType>(roadmapQuery, { idField: 'id' });
   
-  // Community members can be used for assigning tasks
-  const allProfiles: CommunityProfile[] = community?.members.filter((m: any) => m.type === 'human').map((m: any) => ({ id: m.userId, name: m.name, bio: m.bio, avatarUrl: m.avatarUrl })) || [];
+  const memberProfiles: CommunityProfile[] = useMemo(() => {
+    if (!community?.members) return [];
+    return community.members
+      .filter((m: any) => m.type === 'human')
+      .map((m: any) => ({
+        id: m.userId,
+        name: m.name,
+        bio: m.bio,
+        avatarUrl: m.avatarUrl,
+        // Add other required fields for CommunityProfile, even if empty
+        nativeLanguage: '',
+        learningLanguage: '',
+      }));
+  }, [community?.members]);
 
 
   const [columns, setColumns] = useState<RoadmapColumnType[]>([]);
@@ -291,6 +304,18 @@ export default function CommunityRoadmapPage() {
   const handleUpdateAssignees = async (cardId: string, columnId: string, assigneeName: string, shouldAssign: boolean) => {
     // This action needs to be modified to write to the community subcollection
      console.log("Updating assignees - not implemented for community yet");
+  }
+  
+  const handleSeedData = async () => {
+    if (!communityId) return;
+    setIsSeeding(true);
+    const result = await seedCommunityRoadmapData({ communityId });
+    if (result.error) {
+      toast({ variant: 'destructive', title: 'Seeding Failed', description: result.error });
+    } else {
+      toast({ title: 'Roadmap Seeded!', description: 'Your community roadmap is ready.' });
+    }
+    setIsSeeding(false);
   }
 
   if (isCommunityLoading || isLoading) {
@@ -340,7 +365,7 @@ export default function CommunityRoadmapPage() {
                         key={col.id}
                         {...col}
                         onMoveCard={handleMoveCard}
-                        allProfiles={allProfiles || []}
+                        allProfiles={memberProfiles}
                         onUpdateAssignees={handleUpdateAssignees}
                         isOwner={isOwner}
                     >
@@ -348,7 +373,25 @@ export default function CommunityRoadmapPage() {
                     </KanbanColumn>
                     ))
                 ) : (
-                    <p className="text-center text-muted-foreground col-span-4">This community hasn't created a roadmap yet. The owner can seed one.</p>
+                    <div className="col-span-full">
+                        <Card className="text-center py-12">
+                            <CardHeader>
+                                <KanbanIcon className="mx-auto h-12 w-12 text-muted-foreground" />
+                                <CardTitle>Your Roadmap is Empty</CardTitle>
+                                <CardDescription>Get started by seeding the board with default columns and cards.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {isOwner ? (
+                                    <Button onClick={handleSeedData} disabled={isSeeding}>
+                                        {isSeeding ? <LoaderCircle className="mr-2 animate-spin" /> : <Database className="mr-2"/>}
+                                        Seed Roadmap Data
+                                    </Button>
+                                ) : (
+                                    <p className="text-muted-foreground">The community owner can seed the roadmap to get started.</p>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
                 )}
             </div>
          </DndContext>
@@ -356,3 +399,5 @@ export default function CommunityRoadmapPage() {
     </main>
   );
 }
+
+    
