@@ -51,8 +51,24 @@ Design Constraints:
 - Ensure the output is a raw JSON object containing the SVG string, with no additional text, explanations, or markdown formatting like \`\`\`json.`,
 });
 
+// 3. Dedicated Genkit Flow
+const generateFlagFlow = ai.defineFlow(
+  {
+    name: 'generateFlagFlow',
+    inputSchema: GenerateFlagInputSchema,
+    outputSchema: GenerateFlagOutputSchema,
+  },
+  async (input) => {
+    const { output } = await generateFlagPrompt(input);
+    if (!output) {
+      throw new Error('AI failed to generate a flag SVG.');
+    }
+    return output;
+  }
+);
 
-// 3. Server Action (The main entry point called by the client)
+
+// 4. Server Action (The main entry point called by the client)
 export async function generateCommunityFlag(values: z.infer<typeof flagActionSchema>) {
     
     try {
@@ -74,8 +90,8 @@ export async function generateCommunityFlag(values: z.infer<typeof flagActionSch
             return { error: "Unauthorized: You are not the owner of this community." };
         }
 
-        // Call the Genkit Prompt directly and correctly
-        const { output } = await generateFlagPrompt({ communityName, communityDescription });
+        // Call the dedicated Genkit flow
+        const output = await generateFlagFlow({ communityName, communityDescription });
         
         if (!output || !output.svg) {
             throw new Error('Failed to generate a flag SVG from the AI flow.');
