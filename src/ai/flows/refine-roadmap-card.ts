@@ -26,7 +26,14 @@ export async function refineRoadmapCard(input: RefineCardInput): Promise<RefineC
 }
 
 
-const refineCardPrompt = `You are an expert product manager. Your task is to take a raw idea title and an optional brief description and expand it into a clear, concise, and actionable description for a Kanban card.
+const refineCardPrompt = ai.definePrompt({
+    name: 'refineRoadmapCardPrompt',
+    input: { schema: RefineCardInputSchema },
+    output: { schema: RefineCardOutputSchema },
+    config: {
+        model: "googleai/gemini-pro",
+    },
+    prompt: `You are an expert product manager. Your task is to take a raw idea title and an optional brief description and expand it into a clear, concise, and actionable description for a Kanban card.
 
 The description should be suitable for a public roadmap, providing context for users and developers. Focus on the "what" and the "why".
 
@@ -36,7 +43,8 @@ Existing Description: "{{description}}"
 {{/if}}
 
 Generate a refined description. It should be a single paragraph.
-`;
+`,
+});
 
 
 const refineRoadmapCardFlow = ai.defineFlow(
@@ -46,15 +54,11 @@ const refineRoadmapCardFlow = ai.defineFlow(
     outputSchema: RefineCardOutputSchema,
   },
   async (input) => {
-    const { output } = await ai.generate({
-        model: 'googleai/gemini-pro',
-        prompt: refineCardPrompt,
-        input: input,
-        output: { schema: RefineCardOutputSchema },
-    });
+    const { output } = await refineCardPrompt(input);
     if (!output) {
         throw new Error("The AI failed to generate a refined description.");
     }
     return output;
   }
 );
+
