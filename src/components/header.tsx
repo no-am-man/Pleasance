@@ -42,6 +42,8 @@ import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import useIsMobile from '@/hooks/use-is-mobile';
 import { KanbanIcon } from './icons/kanban-icon';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
+
 
 const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com'; // Founder email check
 
@@ -105,41 +107,66 @@ function UserNav() {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-          <Avatar className="h-9 w-9">
-            <AvatarImage src={user.photoURL || ''} alt={user.displayName || ''} />
-            <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuItem asChild>
-          <Link href="/profile">
-            <UserCircle className="mr-2 h-4 w-4" />
-            <span>My Profile</span>
-          </Link>
-        </DropdownMenuItem>
-        {isFounder && (
-            <DropdownMenuItem asChild>
-                <Link href="/admin">
-                    <Shield className="mr-2 h-4 w-4" />
-                    <span>Admin Panel</span>
-                </Link>
+    <AlertDialog>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+            <Avatar className="h-9 w-9">
+              <AvatarImage src={user.photoURL || ''} alt={user.displayName || ''} />
+              <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
+            </Avatar>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56" align="end" forceMount>
+          <DropdownMenuItem asChild>
+            <Link href="/profile">
+              <UserCircle className="mr-2 h-4 w-4" />
+              <span>My Profile</span>
+            </Link>
+          </DropdownMenuItem>
+          {isFounder && (
+              <DropdownMenuItem asChild>
+                  <Link href="/admin">
+                      <Shield className="mr-2 h-4 w-4" />
+                      <span>Admin Panel</span>
+                  </Link>
+              </DropdownMenuItem>
+          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleSignOut}>
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Sign out</span>
+          </DropdownMenuItem>
+          <AlertDialogTrigger asChild>
+            <DropdownMenuItem 
+                className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                onSelect={(e) => e.preventDefault()}
+            >
+              <UserX className="mr-2 h-4 w-4" />
+              <span>Exit Federation</span>
             </DropdownMenuItem>
-        )}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Sign out</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem className="text-destructive focus:bg-destructive focus:text-destructive-foreground">
-          <UserX className="mr-2 h-4 w-4" />
-          <span>Exit Federation</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          </AlertDialogTrigger>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action is irreversible. This will permanently delete your account, your profile,
+            your communities, and remove you from any communities you have joined.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={() => console.log('Exit Federation confirmed')} 
+            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+          >
+            Yes, Exit Federation
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
@@ -170,76 +197,98 @@ export function Header() {
       </Link>
       
       {isMobile ? (
-        <Sheet>
-            <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                <Menu />
-                <span className="sr-only">Toggle menu</span>
-                </Button>
-            </SheetTrigger>
-            <SheetContent side="top">
-                <SheetHeader>
-                <SheetTitle className="sr-only">Main Menu</SheetTitle>
-                </SheetHeader>
-                <div className="flex flex-col gap-4 p-4">
-                <Link href="/" className="flex items-center gap-2 mb-4">
-                    <Logo className="h-8 w-8 text-primary" />
-                    <div className="flex items-center gap-2">
-                    <span className="text-lg font-semibold text-primary">
-                        Pleasance
-                    </span>
-                    <Badge variant="outline" className="text-xs">
-                        BETA
-                    </Badge>
-                    </div>
-                </Link>
-                <nav className="flex flex-col gap-2">
-                    {allLinks.map((link) => (
-                    <NavLink
-                        key={link.href}
-                        {...link}
-                        isActive={pathname === link.href}
-                    />
-                    ))}
-                    <div className="border-t -mx-4 my-2"></div>
-                    {user ? (
-                        <>
-                        <NavLink
-                            href="/profile"
-                            label="My Profile"
-                            icon={UserCircle}
-                            isActive={pathname === '/profile'}
-                        />
-                        <button
-                            onClick={handleSignOut}
-                            className={cn(
-                                'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-accent/50 hover:text-foreground'
-                            )}
-                            >
-                            <LogOut className="h-5 w-5" />
-                            <span>Sign Out</span>
-                        </button>
-                        <button
-                            className={cn(
-                                'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-destructive'
-                            )}
-                            >
-                            <UserX className="h-5 w-5" />
-                            <span>Exit Federation</span>
-                        </button>
-                        </>
-                    ) : (
-                        <NavLink
-                            href="/login"
-                            label="Login"
-                            icon={UserCircle}
-                            isActive={pathname === '/login'}
-                        />
-                    )}
-                </nav>
-                </div>
-            </SheetContent>
-        </Sheet>
+        <AlertDialog>
+          <Sheet>
+              <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                  <Menu />
+                  <span className="sr-only">Toggle menu</span>
+                  </Button>
+              </SheetTrigger>
+              <SheetContent side="top">
+                  <SheetHeader>
+                  <SheetTitle className="sr-only">Main Menu</SheetTitle>
+                  </SheetHeader>
+                  <div className="flex flex-col gap-4 p-4">
+                  <Link href="/" className="flex items-center gap-2 mb-4">
+                      <Logo className="h-8 w-8 text-primary" />
+                      <div className="flex items-center gap-2">
+                      <span className="text-lg font-semibold text-primary">
+                          Pleasance
+                      </span>
+                      <Badge variant="outline" className="text-xs">
+                          BETA
+                      </Badge>
+                      </div>
+                  </Link>
+                  <nav className="flex flex-col gap-2">
+                      {allLinks.map((link) => (
+                      <NavLink
+                          key={link.href}
+                          {...link}
+                          isActive={pathname === link.href}
+                      />
+                      ))}
+                      <div className="border-t -mx-4 my-2"></div>
+                      {user ? (
+                          <>
+                          <NavLink
+                              href="/profile"
+                              label="My Profile"
+                              icon={UserCircle}
+                              isActive={pathname === '/profile'}
+                          />
+                          <button
+                              onClick={handleSignOut}
+                              className={cn(
+                                  'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                              )}
+                              >
+                              <LogOut className="h-5 w-5" />
+                              <span>Sign Out</span>
+                          </button>
+                          <AlertDialogTrigger asChild>
+                            <button
+                                className={cn(
+                                    'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-destructive'
+                                )}
+                                >
+                                <UserX className="h-5 w-5" />
+                                <span>Exit Federation</span>
+                            </button>
+                          </AlertDialogTrigger>
+                          </>
+                      ) : (
+                          <NavLink
+                              href="/login"
+                              label="Login"
+                              icon={UserCircle}
+                              isActive={pathname === '/login'}
+                          />
+                      )}
+                  </nav>
+                  </div>
+              </SheetContent>
+          </Sheet>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action is irreversible. This will permanently delete your account, your profile,
+                your communities, and remove you from any communities you have joined.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={() => console.log('Exit Federation confirmed')} 
+                className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              >
+                Yes, Exit Federation
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       ) : (
          <nav className="flex items-center gap-2">
             <DropdownMenu>
