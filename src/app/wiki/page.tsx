@@ -1,4 +1,3 @@
-
 // src/app/wiki/page.tsx
 'use client';
 
@@ -8,6 +7,7 @@ import { Users, BookOpen, Warehouse, Banknote, Info, PartyPopper, Github, Beaker
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { KanbanIcon } from '@/components/icons/kanban-icon';
+import { Svg3dCube } from '@/components/icons';
 
 const FeatureCard = ({ icon, title, imageUrl, imageHint, href, children }: { icon: React.ReactNode, title: string, imageUrl: string, imageHint: string, href: string, children: React.ReactNode }) => (
     <Card className="shadow-lg flex flex-col">
@@ -79,6 +79,16 @@ export default function WikiPage() {
             href="/workshop"
         >
             A real-time, collaborative space. Any member can join and experiment with generative tools together. Witness collective imagination as you generate art from a prompt, and watch as the creation updates live for all.
+        </FeatureCard>
+        
+        <FeatureCard
+            icon={<Svg3dCube className="h-8 w-8 text-primary" />}
+            title="Guide to SVG3D"
+            imageUrl="https://picsum.photos/seed/108/600/400"
+            imageHint="3d wireframe"
+            href="/wiki/svg3d"
+        >
+            Understand the technology behind our generative 3D art. This guide explains what a point-cloud is, how the AI interprets your prompts, and how you can take your virtual creation into the physical world.
         </FeatureCard>
 
         <FeatureCard 
