@@ -1,4 +1,5 @@
 
+
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -933,7 +934,15 @@ function CommunityWorkshop({ communityId, isOwner }: { communityId: string, isOw
                                     <FormField
                                         control={form.control}
                                         name="cubeSize"
-                                        render={({ field }) => ( <FormItem> <FormLabel>Cube Size</FormLabel> <FormControl> <Input type="number" {...field} /> </FormControl> <FormMessage /> </FormItem> )}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Cube Size</FormLabel>
+                                                <FormControl>
+                                                    <Input type="number" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
                                     />
                                     <FormField
                                         control={form.control}
@@ -1458,5 +1467,3 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
-
-    
