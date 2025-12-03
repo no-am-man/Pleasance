@@ -39,9 +39,6 @@ const generateCommunityPrompt = ai.definePrompt({
   name: 'generateCommunityPrompt',
   input: {schema: GenerateCommunityInputSchema},
   output: {schema: GenerateCommunityOutputSchema},
-  config: {
-    model: 'googleai/gemini-1.5-flash-latest',
-  },
   prompt: `You are an expert at founding online communities. Based on the user's prompt, generate a name, a short description, and a welcome message.
 
 {{#if includeAiAgents}}
@@ -62,7 +59,12 @@ const generateCommunityFlow = ai.defineFlow(
     outputSchema: GenerateCommunityOutputSchema,
   },
   async input => {
-    const {output} = await generateCommunityPrompt(input);
+    const {output} = await ai.generate({
+        prompt: generateCommunityPrompt.prompt,
+        model: 'googleai/gemini-1.5-flash-latest',
+        input: input,
+        output: { schema: generateCommunityPrompt.output?.schema },
+    });
     return output!;
   }
 );
