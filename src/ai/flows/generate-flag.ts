@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A flow to generate a community flag as an SVG string.
@@ -26,6 +27,9 @@ const generateFlagPrompt = ai.definePrompt(
   {
     name: 'generateFlagPrompt',
     input: { schema: GenerateFlagInputSchema },
+    config: {
+        model: 'googleai/gemini-1.5-pro-latest',
+    },
     prompt: `You are an expert graphic designer who specializes in creating symbolic, minimalist, and modern vector art for flags.
 
 Task: Generate a complete, valid SVG string for a flag representing an online community.
