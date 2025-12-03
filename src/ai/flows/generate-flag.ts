@@ -45,7 +45,7 @@ Design Constraints:
 - The design should be abstract and symbolic.
 - Do not include any text in the SVG output.
 - The SVG should look good on both light and dark backgrounds.
-- Ensure the output is a raw JSON object containing the SVG string, with no additional text, explanations, or markdown.`,
+- Ensure the output is a raw JSON object containing the SVG string, with no additional text, explanations, or markdown formatting like \`\`\`json.`,
 });
 
 
@@ -73,9 +73,10 @@ export async function generateCommunityFlag(values: z.infer<typeof flagActionSch
 
         // Call the Genkit Prompt directly
         const { output } = await ai.generate({
-            prompt: generateFlagPrompt,
+            prompt: generateFlagPrompt.prompt,
             model: 'googleai/gemini-1.5-flash-latest',
             input: { communityName, communityDescription },
+            output: { schema: generateFlagPrompt.output?.schema },
         });
         
         if (!output || !output.svg) {
