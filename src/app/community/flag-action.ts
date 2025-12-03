@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import { generateFlag } from '@/ai/flows/generate-flag';
 import { initializeAdminApp } from '@/firebase/config-admin';
+import { getFirestore } from 'firebase-admin/firestore';
 
 const flagSchema = z.object({
     communityId: z.string(),
@@ -15,7 +16,7 @@ const flagSchema = z.object({
 export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) {
     try {
         const adminApp = initializeAdminApp();
-        const firestore = adminApp.firestore();
+        const firestore = getFirestore(adminApp);
 
         const validatedFields = flagSchema.safeParse(values);
         if (!validatedFields.success) {
@@ -39,6 +40,7 @@ export async function generateCommunityFlag(values: z.infer<typeof flagSchema>) 
             return { error: "Unauthorized: You are not the owner of this community." };
         }
 
+        // Correctly call the Genkit flow
         const flagResult = await generateFlag({ communityName, communityDescription });
         if (!flagResult.svg) {
             throw new Error('Failed to generate a flag SVG from the AI flow.');
