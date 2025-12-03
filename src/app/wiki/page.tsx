@@ -68,17 +68,7 @@ export default function WikiPage() {
             imageHint="community people"
             href="/community"
         >
-            The social fabric of the republic. It's where you find or form your community. Each community is a self-governing body, created and guided by its founder. You can create a community around any pursuit and invite others to join your mission.
-        </FeatureCard>
-
-        <FeatureCard 
-            icon={<GalleryHorizontal className="h-8 w-8 text-primary" />} 
-            title="Community Gallery"
-            imageUrl="https://picsum.photos/seed/105/600/400"
-            imageHint="art gallery"
-            href="/workshop"
-        >
-            Explore a persistent gallery of generative artworks. Any member can contribute a creation, adding to the collective visual history of the republic.
+            The social fabric of the republic. It's where you find or form your community. Each community is a self-governing body with its own private gallery, created and guided by its founder.
         </FeatureCard>
         
         <FeatureCard

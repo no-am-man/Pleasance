@@ -10,6 +10,7 @@
  * - `/community-profiles/{userId}`: Publicly readable profiles, writable only by the owner.
  * - `/communities/{communityId}`: Publicly readable communities, writable only by the owner.
  *   - `/communities/{communityId}/messages/{messageId}`: Messages are readable by any signed-in user.
+ *   - `/communities/{communityId}/creations/{creationId}`: Creations are private to community members.
  * - `/_private_admin_data/{docId}`: Highly restricted data, only accessible by the founder.
  */
 rules_version = '2';
@@ -46,6 +47,17 @@ service cloud.firestore {
         return request.resource.data.ownerId == request.auth.uid;
     }
     
+    function isCommunityOwner(communityId) {
+        return get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId == request.auth.uid;
+    }
+    
+    function isCommunityMember(communityId) {
+      // Members are stored in an array of maps. We need to check if the requesting user's ID is in that array.
+      // `hasAny` doesn't work on arrays of maps. We simulate it.
+      let community = get(/databases/$(database)/documents/communities/$(communityId)).data;
+      return request.auth.uid in community.members.map(member => member.userId);
+    }
+    
     // --- Community Profile Validation ---
     function hasValidProfileData(userId) {
         return request.resource.data.userId == userId && request.resource.data.id == userId;
@@ -66,10 +78,6 @@ service cloud.firestore {
         let incomingData = request.resource.data;
         return incomingData.userId == request.auth.uid
             && incomingData.status == 'pending';
-    }
-    
-    function isCommunityOwner(communityId) {
-        return get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId == request.auth.uid;
     }
     
     // --- Fabrication Order Validation ---
@@ -95,9 +103,10 @@ service cloud.firestore {
     }
 
     // --- Creation Validation ---
-    function isValidCreation() {
+    function isValidCreation(communityId) {
         let d = request.resource.data;
         return d.creatorId == request.auth.uid
+            && isCommunityMember(communityId)
             && d.prompt is string && d.prompt.size() > 2
             && d.pixels is list && d.pixels.size() > 0;
     }
@@ -201,17 +210,18 @@ service cloud.firestore {
             allow create: if isOwner(requestId) && isValidJoinRequest();
             allow update, delete: if isCommunityOwner(communityId);
         }
-    }
-    
-    /**
-     * @description Stores generative artworks from the Community Gallery.
-     * @path /creations/{creationId}
-     * @allow Publicly readable. Writable by any authenticated user.
-     */
-    match /creations/{creationId} {
-        allow get, list: if true;
-        allow create: if isSignedIn() && isValidCreation();
-        allow update, delete: if isFounder(); // Only founder can moderate
+
+        /**
+         * @description Stores generative artworks from the Community Gallery.
+         * @path /communities/{communityId}/creations/{creationId}
+         * @allow Read/write is restricted to community members.
+         */
+        match /creations/{creationId} {
+            allow read: if isCommunityMember(communityId);
+            allow list: if isCommunityMember(communityId);
+            allow create: if isSignedIn() && isValidCreation(communityId);
+            allow update, delete: if isCommunityOwner(communityId); // Only owner can moderate
+        }
     }
     
     /**

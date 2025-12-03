@@ -192,6 +192,7 @@ const generateSvg3dSchema = GenerateSvg3dInputSchema.extend({
     creatorId: z.string(),
     creatorName: z.string(),
     creatorAvatarUrl: z.string().url().optional(),
+    communityId: z.string(),
 });
 
 export async function generateSvg3d(values: z.infer<typeof generateSvg3dSchema>) {
@@ -207,11 +208,12 @@ export async function generateSvg3d(values: z.infer<typeof generateSvg3dSchema>)
             return { error: 'The AI could not generate any pixels for this prompt.' };
         }
         
-        // 2. Save the result as a new Creation document in Firestore
+        // 2. Save the result as a new Creation document in the community's subcollection
         const adminApp = initializeAdminApp();
         const firestore = getFirestore(adminApp);
 
-        const newCreationRef = firestore.collection('creations').doc();
+        const newCreationRef = firestore.collection('communities').doc(validatedFields.data.communityId).collection('creations').doc();
+        
         const newCreation = {
             id: newCreationRef.id,
             creatorId: validatedFields.data.creatorId,

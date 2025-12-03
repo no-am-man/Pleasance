@@ -595,12 +595,13 @@
         }
       },
       {
-        "path": "/creations/{creationId}",
+        "path": "/communities/{communityId}/creations/{creationId}",
         "definition": {
           "entityName": "Creation",
           "schema": { "$ref": "#/backend/entities/Creation" },
-          "description": "Stores generated artworks from the Community Gallery. Publicly readable, writable by any signed-in user.",
+          "description": "Stores generated artworks from a community's private gallery. Writable and readable by community members only.",
           "params": [
+            { "name": "communityId", "description": "The ID of the community." },
             { "name": "creationId", "description": "The unique ID for the artwork." }
           ]
         }
@@ -661,6 +662,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities`, `creations`, `fabricationOrders`, `bugs`, and `leaderboard` in top-level collections, they become queryable. User-specific data is nested under `/users/{userId}` to ensure privacy. Public profiles are in `/community-profiles` to allow discoverability without exposing private account details. The roadmap is migrated to Firestore for reliable public read access. The new /conductor/{userId} collection stores conversation history privately for each user."
+    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities`, `fabricationOrders`, `bugs`, and `leaderboard` in top-level collections, they become queryable. User-specific data is nested under `/users/{userId}` to ensure privacy. Public profiles are in `/community-profiles` to allow discoverability without exposing private account details. The roadmap is migrated to Firestore for reliable public read access. The new /conductor/{userId} collection stores conversation history privately for each user. Community-specific creations are now nested under `/communities/{communityId}/creations` for privacy."
   }
 }

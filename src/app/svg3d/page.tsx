@@ -1,5 +1,5 @@
 
-// src/app/svg3d/page.tsx -> renamed to src/app/workshop/page.tsx conceptually
+// src/app/svg3d/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { LoaderCircle, Sparkles, Save, Beaker } from 'lucide-react';
-import { generateSvg3d, saveSvgAsset } from '@/app/actions';
+import { generateSvg3d as generateSvg3dAction, saveSvgAsset } from '@/app/actions';
 import { GenerateSvg3dInputSchema, type ColorPixel } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Svg3dCube } from '@/components/icons/svg3d-cube';
@@ -67,6 +67,8 @@ function SaveToTreasuryForm({ pixels }: { pixels: ColorPixel[] }) {
         }
     }
 
+    if (!user) return null;
+
     return (
         <Card className="mt-4 bg-muted/50">
             <CardHeader>
@@ -114,11 +116,13 @@ function SaveToTreasuryForm({ pixels }: { pixels: ColorPixel[] }) {
 }
 
 
-export default function WorkshopPage() {
+export default function Svg3dPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pixels, setPixels] = useState<ColorPixel[] | null>(null);
   const searchParams = useSearchParams();
+  const { user } = useUser();
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof Svg3dSchema>>({
     resolver: zodResolver(Svg3dSchema),
@@ -163,8 +167,19 @@ export default function WorkshopPage() {
     setError(null);
     setPixels(null);
 
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Login Required', description: 'You must be logged in to use the workshop.' });
+        setIsLoading(false);
+        return;
+    }
+
     try {
-      const result = await generateSvg3d(data);
+      const result = await generateSvg3dAction({
+          ...data,
+          creatorId: user.uid,
+          creatorName: user.displayName || 'Anonymous',
+          // No community ID needed for the personal workshop
+      });
 
       if (result.error) {
         setError(result.error);

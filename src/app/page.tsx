@@ -110,18 +110,18 @@ export default function Home() {
           >
             The social fabric of the republic. Find or form your
             community, populate it with AI Acolytes, or invite other souls to
-            join your mission.
+            join your mission. Each community has its own private gallery for members.
           </FeatureCard>
         </div>
 
         <FeatureCard
-          icon={<GalleryHorizontal className="h-8 w-8 text-primary" />}
-          title="Community Gallery"
+          icon={<Beaker className="h-8 w-8 text-primary" />}
+          title="AI Workshop"
           imageUrl="https://picsum.photos/seed/105/600/400"
           imageHint="art gallery"
-          href="/workshop"
+          href="/svg3d"
         >
-          Explore a collection of generative artworks created by the community in the Crucible of Creation.
+          A private sandbox for personal AI experimentation. Use our 3D point-cloud generator to explore ideas before sharing them with a community.
         </FeatureCard>
 
         <FeatureCard
