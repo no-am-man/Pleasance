@@ -1,3 +1,4 @@
+
 // src/app/profile/[id]/page.tsx
 'use client';
 
@@ -11,7 +12,6 @@ import { LoaderCircle, AlertCircle, ArrowLeft, Languages, User, BookUser } from 
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
-import { useMemo } from 'react';
 
 type CommunityProfile = {
     id: string;
@@ -29,7 +29,7 @@ export default function UserProfilePage() {
   const { user: currentUser } = useUser();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
-  const profileDocRef = useMemoFirebase(() => id ? doc(firestore, 'community-profiles', id) : null, [id]);
+  const profileDocRef = useMemoFirebase(() => id ? doc(firestore, 'community-profiles', id as string) : null, [id]);
   const [profile, isLoading, error] = useDocumentData<CommunityProfile>(profileDocRef, {
     idField: 'id'
   });

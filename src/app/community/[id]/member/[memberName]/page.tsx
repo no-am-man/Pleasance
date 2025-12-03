@@ -3,7 +3,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
+import { useUser, useMemoFirebase } from '@/firebase';
 import { firestore } from '@/firebase/config';
 import { doc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LoaderCircle, AlertCircle, ArrowLeft, Bot, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { getAiChatResponse, type ChatWithMemberInput } from '@/app/actions';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -152,7 +152,7 @@ export default function AiMemberProfilePage() {
   const communityId = Array.isArray(params.id) ? params.id[0] : params.id;
   const memberName = Array.isArray(params.memberName) ? params.memberName[0] : params.memberName;
 
-  const communityDocRef = useMemo(() => communityId ? doc(firestore, 'communities', communityId) : null, [communityId]);
+  const communityDocRef = useMemoFirebase(() => communityId ? doc(firestore, 'communities', communityId) : null, [communityId]);
   const [community, isLoading, error] = useDocumentData<Community>(communityDocRef);
 
   const member = community?.members.find(

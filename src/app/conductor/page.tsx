@@ -1,8 +1,9 @@
+
 // src/app/conductor/page.tsx
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from 'react';
-import { useUser } from '@/firebase';
+import { useState, useRef, useEffect } from 'react';
+import { useUser, useMemoFirebase } from '@/firebase';
 import { firestore } from '@/firebase/config';
 import { doc, setDoc } from 'firebase/firestore';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
@@ -53,7 +54,7 @@ export default function ConductorPage() {
     const [isThinking, setIsThinking] = useState(false);
     const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-    const conductorDocRef = useMemo(() => user ? doc(firestore, 'conductor', user.uid) : null, [user]);
+    const conductorDocRef = useMemoFirebase(() => user ? doc(firestore, 'conductor', user.uid) : null, [user]);
     const [conductorData, isLoadingConductor] = useDocumentData<ConductorData>(conductorDocRef);
     const history = conductorData?.history || [];
 

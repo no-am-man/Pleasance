@@ -15,7 +15,7 @@ import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType
 import { GripVertical, LoaderCircle, PlusCircle, Trash2, Sparkles, ArrowLeft, ArrowRight, UserPlus, Check } from 'lucide-react';
 import { addRoadmapCard, deleteRoadmapCard, refineCardDescription, updateRoadmapCardAssignees, updateRoadmapCardColumn, updateRoadmapCardOrder, generateRoadmapIdeaAction } from '../actions';
 import { useToast } from '@/hooks/use-toast';
-import { useUser } from '@/firebase';
+import { useUser, useMemoFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -442,10 +442,10 @@ export default function RoadmapPage() {
   const isFounder = user?.email === 'gg.el0ai.com@gmail.com';
   const { toast } = useToast();
   
-  const roadmapQuery = useMemo(() => query(collection(firestore, 'roadmap')), []);
+  const roadmapQuery = useMemoFirebase(() => query(collection(firestore, 'roadmap')), []);
   const [columnsData, isLoading, error] = useCollectionData<RoadmapColumnType>(roadmapQuery, { idField: 'id' });
   
-  const allProfilesQuery = useMemo(() => query(collection(firestore, 'community-profiles')), []);
+  const allProfilesQuery = useMemoFirebase(() => query(collection(firestore, 'community-profiles')), []);
   const [allProfiles, profilesLoading] = useCollectionData<CommunityProfile>(allProfilesQuery);
 
   const [columns, setColumns] = useState<RoadmapColumnType[]>([]);

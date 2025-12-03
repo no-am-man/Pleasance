@@ -1,10 +1,11 @@
+
 // src/app/login/page.tsx
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth';
-import { useUser } from '@/firebase';
+import { useUser, useMemoFirebase } from '@/firebase';
 import { auth, firestore } from '@/firebase/config';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,7 +61,7 @@ export default function LoginPage() {
     processRedirectResult();
   }, []);
 
-  const profileRef = useMemo(() => user ? doc(firestore, 'community-profiles', user.uid) : null, [user]);
+  const profileRef = useMemoFirebase(() => user ? doc(firestore, 'community-profiles', user.uid) : null, [user]);
   const [profile, isProfileLoading] = useDocumentData(profileRef);
 
   const handleGoogleSignIn = async () => {
