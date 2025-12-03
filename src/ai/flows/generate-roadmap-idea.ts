@@ -35,7 +35,7 @@ User's Idea: "{{prompt}}"
 Generate a single roadmap card.
 `,
     config: {
-        model: "googleai/gemini-pro",
+        model: "googleai/gemini-1.5-flash-latest",
     },
 });
 

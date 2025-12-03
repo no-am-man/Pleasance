@@ -48,7 +48,7 @@ Bio: ${input.member.bio}
 Your response must be concise, engaging, and directly related to the user's message.`;
 
     const generateOptions: GenerateRequest = {
-        model: 'googleai/gemini-pro',
+        model: 'googleai/gemini-1.5-flash-latest',
         system: systemPrompt,
         prompt: input.userMessage,
     };
