@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { KanbanIcon } from '@/components/icons/kanban-icon';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,7 +11,7 @@ import { firestore } from '@/firebase/config';
 import { collection, query } from 'firebase/firestore';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType } from '@/lib/types';
-import { LoaderCircle } from 'lucide-react';
+import { LoaderCircle, PlusCircle } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -29,9 +29,93 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { updateRoadmapCardColumn } from '../actions';
+import { updateRoadmapCardColumn, addRoadmapCard } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
+import { Button } from '@/components/ui/button';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+
+
+const AddIdeaSchema = z.object({
+    title: z.string().min(3, "Title must be at least 3 characters long."),
+    description: z.string().min(10, "Description must be at least 10 characters long."),
+});
+
+function AddIdeaForm() {
+    const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    const form = useForm<z.infer<typeof AddIdeaSchema>>({
+        resolver: zodResolver(AddIdeaSchema),
+        defaultValues: { title: '', description: '' },
+    });
+
+    async function onSubmit(values: z.infer<typeof AddIdeaSchema>) {
+        setIsSubmitting(true);
+        const result = await addRoadmapCard(values);
+        if (result.error) {
+            toast({
+                variant: 'destructive',
+                title: 'Error adding idea',
+                description: result.error,
+            });
+        } else {
+            toast({
+                title: 'Idea Added!',
+                description: 'Your new idea has been added to the board.',
+            });
+            form.reset();
+        }
+        setIsSubmitting(false);
+    }
+    
+    return (
+        <Card className="mb-4 bg-card/70">
+            <CardHeader className="p-4">
+                <CardTitle className="text-base">Add a New Idea</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="title"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormControl>
+                                        <Input placeholder="Idea title..." {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormControl>
+                                        <Textarea placeholder="Describe the idea..." {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <Button type="submit" size="sm" className="w-full" disabled={isSubmitting}>
+                            {isSubmitting ? <LoaderCircle className="animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
+                            Add Idea
+                        </Button>
+                    </form>
+                </Form>
+            </CardContent>
+        </Card>
+    )
+}
 
 const SortableKanbanCard = ({ id, title, description, tags, assignees }: RoadmapCardType) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
@@ -52,7 +136,7 @@ const SortableKanbanCard = ({ id, title, description, tags, assignees }: Roadmap
         <CardContent className="p-4 pt-0">
           <p className="text-sm text-muted-foreground mb-4">{description}</p>
           <div className="flex justify-between items-center">
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               {tags?.map(tag => (
                 <Badge key={tag} variant="secondary">{tag}</Badge>
               ))}
@@ -81,19 +165,22 @@ const SortableKanbanCard = ({ id, title, description, tags, assignees }: Roadmap
   );
 }
 
-const KanbanColumn = ({ id, title, cards }: RoadmapColumnType) => (
+const KanbanColumn = ({ id, title, cards, children }: RoadmapColumnType & { children?: React.ReactNode }) => (
   <div className="flex flex-col gap-4">
     <div className="px-3 py-2">
       <h2 className="text-lg font-semibold text-foreground">{title}</h2>
     </div>
     <div className="flex-grow space-y-4 rounded-lg p-3 bg-muted/50 min-h-[200px]">
+        {children}
       <SortableContext id={id} items={cards.map(c => c.id)} strategy={verticalListSortingStrategy}>
         {cards && cards.length > 0 ? (
           cards.map(card => <SortableKanbanCard key={card.id} {...card} />)
         ) : (
-          <div className="flex items-center justify-center h-full">
-              <p className="text-muted-foreground">No cards in this column.</p>
-          </div>
+          !children && (
+             <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+                <p>No cards in this column.</p>
+            </div>
+          )
         )}
       </SortableContext>
     </div>
@@ -140,49 +227,61 @@ export default function RoadmapPage() {
         return;
     }
     
-    const activeColumn = columns.find(col => col.cards.some(c => c.id === active.id));
-    const overColumn = columns.find(col => col.id === over.id || col.cards.some(c => c.id === over.id));
+    const activeContainer = active.data.current?.sortable.containerId;
+    const overContainer = over.data.current?.sortable.containerId || over.id;
 
-    if (!activeColumn || !overColumn) return;
+    if (!activeContainer || !overContainer || activeContainer === overContainer) {
+        // Logic for reordering within the same column (optional)
+        if (activeContainer && overContainer && activeContainer === overContainer) {
+            setColumns((prev) => {
+                const activeColumnIndex = prev.findIndex(c => c.id === activeContainer);
+                if (activeColumnIndex === -1) return prev;
 
+                const activeColumn = prev[activeColumnIndex];
+                const oldIndex = activeColumn.cards.findIndex(c => c.id === active.id);
+                const newIndex = activeColumn.cards.findIndex(c => c.id === over.id);
+                
+                const newCards = arrayMove(activeColumn.cards, oldIndex, newIndex);
+                const newColumns = [...prev];
+                newColumns[activeColumnIndex] = { ...activeColumn, cards: newCards };
+
+                return newColumns;
+            });
+        }
+        return;
+    }
+    
     // Optimistically update UI
     setColumns(prevColumns => {
-      const activeItems = activeColumn.cards;
-      const overItems = overColumn.cards;
-      const activeIndex = activeItems.findIndex(c => c.id === active.id);
-      
-      let newColumns = [...prevColumns];
-
-      if (activeColumn.id === overColumn.id) {
-        // Moving within the same column
-        const newCards = arrayMove(activeItems, activeIndex, overItems.findIndex(c => c.id === over.id));
-        const columnIndex = newColumns.findIndex(c => c.id === activeColumn.id);
-        newColumns[columnIndex] = { ...newColumns[columnIndex], cards: newCards };
-      } else {
-        // Moving to a different column
-        const [movedCard] = activeItems.splice(activeIndex, 1);
+        const activeColumnIndex = prevColumns.findIndex(col => col.id === activeContainer);
+        const overColumnIndex = prevColumns.findIndex(col => col.id === overContainer);
+        if (activeColumnIndex === -1 || overColumnIndex === -1) return prevColumns;
         
-        const overIndex = over.data.current?.sortable?.index ?? overItems.length;
-        overItems.splice(overIndex, 0, movedCard);
-
-        const activeColumnIndex = newColumns.findIndex(c => c.id === activeColumn.id);
-        const overColumnIndex = newColumns.findIndex(c => c.id === overColumn.id);
+        const activeColumn = prevColumns[activeColumnIndex];
+        const overColumn = prevColumns[overColumnIndex];
         
-        newColumns[activeColumnIndex] = { ...newColumns[activeColumnIndex], cards: activeItems };
-        newColumns[overColumnIndex] = { ...newColumns[overColumnIndex], cards: overItems };
-      }
-      return newColumns;
+        const activeItemIndex = activeColumn.cards.findIndex(c => c.id === active.id);
+        const [movedCard] = activeColumn.cards.splice(activeItemIndex, 1);
+        
+        const overItemIndex = overColumn.cards.findIndex(c => c.id === over.id);
+        overColumn.cards.splice(overItemIndex !== -1 ? overItemIndex : overColumn.cards.length, 0, movedCard);
+        
+        let newColumns = [...prevColumns];
+        newColumns[activeColumnIndex] = {...activeColumn};
+        newColumns[overColumnIndex] = {...overColumn};
+
+        return newColumns;
     });
 
     // Update Firestore
-    const result = await updateRoadmapCardColumn(active.id as string, activeColumn.id, overColumn.id);
+    const result = await updateRoadmapCardColumn(active.id as string, activeContainer, overContainer);
     if (result.error) {
       toast({
         variant: 'destructive',
         title: 'Update Failed',
         description: result.error,
       });
-      // Optionally revert state, though useCollectionData will handle it
+      // useCollectionData will automatically revert the state on error from Firestore.
     } else {
        toast({
         title: 'Roadmap Updated',
@@ -210,9 +309,9 @@ export default function RoadmapPage() {
         <Card className="max-w-md mx-auto bg-destructive/20 border-destructive">
             <CardHeader>
                 <CardTitle className="text-destructive">Failed to Load Roadmap</CardTitle>
+                <CardDescription>There was an error connecting to the database.</CardDescription>
             </CardHeader>
             <CardContent>
-                <p className="text-destructive/80">There was an error connecting to the database.</p>
                 <pre className="text-xs mt-2">{error.message}</pre>
             </CardContent>
         </Card>
@@ -222,7 +321,9 @@ export default function RoadmapPage() {
          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
                 {columns.map(column => (
-                    <KanbanColumn key={column.id} {...column} />
+                    <KanbanColumn key={column.id} {...column}>
+                        {column.id === 'ideas' && isFounder && <AddIdeaForm />}
+                    </KanbanColumn>
                 ))}
             </div>
          </DndContext>

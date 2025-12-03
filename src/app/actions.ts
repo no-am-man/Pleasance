@@ -534,3 +534,46 @@ export async function updateRoadmapCardColumn(
     return { error: `Failed to move card: ${message}` };
   }
 }
+
+const AddRoadmapCardSchema = z.object({
+    title: z.string().min(3, "Title must be at least 3 characters long."),
+    description: z.string().min(10, "Description must be at least 10 characters long."),
+});
+
+export async function addRoadmapCard(values: z.infer<typeof AddRoadmapCardSchema>) {
+    try {
+        const validatedFields = AddRoadmapCardSchema.safeParse(values);
+        if (!validatedFields.success) {
+            return { error: 'Invalid input.' };
+        }
+        
+        const { title, description } = validatedFields.data;
+
+        const adminApp = initializeAdminApp();
+        const firestore = getFirestore(adminApp);
+
+        // Generate a new unique ID for the card
+        const newCardId = doc(collection(firestore, 'tmp')).id;
+
+        const newCard = {
+            id: newCardId,
+            title,
+            description,
+            tags: ['New Idea'],
+            assignees: [],
+        };
+        
+        const ideasColumnRef = doc(firestore, 'roadmap', 'ideas');
+
+        await updateDoc(ideasColumnRef, {
+            cards: arrayUnion(newCard)
+        });
+
+        return { success: true, card: newCard };
+
+    } catch (e) {
+        console.error('Add Roadmap Card Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Failed to add new idea: ${message}` };
+    }
+}
