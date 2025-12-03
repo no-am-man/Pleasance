@@ -5,7 +5,6 @@ import { AuthProvider } from '@/firebase/auth-provider';
 import { Header } from '@/app/header';
 import { Toaster } from '@/components/ui/toaster';
 import Link from 'next/link';
-import { PresenceBar } from '@/components/PresenceBar';
 import { navLinks } from './header';
 import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
@@ -18,9 +17,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <AuthProvider>
       <Header />
       <main className="flex-grow pt-16 pb-40">
-        <div className="fixed top-16 left-0 right-0 z-40 bg-background/80 backdrop-blur-sm">
-            <PresenceBar />
-        </div>
         <div className="pt-12">{children}</div>
       </main>
       <footer className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t">
