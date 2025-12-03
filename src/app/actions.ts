@@ -16,7 +16,7 @@ import { initializeAdminApp } from '@/firebase/config-admin';
 import { firebaseConfig } from '@/firebase/config';
 import admin from 'firebase-admin';
 import { generateCommunity } from '@/ai/flows/generate-community';
-import { getFirestore, writeBatch, updateDoc, arrayRemove, arrayUnion, getDoc, collection } from 'firebase-admin/firestore';
+import { getFirestore, writeBatch, updateDoc, arrayRemove, arrayUnion, collection } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
 import {
@@ -501,7 +501,7 @@ export async function updateRoadmapCardColumn(
     const oldColumnRef = firestore.collection('roadmap').doc(oldColumnId);
     const newColumnRef = firestore.collection('roadmap').doc(newColumnId);
 
-    const oldColumnSnap = await getDoc(oldColumnRef);
+    const oldColumnSnap = await oldColumnRef.get();
 
     if (!oldColumnSnap.exists) {
       throw new Error(`Source column "${oldColumnId}" not found.`);
@@ -586,9 +586,9 @@ export async function deleteRoadmapCard(cardId: string, columnId: string) {
         const firestore = getFirestore(adminApp);
         
         const columnRef = firestore.collection('roadmap').doc(columnId);
-        const columnSnap = await getDoc(columnRef);
+        const columnSnap = await columnRef.get();
 
-        if (!columnSnap.exists()) {
+        if (!columnSnap.exists) {
             throw new Error(`Column "${columnId}" not found.`);
         }
 
