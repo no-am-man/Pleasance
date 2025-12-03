@@ -1,7 +1,16 @@
-
 {
   "rules": {
-    ".read": false,
-    ".write": false
+    "users": {
+      ".read": true,
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "lastOnline": {
+      ".read": true,
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    }
   }
 }
