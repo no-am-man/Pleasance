@@ -10,7 +10,6 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import admin from 'firebase-admin';
-import { googleAI } from '@genkit-ai/google-genai';
 
 // 1. Schemas
 const GenerateFlagInputSchema = z.object({
@@ -34,6 +33,9 @@ const generateFlagPrompt = ai.definePrompt({
   name: 'generateFlagPrompt',
   input: { schema: GenerateFlagInputSchema },
   output: { schema: GenerateFlagOutputSchema },
+  config: {
+    model: 'googleai/gemini-1.5-flash-latest',
+  },
   prompt: `You are an expert graphic designer who specializes in creating symbolic, minimalist, and modern vector art for flags.
         
 Task: Generate a complete, valid SVG string for a flag representing an online community.
@@ -57,6 +59,7 @@ const generateFlagFlow = ai.defineFlow(
     outputSchema: GenerateFlagOutputSchema,
   },
   async (input) => {
+    // Correctly call the defined prompt function
     const { output } = await generateFlagPrompt(input);
     
     if (!output) {
@@ -69,9 +72,9 @@ const generateFlagFlow = ai.defineFlow(
 
 // 4. Server Action (The main entry point called by the client)
 export async function generateCommunityFlag(values: z.infer<typeof flagActionSchema>) {
-    let adminApp;
+    
     try {
-        adminApp = initializeAdminApp();
+        const adminApp = initializeAdminApp();
         
         const validatedFields = flagActionSchema.safeParse(values);
         if (!validatedFields.success) {
