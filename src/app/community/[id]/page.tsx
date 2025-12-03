@@ -2,9 +2,9 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useUser, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, arrayRemove, updateDoc, deleteDoc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, arrayRemove, updateDoc, getDoc, setDoc, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info, LogOut } from 'lucide-react';
@@ -26,6 +26,7 @@ import { type ChatHistory } from 'genkit';
 import { Svg3dCube } from '@/components/icons/svg3d-cube';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { SaveToTreasuryForm } from '@/components/community/SaveToTreasuryForm';
+import { addDoc } from 'firebase/firestore';
 
 
 type Member = {
@@ -800,13 +801,14 @@ export default function CommunityProfilePage() {
   const suggestedUsers = useMemo(() => {
     if (!community || !allProfiles) return [];
     const memberIds = new Set(community.members.map(m => m.userId));
-    return allProfiles.filter(p => !memberIds.has(p.userId));
-  }, [community, allProfiles]);
+    return allProfiles.filter(p => p.userId !== user?.uid && !memberIds.has(p.userId));
+  }, [community, allProfiles, user]);
 
 
   useEffect(() => {
     if (user && firestore) {
-        const unsubscribe = onSnapshot(doc(firestore, 'community-profiles', user.uid), (doc) => {
+        const profileDocRef = doc(firestore, 'community-profiles', user.uid);
+        const unsubscribe = onSnapshot(profileDocRef, (doc) => {
             setUserProfile(doc.exists() ? doc.data() as CommunityProfile : null);
         });
         return () => unsubscribe();
@@ -816,7 +818,8 @@ export default function CommunityProfilePage() {
   useEffect(() => {
     if (user && id && firestore) {
         setIsRequestLoading(true);
-        const unsubscribe = onSnapshot(doc(firestore, 'communities', id, 'joinRequests', user.uid), (doc) => {
+        const requestDocRef = doc(firestore, 'communities', id, 'joinRequests', user.uid);
+        const unsubscribe = onSnapshot(requestDocRef, (doc) => {
             setUserJoinRequest(doc.exists() ? doc.data() as JoinRequest : null);
             setIsRequestLoading(false);
         });
@@ -851,15 +854,14 @@ export default function CommunityProfilePage() {
     
     const requestRef = doc(firestore, `communities/${id}/joinRequests/${user.uid}`);
 
-    const newRequest: Omit<JoinRequest, 'id'> = {
+    const newRequest: Omit<JoinRequest, 'id' | 'createdAt'> = {
         userId: user.uid,
         userName: userProfile.name,
         userBio: userProfile.bio,
         status: 'pending' as const,
-        createdAt: serverTimestamp() as any
     };
     try {
-        await setDoc(requestRef, newRequest);
+        await setDoc(requestRef, {...newRequest, createdAt: serverTimestamp()});
         toast({ title: 'Request Sent!', description: 'The community owner has been notified.' });
     } catch(e) {
         const message = e instanceof Error ? e.message : 'An error occurred';

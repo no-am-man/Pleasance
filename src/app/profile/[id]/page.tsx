@@ -3,15 +3,15 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useUser, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc } from 'firebase/firestore';
+import { doc, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LoaderCircle, AlertCircle, ArrowLeft, Languages, User, BookUser } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { useState, useEffect } from 'react';
 
 type CommunityProfile = {
     id: string;
@@ -29,10 +29,22 @@ export default function UserProfilePage() {
   const { user: currentUser } = useUser();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
-  const profileDocRef = useMemoFirebase(() => id ? doc(firestore, 'community-profiles', id as string) : null, [id]);
-  const [profile, isLoading, error] = useDocumentData<CommunityProfile>(profileDocRef, {
-    idField: 'id'
-  });
+  const [profile, setProfile] = useState<CommunityProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (!id || !firestore) return;
+    setIsLoading(true);
+    const profileDocRef = doc(firestore, 'community-profiles', id as string);
+    const unsubscribe = onSnapshot(profileDocRef, (doc) => {
+        setProfile(doc.exists() ? { id: doc.id, ...doc.data() } as CommunityProfile : null);
+        setIsLoading(false);
+    }, setError);
+
+    return () => unsubscribe();
+  }, [id]);
+
 
   if (isLoading) {
     return (

@@ -2,9 +2,9 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useUser, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc, collection, query, where, orderBy, updateDoc, FieldValue, serverTimestamp } from 'firebase/firestore';
+import { doc, collection, query, where, orderBy, updateDoc, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, AlertCircle, ArrowLeft, Sparkles, Save, Download, Share, Paintbrush } from 'lucide-react';
@@ -15,7 +15,6 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { generateSvg3d, saveSvgAsset } from '@/app/actions';
-import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useForm } from 'react-hook-form';
@@ -207,14 +206,44 @@ export default function CommunityWorkshopPage() {
     const { user } = useUser();
     const { toast } = useToast();
 
-    const communityDocRef = useMemoFirebase(() => communityId ? doc(firestore, 'communities', communityId) : null, [communityId]);
-    const [community, isCommunityLoading] = useDocumentData<Community>(communityDocRef);
+    const [community, setCommunity] = useState<Community | null>(null);
+    const [isCommunityLoading, setIsCommunityLoading] = useState(true);
+
+    const [creations, setCreations] = useState<Creation[]>([]);
+    const [isCreationsLoading, setIsCreationsLoading] = useState(true);
+    const [creationsError, setCreationsError] = useState<Error | null>(null);
+    
     const isOwner = user?.uid === community?.ownerId;
 
-    const workshopCreationsQuery = useMemoFirebase(() => communityId ? query(collection(firestore, `communities/${communityId}/creations`), where('status', '==', 'in-workshop')) : null, [communityId]);
-    const [creations, isCreationsLoading, creationsError] = useCollectionData<Creation>(workshopCreationsQuery, {
-        idField: 'id'
-    });
+    useEffect(() => {
+        if (!communityId || !firestore) return;
+        setIsCommunityLoading(true);
+        const communityDocRef = doc(firestore, 'communities', communityId);
+        const unsubscribe = onSnapshot(communityDocRef, (doc) => {
+            setCommunity(doc.exists() ? doc.data() as Community : null);
+            setIsCommunityLoading(false);
+        }, (err) => {
+            setError(err.message);
+            setIsCommunityLoading(false);
+        });
+        return () => unsubscribe();
+    }, [communityId]);
+
+    useEffect(() => {
+        if (!communityId || !firestore) return;
+        setIsCreationsLoading(true);
+        const workshopCreationsQuery = query(collection(firestore, `communities/${communityId}/creations`), where('status', '==', 'in-workshop'));
+        const unsubscribe = onSnapshot(workshopCreationsQuery, (snapshot) => {
+            const creationsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Creation));
+            setCreations(creationsData);
+            setIsCreationsLoading(false);
+        }, (err) => {
+            setCreationsError(err);
+            setIsCreationsLoading(false);
+        });
+        return () => unsubscribe();
+    }, [communityId]);
+
 
     const sortedCreations = useMemo(() => {
         if (!creations) return [];

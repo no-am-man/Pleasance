@@ -4,7 +4,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LoaderCircle, AlertCircle, ArrowLeft, Bot, Send } from 'lucide-react';
@@ -155,10 +155,8 @@ export default function AiMemberProfilePage() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!communityId) {
-      setIsLoading(false);
-      return;
-    }
+    if (!communityId || !firestore) return;
+    
     const communityDocRef = doc(firestore, 'communities', communityId);
     const unsubscribe = onSnapshot(communityDocRef, (doc) => {
       if (doc.exists()) {

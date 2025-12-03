@@ -3,10 +3,9 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useUser, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc, serverTimestamp } from 'firebase/firestore';
-import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { doc, serverTimestamp, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { marked } from 'marked';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -56,12 +55,39 @@ export default function CommunityWikiPage() {
     const collectionPath = `communities/${communityId}/wiki`;
     const finalPageId = isNewPage ? title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') : pageId;
 
-    const pageDocRef = useMemoFirebase(() => !isNewPage ? doc(firestore, collectionPath, pageId) : null, [collectionPath, pageId, isNewPage]);
-    const [page, isLoading, error] = useDocumentData<WikiPage>(pageDocRef);
+    const [page, setPage] = useState<WikiPage | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
 
-    const communityDocRef = useMemoFirebase(() => communityId ? doc(firestore, 'communities', communityId) : null, [communityId]);
-    const [community, isCommunityLoading] = useDocumentData<Community>(communityDocRef);
+    const [community, setCommunity] = useState<Community | null>(null);
+    const [isCommunityLoading, setIsCommunityLoading] = useState(true);
     const isOwner = user?.uid === community?.ownerId;
+
+    useEffect(() => {
+        if (!communityId || !firestore) return;
+        setIsCommunityLoading(true);
+        const communityDocRef = doc(firestore, 'communities', communityId);
+        const unsubscribe = onSnapshot(communityDocRef, (doc) => {
+            setCommunity(doc.exists() ? doc.data() as Community : null);
+            setIsCommunityLoading(false);
+        }, setError);
+        return () => unsubscribe();
+    }, [communityId]);
+
+
+    useEffect(() => {
+        if (isNewPage || !firestore || !collectionPath || !pageId) {
+            setIsLoading(false);
+            return;
+        };
+        setIsLoading(true);
+        const pageDocRef = doc(firestore, collectionPath, pageId);
+        const unsubscribe = onSnapshot(pageDocRef, (doc) => {
+            setPage(doc.exists() ? doc.data() as WikiPage : null);
+            setIsLoading(false);
+        }, setError);
+        return () => unsubscribe();
+    }, [collectionPath, pageId, isNewPage]);
 
 
     useEffect(() => {
