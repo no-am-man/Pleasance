@@ -260,7 +260,7 @@ service cloud.firestore {
     /**
      * @description Manages bug reports.
      * @path /bugs/{bugId}
-     * @allow Publicly readable. Any signed-in user can create. Only founder can update/delete.
+     * @allow Publicly readable. Any signed-in user can create a new bug report.
      */
     match /bugs/{bugId} {
       allow get, list: if true;
@@ -297,4 +297,3 @@ service cloud.firestore {
     }
   }
 }
-    

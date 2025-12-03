@@ -6,6 +6,7 @@ import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { Header } from '@/components/header';
 import { Toaster } from '@/components/ui/toaster';
 import Link from 'next/link';
+import { PresenceBar } from '@/components/PresenceBar';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -14,6 +15,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <Header />
       <main className="flex-grow pt-16">{children}</main>
       <footer className="text-center p-4 border-t space-y-2">
+        <PresenceBar />
         <p>
           <Link
             href="https://github.com/no-am-man/Pleasance"
