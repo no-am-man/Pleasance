@@ -1,7 +1,7 @@
 // src/firebase/client-provider.tsx
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useMemo, type ReactNode, type DependencyList } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, type ReactNode, type DependencyList, useRef } from 'react';
 import { type User, onAuthStateChanged } from 'firebase/auth';
 import { LoaderCircle } from 'lucide-react';
 import { auth } from '@/firebase/config'; // Directly import the initialized auth service
@@ -18,14 +18,17 @@ export const AuthContext = createContext<AuthContextState | undefined>(undefined
 export function FirebaseClientProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isUserLoading, setIsUserLoading] = useState(true);
+  const lastUid = useRef<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       setIsUserLoading(false);
 
-      // Manage server-side session cookie
-      if (firebaseUser) {
+      // Only update the session cookie if the user's login state (UID) has actually changed.
+      // This prevents unnecessary writes on every background token refresh.
+      if (firebaseUser && firebaseUser.uid !== lastUid.current) {
+        lastUid.current = firebaseUser.uid;
         try {
           const idToken = await firebaseUser.getIdToken();
           await fetch('/api/auth/session', {
@@ -36,7 +39,8 @@ export function FirebaseClientProvider({ children }: { children: ReactNode }) {
         } catch (e) {
           console.error("Failed to set session cookie:", e);
         }
-      } else {
+      } else if (!firebaseUser && lastUid.current !== null) {
+        lastUid.current = null;
         try {
           await fetch('/api/auth/session', { method: 'DELETE' });
         } catch (e) {
