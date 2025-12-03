@@ -12,13 +12,16 @@ import { firestore } from "@/firebase/config";
 import { collection, doc, query, where, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LogIn, PlusCircle, LoaderCircle, Search, User, Flag } from "lucide-react";
-import { createCommunityDetails } from "../actions";
+import { LogIn, PlusCircle, LoaderCircle, Search, User, Flag, Sparkles } from "lucide-react";
+import { createCommunityDetails, refineCommunityPromptAction } from "../actions";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import Image from "next/image";
+import { useToast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const FormSchema = z.object({
   prompt: z.string().min(10, "Please enter a prompt of at least 10 characters."),
@@ -50,8 +53,10 @@ type CommunityProfile = {
 
 function CreateCommunityForm() {
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefining, setIsRefining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -101,6 +106,34 @@ function CreateCommunityForm() {
     }
     setIsLoading(false);
   }
+  
+  const handleRefinePrompt = async () => {
+    const prompt = form.getValues('prompt');
+    if (!prompt) {
+      toast({
+        variant: 'destructive',
+        title: 'Prompt is required',
+        description: 'Please enter a prompt before refining with AI.',
+      });
+      return;
+    }
+    setIsRefining(true);
+    const result = await refineCommunityPromptAction({ prompt });
+    if (result.error) {
+      toast({
+        variant: 'destructive',
+        title: 'AI Refinement Failed',
+        description: result.error,
+      });
+    } else if (result.refinedPrompt) {
+      form.setValue('prompt', result.refinedPrompt, { shouldValidate: true });
+      toast({
+        title: 'Prompt Refined!',
+        description: 'The AI has expanded on your idea.',
+      });
+    }
+    setIsRefining(false);
+  };
 
   return (
     <Card className="mb-8 shadow-lg">
@@ -110,12 +143,33 @@ function CreateCommunityForm() {
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <textarea
-              {...form.register("prompt")}
-              placeholder="e.g., 'A community for amateur astronomers to share tips, photos, and organize stargazing events.'"
-              className="w-full p-2 border rounded-md min-h-[100px] bg-background"
-            />
+          <div className="space-y-2">
+             <div className="relative">
+                <Textarea
+                {...form.register("prompt")}
+                placeholder="e.g., 'A community for amateur astronomers to share tips, photos, and organize stargazing events.'"
+                className="w-full p-2 border rounded-md min-h-[100px] bg-background pr-10"
+                />
+                 <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                             <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute top-2 right-2 h-8 w-8"
+                                onClick={handleRefinePrompt}
+                                disabled={isRefining}
+                                >
+                                {isRefining ? <LoaderCircle className="h-4 w-4 animate-spin"/> : <Sparkles className="h-4 w-4 text-primary" />}
+                            </Button>
+                        </TooltipTrigger>
+                         <TooltipContent>
+                            <p>Refine with AI</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            </div>
             {form.formState.errors.prompt && (
               <p className="text-sm text-destructive mt-1">{form.formState.errors.prompt.message}</p>
             )}

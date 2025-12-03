@@ -11,6 +11,7 @@ import { generateAvatars } from '@/ai/flows/generate-avatars';
 import { syncAllMembers } from '@/ai/flows/sync-members';
 import { generateSvg3d as generateSvg3dFlow } from '@/ai/flows/generate-svg3d';
 import { refineRoadmapCard } from '@/ai/flows/refine-roadmap-card';
+import { refineCommunityPrompt } from '@/ai/flows/refine-community-prompt';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { firebaseConfig } from '@/firebase/config';
 import admin from 'firebase-admin';
@@ -634,5 +635,31 @@ export async function refineCardDescription(values: z.infer<typeof RefineCardSch
         console.error('Refine Card Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
         return { error: `Failed to refine description: ${message}` };
+    }
+}
+
+
+const RefineCommunityPromptSchema = z.object({
+    prompt: z.string().min(3, "Prompt must be at least 3 characters long."),
+});
+
+export async function refineCommunityPromptAction(values: z.infer<typeof RefineCommunityPromptSchema>) {
+    try {
+        const validatedFields = RefineCommunityPromptSchema.safeParse(values);
+        if (!validatedFields.success) {
+            return { error: 'Invalid input for refinement.' };
+        }
+
+        const result = await refineCommunityPrompt(validatedFields.data);
+
+        if (!result.refinedPrompt) {
+            return { error: 'AI failed to generate a refined prompt.' };
+        }
+
+        return { refinedPrompt: result.refinedPrompt };
+    } catch (e) {
+        console.error('Refine Community Prompt Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Failed to refine prompt: ${message}` };
     }
 }
