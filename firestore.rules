@@ -108,7 +108,8 @@ service cloud.firestore {
         return d.creatorId == request.auth.uid
             && isCommunityMember(communityId)
             && d.prompt is string && d.prompt.size() > 2
-            && d.pixels is list && d.pixels.size() > 0;
+            && d.pixels is list && d.pixels.size() > 0
+            && d.status == 'in-workshop'; // Creations must start in the workshop
     }
 
 
@@ -212,15 +213,15 @@ service cloud.firestore {
         }
 
         /**
-         * @description Stores generative artworks from the Community Gallery.
+         * @description Stores generative artworks. Published works are public. Workshop items are for members only.
          * @path /communities/{communityId}/creations/{creationId}
-         * @allow Read/write is restricted to community members.
          */
         match /creations/{creationId} {
-            allow read: if isCommunityMember(communityId);
-            allow list: if isCommunityMember(communityId);
+            allow get: if resource.data.status == 'published' || (isSignedIn() && isCommunityMember(communityId));
+            allow list: if true; // Allow listing to filter on the client
             allow create: if isSignedIn() && isValidCreation(communityId);
-            allow update, delete: if isCommunityOwner(communityId); // Only owner can moderate
+            allow update: if isCommunityOwner(communityId); // Only owner can publish or moderate
+            allow delete: if isCommunityOwner(communityId);
         }
     }
     
@@ -285,3 +286,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

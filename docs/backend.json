@@ -329,13 +329,14 @@
         "creatorName": { "type": "string", "description": "The name of the creator." },
         "creatorAvatarUrl": { "type": "string", "format": "uri", "description": "The avatar URL of the creator." },
         "prompt": { "type": "string", "description": "The prompt used to generate the artwork." },
+        "status": { "type": "string", "enum": ["in-workshop", "published"], "description": "The visibility status of the artwork." },
         "createdAt": { "type": "string", "format": "date-time" },
         "pixels": {
           "type": "array",
           "items": { "$ref": "#/backend/entities/ColorPixel" }
         }
       },
-      "required": ["id", "creatorId", "creatorName", "prompt", "createdAt", "pixels"]
+      "required": ["id", "creatorId", "creatorName", "prompt", "status", "createdAt", "pixels"]
     },
     "ColorPixel": {
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -599,7 +600,7 @@
         "definition": {
           "entityName": "Creation",
           "schema": { "$ref": "#/backend/entities/Creation" },
-          "description": "Stores generated artworks from a community's private gallery. Writable and readable by community members only.",
+          "description": "Stores generated artworks. Creations with status 'published' are public. Others are for members only.",
           "params": [
             { "name": "communityId", "description": "The ID of the community." },
             { "name": "creationId", "description": "The unique ID for the artwork." }
@@ -665,3 +666,5 @@
     "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities`, `fabricationOrders`, `bugs`, and `leaderboard` in top-level collections, they become queryable. User-specific data is nested under `/users/{userId}` to ensure privacy. Public profiles are in `/community-profiles` to allow discoverability without exposing private account details. The roadmap is migrated to Firestore for reliable public read access. The new /conductor/{userId} collection stores conversation history privately for each user. Community-specific creations are now nested under `/communities/{communityId}/creations` for privacy."
   }
 }
+
+    

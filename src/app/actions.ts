@@ -222,6 +222,7 @@ export async function generateSvg3d(values: z.infer<typeof generateSvg3dSchema>)
             prompt: validatedFields.data.prompt,
             createdAt: FieldValue.serverTimestamp(),
             pixels: result.pixels,
+            status: 'in-workshop' as 'in-workshop' | 'published',
         };
 
         await newCreationRef.set(newCreation);
@@ -822,6 +823,8 @@ const flagActionSchema = z.object({
 export async function generateCommunityFlagAction(values: z.infer<typeof flagActionSchema>) {
     return generateCommunityFlag(values);
 }
+    
+
     
 
     
