@@ -12,11 +12,12 @@ import { syncAllMembers } from '@/ai/flows/sync-members';
 import { generateSvg3d as generateSvg3dFlow } from '@/ai/flows/generate-svg3d';
 import { refineRoadmapCard } from '@/ai/flows/refine-roadmap-card';
 import { refineCommunityPrompt } from '@/ai/flows/refine-community-prompt';
+import { updateCardAssignees } from '@/ai/flows/update-card-assignees';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { firebaseConfig } from '@/firebase/config';
 import admin from 'firebase-admin';
 import { generateCommunity } from '@/ai/flows/generate-community';
-import { getFirestore, writeBatch, updateDoc, doc } from 'firebase-admin/firestore';
+import { getFirestore, writeBatch, updateDoc, doc, arrayRemove, arrayUnion } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import wav from 'wav';
 import {
@@ -498,8 +499,8 @@ export async function updateRoadmapCardColumn(
     const adminApp = initializeAdminApp();
     const firestore = getFirestore(adminApp);
 
-    const oldColumnRef = firestore.collection('roadmap').doc(oldColumnId);
-    const newColumnRef = firestore.collection('roadmap').doc(newColumnId);
+    const oldColumnRef = firestore.doc(`roadmap/${oldColumnId}`);
+    const newColumnRef = firestore.doc(`roadmap/${newColumnId}`);
 
     const oldColumnSnap = await oldColumnRef.get();
 
@@ -686,5 +687,33 @@ export async function refineCommunityPromptAction(values: z.infer<typeof RefineC
         console.error('Refine Community Prompt Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
         return { error: `Failed to refine prompt: ${message}` };
+    }
+}
+
+const UpdateAssigneesSchema = z.object({
+  columnId: z.string(),
+  cardId: z.string(),
+  assigneeName: z.string(),
+  shouldAssign: z.boolean(),
+});
+
+export async function updateRoadmapCardAssignees(values: z.infer<typeof UpdateAssigneesSchema>) {
+    try {
+        const validatedFields = UpdateAssigneesSchema.safeParse(values);
+        if (!validatedFields.success) {
+            return { error: 'Invalid input.' };
+        }
+        
+        const result = await updateCardAssignees(validatedFields.data);
+
+        if (result.error) {
+            return { error: result.error };
+        }
+        return { success: true, newAssignees: result.newAssignees };
+
+    } catch (e) {
+        console.error('Update Assignees Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Failed to update assignees: ${message}` };
     }
 }

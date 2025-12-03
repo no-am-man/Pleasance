@@ -1,3 +1,4 @@
+
 // src/app/roadmap/page.tsx
 'use client';
 
@@ -10,9 +11,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { firestore } from '@/firebase/config';
 import { collection, query, doc } from 'firebase/firestore';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
-import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType } from '@/lib/types';
-import { LoaderCircle, PlusCircle, Trash2, Sparkles, ArrowRight, ArrowLeft } from 'lucide-react';
-import { updateRoadmapCardColumn, addRoadmapCard, deleteRoadmapCard, refineCardDescription, updateRoadmapCardOrder } from '../actions';
+import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType, CommunityProfile } from '@/lib/types';
+import { LoaderCircle, PlusCircle, Trash2, Sparkles, ArrowLeft, ArrowRight, UserPlus, Check } from 'lucide-react';
+import { updateRoadmapCardColumn, addRoadmapCard, deleteRoadmapCard, refineCardDescription, updateRoadmapCardOrder, updateRoadmapCardAssignees } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,7 @@ import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 
 const AddIdeaSchema = z.object({
@@ -161,7 +163,7 @@ function AddIdeaForm() {
     )
 }
 
-function KanbanCard({ card, columnId, onMove }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; }) {
+function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; allProfiles: CommunityProfile[]; onUpdateAssignees: (cardId: string, assigneeName: string, shouldAssign: boolean) => void; }) {
   const { user } = useUser();
   const isFounder = user?.email === 'gg.el0ai.com@gmail.com';
   const { toast } = useToast();
@@ -244,22 +246,49 @@ function KanbanCard({ card, columnId, onMove }: { card: RoadmapCardType; columnI
               <Badge key={tag} variant="secondary">{tag}</Badge>
             ))}
           </div>
-          <div className="flex -space-x-2">
-            <TooltipProvider>
-              {card.assignees?.map(assignee => (
-                <Tooltip key={assignee}>
-                  <TooltipTrigger asChild>
-                    <Avatar className="h-6 w-6 border-2 border-background">
-                      <AvatarImage src={`https://i.pravatar.cc/150?u=${assignee}`} />
-                      <AvatarFallback>{assignee.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{assignee}</p>
-                  </TooltipContent>
-                </Tooltip>
-              ))}
-            </TooltipProvider>
+          <div className="flex items-center gap-1">
+            <div className="flex -space-x-2">
+                <TooltipProvider>
+                {card.assignees?.map(assigneeName => {
+                    const assigneeProfile = allProfiles.find(p => p.name === assigneeName);
+                    return (
+                        <Tooltip key={assigneeName}>
+                            <TooltipTrigger asChild>
+                                <Avatar className="h-6 w-6 border-2 border-background">
+                                <AvatarImage src={assigneeProfile?.avatarUrl || `https://i.pravatar.cc/150?u=${assigneeName}`} />
+                                <AvatarFallback>{assigneeName.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>{assigneeName}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    );
+                })}
+                </TooltipProvider>
+            </div>
+             {isFounder && (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                            <UserPlus className="h-4 w-4"/>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        {allProfiles.map(profile => {
+                            const isAssigned = card.assignees?.includes(profile.name);
+                            return (
+                                <DropdownMenuItem key={profile.id} onSelect={() => onUpdateAssignees(card.id, profile.name, !isAssigned)}>
+                                    <div className={cn("w-4 h-4 mr-2", !isAssigned && "opacity-0")}>
+                                        <Check className="h-4 w-4"/>
+                                    </div>
+                                    <span>{profile.name}</span>
+                                </DropdownMenuItem>
+                            );
+                        })}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+             )}
           </div>
         </div>
       </CardContent>
@@ -267,7 +296,7 @@ function KanbanCard({ card, columnId, onMove }: { card: RoadmapCardType; columnI
   );
 }
 
-function SortableKanbanCard({ card, columnId, onMove }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; }) {
+function SortableKanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; allProfiles: CommunityProfile[]; onUpdateAssignees: (cardId: string, assigneeName: string, shouldAssign: boolean) => void; }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: card.id });
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -277,12 +306,12 @@ function SortableKanbanCard({ card, columnId, onMove }: { card: RoadmapCardType;
 
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={cn(isDragging && 'opacity-50')}>
-            <KanbanCard card={card} columnId={columnId} onMove={onMove} />
+            <KanbanCard card={card} columnId={columnId} onMove={onMove} allProfiles={allProfiles} onUpdateAssignees={onUpdateAssignees} />
         </div>
     )
 }
 
-function KanbanColumn({ id, title, cards, children, onMoveCard }: RoadmapColumnType & { children?: React.ReactNode; onMoveCard: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; }) {
+function KanbanColumn({ id, title, cards, children, onMoveCard, allProfiles, onUpdateAssignees }: RoadmapColumnType & { children?: React.ReactNode; onMoveCard: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; allProfiles: CommunityProfile[]; onUpdateAssignees: (cardId: string, columnId: string, assigneeName: string, shouldAssign: boolean) => void; }) {
   const { user } = useUser();
   const isFounder = user?.email === 'gg.el0ai.com@gmail.com';
   
@@ -295,10 +324,10 @@ function KanbanColumn({ id, title, cards, children, onMoveCard }: RoadmapColumnT
             {children}
             {id === 'ideas' && isFounder && cards ? (
                 <SortableContext id={id} items={cards.map(c => c.id)} strategy={verticalListSortingStrategy}>
-                    {cards.map(card => <SortableKanbanCard key={card.id} card={card} columnId={id} onMove={onMoveCard} />)}
+                    {cards.map(card => <SortableKanbanCard key={card.id} card={card} columnId={id} onMove={onMoveCard} allProfiles={allProfiles} onUpdateAssignees={(cardId, assignee, shouldAssign) => onUpdateAssignees(cardId, id, assignee, shouldAssign)} />)}
                 </SortableContext>
             ) : cards && cards.length > 0 ? (
-              cards.map(card => <KanbanCard key={card.id} card={card} columnId={id} onMove={onMoveCard} />)
+              cards.map(card => <KanbanCard key={card.id} card={card} columnId={id} onMove={onMoveCard} allProfiles={allProfiles} onUpdateAssignees={(cardId, assignee, shouldAssign) => onUpdateAssignees(cardId, id, assignee, shouldAssign)} />)
             ) : (
               !children && (
                  <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
@@ -318,6 +347,8 @@ export default function RoadmapPage() {
   const { toast } = useToast();
   const roadmapQuery = useMemo(() => query(collection(firestore, 'roadmap')), []);
   const [columnsData, isLoading, error] = useCollectionData<RoadmapColumnType>(roadmapQuery, { idField: 'id' });
+  const allProfilesQuery = useMemo(() => query(collection(firestore, 'community-profiles')), []);
+  const [allProfiles, profilesLoading] = useCollectionData<CommunityProfile>(allProfilesQuery);
 
   const [columns, setColumns] = useState<RoadmapColumnType[]>([]);
   const columnOrder = useMemo(() => ['ideas', 'nextUp', 'inProgress', 'alive'], []);
@@ -404,6 +435,36 @@ export default function RoadmapPage() {
     }
   };
 
+  const handleUpdateAssignees = async (cardId: string, columnId: string, assigneeName: string, shouldAssign: boolean) => {
+     // Optimistic UI update
+    setColumns(prev => {
+        const newColumns = prev.map(c => ({...c, cards: c.cards.map(card => ({...card, assignees: [...(card.assignees || [])]}))}));
+        const column = newColumns.find(c => c.id === columnId);
+        if (!column) return prev;
+        const card = column.cards.find(c => c.id === cardId);
+        if (!card) return prev;
+
+        if (shouldAssign) {
+            if (!card.assignees?.includes(assigneeName)) {
+                card.assignees = [...(card.assignees || []), assigneeName];
+            }
+        } else {
+            card.assignees = (card.assignees || []).filter(name => name !== assigneeName);
+        }
+        return newColumns;
+    });
+    
+    const result = await updateRoadmapCardAssignees({ columnId, cardId, assigneeName, shouldAssign });
+    
+    if (result.error) {
+        toast({ variant: 'destructive', title: 'Assignment Failed', description: result.error });
+        // Revert UI on failure
+        setColumns(columnsData ? [...columnsData].sort((a, b) => columnOrder.indexOf(a.id) - columnOrder.indexOf(b.id)) : []);
+    } else {
+        toast({ title: shouldAssign ? 'User Assigned' : 'User Unassigned' });
+    }
+  }
+
   return (
     <main className="container mx-auto min-h-screen py-8">
       <div className="text-center mb-12">
@@ -413,7 +474,7 @@ export default function RoadmapPage() {
         <p className="text-lg text-muted-foreground mt-2">The public development plan for the Pleasance project.</p>
       </div>
 
-      {isLoading && (
+      {(isLoading || profilesLoading) && (
           <div className="flex justify-center items-center h-64">
               <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
           </div>
@@ -431,12 +492,18 @@ export default function RoadmapPage() {
         </Card>
       )}
       
-      {!isLoading && !error && (
+      {!isLoading && !profilesLoading && !error && (
          <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-start">
                 {columns && columns.length > 0 ? (
                     columns.map(col => (
-                    <KanbanColumn key={col.id} {...col} onMoveCard={handleMoveCard}>
+                    <KanbanColumn 
+                        key={col.id}
+                        {...col}
+                        onMoveCard={handleMoveCard}
+                        allProfiles={allProfiles || []}
+                        onUpdateAssignees={handleUpdateAssignees}
+                    >
                         {col.id === 'ideas' && isFounder && <AddIdeaForm />}
                     </KanbanColumn>
                     ))
