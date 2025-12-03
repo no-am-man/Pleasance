@@ -1,13 +1,13 @@
 // src/app/bugs/page.tsx
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useUser, useMemoFirebase } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { collection, query, orderBy, serverTimestamp, doc } from 'firebase/firestore';
+import { collection, query, orderBy, serverTimestamp, doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,8 +17,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LoaderCircle, LogIn, Bug, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -56,7 +54,7 @@ async function submitBugReport(values: z.infer<typeof BugSchema>, user: { uid: s
     };
     
     // Using setDoc directly inside an async function is fine, as this is a user-triggered event, not a hook.
-    await setDoc(newBugRef, newBug, { merge: false });
+    await setDoc(newBugRef, newBug);
 }
 
 function AddBugForm() {
@@ -166,7 +164,22 @@ function BugList() {
         return query(collection(firestore, 'bugs'), orderBy('createdAt', 'desc'));
     }, []);
 
-    const [bugs, isLoading, error] = useCollectionData<Bug>(bugsQuery, { idField: 'id' });
+    const [bugs, setBugs] = useState<Bug[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+
+    useEffect(() => {
+        if (!bugsQuery) {
+            setIsLoading(false);
+            return;
+        }
+        const unsubscribe = onSnapshot(bugsQuery, (querySnapshot) => {
+            const bugsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Bug));
+            setBugs(bugsData);
+            setIsLoading(false);
+        }, setError);
+        return () => unsubscribe();
+    }, [bugsQuery]);
 
     const getStatusVariant = (status: Bug['status']) => {
         switch (status) {

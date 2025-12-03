@@ -1,12 +1,10 @@
-
 // src/app/conductor/page.tsx
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import { useUser, useMemoFirebase } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc, setDoc } from 'firebase/firestore';
-import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,7 +53,22 @@ export default function ConductorPage() {
     const scrollAreaRef = useRef<HTMLDivElement>(null);
 
     const conductorDocRef = useMemoFirebase(() => user ? doc(firestore, 'conductor', user.uid) : null, [user]);
-    const [conductorData, isLoadingConductor] = useDocumentData<ConductorData>(conductorDocRef);
+    
+    const [conductorData, setConductorData] = useState<ConductorData | null>(null);
+    const [isLoadingConductor, setIsLoadingConductor] = useState(true);
+
+    useEffect(() => {
+        if (!conductorDocRef) {
+            setIsLoadingConductor(false);
+            return;
+        }
+        const unsubscribe = onSnapshot(conductorDocRef, (doc) => {
+            setConductorData(doc.exists() ? doc.data() as ConductorData : null);
+            setIsLoadingConductor(false);
+        });
+        return () => unsubscribe();
+    }, [conductorDocRef]);
+
     const history = conductorData?.history || [];
 
     const handleSendMessage = async (e: React.FormEvent) => {

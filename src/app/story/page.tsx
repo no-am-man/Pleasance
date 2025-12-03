@@ -1,4 +1,3 @@
-
 // src/app/story/page.tsx
 'use client';
 
@@ -17,10 +16,9 @@ import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useUser, useMemoFirebase } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { collection, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
-import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -69,11 +67,25 @@ type CommunityProfile = {
 
 function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void; }) {
     const { user, isUserLoading } = useUser();
-
     const storiesQuery = useMemoFirebase(() => user ? query(collection(firestore, 'users', user.uid, 'stories'), orderBy('createdAt', 'desc')) : null, [user]);
-    const [stories, isLoading, error] = useCollectionData<Story>(storiesQuery, {
-      idField: 'id'
-    });
+    
+    const [stories, setStories] = useState<Story[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+
+    useEffect(() => {
+        if (!storiesQuery) {
+            setIsLoading(false);
+            return;
+        }
+        const unsubscribe = onSnapshot(storiesQuery, (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Story));
+            setStories(data);
+            setIsLoading(false);
+        }, setError);
+        return () => unsubscribe();
+    }, [storiesQuery]);
+
 
     if (isUserLoading) {
       return (
@@ -156,9 +168,23 @@ function TimeMachine() {
     const [isCreating, setIsCreating] = useState(false);
 
     const snapshotsQuery = useMemoFirebase(() => user ? query(collection(firestore, 'users', user.uid, 'historySnapshots'), orderBy('createdAt', 'desc')) : null, [user]);
-    const [snapshots, isLoading, error] = useCollectionData<HistorySnapshot>(snapshotsQuery, {
-      idField: 'id'
-    });
+    
+    const [snapshots, setSnapshots] = useState<HistorySnapshot[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+
+    useEffect(() => {
+        if (!snapshotsQuery) {
+            setIsLoading(false);
+            return;
+        }
+        const unsubscribe = onSnapshot(snapshotsQuery, (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as HistorySnapshot));
+            setSnapshots(data);
+            setIsLoading(false);
+        }, setError);
+        return () => unsubscribe();
+    }, [snapshotsQuery]);
 
     const handleCreateSnapshot = async () => {
         if (!user) return;
@@ -173,7 +199,7 @@ function TimeMachine() {
     };
     
     const handleDeleteSnapshot = async (snapshotId: string) => {
-        if (!user) return;
+        if (!user || !firestore) return;
         const docRef = doc(firestore, `users/${user.uid}/historySnapshots/${snapshotId}`);
         await deleteDoc(docRef);
         toast({ title: 'Snapshot Deleted' });
@@ -229,7 +255,22 @@ export default function StoryPage() {
   const { toast } = useToast();
   
   const profileDocRef = useMemoFirebase(() => user ? doc(firestore, 'community-profiles', user.uid) : null, [user]);
-  const [profile, isProfileLoading] = useDocumentData<CommunityProfile>(profileDocRef);
+  
+  const [profile, setProfile] = useState<CommunityProfile | null>(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
+
+  useEffect(() => {
+    if (!profileDocRef) {
+        setIsProfileLoading(false);
+        return;
+    }
+    const unsubscribe = onSnapshot(profileDocRef, (doc) => {
+        setProfile(doc.exists() ? doc.data() as CommunityProfile : null);
+        setIsProfileLoading(false);
+    });
+    return () => unsubscribe();
+  }, [profileDocRef]);
+
 
   const form = useForm<z.infer<typeof StoryFormSchema>>({
     resolver: zodResolver(StoryFormSchema),

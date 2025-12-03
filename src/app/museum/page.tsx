@@ -1,15 +1,14 @@
 // src/app/museum/page.tsx
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useUser, useMemoFirebase } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { collection, query, where, orderBy, doc } from 'firebase/firestore';
+import { collection, query, where, orderBy, doc, onSnapshot } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, AlertCircle, Landmark, Flag } from 'lucide-react';
 import Link from 'next/link';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { Svg3dCube } from '@/components/icons/svg3d-cube';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { DialogTrigger } from '@radix-ui/react-dialog';
@@ -51,7 +50,23 @@ function CommunityHall({ community }: { community: Community }) {
         [community.id]
     );
 
-    const [creations, isLoading, error] = useCollectionData<Creation>(creationsQuery, { idField: 'id' });
+    const [creations, setCreations] = useState<Creation[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+
+    useEffect(() => {
+        if (!creationsQuery) {
+            setIsLoading(false);
+            return;
+        }
+        const unsubscribe = onSnapshot(creationsQuery, (snapshot) => {
+            const creationsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Creation));
+            setCreations(creationsData);
+            setIsLoading(false);
+        }, setError);
+        return () => unsubscribe();
+    }, [creationsQuery]);
+
 
     if (isLoading) {
         return (
@@ -128,7 +143,24 @@ function CommunityHall({ community }: { community: Community }) {
 
 export default function MuseumPage() {
     const communitiesQuery = useMemoFirebase(() => query(collection(firestore, 'communities'), orderBy('name', 'asc')), []);
-    const [communities, isLoading, error] = useCollectionData<Community>(communitiesQuery, { idField: 'id' });
+    
+    const [communities, setCommunities] = useState<Community[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+
+    useEffect(() => {
+        if (!communitiesQuery) {
+            setIsLoading(false);
+            return;
+        }
+        const unsubscribe = onSnapshot(communitiesQuery, (snapshot) => {
+            const communityData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community));
+            setCommunities(communityData);
+            setIsLoading(false);
+        }, setError);
+        return () => unsubscribe();
+    }, [communitiesQuery]);
+
 
     if (isLoading) {
         return (
