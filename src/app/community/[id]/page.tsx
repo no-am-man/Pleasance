@@ -9,7 +9,7 @@ import { firestore } from '@/firebase/config';
 import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, setDoc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, GalleryHorizontal, Camera, Presentation, Share } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, GalleryHorizontal, Camera, Presentation, Share, Paintbrush } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -26,8 +26,6 @@ import Image from 'next/image';
 import { getAiChatResponse, generateCommunityFlagAction, generateSvg3d, saveSvgAsset, createHistorySnapshot } from '@/app/actions';
 import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
 import { type ChatHistory } from 'genkit';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -795,253 +793,39 @@ function SaveToTreasuryForm({ creation }: { creation: Creation }) {
                         <Download className="mr-2 h-4 w-4" />
                         Download .obj File for Fabrication
                     </Button>
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4 border-t">
-                            <FormField
-                                control={form.control}
-                                name="assetName"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Creation Name</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="e.g., 'Digital Sunrise'" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="value"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Creation Value (USD)</FormLabel>
-                                        <FormControl>
-                                            <Input type="number" placeholder="100.00" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <Button type="submit" disabled={isSaving}>
-                                {isSaving ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                                Save Creation to Treasury
-                            </Button>
-                        </form>
-                    </Form>
-                </div>
-            </CardContent>
-        </Card>
-    );
-}
-
-function CommunityWorkshop({ communityId, isOwner }: { communityId: string, isOwner: boolean }) {
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [activeCreation, setActiveCreation] = useState<Creation | null>(null);
-    const { user } = useUser();
-    const { toast } = useToast();
-
-    const workshopCreationsQuery = useMemoFirebase(() => query(collection(firestore, `communities/${communityId}/creations`), where('status', '==', 'in-workshop'), orderBy('createdAt', 'desc')), [communityId]);
-    const [creations, isCreationsLoading, creationsError] = useCollectionData<Creation>(workshopCreationsQuery, {
-        idField: 'id'
-    });
-
-    useEffect(() => {
-        if (!activeCreation && creations && creations.length > 0) {
-            setActiveCreation(creations[0]);
-        }
-    }, [creations, activeCreation]);
-
-    const form = useForm<z.infer<typeof Svg3dSchema>>({
-        resolver: zodResolver(Svg3dSchema),
-        defaultValues: {
-            prompt: '',
-            cubeSize: 100,
-            density: 'medium',
-        },
-    });
-    
-    const handlePublish = async (creationId: string) => {
-        if (!isOwner) return;
-        const creationRef = doc(firestore, `communities/${communityId}/creations`, creationId);
-        await updateDoc(creationRef, { status: 'published' });
-        toast({ title: 'Creation Published!', description: 'The artwork is now visible in the Presentation Hall.' });
-    };
-
-
-    async function onSubmit(data: z.infer<typeof Svg3dSchema>) {
-        if (!user) {
-            toast({ variant: 'destructive', title: 'Login Required', description: 'You must be logged in to create artwork.' });
-            return;
-        }
-        setIsGenerating(true);
-        setError(null);
-
-        try {
-            const result = await generateSvg3d({
-                ...data,
-                creatorId: user.uid,
-                creatorName: user.displayName || 'Anonymous Soul',
-                creatorAvatarUrl: user.photoURL || undefined,
-                communityId: communityId,
-            });
-
-            if (result.error) {
-                setError(result.error);
-            } else if (result.success && result.creation) {
-                toast({ title: 'Creation Added!', description: 'Your vision has been added to the gallery.' });
-                form.reset({ ...form.getValues(), prompt: '' });
-            }
-        } catch (e) {
-            const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
-            setError(`Generation failed: ${message}`);
-        }
-
-        setIsGenerating(false);
-    }
-
-    return (
-        <Card className="shadow-lg">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2"><GalleryHorizontal /> Community Workshop</CardTitle>
-                <CardDescription>A private creative space for community members.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                    <div className="lg:col-span-1 space-y-8">
-                        <Card className="bg-muted/50">
-                            <CardHeader>
-                            <CardTitle>Channel a New Creation</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                            <Form {...form}>
-                                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                                <FormField
-                                    control={form.control}
-                                    name="prompt"
-                                    render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Your Vision</FormLabel>
-                                        <FormControl>
-                                        <Input placeholder="e.g., 'The birth of a star'" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                    )}
-                                />
-                                <div className="grid grid-cols-2 gap-4">
-                                     <FormField
-                                        control={form.control}
-                                        name="cubeSize"
-                                        render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Cube Size</FormLabel>
-                                            <FormControl>
-                                                <Input type="number" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="density"
-                                        render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Density</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                <FormControl>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Select density" />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    <SelectItem value="low">Low</SelectItem>
-                                                    <SelectItem value="medium">Medium</SelectItem>
-                                                    <SelectItem value="high">High</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage />
-                                        </FormItem>
-                                        )}
-                                    />
-                                </div>
-                                <Button type="submit" disabled={isGenerating} className="w-full">
-                                    {isGenerating ? <><LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> Channeling...</> : <><Sparkles className="mr-2 h-4 w-4" /> Create</> }
-                                </Button>
-                                </form>
-                            </Form>
-                            </CardContent>
-                        </Card>
-                        {activeCreation && <SaveToTreasuryForm creation={activeCreation} />}
-                    </div>
-                    <div className="lg:col-span-2 space-y-8">
-                        <Card>
-                             <CardHeader>
-                                {activeCreation && (
-                                    <div className="flex items-center gap-3">
-                                        <Avatar>
-                                            <AvatarImage src={activeCreation.creatorAvatarUrl || `https://i.pravatar.cc/150?u=${activeCreation.creatorId}`} />
-                                            <AvatarFallback>{activeCreation.creatorName.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                        <div>
-                                            <CardTitle className="text-xl">{activeCreation.prompt}</CardTitle>
-                                            <CardDescription>
-                                                Created by {activeCreation.creatorName} {activeCreation.createdAt && formatDistanceToNow(new Date(activeCreation.createdAt.seconds * 1000), { addSuffix: true })}
-                                            </CardDescription>
-                                        </div>
-                                    </div>
-                                )}
-                            </CardHeader>
-                            <CardContent className="p-2 aspect-square">
-                                <div className="w-full h-full bg-muted rounded-md">
-                                    {isGenerating || isCreationsLoading ? (
-                                        <div className="flex w-full h-full justify-center items-center p-8"> <LoaderCircle className="w-12 h-12 animate-spin text-primary" /> </div>
-                                    ) : error ? (
-                                        <div className="flex w-full h-full justify-center items-center p-4"> <Alert variant="destructive"> <AlertTitle>Generation Failed</AlertTitle> <AlertDescription>{error}</AlertDescription> </Alert> </div>
-                                    ) : activeCreation ? (
-                                        <Svg3dCube pixels={activeCreation.pixels} />
-                                    ) : (
-                                        <div className="flex w-full h-full flex-col gap-4 justify-center items-center text-center text-muted-foreground p-4"> <Svg3dCube pixels={[]} className="w-16 h-16" /> <p>Creations from your community will appear here.</p> </div>
-                                    )}
-                                </div>
-                            </CardContent>
-                             {isOwner && activeCreation && (
-                                <CardFooter className="p-2">
-                                    <Button onClick={() => handlePublish(activeCreation.id)} size="sm" className="w-full">
-                                        <Share className="mr-2 h-4 w-4" /> Publish to Presentation Hall
-                                    </Button>
-                                </CardFooter>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4 border-t">
+                        <FormField
+                            control={form.control}
+                            name="assetName"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Creation Name</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g., 'Digital Sunrise'" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
                             )}
-                        </Card>
-
-                         <Card>
-                            <CardHeader>
-                                <CardTitle>Workshop Feed</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {isCreationsLoading && <div className="flex justify-center p-4"><LoaderCircle className="w-8 h-8 animate-spin text-primary" /></div>}
-                                {creationsError && <p className="text-destructive text-center">Error loading gallery: {creationsError.message}</p>}
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                    {creations?.map(creation => (
-                                        <button key={creation.id} onClick={() => setActiveCreation(creation)} className="relative aspect-square block border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary rounded-lg overflow-hidden group">
-                                            <div className="w-full h-full bg-muted">
-                                            <Svg3dCube pixels={creation.pixels} />
-                                            </div>
-                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 text-center text-white">
-                                                <p className="text-xs font-bold line-clamp-2">{creation.prompt}</p>
-                                            </div>
-                                            {activeCreation?.id === creation.id && (
-                                                <div className="absolute inset-0 border-4 border-primary rounded-md pointer-events-none" />
-                                            )}
-                                        </button>
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-                 </div>
+                        />
+                        <FormField
+                            control={form.control}
+                            name="value"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Creation Value (USD)</FormLabel>
+                                    <FormControl>
+                                        <Input type="number" placeholder="100.00" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <Button type="submit" disabled={isSaving}>
+                            {isSaving ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                            Save Creation to Treasury
+                        </Button>
+                    </form>
+                </div>
             </CardContent>
         </Card>
     );
@@ -1414,7 +1198,22 @@ export default function CommunityProfilePage() {
       {isMember && (
           <>
             <Separator className="my-12" />
-            <CommunityWorkshop communityId={community.id} isOwner={isOwner} />
+             <Card className="shadow-lg">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Paintbrush /> Community Workshop</CardTitle>
+                    <CardDescription>The private creative space for members of {community.name}.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground mb-4">
+                        This is where your community collaborates on generative art. Create new works, view creations from other members, and prepare pieces for the public Presentation Hall.
+                    </p>
+                    <Button asChild>
+                        <Link href={`/community/${id}/workshop`}>
+                            Enter the Workshop
+                        </Link>
+                    </Button>
+                </CardContent>
+            </Card>
           </>
       )}
       
