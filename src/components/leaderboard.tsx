@@ -1,9 +1,9 @@
+
 'use client';
 
-import { useMemo } from 'react';
-import { firestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, limit } from 'firebase/firestore';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { useMemo, useEffect, useState } from 'react';
+import { firestore } from '@/firebase';
+import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -37,11 +37,25 @@ const Medal = ({ rank }: { rank: number }) => {
 
 
 export default function Leaderboard() {
-    const leaderboardQuery = useMemoFirebase(() => 
-        query(collection(firestore, 'leaderboard'), orderBy('score', 'desc'), limit(10))
-    , []);
+    const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
 
-    const [entries, isLoading, error] = useCollectionData<LeaderboardEntry>(leaderboardQuery, { idField: 'userId' });
+    useEffect(() => {
+        if (!firestore) return;
+        const leaderboardQuery = query(collection(firestore, 'leaderboard'), orderBy('score', 'desc'), limit(10));
+
+        const unsubscribe = onSnapshot(leaderboardQuery, (snapshot) => {
+            const entriesData = snapshot.docs.map(doc => ({ userId: doc.id, ...doc.data() } as LeaderboardEntry));
+            setEntries(entriesData);
+            setIsLoading(false);
+        }, (err) => {
+            setError(err);
+            setIsLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, []);
 
     return (
         <Card className="shadow-lg">
@@ -66,7 +80,7 @@ export default function Leaderboard() {
                             <TableRow>
                                 <TableHead className="w-[50px]">Rank</TableHead>
                                 <TableHead>Scribe</TableHead>
-                                <TableHead className="text-right">Score</TableHead>
+                                <TableHead className="text-right">Score (sats)</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>

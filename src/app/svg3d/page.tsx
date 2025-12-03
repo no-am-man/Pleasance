@@ -1,3 +1,4 @@
+
 // src/app/svg3d/page.tsx
 'use client';
 
@@ -11,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { LoaderCircle, Sparkles, Save, Beaker } from 'lucide-react';
-import { generateSvg3d as generateSvg3dAction, saveSvgAsset } from '@/app/actions';
+import { generateSvg3d, saveSvgAsset } from '@/app/actions';
 import { GenerateSvg3dInputSchema, type ColorPixel } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Svg3dCube } from '@/components/icons/svg3d-cube';
@@ -99,9 +100,9 @@ function SaveToTreasuryForm({ pixels, prompt }: { pixels: ColorPixel[], prompt: 
                             name="value"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Artwork Value (USD)</FormLabel>
+                                    <FormLabel>Artwork Value (satoshis)</FormLabel>
                                     <FormControl>
-                                        <Input type="number" placeholder="100.00" {...field} />
+                                        <Input type="number" placeholder="10000" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -177,7 +178,7 @@ export default function Svg3dPage() {
     }
 
     try {
-      const result = await generateSvg3dAction({
+      const result = await generateSvg3d({
           ...data,
           creatorId: user.uid,
           creatorName: user.displayName || 'Anonymous',

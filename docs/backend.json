@@ -277,7 +277,7 @@
         "name": { "type": "string", "description": "The name of the asset." },
         "description": { "type": "string", "description": "A detailed description of the asset." },
         "type": { "type": "string", "enum": ["physical", "virtual", "ip"], "description": "The type of asset." },
-        "value": { "type": "number", "description": "The estimated value of the asset in USD." },
+        "value": { "type": "number", "description": "The estimated value of the asset in Satoshis." },
         "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the asset was declared." },
         "fileUrl": { "type": "string", "format": "uri", "description": "URL to the associated design or data file." }
       },
@@ -296,7 +296,7 @@
         "fileUrl": { "type": "string", "format": "uri", "description": "URL to the design file (e.g., STL, OBJ, PDF)." },
         "supplier": { "type": "string", "description": "The chosen supplier for fabrication (e.g., 'NNO.Studio')." },
         "status": { "type": "string", "enum": ["pending", "in_progress", "completed", "shipped", "cancelled"], "description": "Current status of the fabrication order." },
-        "cost": { "type": "number", "description": "The total cost of the fabrication order in USD." },
+        "cost": { "type": "number", "description": "The total cost of the fabrication order in Satoshis." },
         "notes": { "type": "string", "description": "Special instructions or notes for the order." },
         "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of order creation." },
         "updatedAt": { "type": "string", "format": "date-time", "description": "Timestamp of the last status update." }
@@ -716,5 +716,3 @@
     "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities`, `fabricationOrders`, `bugs`, and `leaderboard` in top-level collections, they become queryable. User-specific data is nested under `/users/{userId}` to ensure privacy. Public profiles are in `/community-profiles` to allow discoverability without exposing private account details. The public roadmap is migrated to Firestore for reliable public read access. The new /conductor/{userId} collection stores conversation history privately for each user. Community-specific data like creations, roadmaps and wikis are nested under `/communities/{communityId}` for privacy and organization. A new top-level `/wiki` collection is added for the public wiki."
   }
 }
-
-    

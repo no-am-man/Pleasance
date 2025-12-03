@@ -6,9 +6,9 @@ import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useUser, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { collection, query, where, serverTimestamp, doc } from 'firebase/firestore';
+import { collection, query, where, serverTimestamp, doc, onSnapshot } from 'firebase/firestore';
 import { declareAssetWithFile } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,8 +19,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LoaderCircle, LogIn, Coins, BrainCircuit, Box, PlusCircle, Eye, Warehouse, Upload, FileArchive, CheckCircle, Clock } from 'lucide-react';
 import Link from 'next/link';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Badge } from '@/components/ui/badge';
 import { useSearchParams } from 'next/navigation';
 
@@ -132,9 +130,9 @@ function AddAssetForm() {
                                 name="value"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Asset Value (USD)</FormLabel>
+                                        <FormLabel>Asset Value (Satoshis)</FormLabel>
                                         <FormControl>
-                                            <Input type="number" placeholder="100.00" {...field} />
+                                            <Input type="number" placeholder="10000" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -213,10 +211,28 @@ function AddAssetForm() {
 
 function AssetList() {
     const { user } = useUser();
-    const assetsQuery = useMemoFirebase(() => user ? query(collection(firestore, 'users', user.uid, 'assets')) : null, [user]);
-    const [assets, isLoading, error] = useCollectionData<Asset>(assetsQuery, {
-      idField: 'id'
-    });
+    const [assets, setAssets] = useState<Asset[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+
+    useEffect(() => {
+        if (!user || !firestore) {
+            setIsLoading(false);
+            return;
+        };
+
+        const assetsQuery = query(collection(firestore, 'users', user.uid, 'assets'));
+        const unsubscribe = onSnapshot(assetsQuery, (snapshot) => {
+            const assetsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Asset));
+            setAssets(assetsData);
+            setIsLoading(false);
+        }, (err) => {
+            setError(err);
+            setIsLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [user]);
 
     if (isLoading) {
         return <div className="flex justify-center p-8"><LoaderCircle className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -244,7 +260,7 @@ function AssetList() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex justify-between items-start">
                                             <h3 className="font-semibold">{asset.name}</h3>
-                                            <p className="font-mono text-primary font-bold text-lg whitespace-nowrap pl-4">${asset.value.toLocaleString()}</p>
+                                            <p className="font-mono text-primary font-bold text-lg whitespace-nowrap pl-4">{asset.value.toLocaleString()} sats</p>
                                         </div>
                                         <p className="text-sm text-muted-foreground break-words whitespace-pre-wrap">{asset.description}</p>
                                     </div>
@@ -283,8 +299,29 @@ function AssetList() {
 
 function OrderList() {
     const { user } = useUser();
-    const ordersQuery = useMemoFirebase(() => user ? query(collection(firestore, 'fabricationOrders'), where('userId', '==', user.uid)) : null, [user]);
-    const [orders, isLoading, error] = useCollectionData<FabricationOrder>(ordersQuery, { idField: 'id' });
+    const [orders, setOrders] = useState<FabricationOrder[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+
+     useEffect(() => {
+        if (!user || !firestore) {
+            setIsLoading(false);
+            return;
+        }
+
+        const ordersQuery = query(collection(firestore, 'fabricationOrders'), where('userId', '==', user.uid));
+        const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
+            const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FabricationOrder));
+            setOrders(ordersData);
+            setIsLoading(false);
+        }, (err) => {
+            setError(err);
+            setIsLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [user]);
+
 
     const getStatusVariant = (status: FabricationOrder['status']) => {
         switch (status) {
@@ -334,7 +371,7 @@ function OrderList() {
                             <div key={order.id} className="flex items-center gap-4 rounded-md border p-4">
                                 <div className="flex-1">
                                     <h3 className="font-semibold">{order.assetName}</h3>
-                                    <p className="text-sm text-muted-foreground">Supplier: {order.supplier} | Cost: ${order.cost?.toFixed(2) ?? 'N/A'}</p>
+                                    <p className="text-sm text-muted-foreground">Supplier: {order.supplier} | Cost: {order.cost > 0 ? `${order.cost.toLocaleString()} sats` : 'N/A'}</p>
                                 </div>
                                 <Badge variant={getStatusVariant(order.status)} className="flex items-center gap-1.5">
                                     {getStatusIcon(order.status)}

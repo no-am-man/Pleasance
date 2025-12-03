@@ -1,3 +1,4 @@
+
 // src/components/community/SaveToTreasuryForm.tsx
 'use client';
 import { useState, useEffect } from 'react';
@@ -142,9 +143,9 @@ export function SaveToTreasuryForm({ creation }: { creation: Creation }) {
                             name="value"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Creation Value (USD)</FormLabel>
+                                    <FormLabel>Creation Value (satoshis)</FormLabel>
                                     <FormControl>
-                                        <Input type="number" placeholder="100.00" {...field} />
+                                        <Input type="number" placeholder="10000" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

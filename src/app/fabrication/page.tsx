@@ -14,10 +14,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { LoaderCircle, PlusCircle, LogIn, Warehouse, ShoppingCart, Info, CheckCircle, Clock } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import Link from 'next/link';
-import { useUser, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { collection, query, where, serverTimestamp, doc } from 'firebase/firestore';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { collection, query, where, serverTimestamp, doc, onSnapshot } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSearchParams } from 'next/navigation';
@@ -57,8 +56,28 @@ const OrderSchema = z.object({
 
 function OrderList() {
     const { user } = useUser();
-    const ordersQuery = useMemoFirebase(() => user ? query(collection(firestore, 'fabricationOrders'), where('userId', '==', user.uid)) : null, [user]);
-    const [orders, isLoading, error] = useCollectionData<FabricationOrder>(ordersQuery, { idField: 'id' });
+    const [orders, setOrders] = useState<FabricationOrder[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+
+    useEffect(() => {
+        if (!user || !firestore) {
+            setIsLoading(false);
+            return;
+        }
+
+        const ordersQuery = query(collection(firestore, 'fabricationOrders'), where('userId', '==', user.uid));
+        const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
+            const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FabricationOrder));
+            setOrders(ordersData);
+            setIsLoading(false);
+        }, (err) => {
+            setError(err);
+            setIsLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [user]);
 
     const getStatusVariant = (status: FabricationOrder['status']) => {
         switch (status) {
@@ -108,7 +127,7 @@ function OrderList() {
                             <div key={order.id} className="flex items-center gap-4 rounded-md border p-4">
                                 <div className="flex-1">
                                     <h3 className="font-semibold">{order.assetName}</h3>
-                                    <p className="text-sm text-muted-foreground">Supplier: {order.supplier} | Cost: ${order.cost?.toFixed(2) ?? 'N/A'}</p>
+                                    <p className="text-sm text-muted-foreground">Supplier: {order.supplier} | Cost: {order.cost > 0 ? `${order.cost.toLocaleString()} sats` : 'N/A'}</p>
                                 </div>
                                 <Badge variant={getStatusVariant(order.status)} className="flex items-center gap-1.5">
                                     {getStatusIcon(order.status)}
@@ -148,7 +167,7 @@ function NewOrderForm({ assets }: { assets: Asset[] }) {
     }, [preselectedAssetId, form]);
 
     async function onSubmit(data: z.infer<typeof OrderSchema>) {
-        if (!user) {
+        if (!user || !firestore) {
             toast({ variant: 'destructive', title: "Not Authenticated" });
             return;
         }
@@ -266,9 +285,21 @@ function NewOrderForm({ assets }: { assets: Asset[] }) {
 
 export default function FabricationPage() {
   const { user, isUserLoading } = useUser();
-  
-  const assetsQuery = useMemoFirebase(() => (user ? query(collection(firestore, `users/${user.uid}/assets`)) : null), [user]);
-  const [assets, isAssetsLoading] = useCollectionData<Asset>(assetsQuery, { idField: 'id' });
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [isAssetsLoading, setIsAssetsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user || !firestore) {
+        setIsAssetsLoading(false);
+        return;
+    }
+    const assetsQuery = query(collection(firestore, `users/${user.uid}/assets`));
+    const unsubscribe = onSnapshot(assetsQuery, (snapshot) => {
+        setAssets(snapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as Asset)));
+        setIsAssetsLoading(false);
+    });
+    return () => unsubscribe();
+  }, [user]);
 
   if (isUserLoading || isAssetsLoading) {
     return (
