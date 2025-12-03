@@ -211,16 +211,22 @@ export default function CommunityWorkshopPage() {
     const [community, isCommunityLoading] = useDocumentData<Community>(communityDocRef);
     const isOwner = user?.uid === community?.ownerId;
 
-    const workshopCreationsQuery = useMemoFirebase(() => communityId ? query(collection(firestore, `communities/${communityId}/creations`), where('status', '==', 'in-workshop'), orderBy('createdAt', 'desc')) : null, [communityId]);
+    const workshopCreationsQuery = useMemoFirebase(() => communityId ? query(collection(firestore, `communities/${communityId}/creations`), where('status', '==', 'in-workshop')) : null, [communityId]);
     const [creations, isCreationsLoading, creationsError] = useCollectionData<Creation>(workshopCreationsQuery, {
         idField: 'id'
     });
 
+    const sortedCreations = useMemo(() => {
+        if (!creations) return [];
+        return [...creations].sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
+    }, [creations]);
+
+
     useEffect(() => {
-        if (!activeCreation && creations && creations.length > 0) {
-            setActiveCreation(creations[0]);
+        if (!activeCreation && sortedCreations && sortedCreations.length > 0) {
+            setActiveCreation(sortedCreations[0]);
         }
-    }, [creations, activeCreation]);
+    }, [sortedCreations, activeCreation]);
 
     const form = useForm<z.infer<typeof Svg3dSchema>>({
         resolver: zodResolver(Svg3dSchema),
@@ -439,7 +445,7 @@ export default function CommunityWorkshopPage() {
                             {isCreationsLoading && <div className="flex justify-center p-4"><LoaderCircle className="w-8 h-8 animate-spin text-primary" /></div>}
                             {creationsError && <p className="text-destructive text-center">Error loading gallery: {creationsError.message}</p>}
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                {creations?.map(creation => (
+                                {sortedCreations?.map(creation => (
                                     <button key={creation.id} onClick={() => setActiveCreation(creation)} className="relative aspect-square block border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary rounded-lg overflow-hidden group">
                                         <div className="w-full h-full bg-muted">
                                         <Svg3dCube pixels={creation.pixels} />
