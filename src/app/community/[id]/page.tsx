@@ -22,7 +22,7 @@ import { HumanIcon } from '@/components/icons/human-icon';
 import { AiIcon } from '@/components/icons/ai-icon';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import Image from 'next/image';
-import { getAiChatResponse, generateCommunityFlag as generateCommunityFlagAction, generateSvg3d, saveSvgAsset, createHistorySnapshot } from '@/app/actions';
+import { getAiChatResponse, generateCommunityFlagAction, generateSvg3d, saveSvgAsset, createHistorySnapshot } from '@/app/actions';
 import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
 import { type ChatHistory } from 'genkit';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
