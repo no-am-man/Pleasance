@@ -34,11 +34,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core';
+import { DndContext, closestCenter, type DragEndEvent, type DraggableAttributes } from '@dnd-kit/core';
 import { SortableContext, useSortable, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities';
 
 
 const AddIdeaSchema = z.object({
@@ -163,7 +164,7 @@ function AddIdeaForm() {
     )
 }
 
-function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, dragHandleProps }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; allProfiles: CommunityProfile[]; onUpdateAssignees: (cardId: string, assigneeName: string, shouldAssign: boolean) => void; dragHandleProps?: any; }) {
+function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, dragHandleProps }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; allProfiles: CommunityProfile[]; onUpdateAssignees: (cardId: string, assigneeName: string, shouldAssign: boolean) => void; dragHandleProps?: {listeners: SyntheticListenerMap, attributes: DraggableAttributes} }) {
   const { user } = useUser();
   const isFounder = user?.email === 'gg.el0ai.com@gmail.com';
   const { toast } = useToast();
@@ -192,20 +193,22 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, dr
     }
   };
   
-  const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
+  const stopPropagation = (e: React.MouseEvent | React.FocusEvent) => e.stopPropagation();
 
   return (
     <Card className="bg-card/70 hover:bg-card transition-all group relative">
       <CardHeader
         className="p-4 pb-0 flex flex-row items-start justify-between"
+        {...dragHandleProps?.attributes}
+        {...dragHandleProps?.listeners}
       >
-        <CardTitle className="text-base">{card.title}</CardTitle>
+        <div className="flex items-center gap-2">
+            <div className={cn("p-1 opacity-20 group-hover:opacity-100 transition-opacity", dragHandleProps ? 'cursor-grab' : 'cursor-default')}>
+                <GripVertical className="h-5 w-5" />
+            </div>
+            <CardTitle className="text-base">{card.title}</CardTitle>
+        </div>
         <div className="flex items-center">
-             {dragHandleProps && (
-                <div {...dragHandleProps} className="p-1 cursor-grab opacity-20 group-hover:opacity-100 transition-opacity">
-                    <GripVertical className="h-5 w-5" />
-                </div>
-             )}
             {isFounder && (
                 <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
                     {canMoveLeft && (
@@ -225,7 +228,7 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, dr
                             <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent onMouseDown={stopPropagation}>
+                        <AlertDialogContent onMouseDown={stopPropagation} onFocus={stopPropagation}>
                             <AlertDialogHeader>
                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                             <AlertDialogDescription>
@@ -285,7 +288,7 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, dr
                             <UserPlus className="h-4 w-4"/>
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent onMouseDown={stopPropagation}>
+                    <DropdownMenuContent onMouseDown={stopPropagation} onFocus={stopPropagation}>
                         {allProfiles.map(profile => {
                             const isAssigned = card.assignees?.includes(profile.name);
                             return (
@@ -308,7 +311,12 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, dr
 }
 
 function SortableKanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; allProfiles: CommunityProfile[]; onUpdateAssignees: (cardId: string, assigneeName: string, shouldAssign: boolean) => void; }) {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: card.id });
+    const isDraggable = columnId === 'ideas';
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ 
+        id: card.id,
+        disabled: !isDraggable,
+     });
+
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
@@ -323,7 +331,7 @@ function SortableKanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssig
                 onMove={onMove}
                 allProfiles={allProfiles}
                 onUpdateAssignees={onUpdateAssignees}
-                dragHandleProps={{...attributes, ...listeners}}
+                dragHandleProps={isDraggable ? {listeners, attributes} : undefined}
             />
         </div>
     )
@@ -340,12 +348,10 @@ function KanbanColumn({ id, title, cards, children, onMoveCard, allProfiles, onU
         </div>
         <div className="flex-grow space-y-4 rounded-lg p-3 bg-muted/50 min-h-[200px]">
             {children}
-            {id === 'ideas' && isFounder && cards ? (
+            {cards ? (
                 <SortableContext id={id} items={cards.map(c => c.id)} strategy={verticalListSortingStrategy}>
                     {cards.map(card => <SortableKanbanCard key={card.id} card={card} columnId={id} onMove={onMoveCard} allProfiles={allProfiles} onUpdateAssignees={(cardId, assignee, shouldAssign) => onUpdateAssignees(cardId, id, assignee, shouldAssign)} />)}
                 </SortableContext>
-            ) : cards && cards.length > 0 ? (
-              cards.map(card => <KanbanCard key={card.id} card={card} columnId={id} onMove={onMoveCard} allProfiles={allProfiles} onUpdateAssignees={(cardId, assignee, shouldAssign) => onUpdateAssignees(cardId, id, assignee, shouldAssign)} />)
             ) : (
               !children && (
                  <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
@@ -425,27 +431,42 @@ export default function RoadmapPage() {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const activeColumn = columns.find(col => col.cards.some(c => c.id === active.id));
-    if (activeColumn?.id !== 'ideas') return; // Only allow reordering in 'ideas'
-
+    const activeContainerId = active.data.current?.sortable.containerId;
+    const overContainerId = over.data.current?.sortable.containerId;
+    
     let reorderedCards: RoadmapCardType[] | undefined;
 
-    setColumns(prevColumns => {
-      const ideasColumn = prevColumns.find(col => col.id === 'ideas');
-      if (!ideasColumn) return prevColumns;
+    if (activeContainerId === overContainerId && activeContainerId === 'ideas') {
+      // Reordering within the 'ideas' column
+      setColumns(prevColumns => {
+        const ideasColumnIndex = prevColumns.findIndex(col => col.id === 'ideas');
+        if (ideasColumnIndex === -1) return prevColumns;
 
-      const oldIndex = ideasColumn.cards.findIndex(card => card.id === active.id);
-      const newIndex = ideasColumn.cards.findIndex(card => card.id === over.id);
+        const ideasColumn = prevColumns[ideasColumnIndex];
+        const oldIndex = ideasColumn.cards.findIndex(card => card.id === active.id);
+        const newIndex = ideasColumn.cards.findIndex(card => card.id === over.id);
 
-      if (oldIndex === -1 || newIndex === -1) return prevColumns;
+        if (oldIndex === -1 || newIndex === -1) return prevColumns;
+        
+        reorderedCards = arrayMove(ideasColumn.cards, oldIndex, newIndex);
+        
+        const newColumns = [...prevColumns];
+        newColumns[ideasColumnIndex] = { ...ideasColumn, cards: reorderedCards };
 
-      reorderedCards = arrayMove(ideasColumn.cards, oldIndex, newIndex);
+        return newColumns;
+      });
 
-      return prevColumns.map(col =>
-        col.id === 'ideas' ? { ...col, cards: reorderedCards! } : col
-      );
-    });
+    } else {
+      // Moving between columns
+      const sourceColumn = columns.find(col => col.id === activeContainerId);
+      const targetColumn = columns.find(col => col.id === overContainerId);
 
+      if (sourceColumn && targetColumn && sourceColumn.id !== targetColumn.id) {
+         // For now, only handle with move buttons to avoid complex drag-and-drop state logic between columns
+      }
+    }
+    
+    // If reordered, call server action
     if (reorderedCards) {
       const result = await updateRoadmapCardOrder('ideas', reorderedCards);
       if (result.error) {
