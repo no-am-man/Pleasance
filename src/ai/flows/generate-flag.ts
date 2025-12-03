@@ -50,7 +50,7 @@ Example of a good response format:
 Now, generate the SVG based on the provided community details.`;
 
     const { output } = await ai.generate({
-      model: 'gemini-pro',
+      model: 'googleai/gemini-1.5-flash-latest',
       prompt: prompt,
     });
 
