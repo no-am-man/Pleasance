@@ -47,6 +47,9 @@ Example of a good response format:
 
 Now, generate the SVG based on the provided community details.
 `,
+    config: {
+      model: 'googleai/gemini-1.5-pro-latest',
+    },
 });
 
 
@@ -57,11 +60,7 @@ const generateFlagFlow = ai.defineFlow(
     outputSchema: GenerateFlagOutputSchema,
   },
   async (input) => {
-    const { output } = await ai.generate({
-        prompt: generateFlagPrompt,
-        input: input,
-        model: 'googleai/gemini-1.5-pro-latest',
-    });
+    const { output } = await generateFlagPrompt(input);
     
     if (!output?.svg) {
         throw new Error("The AI failed to generate an SVG string.");
