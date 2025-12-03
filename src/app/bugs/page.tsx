@@ -5,7 +5,7 @@ import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useUser } from '@/firebase';
+import { useUser, useMemoFirebase } from '@/firebase';
 import { firestore } from '@/firebase/config';
 import { collection, query, orderBy, serverTimestamp, doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -157,7 +157,7 @@ function AddBugForm() {
 }
 
 function BugList() {
-    const bugsQuery = useMemo(() => query(collection(firestore, 'bugs'), orderBy('createdAt', 'desc')), []);
+    const bugsQuery = useMemoFirebase(() => query(collection(firestore, 'bugs'), orderBy('createdAt', 'desc')), []);
     const [bugs, isLoading, error] = useCollectionData<Bug>(bugsQuery, { idField: 'id' });
 
     const getStatusVariant = (status: Bug['status']) => {

@@ -14,7 +14,7 @@ import { LANGUAGES } from '@/config/languages';
 import { generateStoryAndSpeech, createHistorySnapshot } from '@/app/actions';
 import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useUser } from '@/firebase';
+import { useUser, useMemoFirebase } from '@/firebase';
 import { firestore } from '@/firebase/config';
 import { collection, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import { Separator } from '@/components/ui/separator';
@@ -69,7 +69,7 @@ type CommunityProfile = {
 function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void; }) {
     const { user, isUserLoading } = useUser();
 
-    const storiesQuery = useMemo(() => user ? query(collection(firestore, 'users', user.uid, 'stories'), orderBy('createdAt', 'desc')) : null, [user]);
+    const storiesQuery = useMemoFirebase(() => user ? query(collection(firestore, 'users', user.uid, 'stories'), orderBy('createdAt', 'desc')) : null, [user]);
     const [stories, isLoading, error] = useCollectionData<Story>(storiesQuery, {
       idField: 'id'
     });
@@ -154,7 +154,7 @@ function TimeMachine() {
     const { toast } = useToast();
     const [isCreating, setIsCreating] = useState(false);
 
-    const snapshotsQuery = useMemo(() => user ? query(collection(firestore, 'users', user.uid, 'historySnapshots'), orderBy('createdAt', 'desc')) : null, [user]);
+    const snapshotsQuery = useMemoFirebase(() => user ? query(collection(firestore, 'users', user.uid, 'historySnapshots'), orderBy('createdAt', 'desc')) : null, [user]);
     const [snapshots, isLoading, error] = useCollectionData<HistorySnapshot>(snapshotsQuery, {
       idField: 'id'
     });
@@ -227,7 +227,7 @@ export default function StoryPage() {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   
-  const profileDocRef = useMemo(() => user ? doc(firestore, 'community-profiles', user.uid) : null, [user]);
+  const profileDocRef = useMemoFirebase(() => user ? doc(firestore, 'community-profiles', user.uid) : null, [user]);
   const [profile, isProfileLoading] = useDocumentData<CommunityProfile>(profileDocRef);
 
   const form = useForm<z.infer<typeof StoryFormSchema>>({

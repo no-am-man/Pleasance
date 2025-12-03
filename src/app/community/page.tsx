@@ -1,4 +1,3 @@
-
 // src/app/community/page.tsx
 "use client";
 
@@ -7,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
-import { useUser } from "@/firebase";
+import { useUser, useMemoFirebase } from "@/firebase";
 import { firestore } from "@/firebase/config";
 import { collection, doc, query, where, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -288,7 +287,7 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
 }
 
 function CommunitySearchResults({ searchTerm, profiles }: { searchTerm: string, profiles: CommunityProfile[] | undefined }) {
-    const searchCommunitiesQuery = useMemo(() => searchTerm 
+    const searchCommunitiesQuery = useMemoFirebase(() => searchTerm 
       ? query(collection(firestore, 'communities'), where('name', '>=', searchTerm), where('name', '<=', searchTerm + '\uf8ff'))
       : null, [searchTerm]);
   
@@ -308,7 +307,7 @@ function CommunitySearchResults({ searchTerm, profiles }: { searchTerm: string, 
 }
 
 function PublicCommunityList({ profiles }: { profiles: CommunityProfile[] | undefined }) {
-    const publicCommunitiesQuery = useMemo(() => query(collection(firestore, 'communities'), orderBy('name', 'asc')), []);
+    const publicCommunitiesQuery = useMemoFirebase(() => query(collection(firestore, 'communities'), orderBy('name', 'asc')), []);
 
     const [communities, isLoading, error] = useCollectionData<Community>(publicCommunitiesQuery, {
       idField: 'id',
@@ -330,12 +329,12 @@ export default function CommunityPage() {
   const { user, isUserLoading } = useUser();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const userCommunitiesQuery = useMemo(() => user ? query(collection(firestore, 'communities'), where('ownerId', '==', user.uid)) : null, [user]);
+  const userCommunitiesQuery = useMemoFirebase(() => user ? query(collection(firestore, 'communities'), where('ownerId', '==', user.uid)) : null, [user]);
   const [userCommunities, isLoadingUserCommunities, userCommunitiesError] = useCollectionData<Community>(userCommunitiesQuery, {
     idField: 'id',
   });
 
-  const allProfilesQuery = useMemo(() => query(collection(firestore, 'community-profiles')), []);
+  const allProfilesQuery = useMemoFirebase(() => query(collection(firestore, 'community-profiles')), []);
   const [allProfiles, isLoadingProfiles] = useCollectionData<CommunityProfile>(allProfilesQuery, {
     idField: 'id'
   });

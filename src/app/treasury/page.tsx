@@ -1,4 +1,3 @@
-
 // src/app/treasury/page.tsx
 'use client';
 
@@ -6,7 +5,7 @@ import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useUser } from '@/firebase';
+import { useUser, useMemoFirebase } from '@/firebase';
 import { firestore } from '@/firebase/config';
 import { collection, query } from 'firebase/firestore';
 import { declareAssetWithFile } from '../actions';
@@ -195,7 +194,7 @@ function AddAssetForm() {
 
 function AssetList() {
     const { user } = useUser();
-    const assetsQuery = useMemo(() => user ? query(collection(firestore, 'users', user.uid, 'assets')) : null, [user]);
+    const assetsQuery = useMemoFirebase(() => user ? query(collection(firestore, 'users', user.uid, 'assets')) : null, [user]);
     const [assets, isLoading, error] = useCollectionData<Asset>(assetsQuery, {
       idField: 'id'
     });
@@ -311,5 +310,3 @@ export default function TreasuryPage() {
     </main>
   );
 }
-
-    

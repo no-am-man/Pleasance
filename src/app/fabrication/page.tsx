@@ -1,4 +1,3 @@
-
 // src/app/fabrication/page.tsx
 'use client';
 
@@ -14,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { LoaderCircle, PlusCircle, LogIn, Warehouse, ShoppingCart, Info, CheckCircle, Clock } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import Link from 'next/link';
-import { useUser } from '@/firebase';
+import { useUser, useMemoFirebase } from '@/firebase';
 import { firestore } from '@/firebase/config';
 import { collection, query, where, serverTimestamp, doc } from 'firebase/firestore';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
@@ -57,7 +56,7 @@ const OrderSchema = z.object({
 
 function OrderList() {
     const { user } = useUser();
-    const ordersQuery = useMemo(() => user ? query(collection(firestore, 'fabricationOrders'), where('userId', '==', user.uid)) : null, [user]);
+    const ordersQuery = useMemoFirebase(() => user ? query(collection(firestore, 'fabricationOrders'), where('userId', '==', user.uid)) : null, [user]);
     const [orders, isLoading, error] = useCollectionData<FabricationOrder>(ordersQuery, { idField: 'id' });
 
     const getStatusVariant = (status: FabricationOrder['status']) => {
@@ -267,7 +266,7 @@ function NewOrderForm({ assets }: { assets: Asset[] }) {
 export default function FabricationPage() {
   const { user, isUserLoading } = useUser();
   
-  const assetsQuery = useMemo(() => user ? query(collection(firestore, `users/${user.uid}/assets`)) : null, [user]);
+  const assetsQuery = useMemoFirebase(() => user ? query(collection(firestore, `users/${user.uid}/assets`)) : null, [user]);
   const [assets, isAssetsLoading] = useCollectionData<Asset>(assetsQuery, { idField: 'id' });
 
   if (isUserLoading || isAssetsLoading) {

@@ -4,7 +4,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useUser, addDocumentNonBlocking } from '@/firebase';
+import { useUser, addDocumentNonBlocking, useMemoFirebase } from '@/firebase';
 import { firestore } from '@/firebase/config';
 import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, setDoc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -407,7 +407,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
     const isDeleted = message.deleted;
     const isReady = !!message.id && !!message.communityId;
     
-    const commentsQuery = useMemo(() => isReady ? query(collection(firestore, `communities/${message.communityId}/messages/${message.id}/comments`), orderBy('createdAt', 'asc')) : null, [isReady, message.communityId, message.id]);
+    const commentsQuery = useMemoFirebase(() => isReady ? query(collection(firestore, `communities/${message.communityId}/messages/${message.id}/comments`), orderBy('createdAt', 'asc')) : null, [isReady, message.communityId, message.id]);
     const [comments, isLoadingComments] = useCollectionData<Comment>(commentsQuery, {
       idField: 'id'
     });
@@ -551,7 +551,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
 function Network({ communityId, isOwner, allMembers }: { communityId: string; isOwner: boolean, allMembers: Member[] }) {
     const { user } = useUser();
 
-    const messagesQuery = useMemo(() => query(collection(firestore, `communities/${communityId}/messages`), orderBy('createdAt', 'desc')), [communityId]);
+    const messagesQuery = useMemoFirebase(() => query(collection(firestore, `communities/${communityId}/messages`), orderBy('createdAt', 'desc')), [communityId]);
     const [messages, isLoading, error] = useCollectionData<Message>(messagesQuery, {
       idField: 'id'
     });
@@ -636,7 +636,7 @@ function Network({ communityId, isOwner, allMembers }: { communityId: string; is
 function JoinRequests({ communityId, communityDocRef }: { communityId: string, communityDocRef: any }) {
     const { toast } = useToast();
 
-    const requestsQuery = useMemo(() => query(collection(firestore, `communities/${communityId}/joinRequests`), where('status', '==', 'pending')), [communityId]);
+    const requestsQuery = useMemoFirebase(() => query(collection(firestore, `communities/${communityId}/joinRequests`), where('status', '==', 'pending')), [communityId]);
     const [requests, isLoading] = useCollectionData<JoinRequest>(requestsQuery, {
       idField: 'id'
     });
@@ -842,7 +842,7 @@ function CommunityWorkshop({ communityId, isOwner }: { communityId: string, isOw
     const { user } = useUser();
     const { toast } = useToast();
 
-    const workshopCreationsQuery = useMemo(() => query(collection(firestore, `communities/${communityId}/creations`), where('status', '==', 'in-workshop'), orderBy('createdAt', 'desc')), [communityId]);
+    const workshopCreationsQuery = useMemoFirebase(() => query(collection(firestore, `communities/${communityId}/creations`), where('status', '==', 'in-workshop'), orderBy('createdAt', 'desc')), [communityId]);
     const [creations, isCreationsLoading, creationsError] = useCollectionData<Creation>(workshopCreationsQuery, {
         idField: 'id'
     });
@@ -931,39 +931,39 @@ function CommunityWorkshop({ communityId, isOwner }: { communityId: string, isOw
                                     )}
                                 />
                                 <div className="grid grid-cols-2 gap-4">
-                                    <FormField
+                                     <FormField
                                         control={form.control}
                                         name="cubeSize"
                                         render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Cube Size</FormLabel>
-                                                <FormControl>
-                                                    <Input type="number" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
+                                        <FormItem>
+                                            <FormLabel>Cube Size</FormLabel>
+                                            <FormControl>
+                                                <Input type="number" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
                                         )}
                                     />
                                     <FormField
                                         control={form.control}
                                         name="density"
                                         render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Density</FormLabel>
-                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                    <FormControl>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Select density" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        <SelectItem value="low">Low</SelectItem>
-                                                        <SelectItem value="medium">Medium</SelectItem>
-                                                        <SelectItem value="high">High</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
+                                        <FormItem>
+                                            <FormLabel>Density</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select density" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="low">Low</SelectItem>
+                                                    <SelectItem value="medium">Medium</SelectItem>
+                                                    <SelectItem value="high">High</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
                                         )}
                                     />
                                 </div>
@@ -1048,7 +1048,7 @@ function CommunityWorkshop({ communityId, isOwner }: { communityId: string, isOw
 }
 
 function PresentationHall({ communityId }: { communityId: string }) {
-    const publishedCreationsQuery = useMemo(() => query(collection(firestore, `communities/${communityId}/creations`), where('status', '==', 'published'), orderBy('createdAt', 'desc')), [communityId]);
+    const publishedCreationsQuery = useMemoFirebase(() => query(collection(firestore, `communities/${communityId}/creations`), where('status', '==', 'published'), orderBy('createdAt', 'desc')), [communityId]);
     const [creations, isLoading, error] = useCollectionData<Creation>(publishedCreationsQuery, {
         idField: 'id'
     });
@@ -1119,12 +1119,12 @@ export default function CommunityProfilePage() {
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const [isGeneratingFlag, setIsGeneratingFlag] = useState(false);
 
-  const communityDocRef = useMemo(() => id ? doc(firestore, 'communities', id) : null, [id]);
+  const communityDocRef = useMemoFirebase(() => id ? doc(firestore, 'communities', id) : null, [id]);
   const [community, isLoading, error] = useDocumentData<Community>(communityDocRef, {
     idField: 'id'
   });
   
-  const allProfilesQuery = useMemo(() => collection(firestore, 'community-profiles'), []);
+  const allProfilesQuery = useMemoFirebase(() => collection(firestore, 'community-profiles'), []);
   const [allProfiles, profilesLoading] = useCollectionData<CommunityProfile>(allProfilesQuery, {
     idField: 'id'
   });
@@ -1135,10 +1135,10 @@ export default function CommunityProfilePage() {
 
   const isOwner = user?.uid === community?.ownerId;
   
-  const userProfileRef = useMemo(() => user ? doc(firestore, 'community-profiles', user.uid) : null, [user]);
+  const userProfileRef = useMemoFirebase(() => user ? doc(firestore, 'community-profiles', user.uid) : null, [user]);
   const [userProfile] = useDocumentData<CommunityProfile>(userProfileRef);
 
-  const userJoinRequestRef = useMemo(() => user && id ? doc(firestore, 'communities', id, 'joinRequests', user.uid) : null, [user, id]);
+  const userJoinRequestRef = useMemoFirebase(() => user && id ? doc(firestore, 'communities', id, 'joinRequests', user.uid) : null, [user, id]);
   const [userJoinRequest, isRequestLoading] = useDocumentData<JoinRequest>(userJoinRequestRef);
 
   const hasPendingRequest = userJoinRequest?.status === 'pending';
