@@ -12,23 +12,6 @@ import { collection, query } from 'firebase/firestore';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType } from '@/lib/types';
 import { LoaderCircle, PlusCircle, Trash2, Sparkles, ArrowRight, ArrowLeft } from 'lucide-react';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import { updateRoadmapCardColumn, addRoadmapCard, deleteRoadmapCard, refineCardDescription } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
@@ -174,21 +157,19 @@ function AddIdeaForm() {
     )
 }
 
-const SortableKanbanCard = ({ card, columnId }: { card: RoadmapCardType; columnId: string; }) => {
+const KanbanCard = ({ card, columnId, onMove }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, direction: 'left' | 'right') => void; }) => {
   const { user } = useUser();
   const isFounder = user?.email === 'gg.el0ai.com@gmail.com';
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: card.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 10 : 1,
-  };
   
+  const columnIds = ['ideas', 'nextUp', 'inProgress', 'alive'];
+  const currentIndex = columnIds.indexOf(columnId);
+
+  const canMoveLeft = currentIndex > 0;
+  const canMoveRight = currentIndex < columnIds.length - 1;
+
+
   const handleDelete = async () => {
     setIsDeleting(true);
     const result = await deleteRoadmapCard(card.id, columnId);
@@ -208,80 +189,91 @@ const SortableKanbanCard = ({ card, columnId }: { card: RoadmapCardType; columnI
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <Card className="bg-card/70 hover:bg-card transition-all cursor-grab active:cursor-grabbing group">
-        <CardHeader className="p-4 pb-0 flex flex-row items-start justify-between">
-          <CardTitle className="text-base">{card.title}</CardTitle>
-          {isFounder && columnId === 'ideas' && (
-             <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will permanently delete the idea "{card.title}". This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                    className="bg-destructive hover:bg-destructive/90"
-                  >
-                    {isDeleting ? <LoaderCircle className="animate-spin" /> : 'Delete'}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-        </CardHeader>
-        <CardContent className="p-4 pt-2">
-          <p className="text-sm text-muted-foreground mb-4">{card.description}</p>
-          <div className="flex justify-between items-center">
-            <div className="flex gap-2 flex-wrap">
-              {card.tags?.map(tag => (
-                <Badge key={tag} variant="secondary">{tag}</Badge>
-              ))}
+    <Card className="bg-card/70 hover:bg-card transition-all group relative">
+      <CardHeader className="p-4 pb-0 flex flex-row items-start justify-between">
+        <CardTitle className="text-base">{card.title}</CardTitle>
+        {isFounder && (
+            <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                 {canMoveLeft && (
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(card.id, 'left')}>
+                        <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                )}
+                {canMoveRight && (
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(card.id, 'right')}>
+                        <ArrowRight className="h-4 w-4" />
+                    </Button>
+                )}
+                {columnId === 'ideas' && (
+                    <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete the idea "{card.title}". This action cannot be undone.
+                        </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDelete}
+                            disabled={isDeleting}
+                            className="bg-destructive hover:bg-destructive/90"
+                        >
+                            {isDeleting ? <LoaderCircle className="animate-spin" /> : 'Delete'}
+                        </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                    </AlertDialog>
+                )}
             </div>
-            <div className="flex -space-x-2">
-              <TooltipProvider>
-                {card.assignees?.map(assignee => (
-                  <Tooltip key={assignee}>
-                    <TooltipTrigger asChild>
-                      <Avatar className="h-6 w-6 border-2 border-background">
-                        <AvatarImage src={`https://i.pravatar.cc/150?u=${assignee}`} />
-                        <AvatarFallback>{assignee.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{assignee}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
-              </TooltipProvider>
-            </div>
+        )}
+      </CardHeader>
+      <CardContent className="p-4 pt-2">
+        <p className="text-sm text-muted-foreground mb-4">{card.description}</p>
+        <div className="flex justify-between items-center">
+          <div className="flex gap-2 flex-wrap">
+            {card.tags?.map(tag => (
+              <Badge key={tag} variant="secondary">{tag}</Badge>
+            ))}
           </div>
-        </CardContent>
-      </Card>
-    </div>
+          <div className="flex -space-x-2">
+            <TooltipProvider>
+              {card.assignees?.map(assignee => (
+                <Tooltip key={assignee}>
+                  <TooltipTrigger asChild>
+                    <Avatar className="h-6 w-6 border-2 border-background">
+                      <AvatarImage src={`https://i.pravatar.cc/150?u=${assignee}`} />
+                      <AvatarFallback>{assignee.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{assignee}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </TooltipProvider>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
-const KanbanColumn = ({ id, title, cards, children }: RoadmapColumnType & { children?: React.ReactNode }) => (
-  <div className="flex flex-col gap-4 lg:col-span-3">
+const KanbanColumn = ({ id, title, cards, children, onMoveCard }: RoadmapColumnType & { children?: React.ReactNode; onMoveCard: (cardId: string, direction: 'left' | 'right') => void; }) => (
+  <div className="flex flex-col gap-4">
     <div className="px-3 py-2">
       <h2 className="text-lg font-semibold text-foreground">{title}</h2>
     </div>
     <div className="flex-grow space-y-4 rounded-lg p-3 bg-muted/50 min-h-[200px]">
         {children}
-      <SortableContext id={id} items={cards?.map(c => c.id) || []} strategy={verticalListSortingStrategy}>
         {cards && cards.length > 0 ? (
-          cards.map(card => <SortableKanbanCard key={card.id} card={card} columnId={id} />)
+          cards.map(card => <KanbanCard key={card.id} card={card} columnId={id} onMove={onMoveCard} />)
         ) : (
           !children && (
              <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
@@ -289,20 +281,9 @@ const KanbanColumn = ({ id, title, cards, children }: RoadmapColumnType & { chil
             </div>
           )
         )}
-      </SortableContext>
     </div>
   </div>
 );
-
-const WorkflowArrows = ({ showLeft, showRight }: { showLeft: boolean; showRight: boolean; }) => (
-    <div className="hidden lg:flex items-center justify-center h-full">
-        <div className="flex items-center justify-between w-full px-2">
-            {showLeft ? <ArrowLeft className="h-8 w-8 text-muted-foreground" /> : <div className="w-8" />}
-            {showRight ? <ArrowRight className="h-8 w-8 text-muted-foreground" /> : <div className="w-8" />}
-        </div>
-    </div>
-);
-
 
 export default function RoadmapPage() {
   const { user } = useUser();
@@ -312,98 +293,68 @@ export default function RoadmapPage() {
   const [columnsData, isLoading, error] = useCollectionData<RoadmapColumnType>(roadmapQuery);
 
   const [columns, setColumns] = useState<RoadmapColumnType[]>([]);
+  const columnOrder = useMemo(() => ['ideas', 'nextUp', 'inProgress', 'alive'], []);
 
   useEffect(() => {
     if (columnsData) {
-      const order = ['ideas', 'nextUp', 'inProgress', 'alive'];
-      const sortedColumns = [...columnsData].sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+      const sortedColumns = [...columnsData].sort((a, b) => columnOrder.indexOf(a.id) - columnOrder.indexOf(b.id));
       setColumns(sortedColumns);
     }
-  }, [columnsData]);
+  }, [columnsData, columnOrder]);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
 
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (!over || active.id === over.id) {
-      return;
-    }
-
+  const handleMoveCard = async (cardId: string, direction: 'left' | 'right') => {
     if (!isFounder) {
-        toast({
-            variant: 'destructive',
-            title: 'Permission Denied',
-            description: 'Only the founder can modify the roadmap.',
-        });
+        toast({ variant: 'destructive', title: 'Permission Denied' });
         return;
     }
-    
-    const activeContainer = active.data.current?.sortable.containerId;
-    const overContainer = over.data.current?.sortable.containerId || over.id;
 
-    if (!activeContainer || !overContainer || activeContainer === overContainer) {
-        // Logic for reordering within the same column (optional)
-        if (activeContainer && overContainer && activeContainer === overContainer) {
-            setColumns((prev) => {
-                const activeColumnIndex = prev.findIndex(c => c.id === activeContainer);
-                if (activeColumnIndex === -1) return prev;
+    let sourceColumn: RoadmapColumnType | undefined;
+    let cardToMove: RoadmapCardType | undefined;
+    let sourceColumnIndex = -1;
 
-                const activeColumn = prev[activeColumnIndex];
-                const oldIndex = activeColumn.cards.findIndex(c => c.id === active.id);
-                const newIndex = activeColumn.cards.findIndex(c => c.id === over.id);
-                
-                const newCards = arrayMove(activeColumn.cards, oldIndex, newIndex);
-                const newColumns = [...prev];
-                newColumns[activeColumnIndex] = { ...activeColumn, cards: newCards };
-
-                return newColumns;
-            });
+    for (let i = 0; i < columns.length; i++) {
+        const card = columns[i].cards.find(c => c.id === cardId);
+        if (card) {
+            sourceColumn = columns[i];
+            cardToMove = card;
+            sourceColumnIndex = i;
+            break;
         }
+    }
+
+    if (!sourceColumn || !cardToMove || sourceColumnIndex === -1) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Card not found.' });
         return;
     }
     
-    // Optimistically update UI
-    setColumns(prevColumns => {
-        const activeColumnIndex = prevColumns.findIndex(col => col.id === activeContainer);
-        const overColumnIndex = prevColumns.findIndex(col => col.id === overContainer);
-        if (activeColumnIndex === -1 || overColumnIndex === -1) return prevColumns;
-        
-        const activeColumn = prevColumns[activeColumnIndex];
-        const overColumn = prevColumns[overColumnIndex];
-        
-        const activeItemIndex = activeColumn.cards.findIndex(c => c.id === active.id);
-        const [movedCard] = activeColumn.cards.splice(activeItemIndex, 1);
-        
-        const overItemIndex = overColumn.cards.findIndex(c => c.id === over.id);
-        overColumn.cards.splice(overItemIndex !== -1 ? overItemIndex : overColumn.cards.length, 0, movedCard);
-        
-        let newColumns = [...prevColumns];
-        newColumns[activeColumnIndex] = {...activeColumn};
-        newColumns[overColumnIndex] = {...overColumn};
+    const targetColumnIndex = direction === 'right' ? sourceColumnIndex + 1 : sourceColumnIndex - 1;
 
+    if (targetColumnIndex < 0 || targetColumnIndex >= columns.length) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Cannot move card further.' });
+        return;
+    }
+    
+    const targetColumn = columns[targetColumnIndex];
+    
+    // Optimistic UI update
+    setColumns(prev => {
+        const newColumns = [...prev];
+        const currentSourceCol = newColumns[sourceColumnIndex];
+        const currentTargetCol = newColumns[targetColumnIndex];
+
+        currentSourceCol.cards = currentSourceCol.cards.filter(c => c.id !== cardId);
+        currentTargetCol.cards = [cardToMove!, ...currentTargetCol.cards];
+        
         return newColumns;
     });
 
-    // Update Firestore
-    const result = await updateRoadmapCardColumn(active.id as string, activeContainer, overContainer);
+    const result = await updateRoadmapCardColumn(cardId, sourceColumn.id, targetColumn.id);
     if (result.error) {
-      toast({
-        variant: 'destructive',
-        title: 'Update Failed',
-        description: result.error,
-      });
-      // useCollectionData will automatically revert the state on error from Firestore.
+        toast({ variant: 'destructive', title: 'Update Failed', description: result.error });
+        // The UI will be reverted automatically by the Firestore hook on the next data snapshot
     } else {
-       toast({
-        title: 'Roadmap Updated',
-        description: 'Card position has been saved.',
-      });
+        toast({ title: 'Card Moved!', description: 'Roadmap has been updated.' });
     }
   };
 
@@ -435,29 +386,13 @@ export default function RoadmapPage() {
       )}
 
       {!isLoading && !error && columns.length > 0 && (
-         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-15 gap-4 items-start">
-                {/* Ideas Column */}
-                <KanbanColumn {...columns[0]}>
-                    {columns[0]?.id === 'ideas' && isFounder && <AddIdeaForm />}
-                </KanbanColumn>
-                
-                <WorkflowArrows showLeft={false} showRight={true} />
-
-                {/* Next Up Column */}
-                <KanbanColumn {...columns[1]} />
-
-                <WorkflowArrows showLeft={true} showRight={true} />
-                
-                {/* In Progress Column */}
-                <KanbanColumn {...columns[2]} />
-
-                <WorkflowArrows showLeft={true} showRight={true} />
-
-                {/* Alive Column */}
-                <KanbanColumn {...columns[3]} />
-            </div>
-         </DndContext>
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
+             {columns.map(col => (
+                 <KanbanColumn key={col.id} {...col} onMoveCard={handleMoveCard}>
+                     {col.id === 'ideas' && isFounder && <AddIdeaForm />}
+                 </KanbanColumn>
+             ))}
+         </div>
       )}
     </main>
   );
