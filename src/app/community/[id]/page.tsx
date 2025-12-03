@@ -1,10 +1,11 @@
+
 // src/app/community/[id]/page.tsx
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
 import { useUser, addDocumentNonBlocking, useMemoFirebase } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, updateDoc, deleteDoc, getDoc } from 'firebase/firestore';
+import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, updateDoc, deleteDoc, getDoc, setDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info } from 'lucide-react';
@@ -582,6 +583,7 @@ function JoinRequests({ communityId, communityDocRef }: { communityId: string, c
         if (!firestore || !communityId) return null;
         return query(collection(firestore, `communities/${communityId}/joinRequests`), where('status', '==', 'pending'));
     }, [communityId]);
+
     const [requests, isLoading] = useCollectionData<JoinRequest>(requestsQuery, {
       idField: 'id'
     });
