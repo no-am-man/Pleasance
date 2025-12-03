@@ -276,6 +276,7 @@ export default function CommunityRoadmapPage() {
         // Add other required fields for CommunityProfile, even if empty
         nativeLanguage: '',
         learningLanguage: '',
+        userId: m.userId
       }));
   }, [community?.members]);
 
@@ -400,4 +401,3 @@ export default function CommunityRoadmapPage() {
   );
 }
 
-    
