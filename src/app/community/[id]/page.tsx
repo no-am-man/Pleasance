@@ -486,7 +486,7 @@ function Chat({ communityId, isOwner, allMembers }: { communityId: string; isOwn
             .slice(0, 10) // Get last 10 messages for context
             .reverse() // Oldest first
             .map(msg => ({
-                role: msg.userId === user?.uid ? 'user' : 'model' as 'user' | 'model',
+                role: msg.userId.startsWith('ai_') ? 'model' : 'user' as 'user' | 'model',
                 content: [{ text: msg.text || '' }],
             }));
             
@@ -526,8 +526,7 @@ function Chat({ communityId, isOwner, allMembers }: { communityId: string; isOwn
                 {messages && messages.length === 0 && <p className="text-muted-foreground text-center py-8">No messages yet. Be the first!</p>}
                 <div className="max-h-[40rem] overflow-y-auto space-y-4 pr-2">
                     {messages?.map(msg => {
-                        // Create a more robust key to prevent React warnings during optimistic updates
-                        const key = msg.id || `${msg.userId}-${msg.createdAt?.seconds}`;
+                        const key = msg.id || `${msg.userId}-${msg.createdAt?.seconds || Date.now()}`;
                         return <MessageCard key={key} message={msg} canManage={isOwner || msg.userId === user?.uid}/>
                     })}
                 </div>
