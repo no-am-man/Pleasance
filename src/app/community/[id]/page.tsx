@@ -374,7 +374,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
              <div className={cn("p-2 rounded-md flex items-center gap-3 transition-all", isUpdating && "opacity-50")}>
                 <CheckCircle className="h-5 w-5 text-green-500" />
                  <Avatar className="w-8 h-8">
-                    <AvatarImage src={message.userAvatarUrl} alt={message.userName} />
+                    <AvatarImage src={message.userAvatarUrl || `https://i.pravatar.cc/150?u=${message.userId}`} alt={message.userName} />
                     <AvatarFallback>{message.userName.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
@@ -395,7 +395,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                 <div>
                     <CardHeader className="flex flex-row items-start gap-4 pb-4">
                         <Avatar>
-                            <AvatarImage src={message.userAvatarUrl} alt={message.userName} />
+                            <AvatarImage src={message.userAvatarUrl || `https://i.pravatar.cc/150?u=${message.userId}`} alt={message.userName} />
                             <AvatarFallback>{message.userName.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
@@ -748,11 +748,11 @@ export default function CommunityProfilePage() {
   };
 
   const handleGenerateFlag = async () => {
-    if (!community || !communityDocRef) {
+    if (!community || !communityDocRef || !user) {
       toast({
         variant: 'destructive',
         title: 'Missing Information',
-        description: 'Community data is not loaded.',
+        description: 'Community data is not loaded or you are not logged in.',
       });
       return;
     }
@@ -764,10 +764,12 @@ export default function CommunityProfilePage() {
     });
 
     try {
+      const idToken = await user.getIdToken();
       const result = await generateCommunityFlag({
         communityId: community.id,
         communityName: community.name,
         communityDescription: community.description,
+        idToken,
       });
 
       if (result.error) {
