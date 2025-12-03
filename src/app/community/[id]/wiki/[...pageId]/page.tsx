@@ -16,6 +16,7 @@ import { WikiEditor } from '@/components/wiki-editor';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
+import Image from 'next/image';
 
 type WikiPage = {
     id: string;
@@ -24,6 +25,12 @@ type WikiPage = {
     lastModifiedAt: { seconds: number; nanoseconds: number; } | null;
     lastModifiedByUserId: string;
     lastModifiedByUserName: string;
+};
+
+type Community = {
+    id: string;
+    name: string;
+    flagUrl?: string;
 };
 
 export default function CommunityWikiPage() {
@@ -48,6 +55,10 @@ export default function CommunityWikiPage() {
 
     const pageDocRef = useMemoFirebase(() => !isNewPage ? doc(firestore, collectionPath, pageId) : null, [collectionPath, pageId, isNewPage]);
     const [page, isLoading, error] = useDocumentData<WikiPage>(pageDocRef);
+
+    const communityDocRef = useMemoFirebase(() => communityId ? doc(firestore, 'communities', communityId) : null, [communityId]);
+    const [community, isCommunityLoading] = useDocumentData<Community>(communityDocRef);
+
 
     useEffect(() => {
         if (page && !isEditing) {
@@ -98,7 +109,7 @@ export default function CommunityWikiPage() {
     
     const pageTitle = isEditing ? (isNewPage ? 'Creating New Page' : `Editing: ${page?.title}`) : page?.title;
 
-    if (isLoading) {
+    if (isLoading || isCommunityLoading) {
         return <div className="flex justify-center py-12"><LoaderCircle className="w-12 h-12 animate-spin text-primary" /></div>;
     }
     
@@ -147,6 +158,11 @@ export default function CommunityWikiPage() {
 
             <Card className="shadow-lg">
                 <CardHeader>
+                     {community?.flagUrl && (
+                        <div className="mb-4 h-40 relative rounded-lg overflow-hidden border">
+                            <Image src={community.flagUrl} alt={`${community.name} flag`} layout="fill" objectFit="cover" />
+                        </div>
+                    )}
                     <CardTitle className="text-3xl flex items-center gap-3">
                         <BookOpen className="text-primary" />
                         {pageTitle}
