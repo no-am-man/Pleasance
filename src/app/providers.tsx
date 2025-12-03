@@ -1,4 +1,3 @@
-
 'use client';
 
 import { FirebaseClientProvider } from '@/firebase/client-provider';
@@ -13,9 +12,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <FirebaseClientProvider>
       <FirebaseErrorListener />
       <Header />
-      <main className="flex-grow pt-16">{children}</main>
+      <main className="flex-grow pt-16">
+        <div className="fixed top-16 left-0 right-0 z-40 bg-background/80 backdrop-blur-sm">
+            <PresenceBar />
+        </div>
+        <div className="pt-12">{children}</div>
+      </main>
       <footer className="text-center p-4 border-t space-y-2">
-        <PresenceBar />
         <p>
           <Link
             href="https://github.com/no-am-man/Pleasance"
