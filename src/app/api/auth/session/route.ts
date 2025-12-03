@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
     const sessionCookie = await adminApp.auth().createSessionCookie(idToken, { expiresIn });
 
-    cookies().set('__session', sessionCookie, {
+    await cookies().set('__session', sessionCookie, {
       maxAge: expiresIn,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE() {
   try {
-    cookies().delete('__session');
+    await cookies().delete('__session');
     return NextResponse.json({ status: 'success' });
   } catch (error) {
     console.error('Error deleting session cookie:', error);

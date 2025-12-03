@@ -21,6 +21,7 @@ import {
   Bot,
   DollarSign,
   GalleryHorizontal,
+  Landmark,
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -53,6 +54,7 @@ const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com'; // Founder email check
 const navLinks = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/community', label: 'Community', icon: Users },
+  { href: '/museum', label: 'Museum', icon: Landmark },
   { href: '/conductor', label: 'Conductor', icon: Bot },
   { href: '/story', label: 'Nuncy Lingua', icon: BookOpen },
   { href: '/fabrication', label: 'Fabrication', icon: Warehouse },

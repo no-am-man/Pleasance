@@ -15,7 +15,7 @@ import {
   ArrowRight,
   Banknote,
   Beaker,
-  GalleryHorizontal,
+  Landmark,
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import Image from 'next/image';
@@ -114,13 +114,13 @@ export default function Home() {
         </div>
 
         <FeatureCard
-          icon={<GalleryHorizontal className="h-8 w-8 text-primary" />}
-          title="Community Gallery"
-          imageUrl="https://picsum.photos/seed/105/600/400"
+          icon={<Landmark className="h-8 w-8 text-primary" />}
+          title="Virtual Museum"
+          imageUrl="https://picsum.photos/seed/109/600/400"
           imageHint="art gallery"
-          href="/svg3d"
+          href="/museum"
         >
-          A private sandbox for personal AI experimentation. Use our 3D point-cloud generator to explore ideas before sharing them with a community.
+          A grand hall where the published creations from every community in the federation are displayed. Discover the collective imagination of the republic.
         </FeatureCard>
 
         <FeatureCard
