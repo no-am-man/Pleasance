@@ -4,7 +4,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useUser, addDocumentNonBlocking, useMemoFirebase } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, setDoc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, updateDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info } from 'lucide-react';
@@ -734,8 +734,6 @@ export default function CommunityProfilePage() {
     idField: 'id'
   });
 
-  const [allMembers, setAllMembers] = useState<Member[]>([]);
-  const [suggestedUsers, setSuggestedUsers] = useState<CommunityProfile[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isOwner = user?.uid === community?.ownerId;
@@ -748,53 +746,50 @@ export default function CommunityProfilePage() {
 
   const hasPendingRequest = userJoinRequest?.status === 'pending';
 
-  useEffect(() => {
-    if (community && allProfiles) {
-        const profilesMap = new Map(allProfiles.map(p => [p.userId, p]));
-        
-        const humanMembers = community.members
-            .filter(m => m.type === 'human' && m.userId)
-            .map(member => {
-                const profile = profilesMap.get(member.userId!);
-                return {
-                    ...member,
-                    name: profile?.name || member.name,
-                    bio: profile?.bio || member.bio,
-                    avatarUrl: profile?.avatarUrl || '', // Fallback to empty string
-                };
-            });
+  const allMembers = useMemo(() => {
+    if (!community) return [];
+    
+    const profilesMap = new Map(allProfiles?.map(p => [p.userId, p]));
+    const communityMembers = community.members || [];
 
-        const aiMembers = community.members.filter(m => m.type === 'AI');
-
-        const ownerProfile = profilesMap.get(community.ownerId);
-        // Ensure ownerProfile exists before trying to use it
-        if (ownerProfile) {
-            const ownerInList = humanMembers.find(m => m.userId === community.ownerId);
-            if (!ownerInList) {
-                humanMembers.unshift({
-                    userId: ownerProfile.userId,
-                    name: ownerProfile.name,
-                    role: 'Founder',
-                    bio: ownerProfile.bio,
-                    type: 'human',
-                    avatarUrl: ownerProfile.avatarUrl || '', // Fallback to empty string
-                });
-            }
+    const enrichedMembers = communityMembers.map(member => {
+        if (member.type === 'human' && member.userId) {
+            const profile = profilesMap.get(member.userId);
+            return {
+                ...member,
+                name: profile?.name || member.name,
+                bio: profile?.bio || member.bio,
+                avatarUrl: profile?.avatarUrl || '',
+            };
         }
-        
-        setAllMembers([...humanMembers, ...aiMembers]);
-    }
-  }, [community, allProfiles]);
-  
-  const isMember = allMembers.some(m => m.userId === user?.uid);
+        return member;
+    });
 
-  useEffect(() => {
-    if (allProfiles && allMembers.length > 0) {
-      const memberUserIds = new Set(allMembers.filter(m => m.userId).map(m => m.userId!));
-      const suggestions = allProfiles.filter(p => !memberUserIds.has(p.userId));
-      setSuggestedUsers(suggestions);
+    const ownerProfile = community.ownerId ? profilesMap.get(community.ownerId) : undefined;
+    if (ownerProfile && !enrichedMembers.some(m => m.userId === ownerProfile.userId)) {
+        enrichedMembers.unshift({
+            userId: ownerProfile.userId,
+            name: ownerProfile.name,
+            role: 'Founder',
+            bio: ownerProfile.bio,
+            type: 'human',
+            avatarUrl: ownerProfile.avatarUrl || '',
+        });
     }
-  }, [allProfiles, allMembers]);
+    
+    return enrichedMembers;
+  }, [community, allProfiles]);
+
+  const suggestedUsers = useMemo(() => {
+    if (!allProfiles || !community) return [];
+    const memberUserIds = new Set(community.members.map(m => m.userId));
+    return allProfiles.filter(p => !memberUserIds.has(p.userId));
+  }, [allProfiles, community]);
+  
+  const isMember = useMemo(() => {
+    return allMembers.some(m => m.userId === user?.uid);
+  }, [allMembers, user]);
+
 
   const handleRequestToJoin = async () => {
     if (!user || !id || !userProfile || !firestore) {
@@ -802,16 +797,19 @@ export default function CommunityProfilePage() {
         return;
     }
     setIsSubmitting(true);
-    const requestRef = doc(firestore, `communities/${id}/joinRequests`, user.uid);
-    const newRequest: Omit<JoinRequest, 'id' | 'createdAt'> & { createdAt: any } = {
+    
+    const requestRef = doc(firestore, `communities/${id}/joinRequests/${user.uid}`);
+
+    const newRequest = {
+        id: requestRef.id,
         userId: user.uid,
         userName: userProfile.name,
         userBio: userProfile.bio,
-        status: 'pending',
+        status: 'pending' as const,
         createdAt: serverTimestamp()
     };
     try {
-        await setDoc(requestRef, { ...newRequest, id: requestRef.id });
+        await setDoc(requestRef, newRequest);
         toast({ title: 'Request Sent!', description: 'The community owner has been notified.' });
     } catch(e) {
         const message = e instanceof Error ? e.message : 'An error occurred';

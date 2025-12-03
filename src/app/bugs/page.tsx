@@ -55,7 +55,8 @@ async function submitBugReport(values: z.infer<typeof BugSchema>, user: { uid: s
         createdAt: serverTimestamp(),
     };
     
-    setDocumentNonBlocking(newBugRef, newBug, { merge: false });
+    // Using setDoc directly inside an async function is fine, as this is a user-triggered event, not a hook.
+    await setDoc(newBugRef, newBug, { merge: false });
 }
 
 function AddBugForm() {
@@ -163,7 +164,7 @@ function BugList() {
     const bugsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return query(collection(firestore, 'bugs'), orderBy('createdAt', 'desc'));
-    }, [firestore]);
+    }, []);
 
     const [bugs, isLoading, error] = useCollectionData<Bug>(bugsQuery, { idField: 'id' });
 
