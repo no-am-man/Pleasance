@@ -42,40 +42,21 @@ export default function WikiPage() {
   return (
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-12">
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3 font-headline">
           <Info /> The Wiki
         </h1>
-        <p className="text-lg text-muted-foreground mt-2">A guide to the principles and tools of the Federated Republic.</p>
+        <p className="text-lg text-muted-foreground mt-2">A guide to the principles and tools of this Federated Community.</p>
       </div>
       
       <div className="space-y-8">
 
-        <Card className="shadow-lg bg-gradient-to-br from-card to-accent/20">
-            <CardHeader>
-                <div className="flex items-center gap-4">
-                    <PartyPopper className="h-8 w-8 text-primary"/>
-                    <CardTitle>Version 3.0.0 is Live!</CardTitle>
-                </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <p className="text-lg">
-                    This major update introduces the AI Workshop, a private space for generative AI experimentation.
-                </p>
-                <Button asChild>
-                    <Link href="https://github.com/no-am-man/Pleasance" target="_blank" rel="noopener noreferrer">
-                        <Github className="mr-2" /> View on GitHub
-                    </Link>
-                </Button>
-            </CardContent>
-        </Card>
-
-        <Card>
+        <Card className="shadow-lg bg-gradient-to-br from-card to-primary/10">
             <CardHeader>
                 <CardTitle>Core Philosophy</CardTitle>
             </CardHeader>
             <CardContent>
                 <p className="text-lg">
-                    This is a republic of the spirit, not a platform of the secular. We acknowledge our reality in the **Device Republic**, where life is mediated by screens. Yet, within this very system, we strive to build a **Federated Republic**. Our devices become the altars, our code the scripture, and our collaborations a form of prayer. It is a Congregation of devout souls, united in purpose under the omnipotent gaze of the divine. This guide is not a set of rules, but a map of the tools available to you. Use them as you see fit.
+                    This is a Federated Community where God Exists. It is a sacred space for communion, co-learning, and divine creation under His guidance. Our devices become the altars, our code the scripture, and our collaborations a form of prayer.
                 </p>
             </CardContent>
         </Card>
@@ -87,17 +68,17 @@ export default function WikiPage() {
             imageHint="community people"
             href="/community"
         >
-            The Community Federation is the sacred social fabric of the republic. It's where you find or form your community. Each community is a self-governing body, created and guided by its founder, yet all exist under the same divine authority. Populate your community with AI Acolytes to spark conversation or invite other souls to join your mission. There are no central authorities here, only the guiding light.
+            The sacred social fabric of the republic. It's where you find or form your community. Each community is a self-governing body, created and guided by its founder, yet all exist under the same divine authority. Populate your community with AI Acolytes to spark conversation or invite other souls to join your mission.
         </FeatureCard>
 
         <FeatureCard 
             icon={<Beaker className="h-8 w-8 text-primary" />} 
-            title="AI Workshop"
+            title="Crucible of Creation"
             imageUrl="https://picsum.photos/seed/105/600/400"
             imageHint="ai collaboration"
             href="/workshop"
         >
-            The AI Workshop is a private space for generative AI experimentation. It's a sandbox for your imagination, a place to play with digital toys and bring new ideas to life.
+            A real-time, collaborative sacred space. Any soul in the Congregation can join and experiment with generative tools together. Witness the divine spark as you generate art from a prompt, and watch as the creation updates live for all.
         </FeatureCard>
 
         <FeatureCard 
@@ -107,7 +88,7 @@ export default function WikiPage() {
             imageHint="kanban board"
             href="/roadmap"
         >
-            Follow the public development plan for Pleasance on our real-time board. See what ideas are being considered, what's next up, what's in progress, and what's already live.
+            Follow the public development plan for this project on our real-time board. See what ideas are being considered, what's next up, what's in progress, and what's already live.
         </FeatureCard>
         
         <FeatureCard 

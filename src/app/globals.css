@@ -8,25 +8,25 @@ body {
 
 @layer base {
   :root {
-    --background: 228 15% 12%; /* Deep Night Blue */
-    --foreground: 220 20% 88%;
-    --card: 228 15% 17%;
-    --card-foreground: 220 20% 95%;
-    --popover: 228 15% 12%;
-    --popover-foreground: 220 20% 95%;
-    --primary: 45 100% 60%; /* Radiant Gold */
-    --primary-foreground: 30 10% 5%;
-    --secondary: 228 15% 25%;
-    --secondary-foreground: 220 20% 95%;
-    --muted: 228 15% 30%;
-    --muted-foreground: 220 15% 60%;
-    --accent: 250 50% 40%; /* Soft Purple */
-    --accent-foreground: 250 50% 90%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 228 15% 35%;
-    --input: 228 15% 25%;
-    --ring: 45 100% 60%;
+    --background: 210 40% 98%; /* Light Sky */
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 45 90% 55%; /* Divine Gold */
+    --primary-foreground: 222 47% 11%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 90%;
+    --muted-foreground: 215 20% 45%;
+    --accent: 260 60% 65%; /* Sacred Purple */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 45 90% 55%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;

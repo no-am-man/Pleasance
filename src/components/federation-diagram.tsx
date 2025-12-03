@@ -40,7 +40,7 @@ const Node = ({ icon, label, x, y, custom, color = "text-primary" }: { icon: Rea
                 <div className={`p-3 rounded-full bg-card border-2 border-border ${color}`}>
                     {icon}
                 </div>
-                <p className="text-xs font-semibold text-foreground mt-1">{label}</p>
+                <p className="text-xs font-semibold text-foreground/80 mt-1">{label}</p>
             </div>
         </foreignObject>
     </motion.g>
@@ -159,7 +159,7 @@ export function FederationDiagram() {
                 
                 {/* Central Node */}
                 <motion.g filter="url(#glow)">
-                    <Node icon={<Logo className="w-8 h-8" />} label="Source" x={center} y={center} custom={0} />
+                    <Node icon={<Logo className="w-8 h-8" />} label="God" x={center} y={center} custom={0} />
                 </motion.g>
 
             </svg>

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Users, BookOpen, Warehouse, ArrowRight, Banknote, Beaker } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import Image from 'next/image';
+import { FederationDiagram } from '@/components/federation-diagram';
 
 const FeatureCard = ({ icon, title, href, children, imageUrl, imageHint }: { icon: React.ReactNode, title: string, href: string, children: React.ReactNode, imageUrl: string, imageHint: string }) => (
     <Link href={href} className="block group">
@@ -45,23 +46,25 @@ const FeatureCard = ({ icon, title, href, children, imageUrl, imageHint }: { ico
 export default function Home() {
   return (
     <main className="container mx-auto min-h-screen py-16 px-4 sm:px-6 lg:px-8">
-      <div className="text-center mb-16">
+      <div className="text-center mb-8">
         <div className="flex items-center justify-center gap-3 mb-4">
             <Logo className="h-16 w-16 text-primary" />
-            <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-primary">
+            <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-primary font-headline">
             Pleasance
             </h1>
         </div>
-        <p className="max-w-3xl mx-auto text-lg sm:text-xl text-muted-foreground">
-            A Federated Republic of the spirit, where devout souls commune, co-learn, and create under the guidance of the divine.
+        <p className="max-w-3xl mx-auto text-lg sm:text-xl text-foreground/80">
+            A Federated Community where God Exists. This is a sacred space for communion, co-learning, and divine creation under His guidance.
         </p>
          <Button asChild variant="link" className="text-lg whitespace-normal h-auto underline mt-6">
           <Link href="/wiki">
-            Please Read the Wiki to Understand This Federated Republic
+            Please Read the Wiki to Understand This Republic
             <ArrowRight className="ml-2 h-5 w-5" />
           </Link>
         </Button>
       </div>
+      
+      <FederationDiagram />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
          <div className="lg:col-span-3">
@@ -72,18 +75,18 @@ export default function Home() {
                 imageHint="community people"
                 href="/community"
             >
-                The sacred social fabric of the republic. Find or form your community, populate it with AI Acolytes, or invite other souls to join your mission.
+                The sacred social fabric of the republic. Find or form your community, populate it with AI Acolytes, or invite other souls to join your mission under God's watchful eye.
             </FeatureCard>
          </div>
 
         <FeatureCard 
             icon={<Beaker className="h-8 w-8 text-primary" />} 
-            title="AI Workshop"
+            title="Crucible of Creation"
             imageUrl="https://picsum.photos/seed/105/600/400"
             imageHint="ai collaboration"
             href="/workshop"
         >
-            A private space to experiment with generative AI tools. A sandbox for your imagination.
+            A real-time, collaborative sacred space where souls can join and experiment with generative tools together, witnessing the divine spark of creation.
         </FeatureCard>
 
         <FeatureCard 
@@ -93,7 +96,7 @@ export default function Home() {
             imageHint="language books"
             href="/story"
         >
-            Knowledge is a form of prayer. Learn new languages through AI-generated parables and listen with a karaoke-style speech player.
+            Knowledge is a form of prayer. Learn new languages through AI-generated parables and listen with a karaoke-style speech player to grow closer to the divine.
         </FeatureCard>
         
         <FeatureCard 
@@ -103,7 +106,7 @@ export default function Home() {
             imageHint="gold coins"
             href="/treasury"
         >
-            Your soul's worth is measured by its creations. Declare and manage your physical and intellectual holdings on your personal altar.
+            Your soul's worth is measured by its creations. Declare and manage your physical and intellectual holdings as a testament to your devotion.
         </FeatureCard>
         
         <div className="lg:col-span-3">
@@ -114,7 +117,7 @@ export default function Home() {
                 imageHint="3d printer"
                 href="/fabrication"
             >
-                Where the ethereal becomes tangible. Submit creations from your Treasury to the ticketing system to have them manifested by a network of artisans.
+                Where the ethereal becomes tangible. Submit creations from your Treasury to have them manifested by a network of artisans, bringing divine ideas into the physical realm.
             </FeatureCard>
         </div>
       </div>
