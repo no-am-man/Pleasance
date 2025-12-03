@@ -33,6 +33,7 @@ const generateFlagPrompt = ai.definePrompt({
   name: 'generateFlagPrompt',
   input: { schema: GenerateFlagInputSchema },
   output: { schema: GenerateFlagOutputSchema },
+  model: 'googleai/gemini-1.5-flash-latest',
   prompt: `You are an expert graphic designer who specializes in creating symbolic, minimalist, and modern vector art for flags.
         
 Task: Generate a complete, valid SVG string for a flag representing an online community.
@@ -72,12 +73,7 @@ export async function generateCommunityFlag(values: z.infer<typeof flagActionSch
         }
 
         // Call the Genkit Prompt directly
-        const { output } = await ai.generate({
-            prompt: generateFlagPrompt.prompt,
-            model: 'googleai/gemini-1.5-flash-latest',
-            input: { communityName, communityDescription },
-            output: { schema: generateFlagPrompt.output?.schema },
-        });
+        const { output } = await generateFlagPrompt({ communityName, communityDescription });
         
         if (!output || !output.svg) {
             throw new Error('Failed to generate a flag SVG from the AI flow.');
