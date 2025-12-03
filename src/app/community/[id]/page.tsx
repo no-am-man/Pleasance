@@ -1163,21 +1163,27 @@ export default function CommunityProfilePage() {
                     <Link href={`/community/${id}/workshop`} className="flex flex-col items-center gap-2">
                         <Sparkles className="w-8 h-8 text-primary" />
                         <span className="font-semibold">Workshop</span>
-                        <span className="text-xs text-center text-muted-foreground">Collaborate on generative art.</span>
+                        <div className="h-10 flex items-center">
+                            <span className="text-xs text-center text-muted-foreground">Collaborate on generative art.</span>
+                        </div>
                     </Link>
                 </Button>
                  <Button asChild variant="outline" className="h-auto py-4">
                      <Link href={`/community/${id}/roadmap`} className="flex flex-col items-center gap-2">
                         <KanbanIcon className="w-8 h-8 text-primary" />
                         <span className="font-semibold">Roadmap</span>
-                        <span className="text-xs text-center text-muted-foreground">View the private community roadmap.</span>
+                        <div className="h-10 flex items-center">
+                            <span className="text-xs text-center text-muted-foreground">View the private community roadmap.</span>
+                        </div>
                     </Link>
                 </Button>
                 <Button asChild variant="outline" className="h-auto py-4">
                      <Link href={`/community/${id}/treasury`} className="flex flex-col items-center gap-2">
                         <Banknote className="w-8 h-8 text-primary" />
                         <span className="font-semibold">Treasury</span>
-                        <span className="text-xs text-center text-muted-foreground">View the community's creations.</span>
+                        <div className="h-10 flex items-center">
+                            <span className="text-xs text-center text-muted-foreground">View the community's creations.</span>
+                        </div>
                     </Link>
                 </Button>
             </CardContent>
