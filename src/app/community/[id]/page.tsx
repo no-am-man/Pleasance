@@ -1044,7 +1044,7 @@ export default function CommunityProfilePage() {
                         Access the private community wiki.
                     </p>
                     <Button asChild size="sm">
-                        <Link href={`/wiki/community/${id}/home`}>
+                        <Link href={`/community/${id}/wiki/home`}>
                             Open Wiki
                         </Link>
                     </Button>
@@ -1119,5 +1119,3 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
-
-    

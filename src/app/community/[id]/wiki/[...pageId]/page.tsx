@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -27,14 +26,15 @@ type WikiPage = {
     lastModifiedByUserName: string;
 };
 
-export default function WikiPageDisplay() {
+export default function CommunityWikiPage() {
     const params = useParams();
     const router = useRouter();
     const { user } = useUser();
     const { toast } = useToast();
 
-    const slugParts = Array.isArray(params.slug) ? params.slug : [params.slug];
-    const pageId = slugParts.join('/');
+    const communityId = params.id as string;
+    const pageIdParts = Array.isArray(params.pageId) ? params.pageId : [params.pageId];
+    const pageId = pageIdParts.join('/');
     const isNewPage = pageId === 'new';
 
     const [isEditing, setIsEditing] = useState(isNewPage);
@@ -42,8 +42,8 @@ export default function WikiPageDisplay() {
     const [content, setContent] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
-    const basePath = '/wiki';
-    const collectionPath = 'wiki';
+    const basePath = `/community/${communityId}/wiki`;
+    const collectionPath = `communities/${communityId}/wiki`;
     const finalPageId = isNewPage ? title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') : pageId;
 
     const pageDocRef = useMemoFirebase(() => !isNewPage ? doc(firestore, collectionPath, pageId) : null, [collectionPath, pageId, isNewPage]);
@@ -97,8 +97,6 @@ export default function WikiPageDisplay() {
     };
     
     const pageTitle = isEditing ? (isNewPage ? 'Creating New Page' : `Editing: ${page?.title}`) : page?.title;
-    const breadcrumbPath = '/wiki';
-    const breadcrumbLabel = 'Public Wiki';
 
     if (isLoading) {
         return <div className="flex justify-center py-12"><LoaderCircle className="w-12 h-12 animate-spin text-primary" /></div>;
@@ -110,23 +108,24 @@ export default function WikiPageDisplay() {
     
     if (!page && !isNewPage) {
         return (
-            <Card className="m-4 text-center">
-                <CardHeader>
-                    <CardTitle>Page Not Found</CardTitle>
-                    <CardDescription>The requested wiki page does not exist.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {user ? (
-                         <Button asChild>
-                            <Link href={`${basePath}/new`}>Create This Page</Link>
-                        </Button>
-                    ) : (
+             <main className="container mx-auto max-w-4xl py-8">
+                <Card className="m-4 text-center">
+                    <CardHeader>
+                        <CardTitle>Page Not Found</CardTitle>
+                        <CardDescription>The requested wiki page does not exist in this community.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {user ? (
+                            <Button asChild>
+                                <Link href={`${basePath}/new`}>Create This Page</Link>
+                            </Button>
+                        ) : null}
                          <Button asChild variant="secondary">
-                            <Link href={basePath}>Back to Wiki</Link>
+                            <Link href={`/community/${communityId}`}>Back to Community</Link>
                         </Button>
-                    )}
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+            </main>
         );
     }
 
@@ -134,9 +133,9 @@ export default function WikiPageDisplay() {
         <main className="container mx-auto max-w-4xl py-8">
             <div className="mb-6 flex justify-between items-center">
                  <Button asChild variant="ghost">
-                    <Link href={breadcrumbPath}>
+                    <Link href={`/community/${communityId}`}>
                         <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to {breadcrumbLabel}
+                        Back to Community
                     </Link>
                 </Button>
                 {user && !isEditing && (
