@@ -15,15 +15,8 @@ export const firebaseConfig = {
   "databaseURL": "https://studio-2441219031-242ae-default-rtdb.firebaseio.com/"
 };
 
-// This function ensures a single instance of Firebase is initialized.
-function getFirebaseApp(): FirebaseApp {
-    if (!getApps().length) {
-        return initializeApp(firebaseConfig);
-    }
-    return getApp();
-}
-
-const firebaseApp: FirebaseApp = getFirebaseApp();
+// Initialize Firebase
+const firebaseApp: FirebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 // Export singleton instances of Firebase services.
 export const auth: Auth = getAuth(firebaseApp);
