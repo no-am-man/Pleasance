@@ -74,7 +74,7 @@ export const FederationDiagram = () => {
           }
         `}
       </style>
-      <svg viewBox="0 0 600 450" className="w-full h-full">
+      <svg viewBox="0 0 500 450" className="w-full h-full">
         <defs>
           <radialGradient id="divineAura" cx="50%" cy="50%" r="50%">
             <stop offset="60%" stopColor="hsl(var(--primary) / 0)" />
@@ -88,7 +88,7 @@ export const FederationDiagram = () => {
 
         {/* The Aura */}
         <circle
-          cx="300"
+          cx="250"
           cy="225"
           r="225"
           fill="url(#divineAura)"
@@ -99,45 +99,32 @@ export const FederationDiagram = () => {
         <DiagramNode label="The Sovereign Soul" x="90" y="225" delay={0} />
         
         {/* Top Layer: Creation & Learning Tools */}
-        <DiagramNode label="Nuncy Lingua" x="240" y="90" delay={200} />
-        <DiagramNode label="Lab" x="360" y="90" delay={400} />
+        <DiagramNode label="Nuncy Lingua" x="250" y="90" delay={200} />
+        <DiagramNode label="Lab" x="410" y="90" delay={400} />
         
         {/* Mid Layer: Declaration */}
-        <DiagramNode label="Treasury" x="300" y="225" delay={600} />
+        <DiagramNode label="Treasury" x="330" y="225" delay={600} />
 
         {/* Bottom Layer: Action & Community */}
-        <DiagramNode label="Workshop of Manifestation" x="240" y="360" delay={800} />
-        <DiagramNode label="Federation" x="360" y="360" delay={1000} />
-        
-        {/* Right-Side Layer: Guiding Systems */}
-        <g transform="translate(520, 225)">
-            <DiagramNode label="Wiki" x="0" y="-120" delay={1200} size={30} />
-            <DiagramNode label="Roadmap" x="0" y="-40" delay={1400} size={30} />
-            <DiagramNode label="Conductor" x="0" y="40" delay={1600} size={30} />
-            <DiagramNode label="Bug Tracker" x="0" y="120" delay={1800} size={30} />
-        </g>
+        <DiagramNode label="Workshop of Manifestation" x="250" y="360" delay={800} />
+        <DiagramNode label="Federation" x="410" y="360" delay={1000} />
         
         {/* Flow Arrows */}
         {/* Soul -> Creation */}
-        <FlowArrow path="M 130 225 Q 180 150 230 125" delay={2000} />
-        <FlowArrow path="M 130 225 Q 240 160 350 125" delay={2100} />
+        <FlowArrow path="M 130 225 Q 180 150 240 125" delay={1200} />
+        <FlowArrow path="M 130 225 Q 260 150 400 125" delay={1300} />
         
         {/* Creation -> Treasury */}
-        <FlowArrow path="M 240 130 V 185" delay={2200} />
-        <FlowArrow path="M 360 130 V 185" delay={2300} />
+        <FlowArrow path="M 250 130 V 185" delay={1400} />
+        <FlowArrow path="M 410 130 V 185" delay={1500} />
 
         {/* Treasury -> Action/Community */}
-        <FlowArrow path="M 290 265 Q 260 300 245 325" delay={2400} />
-        <FlowArrow path="M 310 265 Q 340 300 355 325" delay={2500} />
+        <FlowArrow path="M 320 265 Q 280 300 255 325" delay={1600} />
+        <FlowArrow path="M 340 265 Q 380 300 405 325" delay={1700} />
         
         {/* Community -> Soul (inspiration) */}
-        <FlowArrow path="M 320 360 C 200 420, 150 350, 130 250" delay={2600} />
+        <FlowArrow path="M 370 360 C 250 420, 200 350, 130 250" delay={1800} />
         
-        {/* Guiding Systems -> All */}
-        <FlowArrow path="M 480 105 H 400" delay={2700} />
-        <FlowArrow path="M 480 185 H 340" delay={2800} />
-        <FlowArrow path="M 480 265 H 400" delay={2900} />
-        <FlowArrow path="M 480 345 H 400" delay={3000} />
       </svg>
     </div>
   );

@@ -105,14 +105,8 @@ export default function Home() {
                   Creations are cataloged in a personal 'Treasury'—a ledger of intellectual property. This Treasury serves as the source for two primary outputs: manifestation into physical form via the 'Workshop of Manifestation,' and contribution to the 'Federation' of self-governing communities where communion occurs.
               </p>
                <p>
-                  The entire system is guided by a set of meta-tools—the Wiki, Roadmap, Conductor, and Bug Tracker—which provide transparency, direction, and operational assistance to all participants. This model prioritizes individual agency while enabling collective action, shared governance, and interdisciplinary growth.
+                  This model prioritizes individual agency while enabling collective action, shared governance, and interdisciplinary growth. Public tools like the Roadmap, Conductor, and Bug Tracker ensure transparency and provide direction for the entire republic.
               </p>
-              <Button asChild variant="link" className="px-0 text-primary">
-                  <Link href="/wiki">
-                      Read the Wiki for a Deeper Dive
-                      <ArrowRight className="ml-2 h-4 w-4"/>
-                  </Link>
-              </Button>
           </CardContent>
       </Card>
 
