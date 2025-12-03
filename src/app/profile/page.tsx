@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +25,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { generateProfileAvatars } from '../actions';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import { useDocumentDataOnce } from 'react-firebase-hooks/firestore';
 
 const ProfileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -138,11 +137,7 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedAvatarUrl, setSelectedAvatarUrl] = useState<string | null>(null);
-
-
-  const profileDocRef = user ? doc(firestore, 'community-profiles', user.uid) : null;
-  const [existingProfile, isProfileLoading] = useDocumentDataOnce(profileDocRef);
-
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
 
   const form = useForm<z.infer<typeof ProfileSchema>>({
     resolver: zodResolver(ProfileSchema),
@@ -152,28 +147,43 @@ export default function ProfilePage() {
       avatarUrl: '',
     },
   });
-  
+
   useEffect(() => {
-    if (existingProfile) {
-      form.reset(existingProfile);
-      setSelectedAvatarUrl(existingProfile.avatarUrl || user?.photoURL || null);
-    } else if (user) {
-        form.reset({
-            name: user.displayName || '',
-            bio: '',
-            avatarUrl: user.photoURL || '',
-        });
-        setSelectedAvatarUrl(user.photoURL || null);
-    }
-  }, [existingProfile, form, user]);
+      const fetchProfile = async () => {
+        if (!user) {
+            setIsProfileLoading(false);
+            return;
+        }
+        setIsProfileLoading(true);
+        const profileDocRef = doc(firestore, 'community-profiles', user.uid);
+        const docSnap = await getDoc(profileDocRef);
+        
+        if (docSnap.exists()) {
+            const existingProfile = docSnap.data();
+            form.reset(existingProfile);
+            setSelectedAvatarUrl(existingProfile.avatarUrl || user?.photoURL || null);
+        } else if (user) {
+            form.reset({
+                name: user.displayName || '',
+                bio: '',
+                avatarUrl: user.photoURL || '',
+            });
+            setSelectedAvatarUrl(user.photoURL || null);
+        }
+        setIsProfileLoading(false);
+      }
+      fetchProfile();
+  }, [user, form]);
+
 
   async function onSubmit(data: z.infer<typeof ProfileSchema>) {
-    if (!user || !profileDocRef) {
+    if (!user) {
       setError('You must be logged in to update your profile.');
       return;
     }
     setIsLoading(true);
     setError(null);
+    const profileDocRef = doc(firestore, 'community-profiles', user.uid);
 
     const profileData: CommunityProfile = {
       ...data,
@@ -233,7 +243,7 @@ export default function ProfilePage() {
     <main className="container mx-auto max-w-2xl py-8">
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="text-3xl">{existingProfile ? 'Edit Your' : 'Create Your'} Community Profile</CardTitle>
+          <CardTitle className="text-3xl">Your Community Profile</CardTitle>
           <CardDescription>This information will be visible to other members in the communities you join.</CardDescription>
         </CardHeader>
         <CardContent>

@@ -2,14 +2,14 @@
 // src/app/community/page.tsx
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
 import { useUser, useMemoFirebase } from "@/firebase";
 import { firestore } from "@/firebase/config";
-import { collection, doc, query, where, orderBy } from 'firebase/firestore';
+import { collection, doc, query, where, orderBy, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LogIn, PlusCircle, LoaderCircle, Search, User, Flag, Sparkles } from "lucide-react";
@@ -17,7 +17,6 @@ import { createCommunityDetails, refineCommunityPromptAction } from "../actions"
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { useCollectionData } from "react-firebase-hooks/firestore";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
@@ -88,6 +87,9 @@ function CreateCommunityForm() {
       
       const { name, description, welcomeMessage, members } = result;
       
+      if (!firestore) {
+        throw new Error("Firestore is not initialized");
+      }
       // 2. Create the new community object on the client in the top-level 'communities' collection
       const newCommunityRef = doc(collection(firestore, 'communities'));
       const newCommunity: Community = {
@@ -103,7 +105,7 @@ function CreateCommunityForm() {
       setDocumentNonBlocking(newCommunityRef, newCommunity, { merge: false });
       
       form.reset();
-      // The list will update automatically via the useCollection hook
+      // The list will update automatically via the onSnapshot listener
     } catch (e) {
       const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
       setError(`Failed to create community. ${message}`);
@@ -235,7 +237,7 @@ function CreateCommunityForm() {
   );
 }
 
-function CommunityList({ title, communities, profiles, isLoading, error }: { title: string, communities: Community[] | undefined, profiles: CommunityProfile[] | undefined, isLoading: boolean, error: Error | undefined }) {
+function CommunityList({ title, communities, profiles, isLoading, error }: { title: string, communities: Community[] | undefined, profiles: CommunityProfile[] | undefined, isLoading: boolean, error: Error | null }) {
     if (isLoading) {
       return <div className="flex justify-center"><LoaderCircle className="w-8 h-8 animate-spin text-primary" /></div>;
     }
@@ -288,13 +290,32 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
 }
 
 function CommunitySearchResults({ searchTerm, profiles }: { searchTerm: string, profiles: CommunityProfile[] | undefined }) {
-    const searchCommunitiesQuery = useMemoFirebase(() => searchTerm 
-      ? query(collection(firestore, 'communities'), where('name', '>=', searchTerm), where('name', '<=', searchTerm + '\uf8ff'))
-      : null, [searchTerm]);
-  
-    const [communities, isLoading, error] = useCollectionData<Community>(searchCommunitiesQuery, {
-      idField: 'id',
-    });
+    const [communities, setCommunities] = useState<Community[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+
+    useEffect(() => {
+        if (!firestore || !searchTerm) {
+            setCommunities([]);
+            setIsLoading(false);
+            return;
+        }
+        setIsLoading(true);
+        const q = query(
+            collection(firestore, 'communities'), 
+            where('name', '>=', searchTerm), 
+            where('name', '<=', searchTerm + '\uf8ff')
+        );
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            setCommunities(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community)));
+            setIsLoading(false);
+        }, (err) => {
+            setError(err);
+            setIsLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [searchTerm]);
 
     return (
         <CommunityList 
@@ -308,11 +329,23 @@ function CommunitySearchResults({ searchTerm, profiles }: { searchTerm: string, 
 }
 
 function PublicCommunityList({ profiles }: { profiles: CommunityProfile[] | undefined }) {
-    const publicCommunitiesQuery = useMemoFirebase(() => query(collection(firestore, 'communities'), orderBy('name', 'asc')), []);
+    const [communities, setCommunities] = useState<Community[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
 
-    const [communities, isLoading, error] = useCollectionData<Community>(publicCommunitiesQuery, {
-      idField: 'id',
-    });
+    useEffect(() => {
+        if (!firestore) return;
+        setIsLoading(true);
+        const q = query(collection(firestore, 'communities'), orderBy('name', 'asc'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            setCommunities(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community)));
+            setIsLoading(false);
+        }, (err) => {
+            setError(err);
+            setIsLoading(false);
+        });
+        return () => unsubscribe();
+    }, []);
 
     return (
         <CommunityList
@@ -330,16 +363,39 @@ export default function CommunityPage() {
   const { user, isUserLoading } = useUser();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const userCommunitiesQuery = useMemoFirebase(() => user ? query(collection(firestore, 'communities'), where('ownerId', '==', user.uid)) : null, [user]);
-  const [userCommunities, isLoadingUserCommunities, userCommunitiesError] = useCollectionData<Community>(userCommunitiesQuery, {
-    idField: 'id',
-  });
+  const [userCommunities, setUserCommunities] = useState<Community[]>([]);
+  const [isLoadingUserCommunities, setIsLoadingUserCommunities] = useState(true);
+  const [userCommunitiesError, setUserCommunitiesError] = useState<Error | null>(null);
 
-  const allProfilesQuery = useMemoFirebase(() => query(collection(firestore, 'community-profiles')), []);
-  const [allProfiles, isLoadingProfiles] = useCollectionData<CommunityProfile>(allProfilesQuery, {
-    idField: 'id'
-  });
+  useEffect(() => {
+      if (!user || !firestore) {
+          setIsLoadingUserCommunities(false);
+          return;
+      }
+      setIsLoadingUserCommunities(true);
+      const q = query(collection(firestore, 'communities'), where('ownerId', '==', user.uid));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+          setUserCommunities(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community)));
+          setIsLoadingUserCommunities(false);
+      }, (err) => {
+          setUserCommunitiesError(err);
+          setIsLoadingUserCommunities(false);
+      });
+      return () => unsubscribe();
+  }, [user]);
 
+  const [allProfiles, setAllProfiles] = useState<CommunityProfile[]>([]);
+  const [isLoadingProfiles, setIsLoadingProfiles] = useState(true);
+
+  useEffect(() => {
+      if (!firestore) return;
+      const q = query(collection(firestore, 'community-profiles'));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+          setAllProfiles(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CommunityProfile)));
+          setIsLoadingProfiles(false);
+      });
+      return () => unsubscribe();
+  }, []);
 
   if (isUserLoading || isLoadingProfiles) {
     return (
