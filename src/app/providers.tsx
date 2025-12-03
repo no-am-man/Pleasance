@@ -2,7 +2,7 @@
 'use client';
 
 import { AuthProvider } from '@/firebase/auth-provider';
-import { Header } from '@/components/header';
+import { Header } from '@/app/header';
 import { Toaster } from '@/components/ui/toaster';
 import Link from 'next/link';
 import { PresenceBar } from '@/components/PresenceBar';

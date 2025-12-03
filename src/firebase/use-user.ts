@@ -8,5 +8,5 @@ export function useUser() {
   if (context === undefined) {
     throw new Error('useUser must be used within an AuthProvider');
   }
-  return { user: context.user, isUserLoading: context.isUserLoading };
+  return context;
 }
