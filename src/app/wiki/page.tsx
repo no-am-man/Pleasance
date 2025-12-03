@@ -106,7 +106,7 @@ export default function WikiPage() {
             imageUrl="https://picsum.photos/seed/103/600/400"
             imageHint="3d printer"
         >
-            Ideas are worthless without execution. The Fabrication service is where the digital becomes physical. Upload your designs—CAD files for objects, PDFs for books—and have them manufactured. The integrated Positioning System (PosSys) ensures precision from digital file to tangible asset. Create, build, and own.
+            Ideas are worthless without execution. The Fabrication service is where the digital becomes physical. Submit assets from your Treasury to the ticketing system to have them manufactured by a network of suppliers. Track your order from 'pending' to 'shipped'. Create, build, and own.
         </FeatureCard>
         
         <FeatureCard 
