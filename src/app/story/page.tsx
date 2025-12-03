@@ -307,7 +307,7 @@ export default function StoryPage() {
             border: '1px solid hsl(var(--border))',
         }}>
         <h1 className="text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-          <BookOpen className="w-12 h-12" /> Sacred Texts
+          <BookOpen className="w-12 h-12" /> Nuncy Lingua
         </h1>
         <p className="text-lg text-slate-300 mt-2">
           Generate a short story at your level, then practice with our karaoke-style player.

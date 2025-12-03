@@ -52,7 +52,7 @@ const navLinks = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/community', label: 'Community', icon: Users },
   { href: '/conductor', label: 'Conductor', icon: Bot },
-  { href: '/story', label: 'Sacred Texts', icon: BookOpen },
+  { href: '/story', label: 'Nuncy Lingua', icon: BookOpen },
   { href: '/fabrication', label: 'Fabrication', icon: Warehouse },
   { href: '/treasury', label: 'Treasury', icon: Banknote },
   { href: '/workshop', label: 'Altar of Creation', icon: Beaker },

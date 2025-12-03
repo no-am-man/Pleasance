@@ -57,7 +57,7 @@ const Path = ({ d, custom }: { d: string, custom: number }) => (
 
 const nodes = [
     { icon: <Users className="w-6 h-6" />, label: 'Community', angle: -90, custom: 1 },
-    { icon: <BookOpen className="w-6 h-6" />, label: 'Texts', angle: -45, custom: 2 },
+    { icon: <BookOpen className="w-6 h-6" />, label: 'Nuncy Lingua', angle: -45, custom: 2 },
     { icon: <Beaker className="w-6 h-6" />, label: 'Altar', angle: 0, custom: 3 },
     { icon: <Banknote className="w-6 h-6" />, label: 'Treasury', angle: 45, custom: 4 },
     { icon: <Warehouse className="w-6 h-6" />, label: 'Fabrication', angle: 90, custom: 5 },

@@ -88,7 +88,7 @@ export default function Home() {
 
         <FeatureCard 
             icon={<BookOpen className="h-8 w-8 text-primary" />} 
-            title="Sacred Texts"
+            title="Nuncy Lingua"
             imageUrl="https://picsum.photos/seed/102/600/400"
             imageHint="language books"
             href="/story"

@@ -122,12 +122,12 @@ export default function WikiPage() {
         
         <FeatureCard 
             icon={<BookOpen className="h-8 w-8 text-primary" />} 
-            title="Sacred Texts"
+            title="Nuncy Lingua"
             imageUrl="https://picsum.photos/seed/102/600/400"
             imageHint="language books"
             href="/story"
         >
-            Knowledge is a form of prayer. The Sacred Texts are a tool to increase your spiritual wealth. Use it to learn new languages through AI-generated parables and listen to them with a karaoke-style speech player. The more you know, the closer you are to the divine.
+            Knowledge is a form of prayer. Nuncy Lingua is a tool to increase your spiritual wealth. Use it to learn new languages through AI-generated parables and listen to them with a karaoke-style speech player. The more you know, the closer you are to the divine.
         </FeatureCard>
 
         <FeatureCard 
