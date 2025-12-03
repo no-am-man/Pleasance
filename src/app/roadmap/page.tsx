@@ -13,7 +13,7 @@ import { collection, query, doc } from 'firebase/firestore';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType, CommunityProfile } from '@/lib/types';
 import { LoaderCircle, PlusCircle, Trash2, Sparkles, ArrowLeft, ArrowRight, UserPlus, Check } from 'lucide-react';
-import { updateRoadmapCardColumn, addRoadmapCard, deleteRoadmapCard, refineCardDescription, updateRoadmapCardOrder, updateRoadmapCardAssignees } from '../actions';
+import { addRoadmapCard, deleteRoadmapCard, refineCardDescription, updateRoadmapCardAssignees, updateRoadmapCardColumn, updateRoadmapCardOrder } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -163,7 +163,7 @@ function AddIdeaForm() {
     )
 }
 
-function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; allProfiles: CommunityProfile[]; onUpdateAssignees: (cardId: string, assigneeName: string, shouldAssign: boolean) => void; }) {
+function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, dragHandleProps }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; allProfiles: CommunityProfile[]; onUpdateAssignees: (cardId: string, assigneeName: string, shouldAssign: boolean) => void; dragHandleProps?: any; }) {
   const { user } = useUser();
   const isFounder = user?.email === 'gg.el0ai.com@gmail.com';
   const { toast } = useToast();
@@ -192,28 +192,29 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees }: 
     }
   };
   
-  const stopPropagation = (e: React.MouseEvent | React.TouchEvent) => e.stopPropagation();
-
   return (
     <Card className="bg-card/70 hover:bg-card transition-all group relative">
-      <CardHeader className="p-4 pb-0 flex flex-row items-start justify-between">
+      <CardHeader
+        className="p-4 pb-0 flex flex-row items-start justify-between"
+        {...(dragHandleProps || {})}
+      >
         <CardTitle className="text-base">{card.title}</CardTitle>
         {isFounder && (
             <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
                 {canMoveLeft && (
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(card.id, columnId, 'left')} onMouseDown={stopPropagation}>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(card.id, columnId, 'left')}>
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
                 )}
                 {canMoveRight && (
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(card.id, columnId, 'right')} onMouseDown={stopPropagation}>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(card.id, columnId, 'right')}>
                         <ArrowRight className="h-4 w-4" />
                     </Button>
                 )}
                 {columnId === 'ideas' && (
                     <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onMouseDown={stopPropagation}>
+                        <Button variant="ghost" size="icon" className="h-6 w-6">
                         <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                     </AlertDialogTrigger>
@@ -272,11 +273,11 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees }: 
              {isFounder && (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onMouseDown={stopPropagation}>
+                        <Button variant="ghost" size="icon" className="h-6 w-6">
                             <UserPlus className="h-4 w-4"/>
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent onMouseDown={stopPropagation}>
+                    <DropdownMenuContent>
                         {allProfiles.map(profile => {
                             const isAssigned = card.assignees?.includes(profile.name);
                             return (
@@ -307,8 +308,15 @@ function SortableKanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssig
     };
 
     return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={cn(isDragging && 'opacity-50')}>
-            <KanbanCard card={card} columnId={columnId} onMove={onMove} allProfiles={allProfiles} onUpdateAssignees={onUpdateAssignees} />
+        <div ref={setNodeRef} style={style} className={cn(isDragging && 'opacity-50')}>
+            <KanbanCard
+                card={card}
+                columnId={columnId}
+                onMove={onMove}
+                allProfiles={allProfiles}
+                onUpdateAssignees={onUpdateAssignees}
+                dragHandleProps={{...attributes, ...listeners}}
+            />
         </div>
     )
 }
