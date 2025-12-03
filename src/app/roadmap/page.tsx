@@ -406,10 +406,10 @@ function KanbanColumn({ id, title, cards, children, onMoveCard, allProfiles, onU
   const isFounder = user?.email === 'gg.el0ai.com@gmail.com';
   
   const columnDescriptions: { [key: string]: string } = {
-    ideas: 'Something that comes to mind',
-    nextUp: 'Getting excited... still only in dev...',
-    inProgress: 'Staging',
-    alive: 'A Perfect Model.',
+    ideas: "A seed of inspiration; a potential future for the republic.",
+    nextUp: "The forge is being prepared. These ideas are slated for manifestation.",
+    inProgress: "Actively being constructed in the workshop. Viewable on the staging server.",
+    alive: "A living part of the republic, actively serving its citizens.",
   };
   
   return (
