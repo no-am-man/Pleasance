@@ -75,7 +75,7 @@ export const FederationDiagram = () => {
           </radialGradient>
         </defs>
 
-        {/* The Divine Presence of Hashem */}
+        {/* The Divine Presence */}
         <circle
           cx="250"
           cy="250"
@@ -118,15 +118,6 @@ export const FederationDiagram = () => {
             y1="250"
             x2="100"
             y2="400"
-            stroke="hsl(var(--primary))"
-            strokeWidth="1"
-            strokeDasharray="4"
-          />
-          <line
-            x1="250"
-            y1="250"
-            x2="250"
-            y2="50"
             stroke="hsl(var(--primary))"
             strokeWidth="1"
             strokeDasharray="4"
@@ -192,16 +183,6 @@ export const FederationDiagram = () => {
           delay={800}
         />
         
-        <text
-          x="250"
-          y="65"
-          textAnchor="middle"
-          fill="hsl(var(--primary))"
-          className="font-bold text-lg tracking-wider uppercase"
-          style={{ animation: 'fadeIn 1500ms ease-out forwards', opacity: 0 }}
-        >
-          Hashem
-        </text>
       </svg>
     </div>
   );
