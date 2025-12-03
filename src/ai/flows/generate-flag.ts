@@ -32,9 +32,6 @@ const generateFlagPrompt = ai.definePrompt({
   name: 'generateFlagPrompt',
   input: { schema: GenerateFlagInputSchema },
   output: { schema: GenerateFlagOutputSchema },
-  config: {
-    model: 'googleai/gemini-pro',
-  },
   prompt: `You are an expert graphic designer who specializes in creating symbolic, minimalist, and modern vector art for flags.
         
 Task: Generate a complete, valid SVG string for a flag representing an online community.
@@ -48,6 +45,9 @@ Design Constraints:
 - Do not include any text in the SVG output.
 - The SVG should look good on both light and dark backgrounds.
 - Ensure the output is a raw JSON object containing the SVG string, with no additional text, explanations, or markdown.`,
+  config: {
+    model: 'googleai/gemini-pro',
+  },
 });
 
 
