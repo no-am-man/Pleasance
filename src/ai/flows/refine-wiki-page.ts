@@ -23,6 +23,10 @@ const RefineWikiOutputSchema = z.object({
 });
 export type RefineWikiOutput = z.infer<typeof RefineWikiOutputSchema>;
 
+const RefinedContentSchema = z.object({
+    refinedContent: z.string()
+});
+
 const ImagePromptSchema = z.object({
     prompt: z.string().describe('A concise, descriptive prompt for a text-to-image model, based on the most important concept in the text. The style should be abstract and artistic.')
 });
@@ -33,14 +37,7 @@ export async function refineWikiPage(input: RefineWikiInput): Promise<RefineWiki
 }
 
 
-const refineWikiPrompt = ai.definePrompt({
-    name: 'refineWikiPagePrompt',
-    input: { schema: RefineWikiInputSchema },
-    output: { schema: z.object({ refinedContent: z.string() }) },
-    config: {
-        model: "googleai/gemini-1.5-flash-latest",
-    },
-    prompt: `You are an expert technical writer and collaborative editor specializing in markdown formatting. Your task is to take a wiki page's title and its current markdown content and refine it.
+const refineContentPromptTemplate = `You are an expert technical writer and collaborative editor specializing in markdown formatting. Your task is to take a wiki page's title and its current markdown content and refine it.
 
 - Improve clarity, structure, and flow.
 - Add more detail where appropriate, based on the title and context.
@@ -56,24 +53,15 @@ Existing Content:
 """
 
 Generate the refined markdown content for the page.
-`,
-});
+`;
 
-const generateImagePrompt = ai.definePrompt({
-    name: 'generateWikiImagePrompt',
-    input: { schema: z.object({ title: z.string(), content: z.string() }) },
-    output: { schema: ImagePromptSchema },
-    config: {
-        model: 'googleai/gemini-1.5-flash-latest',
-    },
-    prompt: `Analyze the following wiki page content and title. Identify the single most important, core concept. Create a concise, visually descriptive prompt for a text-to-image model to generate an abstract, artistic image that represents this core concept.
+const imagePromptTemplate = `Analyze the following wiki page content and title. Identify the single most important, core concept. Create a concise, visually descriptive prompt for a text-to-image model to generate an abstract, artistic image that represents this core concept.
 
 Page Title: "{{title}}"
 Content: "{{content}}"
 
 The image prompt should be creative and evocative.
-`,
-});
+`;
 
 
 const refineWikiPageFlow = ai.defineFlow(
@@ -84,7 +72,12 @@ const refineWikiPageFlow = ai.defineFlow(
   },
   async (input) => {
     // Step 1: Generate the refined text content.
-    const { output: textOutput } = await refineWikiPrompt(input);
+    const { output: textOutput } = await ai.generate({
+        model: 'googleai/gemini-1.5-flash-latest',
+        prompt: refineContentPromptTemplate,
+        input,
+        output: { schema: RefinedContentSchema },
+    });
     
     if (!textOutput?.refinedContent) {
         throw new Error("The AI failed to generate refined content for the wiki page.");
@@ -93,9 +86,14 @@ const refineWikiPageFlow = ai.defineFlow(
     let generatedImage: string | undefined = undefined;
 
     // Step 2: Generate an image prompt from the *new* refined content.
-    const { output: imagePromptOutput } = await generateImagePrompt({
-        title: input.title,
-        content: textOutput.refinedContent
+    const { output: imagePromptOutput } = await ai.generate({
+        model: 'googleai/gemini-1.5-flash-latest',
+        prompt: imagePromptTemplate,
+        input: {
+            title: input.title,
+            content: textOutput.refinedContent
+        },
+        output: { schema: ImagePromptSchema },
     });
 
     // Step 3: Generate the image using the new prompt.
