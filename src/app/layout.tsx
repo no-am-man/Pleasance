@@ -1,10 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { Toaster } from '@/components/ui/toaster';
-import { FirebaseClientProvider } from '@/firebase/client-provider';
-import { Header } from '@/components/header';
-import Link from 'next/link';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { Providers } from './providers';
 
 export const metadata: Metadata = {
   title: 'Pleasance',
@@ -31,17 +27,7 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased flex flex-col min-h-screen">
-        <FirebaseClientProvider>
-          <FirebaseErrorListener />
-          <Header />
-          <main className="flex-grow pt-16">{children}</main>
-          <footer className="text-center p-4 border-t">
-            <Link href="https://github.com/no-am-man/Pleasance" target="_blank" rel="noopener noreferrer" className="text-green-500 hover:underline">
-                Open Source Community? Fork Me!
-            </Link>
-          </footer>
-          <Toaster />
-        </FirebaseClientProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
