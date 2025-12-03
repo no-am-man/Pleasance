@@ -12,7 +12,7 @@ import { firestore } from '@/firebase/config';
 import { collection, query, doc } from 'firebase/firestore';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType, CommunityProfile } from '@/lib/types';
-import { LoaderCircle, PlusCircle, Trash2, Sparkles, ArrowLeft, ArrowRight, UserPlus, Check } from 'lucide-react';
+import { GripVertical, LoaderCircle, PlusCircle, Trash2, Sparkles, ArrowLeft, ArrowRight, UserPlus, Check } from 'lucide-react';
 import { addRoadmapCard, deleteRoadmapCard, refineCardDescription, updateRoadmapCardAssignees, updateRoadmapCardColumn, updateRoadmapCardOrder } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
@@ -192,54 +192,62 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, dr
     }
   };
   
+  const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
+
   return (
     <Card className="bg-card/70 hover:bg-card transition-all group relative">
       <CardHeader
         className="p-4 pb-0 flex flex-row items-start justify-between"
-        {...(dragHandleProps || {})}
       >
         <CardTitle className="text-base">{card.title}</CardTitle>
-        {isFounder && (
-            <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                {canMoveLeft && (
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(card.id, columnId, 'left')}>
-                        <ArrowLeft className="h-4 w-4" />
-                    </Button>
-                )}
-                {canMoveRight && (
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(card.id, columnId, 'right')}>
-                        <ArrowRight className="h-4 w-4" />
-                    </Button>
-                )}
-                {columnId === 'ideas' && (
-                    <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6">
-                        <Trash2 className="h-4 w-4 text-destructive" />
+        <div className="flex items-center">
+             {dragHandleProps && (
+                <div {...dragHandleProps} className="p-1 cursor-grab opacity-20 group-hover:opacity-100 transition-opacity">
+                    <GripVertical className="h-5 w-5" />
+                </div>
+             )}
+            {isFounder && (
+                <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    {canMoveLeft && (
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onMouseDown={stopPropagation} onClick={() => onMove(card.id, columnId, 'left')}>
+                            <ArrowLeft className="h-4 w-4" />
                         </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will permanently delete the idea "{card.title}". This action cannot be undone.
-                        </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={handleDelete}
-                            disabled={isDeleting}
-                            className="bg-destructive hover:bg-destructive/90"
-                        >
-                            {isDeleting ? <LoaderCircle className="animate-spin" /> : 'Delete'}
-                        </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                    </AlertDialog>
-                )}
-            </div>
-        )}
+                    )}
+                    {canMoveRight && (
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onMouseDown={stopPropagation} onClick={() => onMove(card.id, columnId, 'right')}>
+                            <ArrowRight className="h-4 w-4" />
+                        </Button>
+                    )}
+                    {columnId === 'ideas' && (
+                        <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onMouseDown={stopPropagation}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent onMouseDown={stopPropagation}>
+                            <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This will permanently delete the idea "{card.title}". This action cannot be undone.
+                            </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={handleDelete}
+                                disabled={isDeleting}
+                                className="bg-destructive hover:bg-destructive/90"
+                            >
+                                {isDeleting ? <LoaderCircle className="animate-spin" /> : 'Delete'}
+                            </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                        </AlertDialog>
+                    )}
+                </div>
+            )}
+        </div>
       </CardHeader>
       <CardContent className="p-4 pt-2">
         <p className="text-sm text-muted-foreground mb-4">{card.description}</p>
@@ -273,11 +281,11 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, dr
              {isFounder && (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onMouseDown={stopPropagation}>
                             <UserPlus className="h-4 w-4"/>
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent>
+                    <DropdownMenuContent onMouseDown={stopPropagation}>
                         {allProfiles.map(profile => {
                             const isAssigned = card.assignees?.includes(profile.name);
                             return (
