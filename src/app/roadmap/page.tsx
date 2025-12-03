@@ -405,10 +405,18 @@ function KanbanColumn({ id, title, cards, children, onMoveCard, allProfiles, onU
   const { user } = useUser();
   const isFounder = user?.email === 'gg.el0ai.com@gmail.com';
   
+  const columnDescriptions: { [key: string]: string } = {
+    ideas: 'Something that comes to mind',
+    nextUp: 'Getting excited... still only in dev...',
+    inProgress: 'Staging',
+    alive: 'A Perfect Model.',
+  };
+  
   return (
       <div className="flex flex-col gap-4">
         <div className="px-3 py-2">
           <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+          <p className="text-sm text-muted-foreground">{columnDescriptions[id]}</p>
         </div>
         <div className="flex-grow space-y-4 rounded-lg p-3 bg-muted/50 min-h-[200px]">
             {children}
