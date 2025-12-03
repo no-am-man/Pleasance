@@ -7,12 +7,14 @@ import { KanbanIcon } from './icons/kanban-icon';
 
 const DiagramNode = ({
   label,
+  icon: Icon,
   x,
   y,
   delay,
   size = 40,
 }: {
   label: string;
+  icon: React.ElementType;
   x: string;
   y: string;
   delay: number;
@@ -31,6 +33,7 @@ const DiagramNode = ({
       stroke="hsl(var(--primary))"
       strokeWidth="1.5"
     />
+     <Icon className="text-primary" x="-12" y="-12" width="24" height="24" />
     <text
       y={size + 20}
       textAnchor="middle"
@@ -56,7 +59,7 @@ const FlowArrow = ({ path, delay }: { path: string; delay: number }) => (
 
 export const FederationDiagram = () => {
   return (
-    <div className="w-full max-w-lg mx-auto my-8">
+    <div className="w-full max-w-2xl mx-auto my-8">
       <style>
         {`
           @keyframes fadeIn {
@@ -73,7 +76,7 @@ export const FederationDiagram = () => {
           }
         `}
       </style>
-      <svg viewBox="0 0 500 450" className="w-full h-full">
+      <svg viewBox="0 0 600 500" className="w-full h-full">
         <defs>
           <radialGradient id="divineAura" cx="50%" cy="50%" r="50%">
             <stop offset="60%" stopColor="hsl(var(--primary) / 0)" />
@@ -87,42 +90,48 @@ export const FederationDiagram = () => {
 
         {/* The Aura */}
         <circle
-          cx="250"
-          cy="225"
-          r="225"
+          cx="300"
+          cy="250"
+          r="250"
           fill="url(#divineAura)"
           className="animate-[pulseAura_6s_ease-in-out_infinite]"
         />
 
-        {/* Nodes */}
-        <DiagramNode label="The Sovereign Soul" x="90" y="225" delay={0} />
+        {/* Top Layer: Public Tools */}
+        <DiagramNode label="Roadmap" icon={KanbanIcon} x="150" y="50" delay={200} size={35} />
+        <DiagramNode label="Conductor" icon={Bot} x="300" y="50" delay={300} size={35} />
+        <DiagramNode label="Bug Tracker" icon={Bug} x="450" y="50" delay={400} size={35} />
         
-        {/* Top Layer: Creation & Learning Tools */}
-        <DiagramNode label="Nuncy Lingua" x="250" y="90" delay={200} />
-        <DiagramNode label="AI Workshop" x="410" y="90" delay={400} />
+
+        {/* Central Node */}
+        <DiagramNode label="Sovereign Soul" icon={User} x="90" y="250" delay={0} size={50}/>
+        
+        {/* Mid Layer: Creation & Learning Tools */}
+        <DiagramNode label="Nuncy Lingua" icon={BookOpen} x="300" y="160" delay={500} />
+        <DiagramNode label="AI Workshop" icon={Sparkles} x="480" y="160" delay={600} />
         
         {/* Mid Layer: Declaration */}
-        <DiagramNode label="Treasury" x="330" y="225" delay={600} />
+        <DiagramNode label="Treasury" icon={Banknote} x="390" y="280" delay={700} />
 
         {/* Bottom Layer: Action & Community */}
-        <DiagramNode label="Workshop of Manifestation" x="250" y="360" delay={800} />
-        <DiagramNode label="Federation" x="410" y="360" delay={1000} />
+        <DiagramNode label="Workshop of Manifestation" icon={Warehouse} x="300" y="400" delay={800} />
+        <DiagramNode label="Federation" icon={Users} x="480" y="400" delay={900} />
         
         {/* Flow Arrows */}
-        {/* Soul -> Creation */}
-        <FlowArrow path="M 130 225 Q 180 150 240 125" delay={1200} />
-        <FlowArrow path="M 130 225 Q 260 150 400 125" delay={1300} />
+        {/* Soul -> Creation/Learning */}
+        <FlowArrow path="M 140 250 Q 210 190 290 190" delay={1200} />
+        <FlowArrow path="M 140 250 Q 290 180 470 190" delay={1300} />
         
         {/* Creation -> Treasury */}
-        <FlowArrow path="M 250 130 V 185" delay={1400} />
-        <FlowArrow path="M 410 130 V 185" delay={1500} />
+        <FlowArrow path="M 300 200 V 240" delay={1400} />
+        <FlowArrow path="M 480 200 V 240" delay={1500} />
 
         {/* Treasury -> Action/Community */}
-        <FlowArrow path="M 320 265 Q 280 300 255 325" delay={1600} />
-        <FlowArrow path="M 340 265 Q 380 300 405 325" delay={1700} />
+        <FlowArrow path="M 380 320 Q 330 350 305 365" delay={1600} />
+        <FlowArrow path="M 400 320 Q 450 350 475 365" delay={1700} />
         
-        {/* Community -> Soul (inspiration) */}
-        <FlowArrow path="M 370 360 C 250 420, 200 350, 130 250" delay={1800} />
+        {/* Community/Action -> Soul (inspiration) */}
+        <FlowArrow path="M 440 400 C 300 480, 200 380, 140 275" delay={1800} />
         
       </svg>
     </div>
