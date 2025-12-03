@@ -8,7 +8,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { googleAI } from '@genkit-ai/google-genai';
 
 const RefineCardInputSchema = z.object({
   title: z.string().describe('The title of the idea to be refined.'),
@@ -53,12 +52,7 @@ const refineRoadmapCardFlow = ai.defineFlow(
   },
   async (input) => {
     // Correctly call the prompt function with the input.
-    const { output } = await ai.generate({
-        prompt: refineCardPrompt.prompt,
-        input: input,
-        model: googleAI.model('gemini-pro'),
-        output: { schema: RefineCardOutputSchema },
-    });
+    const { output } = await refineCardPrompt(input);
     if (!output) {
         throw new Error("The AI failed to generate a refined description.");
     }
