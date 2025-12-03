@@ -605,3 +605,5 @@
     "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities`, `workshops`, `fabricationOrders`, and now `bugs` in top-level collections, they become queryable. User-specific data is nested under `/users/{userId}` to ensure privacy. Public profiles are in `/community-profiles` to allow discoverability without exposing private account details. The roadmap is migrated to Firestore for reliable public read access."
   }
 }
+
+    

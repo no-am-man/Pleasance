@@ -168,8 +168,7 @@ service cloud.firestore {
         match /messages/{messageId} {
             allow read: if true;
             allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-            allow update: if request.auth.uid == resource.data.userId; // Author can update
-            allow update: if isCommunityOwner(communityId); // Community owner can update
+            allow update: if isCommunityOwner(communityId) || request.auth.uid == resource.data.userId;
             allow delete: if false;
 
              /**
@@ -180,8 +179,7 @@ service cloud.firestore {
             match /comments/{commentId} {
                 allow read: if true;
                 allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-                allow update: if request.auth.uid == resource.data.userId; // Author can update
-                allow update: if isCommunityOwner(communityId); // Community owner can update
+                allow update: if isCommunityOwner(communityId) || request.auth.uid == resource.data.userId;
                 allow delete: if false;
             }
         }
@@ -260,3 +258,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

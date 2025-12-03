@@ -224,9 +224,37 @@ function TextCommentForm({ communityId, messageId }: { communityId: string, mess
     );
 }
 
-function CommentCard({ comment }: { comment: Comment }) {
+function CommentCard({ comment, canManage }: { comment: Comment; canManage: boolean; }) {
+    const { toast } = useToast();
+    const [isUpdating, setIsUpdating] = useState(false);
+    const isDeleted = comment.deleted;
+
+    const handleDelete = async () => {
+        setIsUpdating(true);
+        const commentDocRef = doc(firestore, `communities/${useParams().id}/messages/${useParams().messageId}/comments`, comment.id);
+        
+        const updatePayload = {
+            deleted: true,
+            deletedAt: serverTimestamp(),
+            text: deleteField(),
+        };
+
+        await updateDoc(commentDocRef, updatePayload);
+        toast({ title: 'Comment Deleted' });
+        setIsUpdating(false);
+    };
+
+    if (isDeleted) {
+        return (
+            <div className="p-3 rounded-md bg-muted/50 flex gap-3 items-start">
+                <Ban className="h-5 w-5 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground italic">This comment has been deleted.</span>
+            </div>
+        )
+    }
+
     return (
-        <div className="p-3 rounded-md bg-muted/50 flex gap-3 items-start">
+        <div className="p-3 rounded-md bg-muted/50 flex gap-3 items-start group">
             <Avatar className="w-8 h-8">
                 <AvatarImage src={comment.userAvatarUrl || `https://i.pravatar.cc/150?u=${comment.userId}`} alt={comment.userName} />
                 <AvatarFallback>{comment.userName.charAt(0)}</AvatarFallback>
@@ -242,18 +270,41 @@ function CommentCard({ comment }: { comment: Comment }) {
                 </div>
                  <p className="text-sm text-foreground whitespace-pre-wrap">{comment.text}</p>
             </div>
+            {canManage && (
+                 <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" disabled={isUpdating} aria-label="Delete comment" className="opacity-0 group-hover:opacity-100">
+                            <Ban className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure you want to delete this comment?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This will permanently hide the comment content. This action cannot be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+                                {isUpdating ? <LoaderCircle className="animate-spin" /> : 'Delete'}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            )}
         </div>
     )
 }
 
-function CommentThread({ message, comments, isLoading }: { message: Message, comments: Comment[] | undefined, isLoading: boolean }) {
+function CommentThread({ message, comments, isLoading, canManage }: { message: Message, comments: Comment[] | undefined, isLoading: boolean, canManage: boolean }) {
     const { user } = useUser();
 
     return (
         <div className="pl-12 pr-4 pb-4 space-y-4">
             <div className="max-h-60 overflow-y-auto space-y-3 pr-2">
                 {isLoading && <LoaderCircle className="mx-auto animate-spin" />}
-                {comments && comments.length > 0 && comments.map(comment => <CommentCard key={comment.id} comment={comment} />)}
+                {comments && comments.length > 0 && comments.map(comment => <CommentCard key={comment.id} comment={comment} canManage={canManage} />)}
             </div>
             {user && <TextCommentForm communityId={message.communityId} messageId={message.id} />}
         </div>
@@ -271,7 +322,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
     const [comments, isLoadingComments] = useCollectionData<Comment>(commentsQuery, {
       idField: 'id'
     });
-    const commentCount = comments?.length || 0;
+    const commentCount = comments?.filter(c => !c.deleted).length || 0;
 
     const handleToggleStatus = async () => {
         setIsUpdating(true);
@@ -399,7 +450,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                     </CardFooter>
                 </div>
                 <CollapsibleContent>
-                   <CommentThread message={message} comments={comments} isLoading={isLoadingComments} />
+                   <CommentThread message={message} comments={comments} isLoading={isLoadingComments} canManage={canManage} />
                 </CollapsibleContent>
             </Card>
         </Collapsible>
@@ -916,3 +967,5 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
+
+    
