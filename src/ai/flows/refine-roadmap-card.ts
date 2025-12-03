@@ -41,6 +41,9 @@ Existing Description: "{{description}}"
 
 Generate a refined description. It should be a single paragraph.
 `,
+    config: {
+        model: 'googleai/gemini-pro',
+    },
 });
 
 
@@ -59,4 +62,3 @@ const refineRoadmapCardFlow = ai.defineFlow(
     return output;
   }
 );
-
