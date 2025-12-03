@@ -163,6 +163,9 @@ export default function CommunityWikiPage() {
                             <Image src={community.flagUrl} alt={`${community.name} flag`} layout="fill" objectFit="cover" />
                         </div>
                     )}
+                    <div className="text-sm text-muted-foreground font-medium">
+                        {community?.name || 'Community'} Wiki
+                    </div>
                     <CardTitle className="text-3xl flex items-center gap-3">
                         <BookOpen className="text-primary" />
                         {pageTitle}
