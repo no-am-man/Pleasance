@@ -9,8 +9,12 @@ import Link from 'next/link';
 import { PresenceBar } from '@/components/PresenceBar';
 import { navLinks } from './header';
 import { Button } from '@/components/ui/button';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
   return (
     <FirebaseClientProvider>
       <FirebaseErrorListener />
@@ -25,13 +29,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <div className="h-1 w-full ant-trail" />
         <div className="text-center p-4 space-y-4">
             <div className="flex justify-center flex-wrap gap-x-4 gap-y-2">
-                {navLinks.map(link => (
-                    <Button key={link.href} variant="link" asChild className="text-muted-foreground h-auto py-1 px-2">
-                        <Link href={link.href}>
-                            {link.label}
-                        </Link>
-                    </Button>
-                ))}
+                {navLinks.map(link => {
+                    const isActive = pathname.startsWith(link.href) && (link.href !== '/' || pathname === '/');
+                    return (
+                        <Button key={link.href} variant="link" asChild className={cn("h-auto py-1 px-2", isActive ? "text-primary" : "text-muted-foreground")}>
+                            <Link href={link.href}>
+                                {link.label}
+                            </Link>
+                        </Button>
+                    )
+                })}
             </div>
             <p>
             <Link
