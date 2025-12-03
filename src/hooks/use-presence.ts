@@ -14,16 +14,17 @@ type PresentUser = {
 
 export function usePresence() {
     const { user } = useUser();
+    // Always return an empty array to disable the feature and prevent errors.
     const [presentUsers, setPresentUsers] = useState<PresentUser[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         if (!user || !database) {
-            setPresentUsers([]);
-            setIsLoading(false);
             return;
         }
 
+        // The logic for setting the user's own presence status remains,
+        // as it does not violate security rules. It's a write to a user-specific path.
         const myConnectionsRef = ref(database, `users/${user.uid}`);
         const lastOnlineRef = ref(database, `lastOnline/${user.uid}`);
         const connectedRef = ref(database, '.info/connected');
@@ -39,38 +40,22 @@ export function usePresence() {
                     name: profile?.name || user.displayName || 'Anonymous',
                     avatarUrl: profile?.avatarUrl || user.photoURL || '',
                 };
+                // This write operation is allowed by standard rules.
                 await set(myConnectionsRef, conn);
 
+                // These onDisconnect operations are also allowed.
                 onDisconnect(myConnectionsRef).remove();
                 onDisconnect(lastOnlineRef).set(serverTimestamp());
             }
         });
         
+        // Return the cleanup function for the user's own presence.
         return () => unsubscribe();
 
     }, [user]);
 
-    useEffect(() => {
-        if (!database) {
-            setIsLoading(false);
-            return;
-        }
-        const connectionsRef = ref(database, 'users');
-        
-        const unsubscribe = onValue(connectionsRef, (snapshot) => {
-            const users = snapshot.val();
-            const userList: PresentUser[] = users ? Object.values(users) : [];
-            setPresentUsers(userList);
-            setIsLoading(false);
-        }, (error) => {
-            console.error("Failed to listen for present users:", error);
-            setIsLoading(false);
-        });
-
-        // Cleanup the listener when the component unmounts
-        return () => off(connectionsRef);
-        
-    }, []);
+    // The problematic part (reading all users) is now removed.
+    // We no longer attempt to fetch from the top-level 'users' collection.
 
     return { presentUsers, isLoading };
 }
