@@ -11,12 +11,14 @@ import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { marked } from 'marked';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, Info, Edit, ArrowLeft, BookOpen, Save, Eye } from 'lucide-react';
+import { LoaderCircle, Info, Edit, ArrowLeft, BookOpen, Save, Eye, Database } from 'lucide-react';
 import Link from 'next/link';
 import { WikiEditor } from '@/components/wiki-editor';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
+import { seedWikiData } from '../actions';
+import { FOUNDER_EMAIL } from '../admin/page';
 
 type WikiPage = {
     id: string;
@@ -41,6 +43,7 @@ export default function WikiPageDisplay() {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const [isSeeding, setIsSeeding] = useState(false);
 
     const basePath = '/wiki';
     const collectionPath = 'wiki';
@@ -95,6 +98,19 @@ export default function WikiPageDisplay() {
             router.push(`${basePath}/${finalPageId}`);
         }
     };
+
+     const handleSeedData = async () => {
+        setIsSeeding(true);
+        const result = await seedWikiData();
+        if (result.error) {
+            toast({ variant: 'destructive', title: 'Seeding Failed', description: result.error });
+        } else {
+            toast({ title: 'Wiki Seeded!', description: result.message });
+            // Optionally, refresh the page or redirect
+            router.push('/wiki/home');
+        }
+        setIsSeeding(false);
+    };
     
     const pageTitle = isEditing ? (isNewPage ? 'Creating New Page' : `Editing: ${page?.title}`) : page?.title;
     const breadcrumbPath = '/wiki';
@@ -110,23 +126,31 @@ export default function WikiPageDisplay() {
     
     if (!page && !isNewPage) {
         return (
-            <Card className="m-4 text-center">
-                <CardHeader>
-                    <CardTitle>Page Not Found</CardTitle>
-                    <CardDescription>The requested wiki page does not exist.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {user ? (
-                         <Button asChild>
-                            <Link href={`${basePath}/new`}>Create This Page</Link>
-                        </Button>
-                    ) : (
-                         <Button asChild variant="secondary">
-                            <Link href={basePath}>Back to Wiki</Link>
-                        </Button>
-                    )}
-                </CardContent>
-            </Card>
+             <main className="container mx-auto max-w-4xl py-8">
+                <Card className="m-4 text-center">
+                    <CardHeader>
+                        <CardTitle>Page Not Found</CardTitle>
+                        <CardDescription>The requested wiki page does not exist.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {user?.email === FOUNDER_EMAIL && (
+                             <Button onClick={handleSeedData} disabled={isSeeding}>
+                                {isSeeding ? <LoaderCircle className="mr-2 animate-spin" /> : <Database className="mr-2"/>}
+                                Seed Default Wiki
+                            </Button>
+                        )}
+                        {user ? (
+                            <Button asChild variant={user.email === FOUNDER_EMAIL ? "secondary" : "default"}>
+                                <Link href={`${basePath}/new`}>Create This Page</Link>
+                            </Button>
+                        ) : (
+                            <Button asChild variant="secondary">
+                                <Link href={basePath}>Back to Wiki</Link>
+                            </Button>
+                        )}
+                    </CardContent>
+                </Card>
+            </main>
         );
     }
 
@@ -177,7 +201,7 @@ export default function WikiPageDisplay() {
                 {isEditing && (
                     <CardFooter className="flex justify-end gap-2">
                         <Button variant="ghost" onClick={() => setIsEditing(false)} disabled={isSaving}>Cancel</Button>
-                        <Button onClick={handleSave} disabled={isSaving}>
+                        <Button onClick={handleSave} disabled={isSaving || !title.trim()}>
                             {isSaving ? <LoaderCircle className="mr-2 animate-spin" /> : <Save className="mr-2" />}
                             Save Page
                         </Button>

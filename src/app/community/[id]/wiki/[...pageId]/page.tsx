@@ -10,13 +10,14 @@ import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { marked } from 'marked';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, Info, Edit, ArrowLeft, BookOpen, Save, Eye } from 'lucide-react';
+import { LoaderCircle, Info, Edit, ArrowLeft, BookOpen, Save, Eye, Database } from 'lucide-react';
 import Link from 'next/link';
 import { WikiEditor } from '@/components/wiki-editor';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import Image from 'next/image';
+import { seedCommunityWikiData } from '@/app/actions';
 
 type WikiPage = {
     id: string;
@@ -30,6 +31,7 @@ type WikiPage = {
 type Community = {
     id: string;
     name: string;
+    ownerId: string;
     flagUrl?: string;
 };
 
@@ -48,6 +50,7 @@ export default function CommunityWikiPage() {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const [isSeeding, setIsSeeding] = useState(false);
 
     const basePath = `/community/${communityId}/wiki`;
     const collectionPath = `communities/${communityId}/wiki`;
@@ -58,6 +61,7 @@ export default function CommunityWikiPage() {
 
     const communityDocRef = useMemoFirebase(() => communityId ? doc(firestore, 'communities', communityId) : null, [communityId]);
     const [community, isCommunityLoading] = useDocumentData<Community>(communityDocRef);
+    const isOwner = user?.uid === community?.ownerId;
 
 
     useEffect(() => {
@@ -106,6 +110,26 @@ export default function CommunityWikiPage() {
             router.push(`${basePath}/${finalPageId}`);
         }
     };
+
+    const handleSeedData = async () => {
+        if (!user || !communityId) {
+            toast({ variant: 'destructive', title: 'Authentication Error' });
+            return;
+        }
+        setIsSeeding(true);
+        const result = await seedCommunityWikiData({ 
+            communityId, 
+            userId: user.uid,
+            userName: user.displayName || 'Community Owner'
+        });
+        if (result.error) {
+            toast({ variant: 'destructive', title: 'Seeding Failed', description: result.error });
+        } else {
+            toast({ title: 'Wiki Seeded!', description: 'The community wiki has been initialized.' });
+            router.push(`${basePath}/home`); // Redirect to the new home page
+        }
+        setIsSeeding(false);
+    }
     
     const pageTitle = isEditing ? (isNewPage ? 'Creating New Page' : `Editing: ${page?.title}`) : (page?.title || title);
 
@@ -126,12 +150,18 @@ export default function CommunityWikiPage() {
                         <CardDescription>The requested wiki page does not exist in this community.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {user ? (
-                            <Button asChild>
+                        {isOwner && (
+                             <Button onClick={handleSeedData} disabled={isSeeding}>
+                                {isSeeding ? <LoaderCircle className="mr-2 animate-spin" /> : <Database className="mr-2" />}
+                                Seed Default Wiki Pages
+                            </Button>
+                        )}
+                        {user && (
+                            <Button asChild variant={isOwner ? "secondary" : "default"}>
                                 <Link href={`${basePath}/new`}>Create This Page</Link>
                             </Button>
-                        ) : null}
-                         <Button asChild variant="secondary">
+                        )}
+                         <Button asChild variant="outline">
                             <Link href={`/community/${communityId}`}>Back to Community</Link>
                         </Button>
                     </CardContent>

@@ -996,13 +996,60 @@ export async function refineWikiPageAction(values: z.infer<typeof RefineWikiPage
     }
 }
     
+const seedCommunityWikiSchema = z.object({
+  communityId: z.string(),
+  userId: z.string(),
+  userName: z.string(),
+});
 
+export async function seedCommunityWikiData(values: z.infer<typeof seedCommunityWikiSchema>) {
+    try {
+        const { communityId, userId, userName } = seedCommunityWikiSchema.parse(values);
+
+        const adminApp = initializeAdminApp();
+        const firestore = getFirestore(adminApp);
+
+        // Check if user is the owner
+        const communityDoc = await firestore.collection('communities').doc(communityId).get();
+        if (!communityDoc.exists || communityDoc.data()?.ownerId !== userId) {
+            return { error: "Unauthorized: Only the community owner can seed the wiki." };
+        }
+
+        const batch = firestore.batch();
+        const collectionRef = firestore.collection('communities').doc(communityId).collection('wiki');
+
+        const initialData = {
+            'home': {
+                title: 'Welcome to Our Wiki',
+                content: '# Welcome!\n\nThis is the starting point for our community\'s shared knowledge base. Feel free to edit this page or create new ones to document our journey.'
+            },
+            'rules': {
+                title: 'Community Guidelines',
+                content: '# Guidelines\n\n1. Be respectful.\n2. Share generously.\n3. Build together.'
+            }
+        };
+
+        for (const [id, pageData] of Object.entries(initialData)) {
+            const docRef = collectionRef.doc(id);
+            batch.set(docRef, {
+                id: id,
+                title: pageData.title,
+                content: pageData.content,
+                lastModifiedByUserId: userId,
+                lastModifiedByUserName: userName,
+                lastModifiedAt: FieldValue.serverTimestamp(),
+            });
+        }
+
+        await batch.commit();
+        return { success: true, message: `Successfully seeded ${Object.keys(initialData).length} pages.` };
+
+    } catch (e) {
+        console.error('Community Wiki Seeding Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Failed to seed community wiki: ${message}` };
+    }
+}
     
-
-    
-
-    
-
-
 
     
