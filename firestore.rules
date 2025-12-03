@@ -13,6 +13,7 @@
  *   - `/communities/{communityId}/messages/{messageId}`: Messages are readable by any signed-in user.
  *   - `/communities/{communityId}/creations/{creationId}`: Creations are private to community members.
  *   - `/communities/{communityId}/roadmap/{columnId}`: Roadmap is private to community members.
+ *   - `/communities/{communityId}/wiki/{pageId}`: Wiki is private to community members.
  * - `/_private_admin_data/{docId}`: Highly restricted data, only accessible by the founder.
  */
 rules_version = '2';
@@ -56,8 +57,10 @@ service cloud.firestore {
     function isCommunityMember(communityId) {
       // This function can only be used for GET, not LIST operations.
       // `exists` is used here which is more efficient.
+      let community = get(/databases/$(database)/documents/communities/$(communityId));
       return exists(/databases/$(database)/documents/communities/$(communityId)) &&
-             get(/databases/$(database)/documents/communities/$(communityId)).data.members.hasAny([request.auth.uid]);
+             (community.data.ownerId == request.auth.uid || 
+              (community.data.members != null && request.auth.uid in community.data.members));
     }
     
     // --- Community Profile Validation ---
@@ -111,6 +114,15 @@ service cloud.firestore {
             && d.prompt is string && d.prompt.size() > 2
             && d.pixels is list && d.pixels.size() > 0
             && d.status == 'in-workshop'; // Creations must start in the workshop
+    }
+    
+    // --- Wiki Validation ---
+    function isValidWikiPage() {
+        let d = request.resource.data;
+        return d.id == request.id
+            && d.title is string && d.title.size() > 0
+            && d.content is string
+            && d.lastModifiedByUserId == request.auth.uid;
     }
 
 
@@ -234,6 +246,15 @@ service cloud.firestore {
             allow get, list: if isSignedIn();
             allow write: if isCommunityOwner(communityId);
         }
+
+        /**
+         * @description Manages the private wiki for a specific community.
+         * @path /communities/{communityId}/wiki/{pageId}
+         */
+        match /wiki/{pageId} {
+            allow read: if isCommunityMember(communityId);
+            allow write: if isCommunityMember(communityId);
+        }
     }
     
     /**
@@ -287,6 +308,15 @@ service cloud.firestore {
     }
 
     /**
+     * @description Publicly readable wiki. Any signed-in user can contribute.
+     * @path /wiki/{pageId}
+     */
+    match /wiki/{pageId} {
+        allow read: if true;
+        allow write: if isSignedIn();
+    }
+
+    /**
      * @description Secure storage for administrative data, like service account keys.
      * @path /_private_admin_data/{docId}
      * @allow Only the founder can read or write to this collection.
@@ -297,3 +327,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

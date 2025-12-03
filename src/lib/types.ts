@@ -1,3 +1,4 @@
+
 // src/lib/types.ts
 import { z } from 'zod';
 
@@ -72,3 +73,16 @@ export const CommunitySchema = z.object({
   members: z.array(MemberSchema),
 });
 export type Community = z.infer<typeof CommunitySchema>;
+
+// Schema for Wiki Page
+export const WikiPageSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  content: z.string(),
+  lastModifiedByUserId: z.string(),
+  lastModifiedByUserName: z.string(),
+  lastModifiedAt: z.any(), // Using any for Firestore ServerTimestamp
+});
+export type WikiPage = z.infer<typeof WikiPageSchema>;
+
+    

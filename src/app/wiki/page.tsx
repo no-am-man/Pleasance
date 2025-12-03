@@ -1,137 +1,113 @@
 // src/app/wiki/page.tsx
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, BookOpen, Warehouse, Banknote, Info, PartyPopper, Github, Beaker, Bug, GalleryHorizontal } from 'lucide-react';
+import { useUser, useMemoFirebase } from '@/firebase';
+import { firestore } from '@/firebase/config';
+import { collection, query, orderBy } from 'firebase/firestore';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import Image from 'next/image';
-import { KanbanIcon } from '@/components/icons/kanban-icon';
-import { Svg3dCube } from '@/components/icons/svg3d-cube';
+import { LoaderCircle, Info, FileText, PlusCircle } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 
-const FeatureCard = ({ icon, title, imageUrl, imageHint, href, children }: { icon: React.ReactNode, title: string, imageUrl: string, imageHint: string, href: string, children: React.ReactNode }) => (
-    <Card className="shadow-lg flex flex-col">
-        <CardHeader className="flex flex-row items-center gap-4">
-            <div className="bg-primary/10 rounded-full p-3 w-fit">
-                {icon}
-            </div>
-            <CardTitle className="text-2xl">{title}</CardTitle>
-        </CardHeader>
-        <CardContent className="flex-grow space-y-4">
-             <div className="relative aspect-video w-full overflow-hidden rounded-lg">
-                <Image
-                    src={imageUrl}
-                    alt={title}
-                    fill
-                    className="object-cover"
-                    data-ai-hint={imageHint}
-                />
-            </div>
-            <p className="text-muted-foreground leading-relaxed pt-4">{children}</p>
-        </CardContent>
-        <div className="p-6 pt-0">
-            <Button asChild>
-                <Link href={href}>Explore {title}</Link>
-            </Button>
-        </div>
-    </Card>
-);
-
-
-export default function WikiPage() {
-  return (
-    <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3 font-headline">
-          <Info /> The Wiki
-        </h1>
-        <p className="text-lg text-muted-foreground mt-2">A guide to the principles and tools of this Federated Republic.</p>
-      </div>
-      
-      <div className="space-y-8">
-
-        <Card className="shadow-lg bg-gradient-to-br from-card to-primary/10">
-            <CardHeader>
-                <CardTitle>Core Philosophy</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p className="text-lg">
-                    This is a Federated Republic of the Spirit. It is a space for communion, co-learning, and creation. Our tools are designed to facilitate self-governance and collaboration.
-                </p>
-            </CardContent>
-        </Card>
-
-        <FeatureCard 
-            icon={<Users className="h-8 w-8 text-primary" />} 
-            title="Community Federation"
-            imageUrl="https://picsum.photos/seed/101/600/400"
-            imageHint="community people"
-            href="/community"
-        >
-            The social fabric of the republic. It's where you find or form your community. Each community is a self-governing body with its own private gallery, created and guided by its founder.
-        </FeatureCard>
-        
-        <FeatureCard
-            icon={<Svg3dCube className="h-8 w-8 text-primary" />}
-            title="Guide to SVG3D"
-            imageUrl="https://picsum.photos/seed/108/600/400"
-            imageHint="3d wireframe"
-            href="/wiki/svg3d"
-        >
-            Understand the technology behind our generative 3D art. This guide explains what a point-cloud is, how the AI interprets your prompts, and how you can take your virtual creation into the physical world.
-        </FeatureCard>
-
-        <FeatureCard 
-            icon={<KanbanIcon className="h-8 w-8 text-primary" />} 
-            title="Project Roadmap"
-            imageUrl="https://picsum.photos/seed/106/600/400"
-            imageHint="kanban board"
-            href="/roadmap"
-        >
-            Follow the public development plan for this project on our real-time board. See what ideas are being considered, what's next up, what's in progress, and what's already live.
-        </FeatureCard>
-        
-        <FeatureCard 
-            icon={<Bug className="h-8 w-8 text-primary" />} 
-            title="Bug Tracker"
-            imageUrl="https://picsum.photos/seed/107/600/400"
-            imageHint="bug tracking"
-            href="/bugs"
-        >
-            Help improve the project by reporting issues. The public bug tracker allows any member to submit bug reports and view the status of all existing issues to keep development transparent.
-        </FeatureCard>
-        
-        <FeatureCard 
-            icon={<BookOpen className="h-8 w-8 text-primary" />} 
-            title="Nuncy Lingua"
-            imageUrl="https://picsum.photos/seed/102/600/400"
-            imageHint="language books"
-            href="/story"
-        >
-            Knowledge is wealth. Nuncy Lingua is a tool to increase your intellectual holdings. Use it to learn new languages through AI-generated parables and listen to them with a karaoke-style speech player.
-        </FeatureCard>
-
-        <FeatureCard 
-            icon={<Warehouse className="h-8 w-8 text-primary" />} 
-            title="Workshop of Manifestation"
-            imageUrl="https://picsum.photos/seed/103/600/400"
-            imageHint="3d printer"
-            href="/fabrication"
-        >
-            Ideas require a vessel. The Workshop of Manifestation is where the ethereal becomes tangible. Submit creations from your Treasury to the ticketing system to have them manifested by a network of artisans. Track your creation from 'pending' to 'delivered'.
-        </FeatureCard>
-        
-        <FeatureCard 
-            icon={<Banknote className="h-8 w-8 text-primary" />} 
-            title="Treasury"
-            imageUrl="https://picsum.photos/seed/104/600/400"
-            imageHint="gold coins"
-            href="/treasury"
-        >
-            Your worth is measured by your creations. The Treasury is your personal ledger. Here, you declare and manage your holdings, both physical and intellectual. This is a declaration of your contributions to the republic.
-        </FeatureCard>
-      </div>
-
-    </main>
-  );
+type WikiPage = {
+    id: string;
+    title: string;
+    lastModifiedAt: { seconds: number; nanoseconds: number; } | null;
+    lastModifiedByUserName: string;
 }
+
+export default function WikiHomePage() {
+    const { user } = useUser();
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const wikiQuery = useMemoFirebase(() => query(collection(firestore, 'wiki'), orderBy('title', 'asc')), []);
+    const [pages, isLoading, error] = useCollectionData<WikiPage>(wikiQuery);
+
+    const filteredPages = pages?.filter(page =>
+        page.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return (
+        <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+                <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3 font-headline">
+                    <Info /> The Public Wiki
+                </h1>
+                <p className="text-lg text-muted-foreground mt-2">A collaborative guide to the principles and tools of this Federated Republic.</p>
+            </div>
+
+            <Card className="mb-8">
+                <CardHeader>
+                    <CardTitle>Welcome to the Wiki</CardTitle>
+                    <CardDescription>
+                        This is a living document, created and maintained by the community. Browse existing pages, or create a new one to share your knowledge.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col sm:flex-row gap-4">
+                    <input
+                        type="text"
+                        placeholder="Search pages..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full p-2 border rounded-md bg-background"
+                    />
+                    {user && (
+                        <Button asChild className="w-full sm:w-auto">
+                            <Link href="/wiki/new">
+                                <PlusCircle className="mr-2" />
+                                Create New Page
+                            </Link>
+                        </Button>
+                    )}
+                </CardContent>
+            </Card>
+
+            {isLoading && (
+                <div className="flex justify-center py-8">
+                    <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
+                </div>
+            )}
+
+            {error && (
+                <Card className="bg-destructive/10 border-destructive text-destructive-foreground">
+                    <CardHeader>
+                        <CardTitle>Error Loading Wiki</CardTitle>
+                        <CardDescription>{error.message}</CardDescription>
+                    </CardHeader>
+                </Card>
+            )}
+
+            {!isLoading && filteredPages && (
+                <div className="space-y-4">
+                    {filteredPages.length > 0 ? (
+                        filteredPages.map(page => (
+                            <Link key={page.id} href={`/wiki/${page.id}`}>
+                                <Card className="hover:bg-muted/50 transition-colors">
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-3 text-primary">
+                                            <FileText /> {page.title}
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Last updated {page.lastModifiedAt ? formatDistanceToNow(new Date(page.lastModifiedAt.seconds * 1000), { addSuffix: true }) : 'a while ago'} by {page.lastModifiedByUserName}
+                                        </CardDescription>
+                                    </CardHeader>
+                                </Card>
+                            </Link>
+                        ))
+                    ) : (
+                        <Card>
+                            <CardContent className="py-8 text-center text-muted-foreground">
+                                No pages found.
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
+            )}
+        </main>
+    );
+}
+
+    

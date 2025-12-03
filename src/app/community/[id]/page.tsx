@@ -1,3 +1,4 @@
+
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -7,7 +8,7 @@ import { firestore } from '@/firebase/config';
 import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, setDoc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -1003,42 +1004,53 @@ export default function CommunityProfilePage() {
       </Card>
 
       {isMember && (
-          <>
-            <Separator className="my-12" />
+          <div className="my-12 grid grid-cols-1 md:grid-cols-3 gap-8">
              <Card className="shadow-lg">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Sparkles /> Community Workshop</CardTitle>
-                    <CardDescription>The private creative space for members of {community.name}.</CardDescription>
+                    <CardTitle className="flex items-center gap-2"><Sparkles /> Workshop</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-muted-foreground mb-4">
-                        This is where your community collaborates on generative art. Create new works, view creations from other members, and prepare pieces for the public Presentation Hall.
+                    <p className="text-muted-foreground mb-4 text-sm">
+                        Collaborate on generative art.
                     </p>
-                    <Button asChild>
+                    <Button asChild size="sm">
                         <Link href={`/community/${id}/workshop`}>
-                            Enter the Workshop
+                            Enter Workshop
                         </Link>
                     </Button>
                 </CardContent>
             </Card>
-            <Separator className="my-12" />
              <Card className="shadow-lg">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><KanbanIcon /> Community Roadmap</CardTitle>
-                    <CardDescription>View and contribute to the private roadmap for {community.name}.</CardDescription>
+                    <CardTitle className="flex items-center gap-2"><KanbanIcon /> Roadmap</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-muted-foreground mb-4">
-                        Plan the future of your community. This is a private space for members to organize tasks and goals.
+                    <p className="text-muted-foreground mb-4 text-sm">
+                        View the private community roadmap.
                     </p>
-                    <Button asChild>
+                    <Button asChild size="sm">
                         <Link href={`/community/${id}/roadmap`}>
                             View Roadmap
                         </Link>
                     </Button>
                 </CardContent>
             </Card>
-          </>
+            <Card className="shadow-lg">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Info /> Wiki</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground mb-4 text-sm">
+                        Access the private community wiki.
+                    </p>
+                    <Button asChild size="sm">
+                        <Link href={`/wiki/community/${id}/home`}>
+                            Open Wiki
+                        </Link>
+                    </Button>
+                </CardContent>
+            </Card>
+          </div>
       )}
       
        <div className="my-12">
@@ -1107,3 +1119,5 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
+
+    
