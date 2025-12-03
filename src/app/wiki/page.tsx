@@ -24,7 +24,7 @@ export default function WikiHomePage() {
     const [searchTerm, setSearchTerm] = useState('');
 
     const wikiQuery = useMemoFirebase(() => query(collection(firestore, 'wiki'), orderBy('title', 'asc')), []);
-    const [pages, isLoading, error] = useCollectionData<WikiPage>(wikiQuery);
+    const [pages, isLoading, error] = useCollectionData<WikiPage>(wikiQuery, { idField: 'id' });
 
     const filteredPages = pages?.filter(page =>
         page.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -109,5 +109,3 @@ export default function WikiHomePage() {
         </main>
     );
 }
-
-    
