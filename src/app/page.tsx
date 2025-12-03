@@ -1,4 +1,5 @@
 
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,6 +11,7 @@ import {
 } from '@/components/ui/card';
 import {
   ArrowRight,
+  LogIn,
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { FederationDiagram } from '@/components/federation-diagram';
@@ -28,6 +30,24 @@ export default function Home() {
           A Federated Republic of the Spirit. A space for communion, co-learning, and creation.
         </p>
       </div>
+
+       <Card className="max-w-3xl mx-auto shadow-lg mb-12 border-2 border-primary bg-primary/5">
+        <CardHeader className="items-center text-center">
+            <CardTitle className="text-2xl">Join the Federation</CardTitle>
+            <CardDescription>Become a sovereign soul in the republic.</CardDescription>
+        </CardHeader>
+        <CardContent className="text-center space-y-4">
+            <p className="text-muted-foreground">
+                Create your profile, discover communities of like-minded individuals, and begin your journey of co-learning and creation. Your data is your own, your contributions shape the republic.
+            </p>
+            <Button asChild size="lg">
+                <Link href="/login">
+                    <LogIn className="mr-2 h-5 w-5" />
+                    Join the Federation
+                </Link>
+            </Button>
+        </CardContent>
+      </Card>
 
       <div className="w-full max-w-lg mx-auto my-8">
         <FederationDiagram />
@@ -60,3 +80,4 @@ export default function Home() {
     </main>
   );
 }
+
