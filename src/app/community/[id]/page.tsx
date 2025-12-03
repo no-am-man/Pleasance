@@ -947,7 +947,24 @@ function CommunityWorkshop({ communityId, isOwner }: { communityId: string, isOw
                                     <FormField
                                         control={form.control}
                                         name="density"
-                                        render={({ field }) => ( <FormItem> <FormLabel>Density</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl> <SelectTrigger> <SelectValue placeholder="Select density" /> </SelectTrigger> </FormControl> <SelectContent> <SelectItem value="low">Low</SelectItem> <SelectItem value="medium">Medium</SelectItem> <SelectItem value="high">High</SelectItem> </SelectContent> </Select> <FormMessage /> </FormItem> )}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Density</FormLabel>
+                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Select density" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        <SelectItem value="low">Low</SelectItem>
+                                                        <SelectItem value="medium">Medium</SelectItem>
+                                                        <SelectItem value="high">High</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
                                     />
                                 </div>
                                 <Button type="submit" disabled={isGenerating} className="w-full">
