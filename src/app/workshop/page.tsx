@@ -1,4 +1,3 @@
-
 // src/app/workshop/page.tsx
 'use client';
 
@@ -11,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { LoaderCircle, Sparkles, Save, Beaker, Users, LogIn, Download } from 'lucide-react';
+import { LoaderCircle, Sparkles, Save, Beaker, Users, LogIn, Download, Book } from 'lucide-react';
 import { generateSvg3d as generateSvg3dAction, saveSvgAsset } from '@/app/actions';
 import { GenerateSvg3dInputSchema, type ColorPixel } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -133,7 +132,7 @@ const convertPixelsToObj = (pixels: ColorPixel[]): string => {
 
     for (const pixel of pixels) {
         // OBJ format: v x y z r g b
-        objContent += `v ${pixel.x.toFixed(4)} ${pixel.y.toFixed(4)} ${pixel.z.toFixed(4)} ${color}\n`;
+        objContent += `v ${pixel.x.toFixed(4)} ${pixel.y.toFixed(4)} ${pixel.z.toFixed(4)} ${hexToRgb(pixel.color)}\n`;
     }
 
     return objContent;
@@ -489,3 +488,5 @@ export default function WorkshopPage() {
     </main>
   );
 }
+
+    
