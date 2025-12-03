@@ -268,7 +268,7 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
                                 <h3 className="font-semibold text-lg text-primary underline">{community.name}</h3>
                                 <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{community.description}</p>
                                 {owner && (
-                                    <div className="flex items-center gap-2 text-base text-accent-foreground font-medium mt-2">
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground font-semibold mt-2">
                                         <User className="w-4 h-4" />
                                         <span>Founded by {owner.name}</span>
                                     </div>
