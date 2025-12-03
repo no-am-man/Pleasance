@@ -137,10 +137,11 @@ function UserNav() {
             <LogOut className="mr-2 h-4 w-4" />
             <span>Sign out</span>
           </DropdownMenuItem>
-          <AlertDialogTrigger asChild>
+          <AlertDialogTrigger asChild disabled={isFounder}>
             <DropdownMenuItem 
-                className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
-                onSelect={(e) => e.preventDefault()}
+                className="text-destructive focus:bg-destructive focus:text-destructive-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+                onSelect={(e) => !isFounder && e.preventDefault()}
+                disabled={isFounder}
             >
               <UserX className="mr-2 h-4 w-4" />
               <span>Exit Federation</span>
@@ -247,11 +248,13 @@ export function Header() {
                               <LogOut className="h-5 w-5" />
                               <span>Sign Out</span>
                           </button>
-                          <AlertDialogTrigger asChild>
+                          <AlertDialogTrigger asChild disabled={isFounder}>
                             <button
                                 className={cn(
-                                    'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-destructive'
+                                    'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-destructive',
+                                    isFounder && "opacity-50 cursor-not-allowed"
                                 )}
+                                disabled={isFounder}
                                 >
                                 <UserX className="h-5 w-5" />
                                 <span>Exit Federation</span>
