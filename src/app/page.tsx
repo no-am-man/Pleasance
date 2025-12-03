@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Users, BookOpen, Warehouse, ArrowRight, Banknote, Beaker } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import Image from 'next/image';
-import { FederationDiagram } from '@/components/federation-diagram';
 
 const FeatureCard = ({ icon, title, href, children, imageUrl, imageHint }: { icon: React.ReactNode, title: string, href: string, children: React.ReactNode, imageUrl: string, imageHint: string }) => (
     <Link href={href} className="block group">
@@ -46,7 +45,7 @@ const FeatureCard = ({ icon, title, href, children, imageUrl, imageHint }: { ico
 export default function Home() {
   return (
     <main className="container mx-auto min-h-screen py-16 px-4 sm:px-6 lg:px-8">
-      <div className="text-center mb-8">
+      <div className="text-center mb-16">
         <div className="flex items-center justify-center gap-3 mb-4">
             <Logo className="h-16 w-16 text-primary" />
             <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-primary font-headline">
@@ -63,8 +62,6 @@ export default function Home() {
           </Link>
         </Button>
       </div>
-      
-      <FederationDiagram />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
          <div className="lg:col-span-3">
