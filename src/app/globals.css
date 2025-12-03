@@ -95,6 +95,15 @@ body {
     }
   }
 
+  @keyframes ant-shadow {
+    0%, 100% {
+      box-shadow: 0 -2px 10px hsl(var(--primary) / 0.3), 0 -1px 4px hsl(var(--primary) / 0.4);
+    }
+    50% {
+      box-shadow: 0 -2px 15px hsl(var(--primary) / 0.5), 0 -1px 6px hsl(var(--primary) / 0.6);
+    }
+  }
+
   .ant-trail {
     background-image: repeating-linear-gradient(
       -45deg,
@@ -104,6 +113,6 @@ body {
       hsl(var(--primary) / 0.5) 20px
     );
     background-size: 40px 100%;
-    animation: ant-trail 2s linear infinite;
+    animation: ant-trail 2s linear infinite, ant-shadow 4s ease-in-out infinite;
   }
 }
