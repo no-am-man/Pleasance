@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { firestore } from '@/firebase/config';
+import { firestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LoaderCircle, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { BronzeMedal, SilverMedal, GoldMedal, PlatinumMedal } from './icons/medals';
-import { useMemoFirebase } from '@/firebase';
+
 
 type LeaderboardEntry = {
     userId: string;

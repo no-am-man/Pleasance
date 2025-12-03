@@ -41,7 +41,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { useUser, auth } from '@/firebase';
+import { useUser } from '@/firebase/use-user';
+import { auth } from '@/firebase/config';
 import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import useIsMobile from '@/hooks/use-is-mobile';

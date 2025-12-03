@@ -1,8 +1,7 @@
 
 'use client';
 
-import { FirebaseClientProvider } from '@/firebase/client-provider';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { FirebaseClientProvider, FirebaseErrorListener } from '@/firebase';
 import { Header } from '@/components/header';
 import { Toaster } from '@/components/ui/toaster';
 import Link from 'next/link';

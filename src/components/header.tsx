@@ -307,7 +307,7 @@ export function Header() {
                     <DropdownMenuItem key={link.href} asChild>
                     <NavLink
                         {...link}
-                        isActive={pathname === link.href}
+                        isActive={pathname.startsWith(link.href) && (link.href !== '/' || pathname === '/')}
                         isDropdown
                     />
                     </DropdownMenuItem>

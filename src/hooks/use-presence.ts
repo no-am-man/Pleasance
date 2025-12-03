@@ -2,8 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useUser } from '@/firebase';
-import { database, firestore } from '@/firebase/config';
+import { useUser, database, firestore } from '@/firebase';
 import { ref, onValue, onDisconnect, serverTimestamp, set } from 'firebase/database';
 import { doc, getDoc } from 'firebase/firestore';
 
