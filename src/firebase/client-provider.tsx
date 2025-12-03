@@ -61,7 +61,7 @@ export function FirebaseClientProvider({ children }: { children: ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, [auth]);
+  }, []);
 
   const contextValue = useMemo(() => ({
     ...firebaseServices,
