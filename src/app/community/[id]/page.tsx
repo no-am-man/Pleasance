@@ -857,18 +857,15 @@ export default function CommunityProfilePage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const isOwner = user?.uid === community?.ownerId;
+  const isOwner = useMemo(() => user?.uid === community?.ownerId, [user, community]);
   
-  const hasPendingRequest = userJoinRequest?.status === 'pending';
-  
-  const allMembers = useMemo(() => {
-    if (!community?.members) return [];
-    return community.members;
-  }, [community]);
+  const allMembers = useMemo(() => community?.members || [], [community]);
 
   const isMember = useMemo(() => {
-    return allMembers.some(m => m.userId === user?.uid);
-  }, [allMembers, user]);
+      if (!user) return false;
+      if (isOwner) return true;
+      return allMembers.some(m => m.userId === user.uid);
+  }, [allMembers, user, isOwner]);
 
 
   const handleRequestToJoin = async () => {
@@ -1080,7 +1077,7 @@ export default function CommunityProfilePage() {
         )
     }
 
-    if (hasPendingRequest) {
+    if (userJoinRequest?.status === 'pending') {
         return <Button disabled><Hourglass className="mr-2 h-4 w-4 animate-spin" />Request Pending</Button>
     }
 
