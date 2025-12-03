@@ -634,7 +634,7 @@ function Network({ communityId, isOwner, allMembers }: { communityId: string; is
 function JoinRequests({ communityId, communityDocRef }: { communityId: string, communityDocRef: any }) {
     const { toast } = useToast();
 
-    const requestsQuery = useMemoFirebase(() => query(collection(firestore, `communities/${communityId}/joinRequests`), where('status', '==', 'pending')), [communityId]);
+    const requestsQuery = useMemoFirebase(() => communityId ? query(collection(firestore, `communities/${communityId}/joinRequests`), where('status', '==', 'pending')) : null, [communityId]);
     const [requests, isLoading] = useCollectionData<JoinRequest>(requestsQuery, {
       idField: 'id'
     });
@@ -908,7 +908,7 @@ export default function CommunityProfilePage() {
     idField: 'id'
   });
   
-  const allProfilesQuery = useMemoFirebase(() => collection(firestore, 'community-profiles'), []);
+  const allProfilesQuery = useMemoFirebase(() => query(collection(firestore, 'community-profiles')), []);
   const [allProfiles, profilesLoading] = useCollectionData<CommunityProfile>(allProfilesQuery, {
     idField: 'id'
   });
