@@ -5,7 +5,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LoaderCircle, AlertCircle, ArrowLeft, Languages, User, BookUser } from 'lucide-react';
@@ -34,15 +34,23 @@ export default function UserProfilePage() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!id || !firestore) return;
-    setIsLoading(true);
-    const profileDocRef = doc(firestore, 'community-profiles', id as string);
-    const unsubscribe = onSnapshot(profileDocRef, (doc) => {
-        setProfile(doc.exists() ? { id: doc.id, ...doc.data() } as CommunityProfile : null);
+    if (!id || !firestore) {
         setIsLoading(false);
-    }, setError);
-
-    return () => unsubscribe();
+        return;
+    };
+    const fetchProfile = async () => {
+        setIsLoading(true);
+        try {
+            const profileDocRef = doc(firestore, 'community-profiles', id as string);
+            const docSnap = await getDoc(profileDocRef);
+            setProfile(docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } as CommunityProfile : null);
+        } catch(e) {
+            setError(e as Error);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+    fetchProfile();
   }, [id]);
 
 

@@ -5,7 +5,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, arrayRemove, updateDoc, getDoc, getDocs, setDoc, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, arrayRemove, updateDoc, getDoc, getDocs, setDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info, LogOut } from 'lucide-react';
@@ -22,8 +22,7 @@ import { HumanIcon } from '@/components/icons/human-icon';
 import { AiIcon } from '@/components/icons/ai-icon';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import Image from 'next/image';
-import { getAiChatResponse, generateCommunityFlagAction } from '@/app/actions';
-import { type ChatHistory } from 'genkit';
+import { generateCommunityFlagAction } from '@/app/actions';
 import { Svg3dCube } from '@/components/icons/svg3d-cube';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { SaveToTreasuryForm } from '@/components/community/SaveToTreasuryForm';
@@ -217,7 +216,7 @@ function TextMessageForm({ communityId, onMessageSent }: { communityId: string, 
     );
 }
 
-function TextCommentForm({ communityId, messageId }: { communityId: string, messageId: string }) {
+function TextCommentForm({ communityId, messageId, onCommentSent }: { communityId: string, messageId: string, onCommentSent: () => void; }) {
     const [text, setText] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useUser();
@@ -240,6 +239,7 @@ function TextCommentForm({ communityId, messageId }: { communityId: string, mess
         try {
             await addDoc(commentsColRef, newComment);
             setText('');
+            onCommentSent();
         } catch(error) {
             const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
             toast({ variant: 'destructive', title: 'Failed to send reply', description: message });
@@ -346,18 +346,23 @@ function CommentThread({ message, canManage }: { message: Message; canManage: bo
     const [comments, setComments] = useState<Comment[]>([]);
     const [isLoadingComments, setIsLoadingComments] = useState(true);
 
-    useEffect(() => {
+    const fetchComments = useCallback(async () => {
         if (!firestore || !message.communityId || !message.id) return;
-        const commentsQuery = query(collection(firestore, `communities/${message.communityId}/messages/${message.id}/comments`), orderBy('createdAt', 'asc'));
-        const unsubscribe = onSnapshot(commentsQuery, (querySnapshot) => {
+        setIsLoadingComments(true);
+        try {
+            const commentsQuery = query(collection(firestore, `communities/${message.communityId}/messages/${message.id}/comments`), orderBy('createdAt', 'asc'));
+            const querySnapshot = await getDocs(commentsQuery);
             const commentsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Comment));
             setComments(commentsData);
-            setIsLoadingComments(false);
-        });
-        return () => unsubscribe();
+        } catch (e) {
+            console.error(e);
+        }
+        setIsLoadingComments(false);
     }, [message.communityId, message.id]);
-
-    const commentCount = comments?.filter(c => !c.deleted).length || 0;
+    
+    useEffect(() => {
+        fetchComments();
+    }, [fetchComments]);
 
     return (
         <div className="pl-12 pr-4 pb-4 space-y-4">
@@ -365,7 +370,7 @@ function CommentThread({ message, canManage }: { message: Message; canManage: bo
                 {isLoadingComments && <LoaderCircle className="mx-auto animate-spin" />}
                 {comments && comments.length > 0 && comments.map(comment => <CommentCard key={comment.id} comment={comment} communityId={communityId} messageId={message.id} canManage={canManage || user?.uid === message.userId} />)}
             </div>
-            {user && <TextCommentForm communityId={message.communityId} messageId={message.id} />}
+            {user && <TextCommentForm communityId={message.communityId} messageId={message.id} onCommentSent={fetchComments} />}
         </div>
     );
 }
@@ -588,16 +593,24 @@ function JoinRequests({ communityId }: { communityId: string }) {
     const [requests, setRequests] = useState<JoinRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
+    const fetchRequests = useCallback(async () => {
         if (!firestore || !communityId) return;
-        const requestsQuery = query(collection(firestore, `communities/${communityId}/joinRequests`), where('status', '==', 'pending'));
-        const unsubscribe = onSnapshot(requestsQuery, (querySnapshot) => {
+        setIsLoading(true);
+        try {
+            const requestsQuery = query(collection(firestore, `communities/${communityId}/joinRequests`), where('status', '==', 'pending'));
+            const querySnapshot = await getDocs(requestsQuery);
             const requestsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as JoinRequest));
             setRequests(requestsData);
+        } catch (e) {
+            console.error(e);
+        } finally {
             setIsLoading(false);
-        });
-        return () => unsubscribe();
+        }
     }, [communityId]);
+
+    useEffect(() => {
+        fetchRequests();
+    }, [fetchRequests]);
 
     const handleRequest = async (request: JoinRequest, newStatus: 'approved' | 'rejected') => {
         if (!firestore) {
@@ -627,6 +640,7 @@ function JoinRequests({ communityId }: { communityId: string }) {
             }
             await updateDoc(requestDocRef, { status: newStatus });
             toast({ title: `Request ${newStatus}.` });
+            fetchRequests(); // Refresh the list
         } catch (error) {
             const message = error instanceof Error ? error.message : "An unexpected error occurred.";
             toast({ variant: 'destructive', title: `Failed to ${newStatus} request`, description: message });
@@ -670,13 +684,20 @@ function PresentationHall({ communityId }: { communityId: string }) {
 
     useEffect(() => {
         if (!firestore || !communityId) return;
-        const q = query(collection(firestore, `communities/${communityId}/creations`), where('status', '==', 'published'), orderBy('createdAt', 'desc'));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const creationsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Creation));
-            setCreations(creationsData);
-            setIsLoading(false);
-        }, setError);
-        return () => unsubscribe();
+        const fetchCreations = async () => {
+            setIsLoading(true);
+            try {
+                const q = query(collection(firestore, `communities/${communityId}/creations`), where('status', '==', 'published'), orderBy('createdAt', 'desc'));
+                const snapshot = await getDocs(q);
+                const creationsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Creation));
+                setCreations(creationsData);
+            } catch (e) {
+                setError(e as Error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchCreations();
     }, [communityId]);
     
     if (isLoading) {
@@ -757,26 +778,40 @@ export default function CommunityProfilePage() {
   const [isLoadingProfiles, setIsLoadingProfiles] = useState(true);
 
   useEffect(() => {
-    if (!id || !firestore) return;
-    const unsubscribe = onSnapshot(doc(firestore, 'communities', id), (doc) => {
-        setCommunity(doc.exists() ? { id: doc.id, ...doc.data() } as Community : null);
+    if (!id || !firestore) {
         setIsLoading(false);
-    }, setError);
-    return () => unsubscribe();
+        return;
+    };
+    const fetchCommunity = async () => {
+        setIsLoading(true);
+        try {
+            const communityDoc = await getDoc(doc(firestore, 'communities', id));
+            setCommunity(communityDoc.exists() ? { id: communityDoc.id, ...communityDoc.data() } as Community : null);
+        } catch(e) {
+            setError(e as Error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    fetchCommunity();
   }, [id]);
 
   useEffect(() => {
     if (!firestore) return;
-    const profilesQuery = query(collection(firestore, 'community-profiles'));
-    const unsubscribe = onSnapshot(profilesQuery, (snapshot) => {
-        const profiles = snapshot.docs.map(doc => doc.data() as CommunityProfile);
-        setAllProfiles(profiles);
-        setIsLoadingProfiles(false);
-    }, (error) => {
-        console.error("Error fetching all profiles:", error);
-        setIsLoadingProfiles(false);
-    });
-    return () => unsubscribe();
+    const fetchProfiles = async () => {
+        setIsLoadingProfiles(true);
+        try {
+            const profilesQuery = query(collection(firestore, 'community-profiles'));
+            const snapshot = await getDocs(profilesQuery);
+            const profiles = snapshot.docs.map(doc => doc.data() as CommunityProfile);
+            setAllProfiles(profiles);
+        } catch (error) {
+            console.error("Error fetching all profiles:", error);
+        } finally {
+            setIsLoadingProfiles(false);
+        }
+    };
+    fetchProfiles();
   }, []);
 
   const suggestedUsers = useMemo(() => {
@@ -788,23 +823,25 @@ export default function CommunityProfilePage() {
 
   useEffect(() => {
     if (user && firestore) {
-        const profileDocRef = doc(firestore, 'community-profiles', user.uid);
-        const unsubscribe = onSnapshot(profileDocRef, (doc) => {
-            setUserProfile(doc.exists() ? doc.data() as CommunityProfile : null);
-        });
-        return () => unsubscribe();
+        const fetchUserProfile = async () => {
+            const profileDocRef = doc(firestore, 'community-profiles', user.uid);
+            const docSnap = await getDoc(profileDocRef);
+            setUserProfile(docSnap.exists() ? docSnap.data() as CommunityProfile : null);
+        };
+        fetchUserProfile();
     }
   }, [user]);
 
   useEffect(() => {
     if (user && id && firestore) {
         setIsRequestLoading(true);
-        const requestDocRef = doc(firestore, 'communities', id, 'joinRequests', user.uid);
-        const unsubscribe = onSnapshot(requestDocRef, (doc) => {
-            setUserJoinRequest(doc.exists() ? doc.data() as JoinRequest : null);
+        const fetchRequest = async () => {
+            const requestDocRef = doc(firestore, 'communities', id, 'joinRequests', user.uid);
+            const docSnap = await getDoc(requestDocRef);
+            setUserJoinRequest(docSnap.exists() ? docSnap.data() as JoinRequest : null);
             setIsRequestLoading(false);
-        });
-        return () => unsubscribe();
+        }
+        fetchRequest();
     } else {
         setIsRequestLoading(false);
     }

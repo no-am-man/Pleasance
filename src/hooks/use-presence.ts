@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useUser, database, firestore } from '@/firebase';
-import { ref, onValue, onDisconnect, serverTimestamp, set } from 'firebase/database';
+import { ref, onValue, onDisconnect, serverTimestamp, set, get } from 'firebase/database';
 import { doc, getDoc } from 'firebase/firestore';
 
 type PresentUser = {
@@ -50,14 +50,22 @@ export function usePresence() {
 
     useEffect(() => {
         const connectionsRef = ref(database, 'users');
-        const unsubscribe = onValue(connectionsRef, (snapshot) => {
-            const users = snapshot.val();
-            const userList: PresentUser[] = users ? Object.values(users) : [];
-            setPresentUsers(userList);
-            setIsLoading(false);
-        });
+        const fetchUsers = async () => {
+            setIsLoading(true);
+            try {
+                const snapshot = await get(connectionsRef);
+                const users = snapshot.val();
+                const userList: PresentUser[] = users ? Object.values(users) : [];
+                setPresentUsers(userList);
+            } catch (error) {
+                console.error("Failed to fetch present users:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-        return () => unsubscribe();
+        fetchUsers();
+        
     }, []);
 
     return { presentUsers, isLoading };

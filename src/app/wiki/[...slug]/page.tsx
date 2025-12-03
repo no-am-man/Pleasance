@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc, serverTimestamp, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { doc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { marked } from 'marked';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -57,14 +57,20 @@ export default function WikiPageDisplay() {
             setIsLoading(false);
             return;
         }
-        setIsLoading(true);
-        const pageDocRef = doc(firestore, collectionPath, pageId);
-        const unsubscribe = onSnapshot(pageDocRef, (doc) => {
-            setPage(doc.exists() ? doc.data() as WikiPage : null);
-            setIsLoading(false);
-        }, setError);
-
-        return () => unsubscribe();
+        
+        const fetchPage = async () => {
+            setIsLoading(true);
+            try {
+                const pageDocRef = doc(firestore, collectionPath, pageId);
+                const docSnap = await getDoc(pageDocRef);
+                setPage(docSnap.exists() ? docSnap.data() as WikiPage : null);
+            } catch (e) {
+                setError(e as Error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchPage();
     }, [collectionPath, pageId, isNewPage]);
 
     useEffect(() => {

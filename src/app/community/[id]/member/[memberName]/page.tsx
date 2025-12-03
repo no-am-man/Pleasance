@@ -4,7 +4,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LoaderCircle, AlertCircle, ArrowLeft, Bot, Send } from 'lucide-react';
@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
-import { getAiChatResponse, type ChatWithMemberInput } from '@/app/actions';
+import { getAiChatResponse } from '@/app/actions';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { type ChatHistory } from 'genkit';
@@ -155,22 +155,28 @@ export default function AiMemberProfilePage() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!communityId || !firestore) return;
+    if (!communityId || !firestore) {
+        setIsLoading(false);
+        return;
+    };
     
-    const communityDocRef = doc(firestore, 'communities', communityId);
-    const unsubscribe = onSnapshot(communityDocRef, (doc) => {
-      if (doc.exists()) {
-        setCommunity({ id: doc.id, ...doc.data() } as Community);
-      } else {
-        setError(new Error('Community not found.'));
-      }
-      setIsLoading(false);
-    }, (err) => {
-      setError(err);
-      setIsLoading(false);
-    });
-
-    return () => unsubscribe();
+    const fetchCommunity = async () => {
+        setIsLoading(true);
+        try {
+            const communityDocRef = doc(firestore, 'communities', communityId);
+            const docSnap = await getDoc(communityDocRef);
+            if (docSnap.exists()) {
+                setCommunity({ id: docSnap.id, ...docSnap.data() } as Community);
+            } else {
+                setError(new Error('Community not found.'));
+            }
+        } catch(e) {
+            setError(e as Error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    fetchCommunity();
   }, [communityId]);
 
   const member = community?.members.find(

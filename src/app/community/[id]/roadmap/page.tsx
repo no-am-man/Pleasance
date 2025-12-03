@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { firestore } from '@/firebase/config';
-import { collection, query, doc, getDoc, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, doc, getDoc, where, getDocs } from 'firebase/firestore';
 import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType, CommunityProfile } from '@/lib/types';
 import { GripVertical, LoaderCircle, PlusCircle, Trash2, Sparkles, ArrowLeft, ArrowRight, UserPlus, Check, Database } from 'lucide-react';
 import { addRoadmapCard, deleteRoadmapCard, refineCardDescription, updateRoadmapCardAssignees, updateRoadmapCardColumn, updateRoadmapCardOrder, generateRoadmapIdeaAction, seedCommunityRoadmapData } from '@/app/actions';
@@ -265,25 +265,45 @@ export default function CommunityRoadmapPage() {
   const [memberProfiles, setMemberProfiles] = useState<CommunityProfile[]>([]);
 
   useEffect(() => {
-    if (!communityId || !firestore) return;
-    const unsubscribe = onSnapshot(doc(firestore, 'communities', communityId), (doc) => {
-        setCommunity(doc.data());
+    if (!communityId || !firestore) {
         setIsCommunityLoading(false);
-    });
-    return () => unsubscribe();
+        return;
+    }
+    const fetchCommunity = async () => {
+        setIsCommunityLoading(true);
+        try {
+            const communityDoc = await getDoc(doc(firestore, 'communities', communityId));
+            setCommunity(communityDoc.data());
+        } catch(e) {
+            // silent error
+        } finally {
+            setIsCommunityLoading(false);
+        }
+    };
+    fetchCommunity();
   }, [communityId]);
   
   const isOwner = user?.uid === community?.ownerId;
 
   useEffect(() => {
-    if (!communityId || !firestore) return;
-    const q = query(collection(firestore, `communities/${communityId}/roadmap`));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RoadmapColumnType));
-        setColumnsData(data);
+    if (!communityId || !firestore) {
         setIsLoading(false);
-    }, setError);
-    return () => unsubscribe();
+        return;
+    }
+    const fetchRoadmap = async () => {
+        setIsLoading(true);
+        try {
+            const q = query(collection(firestore, `communities/${communityId}/roadmap`));
+            const snapshot = await getDocs(q);
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RoadmapColumnType));
+            setColumnsData(data);
+        } catch (e) {
+            setError(e as Error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    fetchRoadmap();
   }, [communityId]);
 
   const memberUserIds = useMemo(() => {
@@ -298,12 +318,17 @@ export default function CommunityRoadmapPage() {
         setMemberProfiles([]);
         return;
     };
-    const q = query(collection(firestore, 'community-profiles'), where('userId', 'in', memberUserIds));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-        const profiles = snapshot.docs.map(doc => doc.data() as CommunityProfile);
-        setMemberProfiles(profiles);
-    });
-    return () => unsubscribe();
+    const fetchProfiles = async () => {
+        try {
+            const q = query(collection(firestore, 'community-profiles'), where('userId', 'in', memberUserIds));
+            const snapshot = await getDocs(q);
+            const profiles = snapshot.docs.map(doc => doc.data() as CommunityProfile);
+            setMemberProfiles(profiles);
+        } catch(e) {
+            // silent error
+        }
+    }
+    fetchProfiles();
   }, [memberUserIds]);
 
   const [columns, setColumns] = useState<RoadmapColumnType[]>([]);
