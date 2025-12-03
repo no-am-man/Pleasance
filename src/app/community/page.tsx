@@ -22,9 +22,12 @@ import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 
 const FormSchema = z.object({
   prompt: z.string().min(10, "Please enter a prompt of at least 10 characters."),
+  includeAiAgents: z.boolean().default(true),
 });
 
 type Member = {
@@ -62,6 +65,7 @@ function CreateCommunityForm() {
     resolver: zodResolver(FormSchema),
     defaultValues: {
       prompt: "",
+      includeAiAgents: true,
     },
   });
 
@@ -75,7 +79,7 @@ function CreateCommunityForm() {
 
     try {
       // 1. Call server action to get AI-generated details
-      const result = await createCommunityDetails({ prompt: data.prompt });
+      const result = await createCommunityDetails({ prompt: data.prompt, includeAiAgents: data.includeAiAgents });
       if (result.error) {
         setError(result.error);
         setIsLoading(false);
@@ -142,53 +146,90 @@ function CreateCommunityForm() {
         <CardDescription>Describe the community you want to create. What is its purpose? Who is it for?</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-             <div className="relative">
-                <Textarea
-                {...form.register("prompt")}
-                placeholder="e.g., 'A community for amateur astronomers to share tips, photos, and organize stargazing events.'"
-                className="w-full p-2 border rounded-md min-h-[100px] bg-background pr-10"
-                />
-                 <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                             <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="absolute top-2 right-2 h-8 w-8"
-                                onClick={handleRefinePrompt}
-                                disabled={isRefining}
-                                >
-                                {isRefining ? <LoaderCircle className="h-4 w-4 animate-spin"/> : <Sparkles className="h-4 w-4 text-primary" />}
-                            </Button>
-                        </TooltipTrigger>
-                         <TooltipContent>
-                            <p>Refine with AI</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+                <div className="relative">
+                    <FormField
+                        control={form.control}
+                        name="prompt"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Community Idea</FormLabel>
+                                <FormControl>
+                                    <Textarea
+                                        {...field}
+                                        placeholder="e.g., 'A community for amateur astronomers to share tips, photos, and organize stargazing events.'"
+                                        className="w-full p-2 border rounded-md min-h-[100px] bg-background pr-10"
+                                    />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute top-2 right-2 h-8 w-8"
+                                    onClick={handleRefinePrompt}
+                                    disabled={isRefining}
+                                    >
+                                    {isRefining ? <LoaderCircle className="h-4 w-4 animate-spin"/> : <Sparkles className="h-4 w-4 text-primary" />}
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Refine with AI</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </div>
+                {form.formState.errors.prompt && (
+                <p className="text-sm text-destructive mt-1">{form.formState.errors.prompt.message}</p>
+                )}
             </div>
-            {form.formState.errors.prompt && (
-              <p className="text-sm text-destructive mt-1">{form.formState.errors.prompt.message}</p>
-            )}
-          </div>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                Creating...
-              </>
-            ) : (
-              <>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Create Community
-              </>
-            )}
-          </Button>
-          {error && <p className="text-sm text-destructive mt-2">{error}</p>}
-        </form>
+
+            <FormField
+              control={form.control}
+              name="includeAiAgents"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Create with AI Agents
+                    </FormLabel>
+                    <CardDescription>
+                      Automatically generate a few AI members to help get the conversation started.
+                    </CardDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <Button type="submit" disabled={isLoading}>
+                {isLoading ? (
+                <>
+                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                </>
+                ) : (
+                <>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Create Community
+                </>
+                )}
+            </Button>
+            {error && <p className="text-sm text-destructive mt-2">{error}</p>}
+            </form>
+        </Form>
       </CardContent>
     </Card>
   );

@@ -223,6 +223,7 @@ export async function createHistorySnapshot(values: z.infer<typeof snapshotSchem
 
 const communitySchema = z.object({
     prompt: z.string().min(10),
+    includeAiAgents: z.boolean(),
 });
 
 export async function createCommunityDetails(values: z.infer<typeof communitySchema>) {
@@ -232,10 +233,10 @@ export async function createCommunityDetails(values: z.infer<typeof communitySch
             return { error: 'Invalid prompt.' };
         }
 
-        const { prompt } = validatedFields.data;
+        const { prompt, includeAiAgents } = validatedFields.data;
 
         // Generate community details using the AI flow
-        const communityDetails = await generateCommunity({ prompt });
+        const communityDetails = await generateCommunity({ prompt, includeAiAgents });
 
         if (!communityDetails.name || !communityDetails.description || !communityDetails.welcomeMessage || !communityDetails.members) {
             throw new Error('AI failed to generate complete community details.');

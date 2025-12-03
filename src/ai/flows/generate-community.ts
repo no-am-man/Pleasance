@@ -13,6 +13,7 @@ const GenerateCommunityInputSchema = z.object({
   prompt: z
     .string()
     .describe('A user-provided prompt describing the desired community.'),
+  includeAiAgents: z.boolean().describe('Whether or not to generate AI agents for the community.'),
 });
 type GenerateCommunityInput = z.infer<typeof GenerateCommunityInputSchema>;
 
@@ -27,7 +28,7 @@ const GenerateCommunityOutputSchema = z.object({
   name: z.string().describe("A concise and catchy name for the community (e.g., 'Cosmic Coders')."),
   description: z.string().describe("A one-sentence description of the community's purpose."),
   welcomeMessage: z.string().describe("A warm, one-paragraph welcome message for new members."),
-  members: z.array(MemberSchema).min(3).max(5).describe('A list of 3-5 unique, AI-generated members for the community.'),
+  members: z.array(MemberSchema).describe('A list of 3-5 unique, AI-generated members for the community.'),
 });
 
 export async function generateCommunity(input: GenerateCommunityInput): Promise<z.infer<typeof GenerateCommunityOutputSchema>> {
@@ -38,11 +39,17 @@ const generateCommunityPrompt = ai.definePrompt({
   name: 'generateCommunityPrompt',
   input: {schema: GenerateCommunityInputSchema},
   output: {schema: GenerateCommunityOutputSchema},
-  prompt: `You are an expert at founding online communities. Based on the user's prompt, generate a name, a short description, a welcome message, and a diverse cast of 3-5 AI members to populate the community. Each member must have a unique name, role, a one-sentence bio that reflects the community's theme, and the 'type' field must be set to 'AI'.
+  prompt: `You are an expert at founding online communities. Based on the user's prompt, generate a name, a short description, and a welcome message.
+
+{{#if includeAiAgents}}
+You must also generate a diverse cast of 3-5 AI members to populate the community. Each member must have a unique name, role, a one-sentence bio that reflects the community's theme, and the 'type' field must be set to 'AI'.
+{{else}}
+You must NOT generate any AI members. The 'members' array in your output must be empty.
+{{/if}}
 
 User Prompt: {{{prompt}}}
 
-Generate a response that is creative, inviting, and directly related to the user's prompt. Make the AI members interesting and give them personalities that would make a new user want to interact with them.`,
+Generate a response that is creative, inviting, and directly related to the user's prompt.`,
 });
 
 const generateCommunityFlow = ai.defineFlow(
