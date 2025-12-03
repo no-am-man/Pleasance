@@ -115,12 +115,12 @@ export default function PricingPage() {
       </div>
        <Card className="mt-12 text-center bg-muted/50">
           <CardHeader>
-            <CardTitle>A Note on AI Models</CardTitle>
+            <CardTitle>A Note on Google Genkit Usage Fees</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
               The 'Clergy' and 'Founder' tiers provide access to advanced generative models like Gemini Pro.
-              This requires an active subscription to cover the associated API costs and ensure the highest quality results for your creations.
+              An active subscription is required to cover the associated Google Genkit API costs to ensure the highest quality results for your creations.
             </p>
           </CardContent>
         </Card>
