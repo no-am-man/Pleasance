@@ -6,8 +6,8 @@
 
 This project is open source. You can find the repository [here](https://github.com/no-am-man/Pleasance).
 
-## 🙏 Version 4.0.0 is on Staging!
-This major update introduces subscription tiers ('Congregation', 'Clergy', 'Founder') to support the use of advanced generative AI models and ensure the continued growth of the republic.
+## 🙏 Version 6.0.0 is on Staging!
+This major update introduces a public "Virtual Museum" to showcase creations from across the federation, private community treasuries, and enhances the distinction between personal and collaborative creative spaces.
 
 ## Core Philosophy
 
@@ -21,16 +21,20 @@ The name itself—a **Federated Republic of the Spirit**—describes this struct
 ## Features
 
 ### 🏛️ The Federal Community
-This is where the "Federation" comes to life. It's the social fabric of the republic where you can find or form your own self-governing community around any pursuit—a spiritual practice, a technology, a philosophy. Populate it with AI Acolytes to spark conversation or invite other sovereign souls to join your mission. This is a space for radical self-reliance and voluntary **communion**.
+This is where the "Federation" comes to life. It's the social fabric of the republic where you can find or form your own self-governing community around any pursuit—a spiritual practice, a technology, a philosophy. Each community has its own private workshop, roadmap, and treasury.
 
-### 🎨 AI Workshop
-A private sandbox for your imagination. This is your personal space for generative AI experimentation, a place to play with digital tools and bring new ideas to life before sharing them with the federation.
+### 🎨 AI Workshop vs. Community Workshop
+*   **AI Workshop:** A private, personal sandbox for your imagination. This is your space for generative AI experimentation before sharing creations.
+*   **Community Workshop:** A collaborative space within each community for members to create together.
+
+### 🖼️ The Virtual Museum
+A public gallery showcasing the finest "published" creations from every community across the federation. It serves as a central hall to appreciate the collective creative output of the republic.
 
 ### 📖 Nuncy Lingua
-A tool for **co-learning** and increasing your intellectual holdings. Use Nuncy Lingua to learn new languages through AI-generated parables and listen to them with a karaoke-style speech player, integrating intellectual study with your practice.
+A tool for **co-learning** and increasing your intellectual holdings. Use Nuncy Lingua to learn new languages through AI-generated parables and listen to them with a karaoke-style speech player.
 
 ### 🏭 The Workshop of Manifestation
 Ideas require a vessel. The Workshop of Manifestation is where the ethereal becomes tangible. Submit creations from your Treasury to the ticketing system to have them manifested by a network of artisans and track your creation from concept to delivery.
 
 ### 🏦 The Treasury
-Your worth is measured by your creations. The Treasury is your personal, sovereign ledger where you declare and manage your holdings, both physical and intellectual. It is a declaration of your contributions to the republic and its members.
+Your worth is measured by your creations. The Treasury is your personal, sovereign ledger where you declare and manage your holdings, both physical and intellectual. Each community also has its own private treasury to archive all of its creations.
