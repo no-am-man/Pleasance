@@ -30,9 +30,6 @@ const refineCardPrompt = ai.definePrompt({
     name: 'refineRoadmapCardPrompt',
     input: { schema: RefineCardInputSchema },
     output: { schema: RefineCardOutputSchema },
-    config: {
-        model: "gemini-pro",
-    },
     prompt: `You are an expert product manager. Your task is to take a raw idea title and an optional brief description and expand it into a clear, concise, and actionable description for a Kanban card.
 
 The description should be suitable for a public roadmap, providing context for users and developers. Focus on the "what" and the "why".
@@ -44,6 +41,9 @@ Existing Description: "{{description}}"
 
 Generate a refined description. It should be a single paragraph.
 `,
+    config: {
+        model: "gemini-pro",
+    },
 });
 
 
