@@ -172,7 +172,7 @@ export default function WorkshopPage() {
         setPixels(result.pixels);
       }
     } catch (e) {
-      const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+      const message = e instanceof Error ? e.message : 'An unknown error occurred.';
       setError(`Generation failed: ${message}`);
     }
 

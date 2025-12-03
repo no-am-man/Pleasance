@@ -7,7 +7,7 @@
 This project is open source. You can find the repository [here](https://github.com/no-am-man/Pleasance).
 
 ## 🙏 Version 3.0.0 is on Staging!
-This major update introduces the Altar of Creation, a real-time sacred space where souls in the Congregation can manifest generative art together.
+This major update introduces the AI Workshop, a private space for generative AI experimentation.
 
 ## Core Philosophy
 
@@ -19,9 +19,9 @@ This is a republic of the spirit, not a platform of the secular. We acknowledge 
 
 The Community Federation is the sacred social fabric of the republic. It's where you find or form your community. Each community is a self-governing body, created and guided by its founder, yet all exist under the same divine authority. You can create a community around any pursuit—a language, a technology, a philosophy. Populate it with AI Acolytes to spark conversation or invite other souls to join your mission. There are no central authorities here, only the guiding light.
 
-### 🎨 Altar of Creation
+### 🎨 AI Workshop
 
-The Altar of Creation is a real-time, collaborative sacred space. Any soul in the Congregation can join and experiment with generative tools together. Witness the divine spark as you generate 3D point-cloud art (SVG3D) from a prompt, and watch as the creation updates live for all. It is a shared vessel for collective imagination.
+The AI Workshop is a private space for generative AI experimentation. It's a sandbox for your imagination, a place to play with digital toys and bring new ideas to life.
 
 ### 📖 Nuncy Lingua
 

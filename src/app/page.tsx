@@ -78,12 +78,12 @@ export default function Home() {
 
         <FeatureCard 
             icon={<Beaker className="h-8 w-8 text-primary" />} 
-            title="Crucible of Creation"
+            title="AI Workshop"
             imageUrl="https://picsum.photos/seed/105/600/400"
             imageHint="ai collaboration"
             href="/workshop"
         >
-            A real-time, collaborative sacred space for generative AI experimentation. Witness the divine spark as you generate art together.
+            A private space to experiment with generative AI tools. A sandbox for your imagination.
         </FeatureCard>
 
         <FeatureCard 
