@@ -23,7 +23,7 @@ import { HumanIcon } from '@/components/icons/human-icon';
 import { AiIcon } from '@/components/icons/ai-icon';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import Image from 'next/image';
-import { generateCommunityFlagAction } from '@/app/actions';
+import { generateCommunityFlagAction, welcomeNewMemberAction } from '@/app/actions';
 import { Svg3dCube } from '@/components/icons/svg3d-cube';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { SaveToTreasuryForm } from '@/components/community/SaveToTreasuryForm';
@@ -595,7 +595,7 @@ function Network({ communityId, isOwner, allMembers }: { communityId: string; is
     )
 }
 
-function JoinRequests({ communityId }: { communityId: string }) {
+function JoinRequests({ communityId, communityName }: { communityId: string, communityName: string }) {
     const { toast } = useToast();
     const [requests, setRequests] = useState<JoinRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -645,6 +645,9 @@ function JoinRequests({ communityId }: { communityId: string }) {
                 await updateDoc(communityDocRef, {
                     members: arrayUnion(newMember)
                 });
+
+                // After member is added, trigger the welcome message flow
+                await welcomeNewMemberAction({ communityId, communityName, newMemberName: newMember.name });
             }
             await updateDoc(requestDocRef, { status: newStatus });
             toast({ title: `Request ${newStatus}.` });
@@ -862,10 +865,10 @@ export default function CommunityProfilePage() {
   const allMembers = useMemo(() => community?.members || [], [community]);
 
   const isMember = useMemo(() => {
-      if (!user) return false;
-      if (isOwner) return true;
-      return allMembers.some(m => m.userId === user.uid);
-  }, [allMembers, user, isOwner]);
+    if (!user || !community) return false;
+    if (user.uid === community.ownerId) return true;
+    return community.members.some(member => member.type === 'human' && member.userId === user.uid);
+}, [user, community]);
 
 
   const handleRequestToJoin = async () => {
@@ -909,6 +912,9 @@ export default function CommunityProfilePage() {
     await updateDoc(communityDocRef, {
         members: arrayUnion(newMember)
     });
+
+    // After member is added, trigger the welcome message flow
+    await welcomeNewMemberAction({ communityId: community.id, communityName: community.name, newMemberName: newMember.name });
 
     toast({
         title: "Member Invited!",
@@ -1138,7 +1144,7 @@ export default function CommunityProfilePage() {
         </CardContent>
       </Card>
       
-      {isMember && (
+       {isMember && (
         <Card className="shadow-lg my-12">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Wrench /> Available Tools</CardTitle>
@@ -1183,7 +1189,7 @@ export default function CommunityProfilePage() {
                     <CardDescription>Approve or decline requests from users who want to join your community.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <JoinRequests communityId={id} />
+                    <JoinRequests communityId={id} communityName={community.name} />
                 </CardContent>
             </Card>
         </>

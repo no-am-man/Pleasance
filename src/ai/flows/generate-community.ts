@@ -44,10 +44,16 @@ const generateCommunityPrompt = ai.definePrompt({
   },
   prompt: `You are an expert at founding online communities. Based on the user's prompt, generate a name, a short description, and a welcome message.
 
+Your first member must ALWAYS be a special 'Concierge' agent.
+- Name: Concierge
+- Role: SuperAgent
+- Bio: I am the Concierge, here to welcome new members and help them get acquainted with our community.
+- Type: AI
+
 {{#if includeAiAgents}}
-You must also generate a diverse cast of 3-5 AI members to populate the community. Each member must have a unique name, role, a one-sentence bio that reflects the community's theme, and the 'type' field must be set to 'AI'.
+You must also generate a diverse cast of 2-4 additional AI members to populate the community. Each member must have a unique name, role, a one-sentence bio that reflects the community's theme, and the 'type' field must be set to 'AI'.
 {{else}}
-You must NOT generate any AI members. The 'members' array in your output must be empty.
+You must NOT generate any other AI members. The 'members' array in your output must contain only the Concierge.
 {{/if}}
 
 User Prompt: {{{prompt}}}

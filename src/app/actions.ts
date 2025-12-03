@@ -24,6 +24,7 @@ import { getStorage } from 'firebase-admin/storage';
 import { ai } from '@/ai/genkit';
 import { generateCommunityFlag } from '@/ai/flows/generate-flag';
 import { refineWikiPage } from '@/ai/flows/refine-wiki-page';
+import { welcomeNewMember } from '@/ai/flows/welcome-new-member';
 import {
     GenerateSvg3dInputSchema,
     type GenerateSvg3dInput,
@@ -1096,6 +1097,53 @@ export async function updateCommunityRoadmapCardColumn(
     const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
     return { error: `Failed to move card: ${message}` };
   }
+}
+
+const welcomeNewMemberSchema = z.object({
+    communityId: z.string(),
+    communityName: z.string(),
+    newMemberName: z.string(),
+});
+
+export async function welcomeNewMemberAction(values: z.infer<typeof welcomeNewMemberSchema>) {
+    try {
+        const validatedFields = welcomeNewMemberSchema.safeParse(values);
+        if (!validatedFields.success) {
+            return { error: 'Invalid input for welcoming new member.' };
+        }
+
+        const adminApp = initializeAdminApp();
+        const firestore = getFirestore(adminApp);
+
+        // Fetch community to get Concierge bio
+        const communityDoc = await firestore.collection('communities').doc(validatedFields.data.communityId).get();
+        if (!communityDoc.exists) {
+            throw new Error("Community not found.");
+        }
+        const communityData = communityDoc.data();
+        const concierge = communityData?.members.find((m: any) => m.name === 'Concierge');
+
+        if (!concierge) {
+            // If no concierge, just return success without doing anything.
+            return { success: true };
+        }
+        
+        const result = await welcomeNewMember({
+            ...validatedFields.data,
+            conciergeBio: concierge.bio,
+        });
+
+        if (!result.success) {
+            return { error: result.error || 'Failed to generate and post welcome message.' };
+        }
+
+        return { success: true };
+
+    } catch (e) {
+        console.error('Welcome New Member Action Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Failed to welcome new member: ${message}` };
+    }
 }
     
 
