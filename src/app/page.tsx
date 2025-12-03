@@ -94,7 +94,7 @@ export default function Home() {
 
       <Card className="max-w-3xl mx-auto shadow-lg">
           <CardHeader>
-              <CardTitle className="text-2xl">A Model of Federated Sovereignty</CardTitle>
+              <CardTitle className="text-2xl">A Model of Decentralized Sovereignty</CardTitle>
               <CardDescription>An overview of the system architecture.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 text-muted-foreground">
