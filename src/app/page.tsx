@@ -100,12 +100,12 @@ export default function Home() {
                 <SatoshiIcon className="h-12 w-12 text-primary flex-shrink-0" />
                 <div>
                     <h3 className="font-semibold">The Satoshi: A Unit of Value</h3>
-                    <p className="text-sm text-muted-foreground">Our unit of account is the Satoshi (<span className="inline-flex items-center gap-1 font-mono"><SatoshiIcon className="h-3 w-3" />S</span>), a nod to the foundational principles of decentralized value. It is earned through creative and intellectual contributions, such as generating stories or artworks.</p>
+                    <p className="text-sm text-muted-foreground">Our unit of account is the Satoshi (<span className="inline-flex items-center gap-1 font-mono"><SatoshiIcon className="h-3 w-3 fill-current" /></span>), a nod to the foundational principles of decentralized value. It is earned through creative and intellectual contributions, such as generating stories or artworks.</p>
                 </div>
             </div>
             <div className="flex items-center gap-4 p-4 rounded-lg bg-muted">
                 <div className="text-4xl font-bold font-mono text-primary flex items-center gap-2">
-                   1<SatoshiIcon className="w-8 h-8" /> = $1
+                   1<SatoshiIcon className="w-8 h-8 fill-current" /> = $1
                 </div>
                  <div>
                     <h3 className="font-semibold">A Stable Measure of Worth</h3>
@@ -141,4 +141,5 @@ export default function Home() {
     </main>
   );
 }
+
 
