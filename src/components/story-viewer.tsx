@@ -51,14 +51,14 @@ const KaraokeText = ({ text, totalDuration, currentTime, isMuted, language }: { 
             {/* Highlighted text layer, revealed by a clipping mask */}
             <div
                 className={cn(
-                    "absolute top-0 w-full h-full text-primary",
+                    "absolute top-0 w-full h-full",
                     isRtlLanguage ? "right-0" : "left-0"
                 )}
                 style={{
                     clipPath: `inset(0 0 ${100 - progress}% 0)`,
                 }}
             >
-                <p className={cn("whitespace-pre-wrap leading-relaxed", isRtlLanguage && "text-right")} style={{ textShadow: "0 0 5px hsl(var(--primary) / 0.5)" }} dir={isRtlLanguage ? "rtl" : "ltr"}>{text}</p>
+                <p className={cn("whitespace-pre-wrap leading-relaxed bg-gradient-to-r from-fuchsia-500 to-yellow-500 bg-clip-text text-transparent", isRtlLanguage && "text-right")} dir={isRtlLanguage ? "rtl" : "ltr"}>{text}</p>
             </div>
         </div>
     );
