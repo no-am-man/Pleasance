@@ -19,8 +19,8 @@ type LanguageProviderState = {
 };
 
 const initialState: LanguageProviderState = {
-  language: 'en',
-  direction: 'ltr',
+  language: 'he',
+  direction: 'rtl',
   setLanguage: () => null,
 };
 
@@ -28,7 +28,7 @@ const LanguageProviderContext = createContext<LanguageProviderState>(initialStat
 
 export function LanguageProvider({
   children,
-  defaultLanguage = 'en',
+  defaultLanguage = 'he',
   storageKey = 'app-language',
   ...props
 }: LanguageProviderProps) {
