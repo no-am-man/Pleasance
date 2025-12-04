@@ -1159,7 +1159,7 @@ export default function CommunityProfilePage() {
       
       <PresentationHall communityId={community.id} />
 
-      <Card className="shadow-lg mb-8 border-2 border-primary">
+      <Card className="shadow-lg mb-12 border-2 border-primary">
         <CardHeader>
           <CardTitle>Welcome Message</CardTitle>
         </CardHeader>
@@ -1167,6 +1167,15 @@ export default function CommunityProfilePage() {
           <p className="text-lg leading-relaxed whitespace-pre-wrap">{community.welcomeMessage}</p>
         </CardContent>
       </Card>
+
+      <div className="mb-12">
+        <h2 className="text-3xl font-bold text-center mb-8">Meet the Members</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {allMembers.map((member) => (
+            <MemberCard key={member.userId || member.name} member={member} communityId={community.id} />
+          ))}
+        </div>
+      </div>
       
        {isMember && (
         <Card className="shadow-lg my-12">
@@ -1220,15 +1229,6 @@ export default function CommunityProfilePage() {
       )}
 
       <Separator className="my-12" />
-
-      <div className="mb-12">
-        <h2 className="text-3xl font-bold text-center mb-8">Meet the Members</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {allMembers.map((member) => (
-            <MemberCard key={member.userId || member.name} member={member} communityId={community.id} />
-          ))}
-        </div>
-      </div>
       
       {isOwner && (
         <>
