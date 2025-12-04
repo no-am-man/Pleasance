@@ -29,14 +29,7 @@ const flagActionSchema = z.object({
 });
 
 // 2. Genkit Prompt
-const generateFlagPrompt = ai.definePrompt({
-  name: 'generateFlagPrompt',
-  input: { schema: GenerateFlagInputSchema },
-  output: { schema: GenerateFlagOutputSchema },
-  config: {
-    model: 'googleai/gemini-1.5-flash-latest',
-  },
-  prompt: `You are an expert graphic designer who specializes in creating symbolic, minimalist, and modern vector art for flags.
+const PROMPT_TEMPLATE = `You are an expert graphic designer who specializes in creating symbolic, minimalist, and modern vector art for flags.
         
 Task: Generate a complete, valid SVG string for a flag representing an online community.
 
@@ -48,8 +41,8 @@ Design Constraints:
 - The design should be abstract and symbolic.
 - Do not include any text in the SVG output.
 - The SVG should look good on both light and dark backgrounds.
-- Ensure the output is a raw JSON object containing the SVG string, with no additional text, explanations, or markdown formatting like \`\`\`json.`,
-});
+- Ensure the output is a raw JSON object containing the SVG string, with no additional text, explanations, or markdown formatting like \`\`\`json.`;
+
 
 // 3. Dedicated Genkit Flow
 const generateFlagFlow = ai.defineFlow(
@@ -59,7 +52,12 @@ const generateFlagFlow = ai.defineFlow(
     outputSchema: GenerateFlagOutputSchema,
   },
   async (input) => {
-    const { output } = await generateFlagPrompt(input);
+    const { output } = await ai.generate({
+        prompt: PROMPT_TEMPLATE,
+        model: 'googleai/gemini-1.5-flash-latest',
+        input,
+        output: { schema: GenerateFlagOutputSchema },
+    });
     
     if (!output) {
       throw new Error('AI failed to generate a flag SVG.');
