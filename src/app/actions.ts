@@ -24,6 +24,7 @@ import { getStorage } from 'firebase-admin/storage';
 import { ai } from '@/ai/genkit';
 import { generateCommunityFlag } from '@/ai/flows/generate-flag';
 import { welcomeNewMember } from '@/ai/flows/welcome-new-member';
+import { notifyOwnerOfJoinRequest } from '@/ai/flows/notify-owner-of-join-request';
 import {
     GenerateSvg3dInputSchema,
     type GenerateSvg3dInput,
@@ -979,7 +980,31 @@ export async function welcomeNewMemberAction(values: z.infer<typeof welcomeNewMe
     }
 }
     
+const notifyOwnerSchema = z.object({
+    communityId: z.string(),
+    communityName: z.string(),
+    requestingUserName: z.string(),
+});
 
-    
+export async function notifyOwnerOfJoinRequestAction(values: z.infer<typeof notifyOwnerSchema>) {
+    try {
+        const validatedFields = notifyOwnerSchema.safeParse(values);
+        if (!validatedFields.success) {
+            return { error: 'Invalid input for notification.' };
+        }
 
+        const result = await notifyOwnerOfJoinRequest(validatedFields.data);
+
+        if (!result.success) {
+            return { error: result.error || 'Failed to send notification.' };
+        }
+
+        return { success: true };
+
+    } catch (e) {
+        console.error('Notify Owner Action Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Failed to send notification: ${message}` };
+    }
+}
     

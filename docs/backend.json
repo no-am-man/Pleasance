@@ -249,7 +249,8 @@
             "createdAt": { "type": "string", "format": "date-time" },
             "status": { "type": "string", "enum": ["active", "done"], "description": "The status of the message." },
             "deleted": { "type": "boolean", "description": "Flag indicating if the message is soft-deleted." },
-            "deletedAt": { "type": "string", "format": "date-time", "description": "The timestamp when the message was soft-deleted." }
+            "deletedAt": { "type": "string", "format": "date-time", "description": "The timestamp when the message was soft-deleted." },
+            "audience": { "type": "string", "enum": ["public", "owner"], "description": "Who the message is intended for." }
         },
         "required": ["id", "communityId", "userId", "userName", "type", "createdAt", "status"]
      },

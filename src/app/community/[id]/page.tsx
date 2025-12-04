@@ -23,7 +23,7 @@ import { HumanIcon } from '@/components/icons/human-icon';
 import { AiIcon } from '@/components/icons/ai-icon';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import Image from 'next/image';
-import { generateCommunityFlagAction, welcomeNewMemberAction } from '@/app/actions';
+import { generateCommunityFlagAction, welcomeNewMemberAction, notifyOwnerOfJoinRequestAction } from '@/app/actions';
 import { Svg3dCube } from '@/components/icons/svg3d-cube';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { SaveToTreasuryForm } from '@/components/community/SaveToTreasuryForm';
@@ -72,6 +72,7 @@ type Message = {
     status: 'active' | 'done';
     deleted?: boolean;
     deletedAt?: { seconds: number, nanoseconds: number } | null;
+    audience?: 'public' | 'owner';
 };
 
 type Comment = {
@@ -189,6 +190,7 @@ function TextMessageForm({ communityId, onMessageSent }: { communityId: string, 
             text: text.trim(),
             status: 'active' as const,
             createdAt: serverTimestamp(),
+            audience: 'public' as const,
         };
 
         try {
@@ -457,7 +459,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
 
     return (
         <Collapsible open={isCollapsibleOpen} onOpenChange={setIsCollapsibleOpen}>
-            <Card className={cn("flex flex-col", isUpdating && "opacity-50")}>
+            <Card className={cn("flex flex-col", isUpdating && "opacity-50", message.audience === 'owner' && 'bg-primary/10 border-primary')}>
                 <div>
                     <CardHeader className="flex flex-row items-start gap-4 pb-4">
                         <Avatar>
@@ -555,6 +557,15 @@ function Network({ communityId, isOwner, allMembers }: { communityId: string; is
         fetchMessages();
     }, [firestore, communityId, fetchMessages]);
 
+    const filteredMessages = useMemo(() => {
+        return messages.filter(msg => {
+            if (msg.audience === 'owner') {
+                return isOwner;
+            }
+            return true; // Public messages
+        });
+    }, [messages, isOwner]);
+
     const handleMessageSent = () => {
         // Trigger a re-fetch of messages after a new one is sent
         fetchMessages();
@@ -577,9 +588,9 @@ function Network({ communityId, isOwner, allMembers }: { communityId: string; is
             <CardContent className="space-y-4">
                 {isLoading && <LoaderCircle className="mx-auto animate-spin" />}
                 {error && <p className="text-destructive">Error loading messages: {error.message}</p>}
-                {!isLoading && messages && messages.length === 0 && <p className="text-muted-foreground text-center py-8">No messages yet. Be the first!</p>}
+                {!isLoading && filteredMessages && filteredMessages.length === 0 && <p className="text-muted-foreground text-center py-8">No messages yet. Be the first!</p>}
                 <div className="max-h-[40rem] overflow-y-auto space-y-4 pr-2">
-                    {messages?.map(msg => {
+                    {filteredMessages?.map(msg => {
                         const key = msg.id || `${msg.userId}-${msg.createdAt?.seconds || Date.now()}`;
                         return <MessageCard key={key} message={msg} canManage={isOwner || msg.userId === user?.uid}/>
                     })}
@@ -880,7 +891,7 @@ export default function CommunityProfilePage() {
 
 
   const handleRequestToJoin = async () => {
-    if (!user || !id || !userProfile || !firestore) {
+    if (!user || !id || !userProfile || !firestore || !community) {
         toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in and have a profile to join.' });
         return;
     }
@@ -896,6 +907,11 @@ export default function CommunityProfilePage() {
     };
     try {
         await setDoc(requestRef, {...newRequest, createdAt: serverTimestamp()});
+        await notifyOwnerOfJoinRequestAction({
+            communityId: community.id,
+            communityName: community.name,
+            requestingUserName: userProfile.name,
+        });
         toast({ title: 'Request Sent!', description: 'The community owner has been notified.' });
     } catch(e) {
         const message = e instanceof Error ? e.message : 'An error occurred';
@@ -1254,3 +1270,4 @@ export default function CommunityProfilePage() {
 }
 
     
+
