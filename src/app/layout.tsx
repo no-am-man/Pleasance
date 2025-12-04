@@ -3,8 +3,8 @@ import './globals.css';
 import { Providers } from './providers';
 
 export const metadata: Metadata = {
-  title: 'Pleasance | A Federated Republic of the Spirit',
-  description: 'A space for communion, co-learning, and creation.',
+  title: 'Pleasance | A Federation of Social Communities',
+  description: 'A Federation of Social Communities for communion, co-learning, and creation.',
 };
 
 export default function RootLayout({
