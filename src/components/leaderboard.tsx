@@ -11,6 +11,7 @@ import { LoaderCircle, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { BronzeMedal, SilverMedal, GoldMedal, PlatinumMedal } from './icons/medals';
 import { SatoshiIcon } from './icons/satoshi-icon';
+import { useTranslation } from '@/hooks/use-translation';
 
 
 type LeaderboardEntry = {
@@ -38,6 +39,7 @@ const Medal = ({ rank }: { rank: number }) => {
 
 
 export default function Leaderboard() {
+    const { t } = useTranslation();
     const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
@@ -63,10 +65,10 @@ export default function Leaderboard() {
         <Card className="shadow-lg">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-2xl font-headline">
-                    <Trophy /> Scribe Rankings
+                    <Trophy /> {t('scribe_rankings_title')}
                 </CardTitle>
                 <CardDescription>
-                    Your intellectual creations have value. Earn Satoshis (<SatoshiIcon className="w-3.5 h-3.5 inline-block" />) for every story you generate, where 1 Satoshi is pegged to $1 USD.
+                    {t('scribe_rankings_desc')}
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -75,14 +77,14 @@ export default function Leaderboard() {
                         <LoaderCircle className="w-8 h-8 animate-spin text-primary" />
                     </div>
                 )}
-                {error && <p className="text-destructive text-center">Error loading rankings: {error.message}</p>}
+                {error && <p className="text-destructive text-center">{t('scribe_rankings_error', { message: error.message })}</p>}
                 {!isLoading && !error && (
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[50px]">Rank</TableHead>
-                                <TableHead>Scribe</TableHead>
-                                <TableHead className="text-right flex items-center justify-end gap-1.5">Score <SatoshiIcon className="w-4 h-4" /></TableHead>
+                                <TableHead className="w-[50px]">{t('scribe_rankings_rank')}</TableHead>
+                                <TableHead>{t('scribe_rankings_scribe')}</TableHead>
+                                <TableHead className="text-right flex items-center justify-end gap-1.5">{t('scribe_rankings_score')} <SatoshiIcon className="w-4 h-4" /></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -106,7 +108,7 @@ export default function Leaderboard() {
                         </TableBody>
                     </Table>
                 )}
-                {!isLoading && entries?.length === 0 && <p className="text-center text-muted-foreground py-4">The leaderboard is empty. Be the first to earn a score!</p>}
+                {!isLoading && entries?.length === 0 && <p className="text-center text-muted-foreground py-4">{t('scribe_rankings_empty')}</p>}
             </CardContent>
         </Card>
     );
