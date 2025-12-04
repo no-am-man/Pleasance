@@ -57,6 +57,13 @@ export default function WikiPage() {
             
             <FederationDiagram />
 
+            <div className="mt-16 text-center">
+                <h2 className="text-4xl font-bold font-headline mb-4">The Flow of Creation</h2>
+                <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                    The diagram above illustrates the journey of an idea within the Pleasance federation, from a sovereign individual's inspiration to a tangible or communal reality. It is a cyclical process where creation, learning, and community engagement perpetually inspire new ideas.
+                </p>
+            </div>
+
             <div className="mt-20">
                 <h2 className="text-4xl font-bold text-center mb-12 font-headline">Core Concepts</h2>
                 <div className="space-y-8">
