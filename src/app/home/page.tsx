@@ -17,20 +17,20 @@ function FeatureCard({ feature, isFirst, t }: { feature: any, isFirst: boolean, 
             <div className="md:w-1/2">
                 <div className="relative w-full h-64 md:h-full">
                     <Image
-                        src={t(feature.imageUrl)}
-                        alt={t(feature.description)}
+                        src={feature.imageUrl}
+                        alt={feature.description}
                         layout="fill"
                         objectFit="cover"
-                        data-ai-hint={t(feature.imageHint)}
+                        data-ai-hint={feature.imageHint}
                     />
                 </div>
             </div>
             <div className="md:w-1/2 flex flex-col">
                 <CardHeader>
-                    <CardTitle className="font-headline capitalize">{t(feature.title)}</CardTitle>
+                    <CardTitle className="font-headline capitalize">{feature.title}</CardTitle>
                 </CardHeader>
                 <CardContent className="flex-grow flex flex-col">
-                    <p className="text-muted-foreground flex-grow">{t(feature.description)}</p>
+                    <p className="text-muted-foreground flex-grow">{feature.description}</p>
                      {isFirst && (
                         <Button asChild className="mt-6">
                             <Link href="/">
@@ -45,13 +45,13 @@ function FeatureCard({ feature, isFirst, t }: { feature: any, isFirst: boolean, 
 }
 
 export default function HomePage() {
-    const { t, tData } = useTranslation();
+    const { t, tData, isLoading } = useTranslation();
 
-    if (!tData) {
+    if (isLoading) {
         return <div>Loading...</div>;
     }
 
-    const features = tData.features;
+    const features = tData('features') || [];
 
     return (
         <main className="container mx-auto max-w-4xl py-12 px-4">
@@ -84,4 +84,3 @@ export default function HomePage() {
         </main>
     );
 }
-
