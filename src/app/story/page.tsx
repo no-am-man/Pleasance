@@ -1,3 +1,4 @@
+
 // src/app/story/page.tsx
 'use client';
 
@@ -354,12 +355,11 @@ export default function StoryPage() {
   }
 
   return (
-    <main className="container mx-auto max-w-4xl py-8">
+    <main className="container mx-auto max-w-7xl py-8">
       <div 
         className="text-center mb-12 p-8 rounded-lg"
         style={{
             background: 'radial-gradient(circle, hsl(var(--accent) / 0.2) 0%, transparent 70%)',
-            border: '1px solid hsl(var(--border))',
         }}>
         <h1 className="text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3">
           <BookOpen className="w-12 h-12" /> Nuncy Lingua
@@ -369,31 +369,7 @@ export default function StoryPage() {
         </p>
       </div>
       
-      <div ref={storyViewerRef} className="scroll-mt-8">
-        {isLoading && (
-            <div className="flex justify-center p-8">
-                <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
-                <p className="ml-4 text-muted-foreground self-center">Generating your story and audio...</p>
-            </div>
-        )}
-        {error && (
-            <Alert variant="destructive" className="my-8">
-                <AlertTitle>Action Failed</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-            </Alert>
-        )}
-        {activeStory && (
-            <div className="mb-8">
-                <StoryViewer 
-                    key={activeStory.id}
-                    story={activeStory}
-                    autoplay={true}
-                />
-            </div>
-        )}
-      </div>
-
-      {!user ? (
+        {!user ? (
          <Card className="w-full max-w-md mx-auto text-center shadow-lg bg-background/80 backdrop-blur-sm">
           <CardHeader>
             <CardTitle>Welcome to the Scriptorium</CardTitle>
@@ -408,118 +384,135 @@ export default function StoryPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-8">
-            <Card 
-                className="shadow-2xl"
-                style={{
-                    backgroundImage: "url('/chalkboard.jpg')",
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    border: '4px solid #6b4a39'
-                }}>
-                <CardHeader className="text-white">
-                    <CardTitle className="text-3xl font-headline flex items-center gap-2"><PencilRuler/> New Lesson</CardTitle>
-                    <CardDescription className="text-slate-300">Choose your languages and difficulty.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                        control={form.control}
-                        name="sourceLanguage"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel className="text-white font-headline">Your Language</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-body">
-                                    <SelectValue placeholder="Select your language" />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent className="bg-slate-800 text-white border-slate-600 font-body">
-                                {LANGUAGES.map((lang) => (
-                                    <SelectItem key={lang.value} value={lang.value}>
-                                    {lang.label}
-                                    </SelectItem>
-                                ))}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage className="text-red-400" />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={form.control}
-                        name="targetLanguage"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel className="text-white font-headline">Language to Learn</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-body">
-                                    <SelectValue placeholder="Select a language" />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent className="bg-slate-800 text-white border-slate-600 font-body">
-                                {LANGUAGES.map((lang) => (
-                                    <SelectItem key={lang.value} value={lang.value}>
-                                    {lang.label}
-                                    </SelectItem>
-                                ))}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage className="text-red-400" />
-                            </FormItem>
-                        )}
-                        />
-                         <FormField
-                        control={form.control}
-                        name="difficulty"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel className="text-white font-headline">Difficulty</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-body">
-                                    <SelectValue placeholder="Select difficulty" />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent className="bg-slate-800 text-white border-slate-600 font-body">
-                                    <SelectItem value="beginner">Beginner</SelectItem>
-                                    <SelectItem value="intermediate">Intermediate</SelectItem>
-                                    <SelectItem value="advanced">Advanced</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <FormMessage className="text-red-400" />
-                            </FormItem>
-                        )}
-                        />
-                    </div>
-                    <Button type="submit" disabled={isLoading} size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold font-body">
-                        {isLoading ? (
-                            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <Sparkles className="mr-2 h-4 w-4" />
-                        )}
-                        Generate Story
-                    </Button>
-                    </form>
-                </Form>
-                </CardContent>
-            </Card>
-            
-            <Separator />
-            
-            <Leaderboard />
-
-            <Separator />
-
-            <StoryHistory onSelectStory={handleSelectStoryFromHistory} />
-            
-            <Separator />
-
-            <TimeMachine />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <div className="lg:col-span-2 space-y-8">
+                <div ref={storyViewerRef} className="scroll-mt-8">
+                    {isLoading && (
+                        <div className="flex justify-center p-8">
+                            <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
+                            <p className="ml-4 text-muted-foreground self-center">Generating your story and audio...</p>
+                        </div>
+                    )}
+                    {error && (
+                        <Alert variant="destructive" className="my-8">
+                            <AlertTitle>Action Failed</AlertTitle>
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
+                    )}
+                    {activeStory && (
+                        <div className="mb-8">
+                            <StoryViewer 
+                                key={activeStory.id}
+                                story={activeStory}
+                                autoplay={true}
+                            />
+                        </div>
+                    )}
+                </div>
+                 <Card 
+                    className="shadow-2xl"
+                    style={{
+                        backgroundImage: "url('/chalkboard.jpg')",
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                    }}>
+                    <CardHeader className="text-white">
+                        <CardTitle className="text-3xl font-headline flex items-center gap-2"><PencilRuler/> New Lesson</CardTitle>
+                        <CardDescription className="text-slate-300">Choose your languages and difficulty.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <FormField
+                            control={form.control}
+                            name="sourceLanguage"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel className="text-white font-headline">Your Language</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl>
+                                    <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-body">
+                                        <SelectValue placeholder="Select your language" />
+                                    </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent className="bg-slate-800 text-white border-slate-600 font-body">
+                                    {LANGUAGES.map((lang) => (
+                                        <SelectItem key={lang.value} value={lang.value}>
+                                        {lang.label}
+                                        </SelectItem>
+                                    ))}
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage className="text-red-400" />
+                                </FormItem>
+                            )}
+                            />
+                            <FormField
+                            control={form.control}
+                            name="targetLanguage"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel className="text-white font-headline">Language to Learn</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl>
+                                    <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-body">
+                                        <SelectValue placeholder="Select a language" />
+                                    </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent className="bg-slate-800 text-white border-slate-600 font-body">
+                                    {LANGUAGES.map((lang) => (
+                                        <SelectItem key={lang.value} value={lang.value}>
+                                        {lang.label}
+                                        </SelectItem>
+                                    ))}
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage className="text-red-400" />
+                                </FormItem>
+                            )}
+                            />
+                             <FormField
+                            control={form.control}
+                            name="difficulty"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel className="text-white font-headline">Difficulty</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                    <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-body">
+                                        <SelectValue placeholder="Select difficulty" />
+                                    </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent className="bg-slate-800 text-white border-slate-600 font-body">
+                                        <SelectItem value="beginner">Beginner</SelectItem>
+                                        <SelectItem value="intermediate">Intermediate</SelectItem>
+                                        <SelectItem value="advanced">Advanced</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage className="text-red-400" />
+                                </FormItem>
+                            )}
+                            />
+                        </div>
+                        <Button type="submit" disabled={isLoading} size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold font-body">
+                            {isLoading ? (
+                                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Sparkles className="mr-2 h-4 w-4" />
+                            )}
+                            Generate Story
+                        </Button>
+                        </form>
+                    </Form>
+                    </CardContent>
+                </Card>
+            </div>
+            <div className="lg:col-span-1 space-y-8">
+                 <Leaderboard />
+                 <StoryHistory onSelectStory={handleSelectStoryFromHistory} />
+                 <TimeMachine />
+            </div>
         </div>
       )}
     </main>
