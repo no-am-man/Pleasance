@@ -9,7 +9,7 @@ import { firestore } from '@/firebase/config';
 import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, arrayRemove, updateDoc, getDoc, getDocs, setDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info, LogOut, Wrench, Banknote } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info, LogOut, Wrench, Banknote, UserX } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -115,10 +115,10 @@ type ColorPixel = {
 };
 
 
-function MemberCard({ member, communityId }: { member: Member; communityId: string;}) {
+function MemberCard({ member, communityId, isOwner, onRemove }: { member: Member; communityId: string; isOwner: boolean; onRemove: (member: Member) => void; }) {
     const isHuman = member.type === 'human';
     
-    const Wrapper = Link;
+    const Wrapper = isHuman || member.type === 'AI' ? Link : 'div';
     
     let href = '#';
     if(isHuman && member.userId) {
@@ -128,42 +128,54 @@ function MemberCard({ member, communityId }: { member: Member; communityId: stri
     }
 
     return (
-      <Wrapper href={href}>
-        <Card className={cn(
-            "shadow-md transition-all h-full hover:shadow-lg hover:-translate-y-1 hover:bg-muted/50 cursor-pointer"
-        )}>
-            <CardHeader className="flex flex-row items-start gap-4">
-                <Avatar className="w-16 h-16 rounded-lg bg-background border-2 border-primary/20">
-                    <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
-                    <AvatarFallback>
-                        {isHuman ? (
-                            <HumanIcon className="w-10 h-10 text-primary" />
-                        ) : (
-                            <AiIcon className="w-10 h-10 text-primary" />
-                        )}
-                    </AvatarFallback>
-                </Avatar>
+      <div className="flex items-center gap-4 rounded-md border p-4 transition-colors hover:bg-muted/50 group">
+        <Wrapper href={href} className="flex-1 flex items-center gap-4">
+            <Avatar className="w-16 h-16 rounded-lg bg-background border-2 border-primary/20">
+                <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
+                <AvatarFallback>
+                    {isHuman ? (
+                        <HumanIcon className="w-10 h-10 text-primary" />
+                    ) : (
+                        <AiIcon className="w-10 h-10 text-primary" />
+                    )}
+                </AvatarFallback>
+            </Avatar>
             <div className="flex-1 space-y-1">
-                <CardTitle className="text-xl underline">{member.name}</CardTitle>
-                <CardDescription className="text-primary font-medium">{member.role}</CardDescription>
+                <h3 className="font-semibold text-lg group-hover:underline">{member.name}</h3>
+                <p className="text-sm text-primary font-medium">{member.role}</p>
+                <p className="text-sm text-muted-foreground line-clamp-2">{member.bio}</p>
             </div>
             {isHuman ? (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                    <User className="w-3 h-3" />
-                    Human
-                </Badge>
+                <Badge variant="secondary" className="flex-shrink-0"><User className="w-3 h-3 mr-1" /> Human</Badge>
             ) : (
-                <Badge variant="outline" className="flex items-center gap-1">
-                    <Bot className="w-3 h-3" />
-                    AI Member
-                </Badge>
+                <Badge variant="outline" className="flex-shrink-0"><Bot className="w-3 h-3 mr-1" /> AI Member</Badge>
             )}
-            </CardHeader>
-            <CardContent>
-            <p className="text-muted-foreground">{member.bio}</p>
-            </CardContent>
-        </Card>
-      </Wrapper>
+        </Wrapper>
+
+        {isOwner && isHuman && (
+          <AlertDialog>
+              <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100">
+                      <UserX className="w-4 h-4" />
+                  </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                  <AlertDialogHeader>
+                      <AlertDialogTitle>Remove {member.name}?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                          Are you sure you want to remove this member from the community? They will need to request to join again.
+                      </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => onRemove(member)} className="bg-destructive hover:bg-destructive/90">
+                          Remove Member
+                      </AlertDialogAction>
+                  </AlertDialogFooter>
+              </AlertDialogContent>
+          </AlertDialog>
+        )}
+      </div>
     );
 }
 
@@ -953,27 +965,29 @@ export default function CommunityProfilePage() {
     })
   };
 
-  const handleLeaveCommunity = async () => {
-    if (!user || !community || !isMember || isOwner) {
-        toast({ variant: "destructive", title: "Cannot leave community."});
-        return;
+  const handleRemoveMember = async (memberToRemove: Member) => {
+    if (!community || !firestore) {
+      toast({ variant: "destructive", title: "Community not found." });
+      return;
     }
 
-    const memberToRemove = community.members.find(m => m.userId === user.uid);
-    if (!memberToRemove) {
-        toast({ variant: "destructive", title: "You are not a member of this community."});
+    const isRemovingSelf = user?.uid === memberToRemove.userId;
+    if (isOwner && isRemovingSelf) {
+        toast({ variant: "destructive", title: "Owner cannot leave the community."});
         return;
     }
-
+    
     const communityDocRef = doc(firestore, 'communities', community.id);
     try {
-        await updateDoc(communityDocRef, {
-            members: arrayRemove(memberToRemove)
-        });
-        toast({ title: "You have left the community."});
-    } catch(e) {
-        const message = e instanceof Error ? e.message : "An unexpected error occurred.";
-        toast({ variant: "destructive", title: "Failed to leave community.", description: message });
+      await updateDoc(communityDocRef, {
+        members: arrayRemove(memberToRemove)
+      });
+      toast({ title: "Member Removed", description: `${memberToRemove.name} has been removed from the community.` });
+      // Optimistically update the UI
+      setCommunity(prev => prev ? ({ ...prev, members: prev.members.filter(m => m.userId !== memberToRemove.userId) }) : null);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "An unexpected error occurred.";
+      toast({ variant: "destructive", title: "Failed to remove member.", description: message });
     }
   };
 
@@ -1168,7 +1182,7 @@ export default function CommunityProfilePage() {
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleLeaveCommunity} className="bg-destructive hover:bg-destructive/90">
+                            <AlertDialogAction onClick={() => handleRemoveMember(community.members.find(m => m.userId === user.uid)!)} className="bg-destructive hover:bg-destructive/90">
                                 Leave
                             </AlertDialogAction>
                         </AlertDialogFooter>
@@ -1185,7 +1199,7 @@ export default function CommunityProfilePage() {
         <CardContent>
           <div className="grid grid-cols-1 gap-6">
             {allMembers.map((member) => (
-              <MemberCard key={member.userId || member.name} member={member} communityId={community.id} />
+              <MemberCard key={member.userId || member.name} member={member} communityId={community.id} isOwner={isOwner} onRemove={handleRemoveMember} />
             ))}
           </div>
         </CardContent>
@@ -1282,12 +1296,3 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
-
-    
-
-    
-
-
-
-
-    
