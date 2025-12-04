@@ -59,7 +59,7 @@ const generateFlagFlow = ai.defineFlow(
     outputSchema: GenerateFlagOutputSchema,
   },
   async (input) => {
-    const output = await ai.run(generateFlagPrompt, input);
+    const { output } = await generateFlagPrompt(input);
     
     if (!output) {
       throw new Error('AI failed to generate a flag SVG.');
