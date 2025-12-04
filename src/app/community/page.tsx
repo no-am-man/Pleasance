@@ -286,9 +286,9 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
                         </Link>
                         <div className="mt-4 pt-4 border-t">
                             <h4 className="text-sm font-semibold mb-2 flex items-center gap-2"><Users className="w-4 h-4" /> Meet the Members ({members.length})</h4>
-                            <div className="space-y-3">
-                                {members.slice(0, 5).map((member, index) => (
-                                    <div key={member.userId || index} className="flex items-center gap-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {members.slice(0, 4).map((member, index) => (
+                                    <div key={member.userId || index} className="flex items-center gap-3 p-2 rounded-md bg-background/50">
                                         <Avatar className="h-8 w-8 border-2 border-background">
                                             <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
                                             <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
@@ -302,12 +302,14 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
                                                     <Badge variant="secondary" className="h-5"><User className="w-3 h-3 mr-1" /> Human</Badge>
                                                 )}
                                             </div>
-                                            <p className="text-xs text-muted-foreground">{member.bio}</p>
+                                            <p className="text-xs text-muted-foreground line-clamp-1">{member.bio}</p>
                                         </div>
                                     </div>
                                 ))}
-                                {members.length > 5 && (
-                                    <p className="text-xs text-muted-foreground font-semibold">...and {members.length - 5} more</p>
+                                {members.length > 4 && (
+                                    <div className="flex items-center justify-center p-2 rounded-md bg-background/50">
+                                        <p className="text-xs text-muted-foreground font-semibold">...and {members.length - 4} more</p>
+                                    </div>
                                 )}
                             </div>
                         </div>
