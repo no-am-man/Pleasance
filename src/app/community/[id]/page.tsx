@@ -881,7 +881,14 @@ export default function CommunityProfilePage() {
 
   const isOwner = useMemo(() => user?.uid === community?.ownerId, [user, community]);
   
-  const allMembers = useMemo(() => community?.members || [], [community]);
+  const allMembers = useMemo(() => {
+    if (!community?.members) return [];
+    return [...community.members].sort((a, b) => {
+      if (a.type === 'human' && b.type !== 'human') return -1;
+      if (a.type !== 'human' && b.type === 'human') return 1;
+      return 0;
+    });
+  }, [community]);
 
   const isMember = useMemo(() => {
     if (!user || !community) return false;
@@ -1170,7 +1177,7 @@ export default function CommunityProfilePage() {
             </CardFooter>
         )}
       </Card>
-
+      
       <Card className="shadow-lg mb-12">
         <CardHeader>
           <CardTitle className="text-3xl font-bold text-center">Meet the Members</CardTitle>
