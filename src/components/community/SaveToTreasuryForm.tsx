@@ -144,9 +144,12 @@ export function SaveToTreasuryForm({ creation }: { creation: Creation }) {
                             name="value"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="flex items-center gap-1.5">Creation Value <SatoshiIcon className="w-4 h-4 fill-current" /></FormLabel>
+                                    <FormLabel className="flex items-center gap-1.5">Creation Value</FormLabel>
                                     <FormControl>
-                                        <Input type="number" placeholder="10000" {...field} />
+                                        <div className="relative">
+                                            <SatoshiIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <Input type="number" placeholder="10000" className="pl-8" {...field} />
+                                        </div>
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

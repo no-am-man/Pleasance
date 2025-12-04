@@ -131,9 +131,12 @@ function AddAssetForm() {
                                 name="value"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="flex items-center gap-1.5">Asset Value <SatoshiIcon className="w-4 h-4 fill-current" /></FormLabel>
+                                        <FormLabel className="flex items-center gap-1.5">Asset Value</FormLabel>
                                         <FormControl>
-                                            <Input type="number" placeholder="10000" {...field} />
+                                            <div className="relative">
+                                                <SatoshiIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                                <Input type="number" placeholder="10000" className="pl-8" {...field} />
+                                            </div>
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -266,7 +269,7 @@ function AssetList() {
                                             <h3 className="font-semibold">{asset.name}</h3>
                                             <div className="flex items-center gap-1 font-mono text-primary font-bold text-lg whitespace-nowrap pl-4">
                                                 <span>{asset.value.toLocaleString()}</span>
-                                                <SatoshiIcon className="w-5 h-5 fill-current" />
+                                                <SatoshiIcon className="w-5 h-5" />
                                             </div>
                                         </div>
                                         <p className="text-sm text-muted-foreground break-words whitespace-pre-wrap">{asset.description}</p>
@@ -381,7 +384,7 @@ function OrderList() {
                             <div key={order.id} className="flex items-center gap-4 rounded-md border p-4">
                                 <div className="flex-1">
                                     <h3 className="font-semibold">{order.assetName}</h3>
-                                    <p className="text-sm text-muted-foreground flex items-center gap-1">Supplier: {order.supplier} | Cost: {order.cost > 0 ? <><span className="flex items-center gap-1">{order.cost.toLocaleString()} <SatoshiIcon className="w-4 h-4 fill-current" /></span></> : 'N/A'}</p>
+                                    <p className="text-sm text-muted-foreground flex items-center gap-1">Supplier: {order.supplier} | Cost: {order.cost > 0 ? <><span className="flex items-center gap-1">{order.cost.toLocaleString()} <SatoshiIcon className="w-4 h-4" /></span></> : 'N/A'}</p>
                                 </div>
                                 <Badge variant={getStatusVariant(order.status)} className="flex items-center gap-1.5">
                                     {getStatusIcon(order.status)}

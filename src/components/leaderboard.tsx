@@ -66,7 +66,7 @@ export default function Leaderboard() {
                     <Trophy /> Scribe Rankings
                 </CardTitle>
                 <CardDescription className="flex items-center gap-1.5">
-                    Your intellectual creations have value. Earn Satoshis (<SatoshiIcon className="w-3 h-3 inline-block fill-current" />) for every story you generate, where 1 Satoshi is pegged to $1 USD.
+                    Your intellectual creations have value. Earn Satoshis (<SatoshiIcon className="w-3.5 h-3.5 inline-block" />) for every story you generate, where 1 Satoshi is pegged to $1 USD.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -82,7 +82,7 @@ export default function Leaderboard() {
                             <TableRow>
                                 <TableHead className="w-[50px]">Rank</TableHead>
                                 <TableHead>Scribe</TableHead>
-                                <TableHead className="text-right flex items-center justify-end gap-1.5">Score <SatoshiIcon className="w-4 h-4 fill-current" /></TableHead>
+                                <TableHead className="text-right flex items-center justify-end gap-1.5">Score <SatoshiIcon className="w-4 h-4" /></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -100,7 +100,7 @@ export default function Leaderboard() {
                                             <span className="font-medium group-hover:underline">{entry.userName}</span>
                                         </Link>
                                     </TableCell>
-                                    <TableCell className="text-right font-bold text-lg text-primary flex items-center justify-end gap-1">{entry.score.toLocaleString()} <SatoshiIcon className="w-5 h-5 fill-current" /></TableCell>
+                                    <TableCell className="text-right font-bold text-lg text-primary flex items-center justify-end gap-1">{entry.score.toLocaleString()} <SatoshiIcon className="w-5 h-5" /></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
