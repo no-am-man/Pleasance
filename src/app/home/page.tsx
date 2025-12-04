@@ -45,7 +45,7 @@ function FeatureCard({ feature, isFirst, t }: { feature: any, isFirst: boolean, 
 }
 
 export default function HomePage() {
-    const { t,- tData } = useTranslation();
+    const { t, tData } = useTranslation();
 
     if (!tData) {
         return <div>Loading...</div>;
@@ -84,3 +84,4 @@ export default function HomePage() {
         </main>
     );
 }
+
