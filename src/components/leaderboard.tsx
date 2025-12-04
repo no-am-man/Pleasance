@@ -66,7 +66,7 @@ export default function Leaderboard() {
                     <Trophy /> Scribe Rankings
                 </CardTitle>
                 <CardDescription className="flex items-center gap-1.5">
-                    Earn points by generating stories. Each point is worth one Satoshi. Note: These are for internal scoring and are not connected to the live Bitcoin network.
+                    Your intellectual creations have value. Earn Satoshis for every story you generate, where 1 Satoshi is pegged to $1 USD.
                 </CardDescription>
             </CardHeader>
             <CardContent>
