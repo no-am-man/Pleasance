@@ -66,7 +66,7 @@ export default function Leaderboard() {
                     <Trophy /> Scribe Rankings
                 </CardTitle>
                 <CardDescription className="flex items-center gap-1.5">
-                    Your intellectual creations have value. Earn Satoshis for every story you generate, where 1 Satoshi is pegged to $1 USD.
+                    Your intellectual creations have value. Earn Satoshis (<SatoshiIcon className="w-3 h-3 inline-block fill-current" />) for every story you generate, where 1 Satoshi is pegged to $1 USD.
                 </CardDescription>
             </CardHeader>
             <CardContent>
