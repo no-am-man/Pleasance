@@ -31,6 +31,7 @@ import {
   DialogClose
 } from '@/components/ui/dialog';
 import Leaderboard from '@/components/leaderboard';
+import { useTranslation } from '@/hooks/use-translation';
 
 const StoryFormSchema = z.object({
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
@@ -68,6 +69,7 @@ type CommunityProfile = {
 
 function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void; }) {
     const { user, isUserLoading } = useUser();
+    const { t } = useTranslation();
     
     const [stories, setStories] = useState<Story[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -109,13 +111,13 @@ function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void
     return (
         <Card className="shadow-lg bg-background/80 backdrop-blur-sm">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-2xl font-headline"><History /> Your Story History</CardTitle>
-                <CardDescription>Revisit stories you've generated in the past.</CardDescription>
+                <CardTitle className="flex items-center gap-2 text-2xl font-headline"><History /> {t('story_history_title')}</CardTitle>
+                <CardDescription>{t('story_history_desc')}</CardDescription>
             </CardHeader>
             <CardContent>
                 {isLoading && <LoaderCircle className="animate-spin mx-auto" />}
                 {error && <p className="text-destructive">Error loading history: {error.message}</p>}
-                {stories && stories.length === 0 && <p className="text-muted-foreground text-center">You haven't generated any stories yet.</p>}
+                {stories && stories.length === 0 && <p className="text-muted-foreground text-center">{t('story_history_empty')}</p>}
                 {stories && stories.length > 0 && (
                     <ul className="space-y-2 max-h-80 overflow-y-auto">
                         {stories.map((story, index) => (
@@ -139,12 +141,13 @@ function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void
 }
 
 function SnapshotViewer({ snapshot }: { snapshot: HistorySnapshot }) {
+  const { t } = useTranslation();
   return (
     <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
       <DialogHeader>
-        <DialogTitle>Story Snapshot from {snapshot.createdAt ? new Date(snapshot.createdAt.seconds * 1000).toLocaleString() : 'a past time'}</DialogTitle>
+        <DialogTitle>{t('snapshot_title', { date: snapshot.createdAt ? new Date(snapshot.createdAt.seconds * 1000).toLocaleString() : 'a past time' })}</DialogTitle>
         <DialogDescription>
-          A view of your {snapshot.storyCount} stories from this point in time.
+          {t('snapshot_desc', { count: snapshot.storyCount })}
         </DialogDescription>
       </DialogHeader>
       <div className="flex-grow overflow-y-auto pr-4 space-y-4">
@@ -164,7 +167,7 @@ function SnapshotViewer({ snapshot }: { snapshot: HistorySnapshot }) {
       </div>
        <DialogClose asChild>
           <Button type="button" variant="secondary">
-            Close
+            {t('snapshot_close')}
           </Button>
         </DialogClose>
     </DialogContent>
@@ -174,6 +177,7 @@ function SnapshotViewer({ snapshot }: { snapshot: HistorySnapshot }) {
 function TimeMachine() {
     const { user, isUserLoading } = useUser();
     const { toast } = useToast();
+    const { t } = useTranslation();
     const [isCreating, setIsCreating] = useState(false);
 
     const [snapshots, setSnapshots] = useState<HistorySnapshot[]>([]);
@@ -207,9 +211,9 @@ function TimeMachine() {
         setIsCreating(true);
         const result = await createHistorySnapshot({ userId: user.uid });
         if (result.error) {
-            toast({ variant: 'destructive', title: 'Snapshot Failed', description: result.error });
+            toast({ variant: 'destructive', title: t('toast_snapshot_failed_title'), description: result.error });
         } else {
-            toast({ title: 'Snapshot Created!', description: `Saved ${result.storyCount} stories to your Time Machine.` });
+            toast({ title: t('toast_snapshot_created_title'), description: t('toast_snapshot_created_desc', { count: result.storyCount }) });
         }
         setIsCreating(false);
     };
@@ -218,7 +222,7 @@ function TimeMachine() {
         if (!user || !firestore) return;
         const docRef = doc(firestore, `users/${user.uid}/historySnapshots/${snapshotId}`);
         await deleteDoc(docRef);
-        toast({ title: 'Snapshot Deleted' });
+        toast({ title: t('toast_snapshot_deleted_title') });
         setSnapshots(prev => prev.filter(s => s.id !== snapshotId));
     }
 
@@ -228,18 +232,18 @@ function TimeMachine() {
     return (
         <Card className="shadow-lg">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Clock /> Time Machine</CardTitle>
-                <CardDescription>Create and view snapshots of your story history.</CardDescription>
+                <CardTitle className="flex items-center gap-2"><Clock /> {t('time_machine_title')}</CardTitle>
+                <CardDescription>{t('time_machine_desc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                  <Button onClick={handleCreateSnapshot} disabled={isCreating}>
                     {isCreating ? <LoaderCircle className="mr-2 animate-spin" /> : <Camera className="mr-2" />}
-                    Create Snapshot
+                    {t('time_machine_create_button')}
                 </Button>
                 <Separator />
                  {isLoading && <LoaderCircle className="animate-spin mx-auto" />}
-                 {error && <p className="text-destructive">Error loading snapshots: {error.message}</p>}
-                 {snapshots && snapshots.length === 0 && <p className="text-muted-foreground text-center">No snapshots created yet.</p>}
+                 {error && <p className="text-destructive">{t('time_machine_error', { message: error.message })}</p>}
+                 {snapshots && snapshots.length === 0 && <p className="text-muted-foreground text-center">{t('time_machine_empty')}</p>}
                  {snapshots && snapshots.length > 0 && (
                     <div className="space-y-2 max-h-80 overflow-y-auto">
                         {snapshots.map(snapshot => (
@@ -248,10 +252,10 @@ function TimeMachine() {
                                     <DialogTrigger asChild>
                                         <button className="flex-grow text-left">
                                             <p className="font-semibold">{snapshot.createdAt ? new Date(snapshot.createdAt.seconds * 1000).toLocaleString() : 'Snapshot'}</p>
-                                            <p className="text-sm text-muted-foreground">{snapshot.storyCount} stories captured</p>
+                                            <p className="text-sm text-muted-foreground">{t('time_machine_stories_captured', { count: snapshot.storyCount })}</p>
                                         </button>
                                     </DialogTrigger>
-                                    <Button variant="ghost" size="sm" onClick={() => handleDeleteSnapshot(snapshot.id)}>Delete</Button>
+                                    <Button variant="ghost" size="sm" onClick={() => handleDeleteSnapshot(snapshot.id)}>{t('time_machine_delete_button')}</Button>
                                 </div>
                                 <SnapshotViewer snapshot={snapshot} />
                             </Dialog>
@@ -270,6 +274,7 @@ export default function StoryPage() {
   const storyViewerRef = useRef<HTMLDivElement>(null);
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
+  const { t } = useTranslation();
   
   const [profile, setProfile] = useState<CommunityProfile | null>(null);
   const [isProfileLoading, setIsProfileLoading] = useState(true);
@@ -314,7 +319,7 @@ export default function StoryPage() {
 
   async function onSubmit(data: z.infer<typeof StoryFormSchema>) {
     if (!user || !profile) {
-        setError("You must be logged in and have a complete profile to generate a story.");
+        setError(t('story_generation_error_profile'));
         return;
     }
     setIsLoading(true);
@@ -336,9 +341,9 @@ export default function StoryPage() {
     
     if (result.storyData) {
         setActiveStory(result.storyData as Story);
-        toast({ title: "Story Generated!", description: "Your new story is ready."});
+        toast({ title: t('toast_story_generated_title'), description: t('toast_story_generated_desc') });
     } else {
-      setError('An unknown error occurred while generating the story.');
+      setError(t('story_generation_error_unknown'));
     }
   }
 
@@ -362,23 +367,23 @@ export default function StoryPage() {
             background: 'radial-gradient(circle, hsl(var(--accent) / 0.2) 0%, transparent 70%)',
         }}>
         <h1 className="text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-          <BookOpen className="w-12 h-12" /> Nuncy Lingua
+          <BookOpen className="w-12 h-12" /> {t('nuncy_lingua_title')}
         </h1>
         <p className="text-lg text-muted-foreground mt-2">
-          Generate a short story at your level, then practice with our karaoke-style player.
+          {t('nuncy_lingua_subtitle')}
         </p>
       </div>
       
         {!user ? (
          <Card className="w-full max-w-md mx-auto text-center shadow-lg bg-background/80 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle>Welcome to the Scriptorium</CardTitle>
-            <CardDescription>Log in to generate stories and save your progress.</CardDescription>
+            <CardTitle>{t('story_login_card_title')}</CardTitle>
+            <CardDescription>{t('story_login_card_desc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild>
               <Link href="/login">
-                <LogIn className="mr-2 h-4 w-4" /> Login to Continue
+                <LogIn className="mr-2 h-4 w-4" /> {t('story_login_card_button')}
               </Link>
             </Button>
           </CardContent>
@@ -390,12 +395,12 @@ export default function StoryPage() {
                     {isLoading && (
                         <div className="flex justify-center p-8">
                             <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
-                            <p className="ml-4 text-muted-foreground self-center">Generating your story and audio...</p>
+                            <p className="ml-4 text-muted-foreground self-center">{t('story_generating_message')}</p>
                         </div>
                     )}
                     {error && (
                         <Alert variant="destructive" className="my-8">
-                            <AlertTitle>Action Failed</AlertTitle>
+                            <AlertTitle>{t('story_generation_failed_title')}</AlertTitle>
                             <AlertDescription>{error}</AlertDescription>
                         </Alert>
                     )}
@@ -417,8 +422,8 @@ export default function StoryPage() {
                         backgroundPosition: 'center',
                     }}>
                     <CardHeader className="text-white">
-                        <CardTitle className="text-3xl font-headline flex items-center gap-2"><PencilRuler/> New Lesson</CardTitle>
-                        <CardDescription className="text-slate-300">Choose your languages and difficulty.</CardDescription>
+                        <CardTitle className="text-3xl font-headline flex items-center gap-2"><PencilRuler/> {t('story_new_lesson_title')}</CardTitle>
+                        <CardDescription className="text-slate-300">{t('story_new_lesson_desc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                     <Form {...form}>
@@ -429,11 +434,11 @@ export default function StoryPage() {
                             name="sourceLanguage"
                             render={({ field }) => (
                                 <FormItem>
-                                <FormLabel className="text-white font-headline">Your Language</FormLabel>
+                                <FormLabel className="text-white font-headline">{t('story_form_your_language')}</FormLabel>
                                 <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
                                     <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-body">
-                                        <SelectValue placeholder="Select your language" />
+                                        <SelectValue placeholder={t('story_form_select_your_language')} />
                                     </SelectTrigger>
                                     </FormControl>
                                     <SelectContent className="bg-slate-800 text-white border-slate-600 font-body">
@@ -453,11 +458,11 @@ export default function StoryPage() {
                             name="targetLanguage"
                             render={({ field }) => (
                                 <FormItem>
-                                <FormLabel className="text-white font-headline">Language to Learn</FormLabel>
+                                <FormLabel className="text-white font-headline">{t('story_form_language_to_learn')}</FormLabel>
                                 <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
                                     <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-body">
-                                        <SelectValue placeholder="Select a language" />
+                                        <SelectValue placeholder={t('story_form_select_a_language')} />
                                     </SelectTrigger>
                                     </FormControl>
                                     <SelectContent className="bg-slate-800 text-white border-slate-600 font-body">
@@ -477,17 +482,17 @@ export default function StoryPage() {
                             name="difficulty"
                             render={({ field }) => (
                                 <FormItem>
-                                <FormLabel className="text-white font-headline">Difficulty</FormLabel>
+                                <FormLabel className="text-white font-headline">{t('story_form_difficulty')}</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                     <FormControl>
                                     <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-body">
-                                        <SelectValue placeholder="Select difficulty" />
+                                        <SelectValue placeholder={t('story_form_select_difficulty')} />
                                     </SelectTrigger>
                                     </FormControl>
                                     <SelectContent className="bg-slate-800 text-white border-slate-600 font-body">
-                                        <SelectItem value="beginner">Beginner</SelectItem>
-                                        <SelectItem value="intermediate">Intermediate</SelectItem>
-                                        <SelectItem value="advanced">Advanced</SelectItem>
+                                        <SelectItem value="beginner">{t('story_form_difficulty_beginner')}</SelectItem>
+                                        <SelectItem value="intermediate">{t('story_form_difficulty_intermediate')}</SelectItem>
+                                        <SelectItem value="advanced">{t('story_form_difficulty_advanced')}</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <FormMessage className="text-red-400" />
@@ -501,7 +506,7 @@ export default function StoryPage() {
                             ) : (
                                 <Sparkles className="mr-2 h-4 w-4" />
                             )}
-                            Generate Story
+                            {t('story_form_generate_button')}
                         </Button>
                         </form>
                     </Form>
