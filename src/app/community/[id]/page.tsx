@@ -1168,14 +1168,18 @@ export default function CommunityProfilePage() {
         </CardContent>
       </Card>
 
-      <div className="mb-12">
-        <h2 className="text-3xl font-bold text-center mb-8">Meet the Members</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {allMembers.map((member) => (
-            <MemberCard key={member.userId || member.name} member={member} communityId={community.id} />
-          ))}
-        </div>
-      </div>
+      <Card className="shadow-lg mb-12">
+        <CardHeader>
+          <CardTitle className="text-3xl font-bold text-center">Meet the Members</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {allMembers.map((member) => (
+              <MemberCard key={member.userId || member.name} member={member} communityId={community.id} />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
       
        {isMember && (
         <Card className="shadow-lg my-12">
