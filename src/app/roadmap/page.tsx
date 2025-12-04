@@ -39,6 +39,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities';
+import { useTranslation } from '@/hooks/use-translation';
 
 
 const AddIdeaSchema = z.object({
@@ -53,6 +54,7 @@ const GenerateIdeaSchema = z.object({
 
 function GenerateIdeaForm() {
     const { toast } = useToast();
+    const { t } = useTranslation();
     const [isSubmitting, setIsSubmitting] = useState(false);
     
     const form = useForm<z.infer<typeof GenerateIdeaSchema>>({
@@ -66,13 +68,13 @@ function GenerateIdeaForm() {
         if (result.error) {
             toast({
                 variant: 'destructive',
-                title: 'Error generating idea',
+                title: t('toast_generate_error'),
                 description: result.error,
             });
         } else {
             toast({
-                title: 'AI Idea Generated!',
-                description: `"${result.card?.title}" has been added to the board.`,
+                title: t('toast_idea_generated'),
+                description: t('toast_idea_generated_desc', { title: result.card?.title || '' }),
             });
             form.reset();
         }
@@ -82,7 +84,7 @@ function GenerateIdeaForm() {
     return (
         <Card className="mb-4 bg-card/70">
             <CardHeader className="p-4">
-                <CardTitle className="text-base">Generate New Idea with AI</CardTitle>
+                <CardTitle className="text-base">{t('roadmap_form_generate_title')}</CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
                 <Form {...form}>
@@ -93,7 +95,7 @@ function GenerateIdeaForm() {
                             render={({ field }) => (
                                 <FormItem>
                                     <FormControl>
-                                        <Input placeholder="AI to auto-assign tasks..." {...field} />
+                                        <Input placeholder={t('roadmap_form_generate_placeholder')} {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -101,7 +103,7 @@ function GenerateIdeaForm() {
                         />
                         <Button type="submit" size="sm" className="w-full" disabled={isSubmitting}>
                             {isSubmitting ? <LoaderCircle className="animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                            Generate Idea
+                            {t('roadmap_form_generate_button')}
                         </Button>
                     </form>
                 </Form>
@@ -112,6 +114,7 @@ function GenerateIdeaForm() {
 
 function AddIdeaForm() {
     const { toast } = useToast();
+    const { t } = useTranslation();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isRefining, setIsRefining] = useState(false);
     
@@ -126,13 +129,13 @@ function AddIdeaForm() {
         if (result.error) {
             toast({
                 variant: 'destructive',
-                title: 'Error adding idea',
+                title: t('toast_add_error'),
                 description: result.error,
             });
         } else {
             toast({
-                title: 'Idea Added!',
-                description: 'Your new idea has been added to the board.',
+                title: t('toast_idea_added'),
+                description: t('toast_idea_added_desc'),
             });
             form.reset();
         }
@@ -144,8 +147,8 @@ function AddIdeaForm() {
         if (!title) {
             toast({
                 variant: 'destructive',
-                title: 'Title is required',
-                description: 'Please enter a title before refining with AI.',
+                title: t('toast_title_required'),
+                description: t('toast_refine_failed_desc'),
             });
             return;
         }
@@ -154,7 +157,7 @@ function AddIdeaForm() {
         if (result.error) {
             toast({
                 variant: 'destructive',
-                title: 'AI Refinement Failed',
+                title: t('toast_refine_failed_title'),
                 description: result.error,
             });
         } else if (result.refinedDescription) {
@@ -166,7 +169,7 @@ function AddIdeaForm() {
     return (
         <Card className="mb-4 bg-card/70">
             <CardHeader className="p-4">
-                <CardTitle className="text-base">Add a New Idea Manually</CardTitle>
+                <CardTitle className="text-base">{t('roadmap_form_manual_title')}</CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
                 <Form {...form}>
@@ -177,7 +180,7 @@ function AddIdeaForm() {
                             render={({ field }) => (
                                 <FormItem>
                                     <FormControl>
-                                        <Input placeholder="Idea title..." {...field} />
+                                        <Input placeholder={t('roadmap_form_manual_title_placeholder')} {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -190,7 +193,7 @@ function AddIdeaForm() {
                                 <FormItem>
                                     <div className="relative">
                                         <FormControl>
-                                            <Textarea placeholder="Refine Description with AI" {...field} className="pr-10"/>
+                                            <Textarea placeholder={t('roadmap_form_manual_desc_placeholder')} {...field} className="pr-10"/>
                                         </FormControl>
                                         <TooltipProvider>
                                             <Tooltip>
@@ -207,7 +210,7 @@ function AddIdeaForm() {
                                                     </Button>
                                                 </TooltipTrigger>
                                                 <TooltipContent>
-                                                    <p>Refine with AI</p>
+                                                    <p>{t('roadmap_form_manual_refine_button')}</p>
                                                 </TooltipContent>
                                             </Tooltip>
                                         </TooltipProvider>
@@ -218,7 +221,7 @@ function AddIdeaForm() {
                         />
                         <Button type="submit" size="sm" className="w-full" disabled={isSubmitting}>
                             {isSubmitting ? <LoaderCircle className="animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
-                            Add Idea
+                            {t('roadmap_form_manual_add_button')}
                         </Button>
                     </form>
                 </Form>
@@ -229,6 +232,7 @@ function AddIdeaForm() {
 
 function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, dragHandleProps }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; allProfiles: CommunityProfile[]; onUpdateAssignees: (cardId: string, assigneeName: string, shouldAssign: boolean) => void; dragHandleProps?: {listeners: SyntheticListenerMap, attributes: DraggableAttributes} }) {
   const { user } = useUser();
+  const { t } = useTranslation();
   const isFounder = user?.email === 'gg.el0ai.com@gmail.com';
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -245,13 +249,13 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, dr
     if (result.error) {
         toast({
             variant: 'destructive',
-            title: 'Error deleting idea',
+            title: t('toast_delete_error'),
             description: result.error,
         });
     } else {
         toast({
-            title: 'Idea Removed',
-            description: 'The idea has been removed from the board.',
+            title: t('toast_idea_removed'),
+            description: t('toast_idea_removed_desc'),
         });
     }
   };
@@ -293,19 +297,19 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, dr
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                             <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogTitle>{t('roadmap_delete_dialog_title')}</AlertDialogTitle>
                             <AlertDialogDescription>
-                                This will permanently delete the idea "{card.title}". This action cannot be undone.
+                                {t('roadmap_delete_dialog_desc', { title: card.title })}
                             </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogCancel>{t('roadmap_delete_dialog_cancel')}</AlertDialogCancel>
                             <AlertDialogAction
                                 onClick={handleDelete}
                                 disabled={isDeleting}
                                 className="bg-destructive hover:bg-destructive/90"
                             >
-                                {isDeleting ? <LoaderCircle className="animate-spin" /> : 'Delete'}
+                                {isDeleting ? <LoaderCircle className="animate-spin" /> : t('roadmap_delete_dialog_confirm')}
                             </AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>
@@ -402,20 +406,23 @@ function SortableKanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssig
 
 function KanbanColumn({ id, title, cards, children, onMoveCard, allProfiles, onUpdateAssignees }: RoadmapColumnType & { children?: React.ReactNode; onMoveCard: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; allProfiles: CommunityProfile[]; onUpdateAssignees: (cardId: string, columnId: string, assigneeName: string, shouldAssign: boolean) => void; }) {
   const { user } = useUser();
+  const { t } = useTranslation();
   const isFounder = user?.email === 'gg.el0ai.com@gmail.com';
   
-  const columnDescriptions: { [key: string]: string } = {
-    ideas: "A seed of inspiration; a potential future for the republic.",
-    nextUp: "The forge is being prepared. These ideas are slated for manifestation.",
-    inProgress: "Actively being constructed in the workshop. Viewable on the staging server.",
-    alive: "A living part of the republic, actively serving its citizens.",
+  const columnInfo: { [key: string]: { titleKey: string, descKey: string } } = {
+    ideas: { titleKey: 'roadmap_column_ideas_title', descKey: 'roadmap_column_ideas_desc' },
+    nextUp: { titleKey: 'roadmap_column_nextUp_title', descKey: 'roadmap_column_nextUp_desc' },
+    inProgress: { titleKey: 'roadmap_column_inProgress_title', descKey: 'roadmap_column_inProgress_desc' },
+    alive: { titleKey: 'roadmap_column_alive_title', descKey: 'roadmap_column_alive_desc' },
   };
+
+  const currentColumnInfo = columnInfo[id] || { titleKey: 'title', descKey: 'description' };
   
   return (
       <div className="flex flex-col gap-4">
         <div className="px-3 py-2">
-          <h2 className="text-lg font-semibold text-foreground">{title}</h2>
-          <p className="text-sm text-muted-foreground">{columnDescriptions[id]}</p>
+          <h2 className="text-lg font-semibold text-foreground">{t(currentColumnInfo.titleKey)}</h2>
+          <p className="text-sm text-muted-foreground">{t(currentColumnInfo.descKey)}</p>
         </div>
         <div className="flex-grow space-y-4 rounded-lg p-3 bg-muted/50 min-h-[200px]">
             {children}
@@ -426,7 +433,7 @@ function KanbanColumn({ id, title, cards, children, onMoveCard, allProfiles, onU
             ) : (
               !children && (
                  <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-                    <p>No cards in this column.</p>
+                    <p>{t('roadmap_no_cards')}</p>
                 </div>
               )
             )}
@@ -438,6 +445,7 @@ function KanbanColumn({ id, title, cards, children, onMoveCard, allProfiles, onU
 
 export default function RoadmapPage() {
   const { user } = useUser();
+  const { t } = useTranslation();
   const isFounder = user?.email === 'gg.el0ai.com@gmail.com';
   const { toast } = useToast();
   
@@ -495,7 +503,7 @@ export default function RoadmapPage() {
 
   const handleMoveCard = async (cardId: string, oldColumnId: string, direction: 'left' | 'right') => {
     if (!isFounder) {
-        toast({ variant: 'destructive', title: 'Permission Denied' });
+        toast({ variant: 'destructive', title: t('toast_permission_denied') });
         return;
     }
 
@@ -527,11 +535,11 @@ export default function RoadmapPage() {
 
     const result = await updateRoadmapCardColumn(cardId, sourceColumn.id, targetColumn.id);
     if (result.error) {
-        toast({ variant: 'destructive', title: 'Update Failed', description: result.error });
+        toast({ variant: 'destructive', title: t('toast_update_failed'), description: result.error });
         // Revert UI on failure
         setColumns(columnsData ? [...columnsData].sort((a, b) => columnOrder.indexOf(a.id) - columnOrder.indexOf(b.id)) : []);
     } else {
-        toast({ title: 'Card Moved!', description: 'Plan has been updated.' });
+        toast({ title: t('toast_card_moved'), description: t('toast_plan_updated') });
     }
   };
   
@@ -570,7 +578,7 @@ export default function RoadmapPage() {
     if (reorderedCards) {
       const result = await updateRoadmapCardOrder('ideas', reorderedCards);
       if (result.error) {
-        toast({ variant: 'destructive', title: 'Reorder Failed', description: result.error });
+        toast({ variant: 'destructive', title: t('toast_reorder_failed'), description: result.error });
         // Revert UI on failure by re-fetching or rolling back state
         setColumns(columnsData ? [...columnsData].sort((a, b) => columnOrder.indexOf(a.id) - columnOrder.indexOf(b.id)) : []);
       }
@@ -599,11 +607,11 @@ export default function RoadmapPage() {
     const result = await updateRoadmapCardAssignees({ columnId, cardId, assigneeName, shouldAssign });
     
     if (result.error) {
-        toast({ variant: 'destructive', title: 'Assignment Failed', description: result.error });
+        toast({ variant: 'destructive', title: t('toast_assignment_failed'), description: result.error });
         // Revert UI on failure
         setColumns(columnsData ? [...columnsData].sort((a, b) => columnOrder.indexOf(a.id) - columnOrder.indexOf(b.id)) : []);
     } else {
-        toast({ title: shouldAssign ? 'User Assigned' : 'User Unassigned' });
+        toast({ title: shouldAssign ? t('toast_user_assigned') : t('toast_user_unassigned') });
     }
   }
 
@@ -611,9 +619,9 @@ export default function RoadmapPage() {
     <main className="container mx-auto min-h-screen py-8">
       <div className="text-center mb-12">
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3 font-headline">
-          <KanbanIcon className="w-10 h-10" /> Project Roadmap
+          <KanbanIcon className="w-10 h-10" /> {t('roadmap_title')}
         </h1>
-        <p className="text-lg text-muted-foreground mt-2">The public development plan for the Pleasance project.</p>
+        <p className="text-lg text-muted-foreground mt-2">{t('roadmap_subtitle')}</p>
       </div>
 
       {(isLoading || profilesLoading) && (
@@ -625,8 +633,8 @@ export default function RoadmapPage() {
       {error && (
         <Card className="max-w-md mx-auto bg-destructive/20 border-destructive">
             <CardHeader>
-                <CardTitle className="text-destructive">Failed to Load Roadmap</CardTitle>
-                <CardDescription>There was an error connecting to the data source.</CardDescription>
+                <CardTitle className="text-destructive">{t('roadmap_error_title')}</CardTitle>
+                <CardDescription>{t('roadmap_error_desc')}</CardDescription>
             </CardHeader>
             <CardContent>
                 <pre className="text-xs mt-2">{error.message}</pre>
