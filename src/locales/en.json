@@ -1,0 +1,39 @@
+
+{
+  "pleasance": "Pleasance",
+  "federationSubtitle": "A Federation of Social Communities",
+  "flowOfCreationTitle": "The Flow of Creation",
+  "flowOfCreationDescription": "The diagram above illustrates the journey of an idea within the Pleasance federation, from a sovereign individual's inspiration to a tangible or communal reality. It is a cyclical process where creation, learning, and community engagement perpetually inspire new ideas.",
+  "coreConceptsTitle": "Core Concepts",
+  "exploreCommunities": "Explore Communities",
+  "features": [
+    {
+      "id": "wiki-community",
+      "title": "The Federal Community",
+      "description": "The Federal Community is the social fabric of the republic where you can find or form your own self-governing community around any pursuit—a spiritual practice, a technology, or a philosophy. Each community has its own private workshop, roadmap, and treasury.",
+      "imageUrl": "https://picsum.photos/seed/101/600/400",
+      "imageHint": "community people"
+    },
+    {
+      "id": "wiki-lingua",
+      "title": "Nuncy Lingua",
+      "description": "A tool for co-learning and increasing your intellectual holdings. Use Nuncy Lingua to learn new languages through AI-generated parables and listen to them with a karaoke-style speech player.",
+      "imageUrl": "https://picsum.photos/seed/102/600/400",
+      "imageHint": "language books"
+    },
+    {
+      "id": "wiki-fabrication",
+      "title": "Workshop of Manifestation",
+      "description": "The Workshop of Manifestation is where the ethereal becomes tangible. Submit creations from your Treasury to the ticketing system to have them manifested by a network of artisans and track your creation from concept to delivery.",
+      "imageUrl": "https://picsum.photos/seed/103/600/400",
+      "imageHint": "3d printer"
+    },
+    {
+      "id": "wiki-treasury",
+      "title": "The Treasury",
+      "description": "Your worth is measured by your creations. The Treasury is your personal, sovereign ledger where you declare and manage your holdings, both physical and intellectual. Each community also has its own private treasury to archive all of its creations.",
+      "imageUrl": "https://picsum.photos/seed/104/600/400",
+      "imageHint": "gold coins"
+    }
+  ]
+}

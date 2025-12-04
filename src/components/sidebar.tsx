@@ -40,6 +40,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { ThemeSwitcher } from './theme-switcher';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
+import { LanguageToggle } from './language-toggle';
 
 
 const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com';
@@ -153,6 +154,9 @@ function UserNav() {
           <DropdownMenuSeparator />
           <div className="px-2 py-1.5">
             <ThemeSwitcher />
+          </div>
+          <div className="px-2 py-1.5">
+            <LanguageToggle />
           </div>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut}>
