@@ -9,6 +9,16 @@ import {
   Shield,
   UserCircle,
   UserX,
+  Users,
+  Landmark,
+  Sparkles,
+  BookOpen,
+  Warehouse,
+  Banknote,
+  Bug,
+  Bot,
+  Info,
+  DollarSign
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -25,12 +35,48 @@ import { auth } from '@/firebase/config';
 import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { navLinks } from '@/app/header';
+import { KanbanIcon } from '@/components/icons/kanban-icon';
 import { ScrollArea } from './ui/scroll-area';
 import { ThemeSwitcher } from './theme-switcher';
 import { Badge } from './ui/badge';
+import { Separator } from './ui/separator';
 
-const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com'; // Founder email check
+
+const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com';
+
+const navGroups = [
+    {
+        title: 'Federation',
+        links: [
+            { href: '/', label: 'Community', icon: Users },
+            { href: '/museum', label: 'Museum', icon: Landmark },
+        ]
+    },
+    {
+        title: 'Creation',
+        links: [
+            { href: '/svg3d', label: 'AI Workshop', icon: Sparkles },
+            { href: '/story', label: 'Nuncy Lingua', icon: BookOpen },
+            { href: '/fabrication', label: 'Fabrication', icon: Warehouse },
+        ]
+    },
+    {
+        title: 'Governance',
+        links: [
+            { href: '/treasury', label: 'Treasury', icon: Banknote },
+            { href: '/roadmap', label: 'Roadmap', icon: KanbanIcon },
+            { href: '/bugs', label: 'Bug Tracker', icon: Bug },
+            { href: '/conductor', label: 'Conductor', icon: Bot },
+        ]
+    },
+    {
+        title: 'System',
+        links: [
+            { href: '/home', label: 'Wiki', icon: Info },
+            { href: '/pricing', label: 'Pricing', icon: DollarSign },
+        ]
+    }
+];
 
 const adminLink = { href: '/admin', label: 'Admin', icon: Shield };
 
@@ -153,8 +199,6 @@ export function Sidebar() {
     const { user } = useUser();
     const isFounder = user?.email === FOUNDER_EMAIL;
 
-    const allLinks = isFounder ? [...navLinks, adminLink] : navLinks;
-
     return (
         <aside className="fixed inset-y-0 left-0 z-50 hidden w-sidebar flex-col border-r bg-sidebar sm:flex">
             <div className="flex h-16 items-center border-b px-6">
@@ -169,14 +213,30 @@ export function Sidebar() {
                 </Link>
             </div>
             <ScrollArea className="flex-1">
-                <nav className="grid items-start px-4 py-4 text-sm font-medium">
-                    {allLinks.map((link) => (
-                        <NavLink 
-                            key={link.href}
-                            {...link}
-                            isActive={pathname === link.href}
-                        />
+                <nav className="grid items-start p-4 text-sm font-medium">
+                    {navGroups.map((group, groupIndex) => (
+                        <div key={groupIndex} className="mb-2">
+                            <h3 className="px-3 py-2 text-xs font-semibold uppercase text-muted-foreground tracking-wider">{group.title}</h3>
+                            {group.links.map((link) => (
+                                <NavLink
+                                    key={link.href}
+                                    {...link}
+                                    isActive={pathname === link.href}
+                                />
+                            ))}
+                        </div>
                     ))}
+                     {isFounder && (
+                         <div className="mb-2">
+                            <Separator className="my-2" />
+                            <h3 className="px-3 py-2 text-xs font-semibold uppercase text-muted-foreground tracking-wider">Founder</h3>
+                            <NavLink
+                                key={adminLink.href}
+                                {...adminLink}
+                                isActive={pathname === adminLink.href}
+                            />
+                        </div>
+                    )}
                 </nav>
             </ScrollArea>
             <div className="mt-auto p-4 border-t">

@@ -37,22 +37,43 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { KanbanIcon } from '@/components/icons/kanban-icon';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ThemeSwitcher } from '@/components/theme-switcher';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
+const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com';
 
-const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com'; // Founder email check
-
-export const navLinks = [
-  { href: '/', label: 'Community', icon: Users },
-  { href: '/home', label: 'Wiki', icon: Info },
-  { href: '/museum', label: 'Museum', icon: Landmark },
-  { href: '/svg3d', label: 'AI Workshop', icon: Sparkles },
-  { href: '/conductor', label: 'Conductor', icon: Bot },
-  { href: '/story', label: 'Nuncy Lingua', icon: BookOpen },
-  { href: '/fabrication', label: 'Fabrication', icon: Warehouse },
-  { href: '/treasury', label: 'Treasury', icon: Banknote },
-  { href: '/roadmap', label: 'Roadmap', icon: KanbanIcon },
-  { href: '/bugs', label: 'Bug Tracker', icon: Bug },
-  { href: '/pricing', label: 'Pricing', icon: DollarSign },
+const navGroups = [
+    {
+        title: 'Federation',
+        links: [
+            { href: '/', label: 'Community', icon: Users },
+            { href: '/museum', label: 'Museum', icon: Landmark },
+        ]
+    },
+    {
+        title: 'Creation',
+        links: [
+            { href: '/svg3d', label: 'AI Workshop', icon: Sparkles },
+            { href: '/story', label: 'Nuncy Lingua', icon: BookOpen },
+            { href: '/fabrication', label: 'Fabrication', icon: Warehouse },
+        ]
+    },
+    {
+        title: 'Governance',
+        links: [
+            { href: '/treasury', label: 'Treasury', icon: Banknote },
+            { href: '/roadmap', label: 'Roadmap', icon: KanbanIcon },
+            { href: '/bugs', label: 'Bug Tracker', icon: Bug },
+            { href: '/conductor', label: 'Conductor', icon: Bot },
+        ]
+    },
+    {
+        title: 'System',
+        links: [
+            { href: '/home', label: 'Wiki', icon: Info },
+            { href: '/pricing', label: 'Pricing', icon: DollarSign },
+        ]
+    }
 ];
 
 const adminLink = { href: '/admin', label: 'Admin', icon: Shield };
@@ -88,8 +109,6 @@ export function Header() {
   const { user } = useUser();
   const isFounder = user?.email === FOUNDER_EMAIL;
 
-  const allLinks = isFounder ? [...navLinks, adminLink] : navLinks;
-
   const handleSignOut = async () => {
     await signOut(auth);
   };
@@ -115,23 +134,38 @@ export function Header() {
                 <span className="sr-only">Toggle menu</span>
                 </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="bg-sidebar text-sidebar-foreground p-0">
+            <SheetContent side="left" className="bg-sidebar text-sidebar-foreground p-0 flex flex-col">
                 <div className="flex h-16 items-center border-b px-6">
                     <Link href="/" className="flex items-center gap-2 font-semibold">
                         <Logo className="h-8 w-8 text-primary" />
                     </Link>
                 </div>
-                <div className="flex-1 overflow-y-auto">
+                <ScrollArea className="flex-1">
                     <nav className="grid items-start p-4 text-sm font-medium">
-                        {allLinks.map((link) => (
-                        <NavLink
-                            key={link.href}
-                            {...link}
-                            isActive={pathname === link.href}
-                        />
+                        {navGroups.map((group, groupIndex) => (
+                            <div key={groupIndex} className="mb-4">
+                                <h3 className="px-3 py-2 text-xs font-semibold uppercase text-muted-foreground tracking-wider">{group.title}</h3>
+                                {group.links.map((link) => (
+                                    <NavLink
+                                        key={link.href}
+                                        {...link}
+                                        isActive={pathname === link.href}
+                                    />
+                                ))}
+                            </div>
                         ))}
+                        {isFounder && (
+                             <div className="mb-4">
+                                <h3 className="px-3 py-2 text-xs font-semibold uppercase text-muted-foreground tracking-wider">Founder</h3>
+                                <NavLink
+                                    key={adminLink.href}
+                                    {...adminLink}
+                                    isActive={pathname === adminLink.href}
+                                />
+                            </div>
+                        )}
                     </nav>
-                </div>
+                </ScrollArea>
                  <div className="mt-auto p-4 border-t">
                     {user ? (
                         <div className="space-y-2">
@@ -182,5 +216,3 @@ export function Header() {
     </header>
   );
 }
-
-    
