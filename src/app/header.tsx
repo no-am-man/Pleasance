@@ -41,6 +41,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useTranslation } from '@/hooks/use-translation';
 import { LanguageToggle } from '@/components/language-toggle';
+import { useLanguage } from '@/components/language-provider';
 
 
 const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com';
@@ -78,6 +79,7 @@ export function Header() {
   const pathname = usePathname();
   const { user } = useUser();
   const { t } = useTranslation();
+  const { direction } = useLanguage();
   const isFounder = user?.email === FOUNDER_EMAIL;
 
   const handleSignOut = async () => {
@@ -139,7 +141,7 @@ export function Header() {
                 <span className="sr-only">Toggle menu</span>
                 </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="bg-sidebar text-sidebar-foreground p-0 flex flex-col">
+            <SheetContent side={direction === 'rtl' ? 'right' : 'left'} className="bg-sidebar text-sidebar-foreground p-0 flex flex-col">
                 <div className="flex h-16 items-center border-b px-6">
                     <Link href="/" className="flex items-center gap-2 font-semibold">
                         <Logo className="h-8 w-8 text-primary" />

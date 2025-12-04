@@ -1,3 +1,4 @@
+
 'use client';
 
 import { usePathname } from 'next/navigation';
@@ -63,6 +64,12 @@ export function Breadcrumbs() {
     if (index === 1 && pathSegments[0] === 'community' && communityName) {
         return communityName;
     }
+    
+    // Special case for home page
+    if (segment === 'home' && index === 0) {
+        return 'Wiki';
+    }
+
     // Default formatting for other segments
     return segment
       .replace(/-/g, ' ')

@@ -42,6 +42,7 @@ import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { LanguageToggle } from './language-toggle';
 import { useTranslation } from '@/hooks/use-translation';
+import { useLanguage } from './language-provider';
 
 const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com';
 
@@ -76,6 +77,7 @@ function NavLink({
 function UserNav() {
   const { user } = useUser();
   const { t } = useTranslation();
+  const { direction } = useLanguage();
   const isFounder = user?.email === FOUNDER_EMAIL;
 
   const handleSignOut = async () => {
@@ -103,7 +105,7 @@ function UserNav() {
             <span className="truncate text-sidebar-foreground">{user.displayName || t('navMyProfile')}</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56" side="right" align="start" forceMount>
+        <DropdownMenuContent className="w-56" side={direction === 'rtl' ? 'left' : 'right'} align="start" forceMount>
           <DropdownMenuItem asChild>
             <Link href="/profile">
               <UserCircle className="mr-2 h-4 w-4" />
@@ -169,6 +171,7 @@ export function Sidebar() {
     const pathname = usePathname();
     const { user } = useUser();
     const { t } = useTranslation();
+    const { direction } = useLanguage();
     const isFounder = user?.email === FOUNDER_EMAIL;
 
     const navGroups = [
@@ -206,7 +209,10 @@ export function Sidebar() {
     ];
 
     return (
-        <aside className="fixed inset-y-0 left-0 z-50 hidden w-sidebar flex-col border-r bg-sidebar sm:flex">
+        <aside className={cn(
+            "fixed inset-y-0 z-50 hidden w-sidebar flex-col bg-sidebar sm:flex",
+            direction === 'rtl' ? 'right-0 border-l' : 'left-0 border-r'
+        )}>
             <div className="flex h-16 items-center border-b px-6">
                 <Link href="/" className="flex items-center gap-2 font-semibold">
                     <Logo className="h-8 w-8 text-primary" />
