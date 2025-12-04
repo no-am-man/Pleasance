@@ -9,6 +9,7 @@ import {
   Shield,
   UserCircle,
   UserX,
+  Home,
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -153,7 +154,7 @@ export function Sidebar() {
     const { user } = useUser();
     const isFounder = user?.email === FOUNDER_EMAIL;
 
-    const allLinks = isFounder ? [...navLinks, adminLink] : navLinks;
+    const allLinks = isFounder ? [...navLinks.filter(l => l.href !== '/wiki'), adminLink] : navLinks.filter(l => l.href !== '/wiki');
 
     return (
         <aside className="fixed inset-y-0 left-0 z-50 hidden w-sidebar flex-col border-r bg-sidebar sm:flex">
