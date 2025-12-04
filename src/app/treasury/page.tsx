@@ -21,6 +21,7 @@ import { LoaderCircle, LogIn, Coins, BrainCircuit, Box, PlusCircle, Eye, Warehou
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { useSearchParams } from 'next/navigation';
+import { SatoshiIcon } from '@/components/icons/satoshi-icon';
 
 const AssetSchema = z.object({
   name: z.string().min(2, 'Asset name must be at least 2 characters.'),
@@ -130,7 +131,7 @@ function AddAssetForm() {
                                 name="value"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Asset Value (satoshis)</FormLabel>
+                                        <FormLabel className="flex items-center gap-1.5">Asset Value <SatoshiIcon className="w-4 h-4" /></FormLabel>
                                         <FormControl>
                                             <Input type="number" placeholder="10000" {...field} />
                                         </FormControl>
@@ -263,7 +264,10 @@ function AssetList() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex justify-between items-start">
                                             <h3 className="font-semibold">{asset.name}</h3>
-                                            <p className="font-mono text-primary font-bold text-lg whitespace-nowrap pl-4">{asset.value.toLocaleString()} sats</p>
+                                            <div className="flex items-center gap-1 font-mono text-primary font-bold text-lg whitespace-nowrap pl-4">
+                                                <span>{asset.value.toLocaleString()}</span>
+                                                <SatoshiIcon className="w-5 h-5" />
+                                            </div>
                                         </div>
                                         <p className="text-sm text-muted-foreground break-words whitespace-pre-wrap">{asset.description}</p>
                                     </div>
@@ -377,7 +381,7 @@ function OrderList() {
                             <div key={order.id} className="flex items-center gap-4 rounded-md border p-4">
                                 <div className="flex-1">
                                     <h3 className="font-semibold">{order.assetName}</h3>
-                                    <p className="text-sm text-muted-foreground">Supplier: {order.supplier} | Cost: {order.cost > 0 ? `${order.cost.toLocaleString()} sats` : 'N/A'}</p>
+                                    <p className="text-sm text-muted-foreground flex items-center gap-1">Supplier: {order.supplier} | Cost: {order.cost > 0 ? <><span className="flex items-center gap-1">{order.cost.toLocaleString()} <SatoshiIcon className="w-4 h-4" /></span></> : 'N/A'}</p>
                                 </div>
                                 <Badge variant={getStatusVariant(order.status)} className="flex items-center gap-1.5">
                                     {getStatusIcon(order.status)}

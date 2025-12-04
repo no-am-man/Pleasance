@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -9,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LoaderCircle, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { BronzeMedal, SilverMedal, GoldMedal, PlatinumMedal } from './icons/medals';
+import { SatoshiIcon } from './icons/satoshi-icon';
 
 
 type LeaderboardEntry = {
@@ -63,7 +65,7 @@ export default function Leaderboard() {
                 <CardTitle className="flex items-center gap-2 text-2xl font-headline">
                     <Trophy /> Scribe Rankings
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="flex items-center gap-1.5">
                     Earn points by generating stories. Each point is worth one Satoshi. Note: These are for internal scoring and are not connected to the live Bitcoin network.
                 </CardDescription>
             </CardHeader>
@@ -80,7 +82,7 @@ export default function Leaderboard() {
                             <TableRow>
                                 <TableHead className="w-[50px]">Rank</TableHead>
                                 <TableHead>Scribe</TableHead>
-                                <TableHead className="text-right">Score (sats)</TableHead>
+                                <TableHead className="text-right flex items-center justify-end gap-1.5">Score <SatoshiIcon className="w-4 h-4" /></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -98,7 +100,7 @@ export default function Leaderboard() {
                                             <span className="font-medium group-hover:underline">{entry.userName}</span>
                                         </Link>
                                     </TableCell>
-                                    <TableCell className="text-right font-bold text-lg text-primary">{entry.score.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right font-bold text-lg text-primary flex items-center justify-end gap-1">{entry.score.toLocaleString()} <SatoshiIcon className="w-5 h-5" /></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>

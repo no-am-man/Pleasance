@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, Save, Download } from 'lucide-react';
 import { type ColorPixel } from '@/lib/types';
+import { SatoshiIcon } from '../icons/satoshi-icon';
 
 type Creation = {
     id: string;
@@ -143,7 +144,7 @@ export function SaveToTreasuryForm({ creation }: { creation: Creation }) {
                             name="value"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Creation Value (satoshis)</FormLabel>
+                                    <FormLabel className="flex items-center gap-1.5">Creation Value <SatoshiIcon className="w-4 h-4" /></FormLabel>
                                     <FormControl>
                                         <Input type="number" placeholder="10000" {...field} />
                                     </FormControl>

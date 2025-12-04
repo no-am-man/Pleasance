@@ -1,3 +1,4 @@
+
 // src/app/svg3d/page.tsx
 'use client';
 
@@ -20,6 +21,7 @@ import { useUser } from '@/firebase';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { saveSvgAsset } from '../actions';
 import Link from 'next/link';
+import { SatoshiIcon } from '@/components/icons/satoshi-icon';
 
 
 const Svg3dSchema = GenerateSvg3dInputSchema;
@@ -102,7 +104,7 @@ function SaveToTreasuryForm({ pixels, prompt }: { pixels: ColorPixel[], prompt: 
                             name="value"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Artwork Value (satoshis)</FormLabel>
+                                    <FormLabel className="flex items-center gap-1.5">Artwork Value <SatoshiIcon className="w-4 h-4" /></FormLabel>
                                     <FormControl>
                                         <Input type="number" placeholder="10000" {...field} />
                                     </FormControl>
