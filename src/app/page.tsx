@@ -20,6 +20,7 @@ import {
 import { Logo } from '@/components/icons';
 import { FederationDiagram } from '@/components/federation-diagram';
 import { SatoshiIcon } from '@/components/icons/satoshi-icon';
+import { KanbanIcon } from '@/components/icons/kanban-icon';
 
 export default function Home() {
   return (
@@ -120,7 +121,7 @@ export default function Home() {
         <FederationDiagram />
       </div>
 
-      <Card className="max-w-3xl mx-auto shadow-lg">
+      <Card className="max-w-3xl mx-auto shadow-lg mb-12">
           <CardHeader>
               <CardTitle className="text-2xl">A Model of Decentralized Sovereignty</CardTitle>
               <CardDescription>An overview of the system architecture.</CardDescription>
@@ -137,9 +138,30 @@ export default function Home() {
               </p>
           </CardContent>
       </Card>
+      
+      <Card className="max-w-3xl mx-auto shadow-lg mb-12">
+        <CardHeader>
+          <CardTitle className="text-2xl flex items-center gap-2">
+            <KanbanIcon className="w-6 h-6 text-primary" /> Project Roadmap
+          </CardTitle>
+          <CardDescription>Follow the development of the Pleasance project.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground mb-4">
+            The roadmap is a public Kanban board that outlines the current, upcoming, and completed features. It's a transparent view into the evolution of our republic.
+          </p>
+          <Button asChild>
+            <Link href="/roadmap">
+              <ArrowRight className="mr-2 h-4 w-4" />
+              View the Roadmap
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
 
     </main>
   );
 }
+
 
 
