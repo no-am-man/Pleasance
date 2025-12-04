@@ -33,7 +33,7 @@ export function LanguageProvider({
   ...props
 }: LanguageProviderProps) {
   const [language, setLanguage] = useState<Language>(
-    () => (localStorage.getItem(storageKey) as Language) || defaultLanguage
+    () => (typeof window !== 'undefined' ? (localStorage.getItem(storageKey) as Language) : defaultLanguage) || defaultLanguage
   );
 
   const direction = language === 'he' ? 'rtl' : 'ltr';

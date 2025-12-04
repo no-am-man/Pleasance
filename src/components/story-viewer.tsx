@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Play, Pause, LoaderCircle, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "./language-provider";
 
 type Story = {
     id: string;
@@ -31,12 +32,18 @@ const isRtl = (lang: string) => rtlLanguages.includes(lang);
 // A component for the karaoke-style text highlighting
 const KaraokeText = ({ text, totalDuration, currentTime, isMuted, language }: { text: string; totalDuration: number; currentTime: number; isMuted: boolean; language: string; }) => {
     
+    const isRtlLanguage = isRtl(language);
+
     if (totalDuration === 0 || !text) {
-        return <p className={cn("whitespace-pre-wrap leading-relaxed", isMuted ? "text-muted-foreground" : "text-foreground", isRtl(language) && "text-right")} dir={isRtl(language) ? "rtl" : "ltr"}>{text}</p>;
+        return <p className={cn("whitespace-pre-wrap leading-relaxed", isMuted ? "text-muted-foreground" : "text-foreground", isRtlLanguage && "text-right")} dir={isRtlLanguage ? "rtl" : "ltr"}>{text}</p>;
     }
     
     const progress = (currentTime / totalDuration) * 100;
-    const isRtlLanguage = isRtl(language);
+    
+    const clipPathStyle = isRtlLanguage
+      ? `inset(0 0 ${100 - progress}% 0)`
+      : `inset(0 ${100 - progress}% 0 0)`;
+
 
     return (
         <div className="relative">
@@ -55,7 +62,7 @@ const KaraokeText = ({ text, totalDuration, currentTime, isMuted, language }: { 
                     isRtlLanguage ? "right-0" : "left-0"
                 )}
                 style={{
-                    clipPath: `inset(0 0 ${100 - progress}% 0)`,
+                    clipPath: clipPathStyle,
                 }}
             >
                 <p className={cn("whitespace-pre-wrap leading-relaxed bg-gradient-to-r from-fuchsia-500 to-yellow-500 bg-clip-text text-transparent", isRtlLanguage && "text-right")} dir={isRtlLanguage ? "rtl" : "ltr"}>{text}</p>
@@ -71,6 +78,7 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const { toast } = useToast();
+  const { direction } = useLanguage();
 
   const isProcessing = story.status === 'processing';
   const hasAudio = story.audioUrl && story.audioUrl.length > 0;
@@ -140,7 +148,7 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
   return (
     <div className="animate-in fade-in-50 duration-500">
         <audio ref={audioRef} crossOrigin="anonymous"/>
-        <div className="flex flex-col md:flex-row items-start justify-center gap-8">
+        <div className={cn("flex flex-col md:flex-row items-start justify-center gap-8", direction === 'rtl' && 'md:flex-row-reverse')}>
             {/* Original Story Panel */}
             <div className="w-full md:w-5/12">
                 <Card className="overflow-hidden">
