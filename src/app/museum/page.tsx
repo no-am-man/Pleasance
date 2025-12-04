@@ -7,7 +7,7 @@ import { firestore } from '@/firebase/config';
 import { collection, query, where, orderBy, doc, getDocs } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, Landmark, Flag } from 'lucide-react';
+import { LoaderCircle, AlertCircle, Landmark, Flag, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { Svg3dCube } from '@/components/icons/svg3d-cube';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -204,6 +204,26 @@ export default function MuseumPage() {
                 <p className="text-lg text-muted-foreground mt-2">A grand hall showcasing the published creations from every community in the federation.</p>
             </div>
             
+            <Card className="mb-12 text-center border-primary/20">
+                <CardHeader>
+                    <CardTitle>From Virtual to Real: The Future of the Museum</CardTitle>
+                    <CardDescription>
+                        This virtual gallery is the precursor to a physical space for art, learning, and community.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground mb-4">
+                        The creations you see here are the first seeds of a future vision: a real-world museum and center for interdisciplinary spirituality.
+                    </p>
+                    <Button asChild>
+                        <Link href="https://lashirilo.com" target="_blank" rel="noopener noreferrer">
+                             <ExternalLink className="mr-2 h-4 w-4" />
+                            Visit Lashirilo.com to learn more
+                        </Link>
+                    </Button>
+                </CardContent>
+            </Card>
+
             <div className="space-y-12">
                 {communities && communities.length > 0 ? (
                     communities.map(community => (
