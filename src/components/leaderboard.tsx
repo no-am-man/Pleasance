@@ -65,7 +65,7 @@ export default function Leaderboard() {
                 <CardTitle className="flex items-center gap-2 text-2xl font-headline">
                     <Trophy /> Scribe Rankings
                 </CardTitle>
-                <CardDescription className="flex items-center gap-1.5">
+                <CardDescription>
                     Your intellectual creations have value. Earn Satoshis (<SatoshiIcon className="w-3.5 h-3.5 inline-block" />) for every story you generate, where 1 Satoshi is pegged to $1 USD.
                 </CardDescription>
             </CardHeader>
