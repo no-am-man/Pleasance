@@ -1126,36 +1126,36 @@ export default function CommunityProfilePage() {
         {getJoinButton()}
       </div>
 
-       <div className="mb-8 relative rounded-lg overflow-hidden border-2 border-primary aspect-[16/9] bg-muted flex items-center justify-center">
-            {community.flagUrl ? (
-                <Image src={community.flagUrl} alt={`${community.name} Flag`} fill objectFit="cover" />
-            ) : (
-                <div className="text-center text-muted-foreground">
-                    <Flag className="h-12 w-12 mx-auto" />
-                    <p>No flag has been generated for this community yet.</p>
-                </div>
-            )}
-            {isOwner && (
-                <div className="absolute top-2 right-2">
-                    <Button variant="secondary" size="sm" onClick={handleGenerateFlag} disabled={isGeneratingFlag}>
-                        {isGeneratingFlag ? (
-                            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <RefreshCw className="mr-2 h-4 w-4" />
-                        )}
-                        Regenerate Flag
-                    </Button>
-                </div>
-            )}
+       <div className="mb-8">
+            <div className="relative rounded-lg overflow-hidden border-2 border-primary aspect-[16/9] bg-muted flex items-center justify-center">
+                {community.flagUrl ? (
+                    <Image src={community.flagUrl} alt={`${community.name} Flag`} fill objectFit="cover" />
+                ) : (
+                    <div className="text-center text-muted-foreground">
+                        <Flag className="h-12 w-12 mx-auto" />
+                        <p>No flag has been generated for this community yet.</p>
+                    </div>
+                )}
+                {isOwner && (
+                    <div className="absolute top-2 right-2">
+                        <Button variant="secondary" size="sm" onClick={handleGenerateFlag} disabled={isGeneratingFlag}>
+                            {isGeneratingFlag ? (
+                                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <RefreshCw className="mr-2 h-4 w-4" />
+                            )}
+                            Regenerate Flag
+                        </Button>
+                    </div>
+                )}
+            </div>
+            <div className="text-center mt-4">
+                <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary">
+                {community.name}
+                </h1>
+                <p className="text-lg text-accent-foreground mt-2">{community.description}</p>
+            </div>
         </div>
-
-
-      <div className="text-center mb-8">
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary">
-          {community.name}
-        </h1>
-        <p className="text-lg text-accent-foreground mt-2">{community.description}</p>
-      </div>
       
       <PresentationHall communityId={community.id} />
 
@@ -1276,3 +1276,4 @@ export default function CommunityProfilePage() {
     
 
     
+
