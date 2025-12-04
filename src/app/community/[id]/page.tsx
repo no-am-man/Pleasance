@@ -1076,44 +1076,7 @@ export default function CommunityProfilePage() {
         </main>
       );
   }
-
-  const getJoinButton = () => {
-    if (!user) {
-        return <Button asChild><Link href="/login"><LogIn className="mr-2 h-4 w-4" />Login to Join</Link></Button>
-    }
-    if (isOwner) return null;
-
-    if (isMember) {
-        return (
-            <AlertDialog>
-                <AlertDialogTrigger asChild>
-                    <Button variant="destructive"><LogOut className="mr-2 h-4 w-4" />Leave Community</Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure you want to leave?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            You will lose access to this community's private content. You can always request to join again later.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleLeaveCommunity} className="bg-destructive hover:bg-destructive/90">
-                            Leave
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-        )
-    }
-
-    if (userJoinRequest?.status === 'pending') {
-        return <Button disabled><Hourglass className="mr-2 h-4 w-4 animate-spin" />Request Pending</Button>
-    }
-
-    return <Button onClick={handleRequestToJoin} disabled={isSubmitting}><PlusCircle className="mr-2 h-4 w-4" />Request to Join</Button>;
-  }
-
+  
   return (
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
       <div className="mb-6 flex justify-between items-center">
@@ -1123,7 +1086,6 @@ export default function CommunityProfilePage() {
                 Back to All Communities
             </Link>
         </Button>
-        {getJoinButton()}
       </div>
 
        <div className="mb-8">
@@ -1159,6 +1121,24 @@ export default function CommunityProfilePage() {
       
       <PresentationHall communityId={community.id} />
 
+      {!isMember && (
+         <Card className="shadow-lg mb-12 border-2 border-primary bg-primary/5">
+            <CardHeader className="items-center text-center">
+                <CardTitle className="text-2xl">Join {community.name}</CardTitle>
+                <CardDescription>Become a member to participate in the community.</CardDescription>
+            </CardHeader>
+            <CardContent className="text-center">
+                {!user ? (
+                    <Button asChild><Link href="/login"><LogIn className="mr-2 h-4 w-4" />Login to Join</Link></Button>
+                ) : userJoinRequest?.status === 'pending' ? (
+                    <Button disabled><Hourglass className="mr-2 h-4 w-4 animate-spin" />Request Pending</Button>
+                ) : (
+                    <Button onClick={handleRequestToJoin} disabled={isSubmitting}><PlusCircle className="mr-2 h-4 w-4" />Request to Join</Button>
+                )}
+            </CardContent>
+        </Card>
+      )}
+
       <Card className="shadow-lg mb-12 border-2 border-primary">
         <CardHeader>
           <CardTitle>Welcome Message</CardTitle>
@@ -1166,6 +1146,29 @@ export default function CommunityProfilePage() {
         <CardContent>
           <p className="text-lg leading-relaxed whitespace-pre-wrap">{community.welcomeMessage}</p>
         </CardContent>
+         {isMember && !isOwner && (
+            <CardFooter>
+                 <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="destructive"><LogOut className="mr-2 h-4 w-4" />Leave Community</Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure you want to leave?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                You will lose access to this community's private content. You can always request to join again later.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleLeaveCommunity} className="bg-destructive hover:bg-destructive/90">
+                                Leave
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </CardFooter>
+        )}
       </Card>
 
       <Card className="shadow-lg mb-12">
@@ -1278,3 +1281,6 @@ export default function CommunityProfilePage() {
     
 
 
+
+
+    
