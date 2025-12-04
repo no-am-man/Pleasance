@@ -131,7 +131,7 @@ function OrderList() {
                             <div key={order.id} className="flex items-center gap-4 rounded-md border p-4">
                                 <div className="flex-1">
                                     <h3 className="font-semibold">{order.assetName}</h3>
-                                    <p className="text-sm text-muted-foreground flex items-center gap-1">Supplier: {order.supplier} | Cost: {order.cost > 0 ? <><span className="flex items-center gap-1">{order.cost.toLocaleString()} <SatoshiIcon className="w-4 h-4" /></span></> : 'N/A'}</p>
+                                    <p className="text-sm text-muted-foreground flex items-center gap-1">Supplier: {order.supplier} | Cost: {order.cost > 0 ? <><span className="flex items-center gap-1">{order.cost.toLocaleString()} <SatoshiIcon className="w-4 h-4 fill-current" /></span></> : 'N/A'}</p>
                                 </div>
                                 <Badge variant={getStatusVariant(order.status)} className="flex items-center gap-1.5">
                                     {getStatusIcon(order.status)}

@@ -82,7 +82,7 @@ export default function Leaderboard() {
                             <TableRow>
                                 <TableHead className="w-[50px]">Rank</TableHead>
                                 <TableHead>Scribe</TableHead>
-                                <TableHead className="text-right flex items-center justify-end gap-1.5">Score <SatoshiIcon className="w-4 h-4" /></TableHead>
+                                <TableHead className="text-right flex items-center justify-end gap-1.5">Score <SatoshiIcon className="w-4 h-4 fill-current" /></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -100,7 +100,7 @@ export default function Leaderboard() {
                                             <span className="font-medium group-hover:underline">{entry.userName}</span>
                                         </Link>
                                     </TableCell>
-                                    <TableCell className="text-right font-bold text-lg text-primary flex items-center justify-end gap-1">{entry.score.toLocaleString()} <SatoshiIcon className="w-5 h-5" /></TableCell>
+                                    <TableCell className="text-right font-bold text-lg text-primary flex items-center justify-end gap-1">{entry.score.toLocaleString()} <SatoshiIcon className="w-5 h-5 fill-current" /></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>

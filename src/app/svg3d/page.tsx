@@ -104,7 +104,7 @@ function SaveToTreasuryForm({ pixels, prompt }: { pixels: ColorPixel[], prompt: 
                             name="value"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="flex items-center gap-1.5">Artwork Value <SatoshiIcon className="w-4 h-4" /></FormLabel>
+                                    <FormLabel className="flex items-center gap-1.5">Artwork Value <SatoshiIcon className="w-4 h-4 fill-current" /></FormLabel>
                                     <FormControl>
                                         <Input type="number" placeholder="10000" {...field} />
                                     </FormControl>
