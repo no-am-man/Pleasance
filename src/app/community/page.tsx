@@ -368,7 +368,7 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
                                 )}
                             </div>
                         </div>
-                        <CardFooter className="p-4 border-t">
+                         <CardFooter className="p-4 border-t">
                              {!isMember && user && (
                                 <Button onClick={() => handleRequestToJoin(community)} disabled={isSubmitting}>
                                     {isSubmitting ? <Hourglass className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
@@ -522,7 +522,7 @@ export default function CommunityPage() {
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-8">
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary font-headline">
-          FederalCommunitySocial
+          The Federal Community
         </h1>
         <p className="text-lg text-muted-foreground">Create, manage, and discover communities.</p>
       </div>
