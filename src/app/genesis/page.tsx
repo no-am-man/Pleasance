@@ -1,3 +1,4 @@
+
 // src/app/genesis/page.tsx
 'use client';
 
@@ -20,7 +21,7 @@ export default function GenesisPage() {
           </p>
           <Button asChild>
             <Link href="/community">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Go to the Community Federation
+              <ArrowLeft className="mr-2 h-4 w-4" /> Go to the FederalCommunitySocial
             </Link>
           </Button>
         </CardContent>

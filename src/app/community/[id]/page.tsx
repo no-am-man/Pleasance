@@ -1068,7 +1068,7 @@ export default function CommunityProfilePage() {
               <Button asChild variant="outline">
               <Link href="/community">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Federal Community
+                Back to FederalCommunitySocial
               </Link>
             </Button>
             </CardContent>
@@ -1270,4 +1270,3 @@ export default function CommunityProfilePage() {
 }
 
     
-

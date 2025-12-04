@@ -423,7 +423,7 @@ export default function CommunityPage() {
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-8">
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary font-headline">
-          Federal Community
+          FederalCommunitySocial
         </h1>
         <p className="text-lg text-muted-foreground">Create, manage, and discover communities.</p>
       </div>
