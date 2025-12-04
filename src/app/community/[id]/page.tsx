@@ -5,7 +5,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, arrayRemove, updateDoc, getDoc, getDocs, setDoc } from 'firebase/firestore';
+import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, arrayRemove, updateDoc, getDoc, getDocs, setDoc, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info, LogOut, Wrench, Banknote, UserX } from 'lucide-react';
@@ -131,7 +131,7 @@ function TextMessageForm({ communityId, onMessageSent }: { communityId: string, 
         try {
             await addDoc(messagesColRef, newMessage);
             setText('');
-            onMessageSent(); // Trigger refresh
+            onMessageSent(); // This is now less critical but good for immediate feedback if needed elsewhere
         } catch (error) {
             const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
             toast({ variant: 'destructive', title: 'Failed to send message', description: message });
@@ -290,24 +290,31 @@ function CommentThread({ message, canManage }: { message: Message; canManage: bo
     const [comments, setComments] = useState<Comment[]>([]);
     const [isLoadingComments, setIsLoadingComments] = useState(true);
 
-    const fetchComments = useCallback(async () => {
-        if (!firestore || !message.communityId || !message.id) return;
+    const fetchComments = useCallback(() => {
+        if (!firestore || !message.communityId || !message.id) {
+            setIsLoadingComments(false);
+            return () => {};
+        }
+
         setIsLoadingComments(true);
-        try {
-            const commentsQuery = query(collection(firestore, `communities/${message.communityId}/messages/${message.id}/comments`), orderBy('createdAt', 'asc'));
-            const querySnapshot = await getDocs(commentsQuery);
+        const commentsQuery = query(collection(firestore, `communities/${message.communityId}/messages/${message.id}/comments`), orderBy('createdAt', 'asc'));
+        
+        const unsubscribe = onSnapshot(commentsQuery, (querySnapshot) => {
             const commentsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Comment));
             setComments(commentsData);
-        } catch (e) {
-            console.error(e);
-        }
-        setIsLoadingComments(false);
+            setIsLoadingComments(false);
+        }, (error) => {
+            console.error("Error fetching comments:", error);
+            setIsLoadingComments(false);
+        });
+
+        return unsubscribe;
     }, [message.communityId, message.id]);
     
     useEffect(() => {
-        if (!firestore || !message.communityId || !message.id) return;
-        fetchComments();
-    }, [firestore, message.communityId, message.id, fetchComments]);
+        const unsubscribe = fetchComments();
+        return () => unsubscribe();
+    }, [fetchComments]);
 
     return (
         <div className="pl-12 pr-4 pb-4 space-y-4">
@@ -315,7 +322,7 @@ function CommentThread({ message, canManage }: { message: Message; canManage: bo
                 {isLoadingComments && <LoaderCircle className="mx-auto animate-spin" />}
                 {comments && comments.length > 0 && comments.map(comment => <CommentCard key={comment.id} comment={comment} communityId={communityId} messageId={message.id} canManage={canManage || user?.uid === message.userId} />)}
             </div>
-            {user && <TextCommentForm communityId={message.communityId} messageId={message.id} onCommentSent={fetchComments} />}
+            {user && <TextCommentForm communityId={message.communityId} messageId={message.id} onCommentSent={() => {}} />}
         </div>
     );
 }
@@ -471,26 +478,36 @@ function Network({ communityId, isOwner, allMembers }: { communityId: string; is
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
-    const fetchMessages = useCallback(async () => {
-        if (!firestore || !communityId) return;
+    const fetchMessages = useCallback(() => {
+        if (!firestore || !communityId) {
+            setIsLoading(false);
+            return () => {};
+        }
         setIsLoading(true);
         setError(null);
-        try {
-            const messagesQuery = query(collection(firestore, `communities/${communityId}/messages`), orderBy('createdAt', 'desc'));
-            const snapshot = await getDocs(messagesQuery);
-            const messagesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
-            setMessages(messagesData);
-        } catch (e: any) {
-            setError(e);
-        } finally {
-            setIsLoading(false);
-        }
+        
+        const messagesQuery = query(collection(firestore, `communities/${communityId}/messages`), orderBy('createdAt', 'desc'));
+        
+        const unsubscribe = onSnapshot(messagesQuery, 
+            (snapshot) => {
+                const messagesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
+                setMessages(messagesData);
+                setIsLoading(false);
+            }, 
+            (err) => {
+                console.error("Error fetching messages:", err);
+                setError(err);
+                setIsLoading(false);
+            }
+        );
+        
+        return unsubscribe;
     }, [communityId]);
     
     useEffect(() => {
-        if (!firestore || !communityId) return;
-        fetchMessages();
-    }, [firestore, communityId, fetchMessages]);
+        const unsubscribe = fetchMessages();
+        return () => unsubscribe();
+    }, [fetchMessages]);
 
     const filteredMessages = useMemo(() => {
         return messages.filter(msg => {
@@ -502,8 +519,7 @@ function Network({ communityId, isOwner, allMembers }: { communityId: string; is
     }, [messages, isOwner]);
 
     const handleMessageSent = () => {
-        // Trigger a re-fetch of messages after a new one is sent
-        fetchMessages();
+        // No longer needed to manually trigger, but kept for potential future use
     }
 
     return (
@@ -514,10 +530,6 @@ function Network({ communityId, isOwner, allMembers }: { communityId: string; is
                         <CardTitle className="flex items-center gap-2"><MessageSquare /> Community Network</CardTitle>
                         <CardDescription>The central feed for community activity and messages.</CardDescription>
                     </div>
-                    <Button onClick={fetchMessages} variant="outline" size="sm" disabled={isLoading}>
-                        <RefreshCw className={cn("mr-2 h-4 w-4", isLoading && "animate-spin")} />
-                        Refresh Feed
-                    </Button>
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -573,18 +585,15 @@ export default function CommunityProfilePage() {
         setIsLoading(false);
         return;
     };
-    const fetchCommunity = async () => {
-        setIsLoading(true);
-        try {
-            const communityDoc = await getDoc(doc(firestore, 'communities', id));
-            setCommunity(communityDoc.exists() ? { id: communityDoc.id, ...communityDoc.data() } as Community : null);
-        } catch(e) {
-            setError(e as Error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-    fetchCommunity();
+    const communityDocRef = doc(firestore, 'communities', id);
+    const unsubscribe = onSnapshot(communityDocRef, (doc) => {
+        setCommunity(doc.exists() ? { id: doc.id, ...doc.data() } as Community : null);
+        setIsLoading(false);
+    }, (err) => {
+        setError(err as Error);
+        setIsLoading(false);
+    });
+    return () => unsubscribe();
   }, [id]);
 
   useEffect(() => {
@@ -626,13 +635,15 @@ export default function CommunityProfilePage() {
   useEffect(() => {
     if (user && id && firestore) {
         setIsRequestLoading(true);
-        const fetchRequest = async () => {
-            const requestDocRef = doc(firestore, 'communities', id, 'joinRequests', user.uid);
-            const docSnap = await getDoc(requestDocRef);
+        const requestDocRef = doc(firestore, 'communities', id, 'joinRequests', user.uid);
+        const unsubscribe = onSnapshot(requestDocRef, (docSnap) => {
             setUserJoinRequest(docSnap.exists() ? docSnap.data() as JoinRequest : null);
             setIsRequestLoading(false);
-        }
-        fetchRequest();
+        }, (error) => {
+            console.error("Error fetching join request:", error);
+            setIsRequestLoading(false);
+        });
+        return () => unsubscribe();
     } else {
         setIsRequestLoading(false);
     }
@@ -690,7 +701,7 @@ export default function CommunityProfilePage() {
   };
 
   const handleInvite = async (profile: CommunityProfile) => {
-    if (!community) return;
+    if (!community || !firestore) return;
     
     const newMember: Member = {
         userId: profile.userId,
@@ -705,7 +716,6 @@ export default function CommunityProfilePage() {
         members: arrayUnion(newMember)
     });
 
-    // After member is added, trigger the welcome message flow
     await welcomeNewMemberAction({ communityId: community.id, communityName: community.name, newMemberName: newMember.name });
 
     toast({
@@ -732,8 +742,7 @@ export default function CommunityProfilePage() {
         members: arrayRemove(memberToRemove)
       });
       toast({ title: "Member Removed", description: `${memberToRemove.name} has been removed from the community.` });
-      // Optimistically update the UI
-      setCommunity(prev => prev ? ({ ...prev, members: prev.members.filter(m => m.userId !== memberToRemove.userId) }) : null);
+      // UI will update via onSnapshot
     } catch (e) {
       const message = e instanceof Error ? e.message : "An unexpected error occurred.";
       toast({ variant: "destructive", title: "Failed to remove member.", description: message });
