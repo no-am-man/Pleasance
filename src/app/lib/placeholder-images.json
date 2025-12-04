@@ -2,25 +2,25 @@
   "placeholderImages": [
     {
       "id": "wiki-community",
-      "description": "A diverse group of people collaborating.",
+      "description": "The Federal Community is the social fabric of the republic where you can find or form your own self-governing community around any pursuit—a spiritual practice, a technology, or a philosophy. Each community has its own private workshop, roadmap, and treasury.",
       "imageUrl": "https://picsum.photos/seed/101/600/400",
       "imageHint": "community people"
     },
     {
       "id": "wiki-lingua",
-      "description": "A stack of old books about languages.",
+      "description": "A tool for co-learning and increasing your intellectual holdings. Use Nuncy Lingua to learn new languages through AI-generated parables and listen to them with a karaoke-style speech player.",
       "imageUrl": "https://picsum.photos/seed/102/600/400",
       "imageHint": "language books"
     },
     {
       "id": "wiki-fabrication",
-      "description": "A 3D printer in the middle of a fabrication job.",
+      "description": "The Workshop of Manifestation is where the ethereal becomes tangible. Submit creations from your Treasury to the ticketing system to have them manifested by a network of artisans and track your creation from concept to delivery.",
       "imageUrl": "https://picsum.photos/seed/103/600/400",
       "imageHint": "3d printer"
     },
     {
       "id": "wiki-treasury",
-      "description": "A pile of gold coins, representing wealth.",
+      "description": "Your worth is measured by your creations. The Treasury is your personal, sovereign ledger where you declare and manage your holdings, both physical and intellectual. Each community also has its own private treasury to archive all of its creations.",
       "imageUrl": "https://picsum.photos/seed/104/600/400",
       "imageHint": "gold coins"
     }

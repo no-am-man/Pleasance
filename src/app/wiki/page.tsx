@@ -24,15 +24,15 @@ function FeatureCard({ feature, isFirst }: { feature: ImagePlaceholder, isFirst:
                     />
                 </div>
             </div>
-            <div className="md:w-1/2">
+            <div className="md:w-1/2 flex flex-col">
                 <CardHeader>
-                    <CardTitle className="font-headline">{feature.id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</CardTitle>
+                    <CardTitle className="font-headline capitalize">{feature.id.split('-').pop()}</CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground">{feature.description}</p>
+                <CardContent className="flex-grow flex flex-col">
+                    <p className="text-muted-foreground flex-grow">{feature.description}</p>
                      {isFirst && (
                         <Button asChild className="mt-6">
-                            <Link href="/">
+                            <Link href="/community">
                                 Explore Communities <ArrowRight className="ml-2 h-4 w-4" />
                             </Link>
                         </Button>
