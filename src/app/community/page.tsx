@@ -13,7 +13,7 @@ import { firestore } from "@/firebase/config";
 import { collection, doc, query, where, orderBy, onSnapshot, Unsubscribe, getDocs } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LogIn, PlusCircle, LoaderCircle, Search, User, Flag, Sparkles, Users } from "lucide-react";
+import { LogIn, PlusCircle, LoaderCircle, Search, User, Flag, Sparkles, Users, Bot } from "lucide-react";
 import { createCommunityDetails, refineCommunityPromptAction } from "../actions";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 const FormSchema = z.object({
   prompt: z.string().min(10, "Please enter a prompt of at least 10 characters."),
@@ -292,8 +293,15 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
                                             <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
                                             <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
                                         </Avatar>
-                                        <div>
-                                            <p className="font-semibold text-sm">{member.name}</p>
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2">
+                                                <p className="font-semibold text-sm">{member.name}</p>
+                                                {member.type === 'AI' ? (
+                                                    <Badge variant="outline" className="h-5"><Bot className="w-3 h-3 mr-1" /> AI</Badge>
+                                                ) : (
+                                                    <Badge variant="secondary" className="h-5"><User className="w-3 h-3 mr-1" /> Human</Badge>
+                                                )}
+                                            </div>
                                             <p className="text-xs text-muted-foreground">{member.bio}</p>
                                         </div>
                                     </div>
