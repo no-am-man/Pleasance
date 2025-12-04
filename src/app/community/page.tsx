@@ -10,11 +10,11 @@ import * as z from "zod";
 import Link from "next/link";
 import { useUser, useMemoFirebase } from "@/firebase";
 import { firestore } from "@/firebase/config";
-import { collection, doc, query, where, orderBy, onSnapshot, Unsubscribe, getDocs } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { collection, doc, query, where, orderBy, onSnapshot, Unsubscribe, getDocs, setDoc, serverTimestamp } from 'firebase/firestore';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LogIn, PlusCircle, LoaderCircle, Search, User, Flag, Sparkles, Users, Bot } from "lucide-react";
-import { createCommunityDetails, refineCommunityPromptAction } from "../actions";
+import { LogIn, PlusCircle, LoaderCircle, Search, User, Flag, Sparkles, Users, Bot, Hourglass } from "lucide-react";
+import { createCommunityDetails, refineCommunityPromptAction, notifyOwnerOfJoinRequestAction } from "../actions";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -55,6 +55,7 @@ type CommunityProfile = {
   id: string;
   userId: string;
   name: string;
+  bio: string;
 };
 
 function CreateCommunityForm() {
@@ -242,6 +243,56 @@ function CreateCommunityForm() {
 }
 
 function CommunityList({ title, communities, profiles, isLoading, error }: { title: string, communities: Community[] | undefined, profiles: CommunityProfile[] | undefined, isLoading: boolean, error: Error | null }) {
+    const { user } = useUser();
+    const [userProfile, setUserProfile] = useState<CommunityProfile | null>(null);
+    const { toast } = useToast();
+    const [submittingRequests, setSubmittingRequests] = useState<{[key: string]: boolean}>({});
+
+    useEffect(() => {
+        if (user && firestore) {
+            const fetchUserProfile = async () => {
+                const profileDocRef = doc(firestore, 'community-profiles', user.uid);
+                const docSnap = await getDoc(profileDocRef);
+                setUserProfile(docSnap.exists() ? docSnap.data() as CommunityProfile : null);
+            };
+            fetchUserProfile();
+        }
+    }, [user]);
+
+    const handleRequestToJoin = async (community: Community) => {
+        if (!user || !userProfile || !firestore) {
+            toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in and have a profile to join.' });
+            return;
+        }
+        setSubmittingRequests(prev => ({...prev, [community.id]: true}));
+        
+        const requestRef = doc(firestore, `communities/${community.id}/joinRequests/${user.uid}`);
+        
+        const newRequest = {
+            userId: user.uid,
+            userName: userProfile.name,
+            userBio: userProfile.bio,
+            status: 'pending' as const,
+            createdAt: serverTimestamp(),
+        };
+
+        try {
+            await setDoc(requestRef, newRequest);
+            await notifyOwnerOfJoinRequestAction({
+                communityId: community.id,
+                communityName: community.name,
+                requestingUserName: userProfile.name,
+            });
+            toast({ title: 'Request Sent!', description: 'The community owner has been notified.' });
+        } catch(e) {
+            const message = e instanceof Error ? e.message : 'An error occurred';
+            toast({ variant: 'destructive', title: 'Failed to send request', description: message });
+        } finally {
+            setSubmittingRequests(prev => ({...prev, [community.id]: false}));
+        }
+    };
+
+
     if (isLoading) {
       return <div className="flex justify-center"><LoaderCircle className="w-8 h-8 animate-spin text-primary" /></div>;
     }
@@ -261,19 +312,22 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
               {communities.map((community) => {
                 const owner = profiles?.find(p => p.userId === community.ownerId);
                 const members = community.members || [];
+                const isMember = user ? members.some(m => m.userId === user.uid) : false;
+                const isSubmitting = submittingRequests[community.id];
+
                 return (
-                    <li key={community.id} className="rounded-md border transition-colors hover:bg-muted/50 p-4">
-                        <Link href={`/community/${community.id}`} className="block">
+                    <li key={community.id} className="rounded-md border transition-colors hover:bg-muted/50">
+                        <div className="p-4">
                             <div className="flex items-start gap-4">
-                                <div className="relative h-20 w-36 flex-shrink-0 rounded-md border bg-muted flex items-center justify-center">
+                                <Link href={`/community/${community.id}`} className="relative h-20 w-36 flex-shrink-0 rounded-md border bg-muted flex items-center justify-center">
                                     {community.flagUrl ? (
                                         <Image src={community.flagUrl} alt={`${community.name} Flag`} layout="fill" objectFit="cover" className="rounded-md" />
                                     ) : (
                                         <Flag className="h-8 w-8 text-muted-foreground" />
                                     )}
-                                </div>
+                                </Link>
                                 <div className="flex-1">
-                                    <h3 className="font-semibold text-lg text-primary underline">{community.name}</h3>
+                                    <Link href={`/community/${community.id}`}><h3 className="font-semibold text-lg text-primary underline">{community.name}</h3></Link>
                                     <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{community.description}</p>
                                     {owner && (
                                         <div className="flex items-center gap-2 text-sm text-muted-foreground font-semibold mt-2">
@@ -283,8 +337,9 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
                                     )}
                                 </div>
                             </div>
-                        </Link>
-                        <div className="mt-4 pt-4 border-t">
+                        </div>
+
+                        <div className="p-4 pt-0">
                             <h4 className="text-sm font-semibold mb-2 flex items-center gap-2"><Users className="w-4 h-4" /> Meet the Members ({members.length})</h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {members.slice(0, 4).map((member, index) => (
@@ -307,12 +362,20 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
                                     </div>
                                 ))}
                                 {members.length > 4 && (
-                                    <div className="flex items-center justify-center p-2 rounded-md bg-background/50">
+                                    <Link href={`/community/${community.id}`} className="flex items-center justify-center p-2 rounded-md bg-background/50 hover:bg-background">
                                         <p className="text-xs text-muted-foreground font-semibold">...and {members.length - 4} more</p>
-                                    </div>
+                                    </Link>
                                 )}
                             </div>
                         </div>
+                        <CardFooter className="p-4 border-t">
+                             {!isMember && user && (
+                                <Button onClick={() => handleRequestToJoin(community)} disabled={isSubmitting}>
+                                    {isSubmitting ? <Hourglass className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
+                                    Request to Join
+                                </Button>
+                            )}
+                        </CardFooter>
                     </li>
                 );
               })}
