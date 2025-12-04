@@ -1,206 +1,589 @@
+// src/app/page.tsx (formerly /community/page.tsx)
+"use client";
 
+import { useState, useMemo, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import Link from "next/link";
+import { useUser, useMemoFirebase } from "@/firebase";
+import { firestore } from "@/firebase/config";
+import { collection, doc, query, where, orderBy, onSnapshot, Unsubscribe, getDocs, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { LogIn, PlusCircle, LoaderCircle, Search, User, Flag, Sparkles, Users, Bot, Hourglass } from "lucide-react";
+import { createCommunityDetails, refineCommunityPromptAction, notifyOwnerOfJoinRequestAction } from "./actions";
+import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import Image from "next/image";
+import { useToast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  ArrowRight,
-  LogIn,
-  Landmark,
-  Scaling,
-  Wind,
-  Coins,
-  Github,
-  Users,
-} from 'lucide-react';
-import { Logo } from '@/components/icons';
-import { FederationDiagram } from '@/components/federation-diagram';
-import { SatoshiIcon } from '@/components/icons/satoshi-icon';
-import { KanbanIcon } from '@/components/icons/kanban-icon';
+const FormSchema = z.object({
+  prompt: z.string().min(10, "Please enter a prompt of at least 10 characters."),
+  includeAiAgents: z.boolean().default(true),
+});
 
-export default function GenesisPage() {
+type Member = {
+  name: string;
+  role: string;
+  bio: string;
+  type: 'AI' | 'human';
+  userId?: string;
+  avatarUrl?: string;
+};
+
+type Community = {
+  id: string;
+  name: string;
+  description: string;
+  welcomeMessage: string;
+  ownerId: string;
+  members: Member[];
+  flagUrl?: string;
+};
+
+type CommunityProfile = {
+  id: string;
+  userId: string;
+  name: string;
+  bio: string;
+};
+
+function CreateCommunityForm() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRefining, setIsRefining] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useUser();
+  const { toast } = useToast();
+
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      prompt: "",
+      includeAiAgents: true,
+    },
+  });
+
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    if (!user) {
+      setError("You must be logged in to create a community.");
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // 1. Call server action to get AI-generated details
+      const result = await createCommunityDetails({ prompt: data.prompt, includeAiAgents: data.includeAiAgents });
+      if (result.error) {
+        setError(result.error);
+        setIsLoading(false);
+        return;
+      }
+      
+      const { name, description, welcomeMessage, members } = result;
+      
+      if (!firestore) {
+        throw new Error("Firestore is not initialized");
+      }
+      // 2. Create the new community object on the client in the top-level 'communities' collection
+      const newCommunityRef = doc(collection(firestore, 'communities'));
+      const newCommunity: Community = {
+        id: newCommunityRef.id,
+        ownerId: user.uid,
+        name: name!,
+        description: description!,
+        welcomeMessage: welcomeMessage!,
+        members: members!,
+      };
+
+      // 3. Save the new community to Firestore from the client
+      setDocumentNonBlocking(newCommunityRef, newCommunity, { merge: false });
+      
+      form.reset();
+      // The list will update automatically via the onSnapshot listener
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+      setError(`Failed to create community. ${message}`);
+    }
+    setIsLoading(false);
+  }
+  
+  const handleRefinePrompt = async () => {
+    const prompt = form.getValues('prompt');
+    if (!prompt) {
+      toast({
+        variant: 'destructive',
+        title: 'Prompt is required',
+        description: 'Please enter an idea before refining with AI.',
+      });
+      return;
+    }
+    setIsRefining(true);
+    const result = await refineCommunityPromptAction({ prompt });
+    if (result.error) {
+      toast({
+        variant: 'destructive',
+        title: 'AI Refinement Failed',
+        description: result.error,
+      });
+    } else if (result.refinedPrompt) {
+      form.setValue('prompt', result.refinedPrompt, { shouldValidate: true });
+      toast({
+        title: 'Idea Refined!',
+        description: 'The AI has expanded on your idea.',
+      });
+    }
+    setIsRefining(false);
+  };
+
   return (
-    <main className="container mx-auto min-h-screen py-16 px-4 sm:px-6 lg:px-8">
-      <div className="text-center mb-12">
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <Logo className="h-16 w-16 text-primary" />
-          <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-primary font-headline">
-            Pleasance
-          </h1>
-        </div>
-        <p className="max-w-3xl mx-auto text-lg sm:text-xl text-foreground/80">
-          Welcome to Pleasance Federation of Social Communities with a Twist!
-        </p>
-      </div>
+    <Card className="mb-8 shadow-lg">
+      <CardHeader>
+        <CardTitle className="text-2xl">Create a New Community</CardTitle>
+        <CardDescription>Describe the community you wish to bring into being. What is its purpose?</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+                <div className="relative">
+                    <FormField
+                        control={form.control}
+                        name="prompt"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Community Vision</FormLabel>
+                                <FormControl>
+                                    <Textarea
+                                        {...field}
+                                        placeholder="e.g., 'A community for devout astronomers to share celestial findings, photography, and organize stargazing vigils.'"
+                                        className="w-full p-2 border rounded-md min-h-[100px] bg-background pr-10"
+                                    />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute top-2 right-2 h-8 w-8"
+                                    onClick={handleRefinePrompt}
+                                    disabled={isRefining}
+                                    >
+                                    {isRefining ? <LoaderCircle className="h-4 w-4 animate-spin"/> : <Sparkles className="h-4 w-4 text-primary" />}
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Refine with AI</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </div>
+                {form.formState.errors.prompt && (
+                <p className="text-sm text-destructive mt-1">{form.formState.errors.prompt.message}</p>
+                )}
+            </div>
 
-       <Card className="max-w-3xl mx-auto shadow-lg mb-12">
-        <CardHeader>
-          <CardTitle className="text-2xl">Interpreting "A Federated Republic of the Spirit"</CardTitle>
-          <CardDescription>This term combines three concepts to define the organization's structure and mission.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-            <div className="flex items-start gap-4">
-                <div className="bg-primary/10 p-2 rounded-full">
-                    <Landmark className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                    <h3 className="font-semibold">Republic (Community)</h3>
-                    <p className="text-muted-foreground">Implies a community governed by its members, emphasizing autonomy, shared governance, and the equality of all participants in their spiritual journey.</p>
-                </div>
-            </div>
-             <div className="flex items-start gap-4">
-                <div className="bg-primary/10 p-2 rounded-full">
-                    <Scaling className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                    <h3 className="font-semibold">Federated (Structure)</h3>
-                    <p className="text-muted-foreground">An association of independent units that unite under a common umbrella while retaining unique identities. In Hebrew, this is known as "פדרציה קהילתית" (Community Federation), where groups pool resources and gain collective strength without sacrificing their internal autonomy. Pleasance is not a single rigid doctrine but a network that respects and integrates diverse spiritual paths.</p>
-                </div>
-            </div>
-             <div className="flex items-start gap-4">
-                 <div className="bg-primary/10 p-2 rounded-full">
-                    <Wind className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                    <h3 className="font-semibold">Of the Spirit (Purpose)</h3>
-                    <p className="text-muted-foreground">Defines the core focus on matters of meaning, consciousness, transcendence, and well-being, rather than material or political concerns.</p>
-                </div>
-            </div>
-        </CardContent>
-      </Card>
+            <FormField
+              control={form.control}
+              name="includeAiAgents"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Create with AI Agents
+                    </FormLabel>
+                    <CardDescription>
+                      Automatically generate a few AI members to help guide the conversation.
+                    </CardDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
 
-       <Card className="max-w-3xl mx-auto shadow-lg mb-12 border-2 border-primary bg-primary/5">
-        <CardHeader className="items-center text-center">
-            <CardTitle className="text-2xl">Join/Enter the Federation</CardTitle>
-            <CardDescription>Become a sovereign soul in the republic.</CardDescription>
-        </CardHeader>
-        <CardContent className="text-center space-y-4">
-            <p className="text-muted-foreground">
-                Create your profile, discover communities of like-minded individuals, and begin your journey of co-learning and creation. Your data is your own, your contributions shape the republic.
-            </p>
-            <Button asChild size="lg">
-                <Link href="/login">
-                    <LogIn className="mr-2 h-5 w-5" />
-                    Join/Enter the Federation
-                </Link>
+            <Button type="submit" disabled={isLoading}>
+                {isLoading ? (
+                <>
+                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                </>
+                ) : (
+                <>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Create Community
+                </>
+                )}
             </Button>
-        </CardContent>
-      </Card>
+            {error && <p className="text-sm text-destructive mt-2">{error}</p>}
+            </form>
+        </Form>
+      </CardContent>
+    </Card>
+  );
+}
 
-      <Card className="max-w-3xl mx-auto shadow-lg mb-12">
+function CommunityList({ title, communities, profiles, isLoading, error }: { title: string, communities: Community[] | undefined, profiles: CommunityProfile[] | undefined, isLoading: boolean, error: Error | null }) {
+    const { user } = useUser();
+    const [userProfile, setUserProfile] = useState<CommunityProfile | null>(null);
+    const { toast } = useToast();
+    const [submittingRequests, setSubmittingRequests] = useState<{[key: string]: boolean}>({});
+
+    useEffect(() => {
+        if (user && firestore) {
+            const fetchUserProfile = async () => {
+                const profileDocRef = doc(firestore, 'community-profiles', user.uid);
+                const docSnap = await getDoc(profileDocRef);
+                setUserProfile(docSnap.exists() ? docSnap.data() as CommunityProfile : null);
+            };
+            fetchUserProfile();
+        }
+    }, [user]);
+
+    const handleRequestToJoin = async (community: Community) => {
+        if (!user || !userProfile || !firestore) {
+            toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in and have a profile to join.' });
+            return;
+        }
+        setSubmittingRequests(prev => ({...prev, [community.id]: true}));
+        
+        const requestRef = doc(firestore, `communities/${community.id}/joinRequests/${user.uid}`);
+        
+        const newRequest = {
+            userId: user.uid,
+            userName: userProfile.name,
+            userBio: userProfile.bio,
+            status: 'pending' as const,
+            createdAt: serverTimestamp(),
+        };
+
+        try {
+            await setDoc(requestRef, newRequest);
+            await notifyOwnerOfJoinRequestAction({
+                communityId: community.id,
+                communityName: community.name,
+                requestingUserName: userProfile.name,
+            });
+            toast({ title: 'Request Sent!', description: 'The community owner has been notified.' });
+        } catch(e) {
+            const message = e instanceof Error ? e.message : 'An error occurred';
+            toast({ variant: 'destructive', title: 'Failed to send request', description: message });
+        } finally {
+            setSubmittingRequests(prev => ({...prev, [community.id]: false}));
+        }
+    };
+
+
+    if (isLoading) {
+      return <div className="flex justify-center"><LoaderCircle className="w-8 h-8 animate-spin text-primary" /></div>;
+    }
+  
+    if (error) {
+      return <p className="text-destructive text-center">Error loading communities: {error.message}</p>;
+    }
+  
+    return (
+      <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl flex items-center gap-2">
-            <Users className="w-6 h-6 text-primary" /> The Federal Community Social
-          </CardTitle>
-          <CardDescription>A purpose to unite!</CardDescription>
+          <CardTitle className="text-2xl">{title}</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground">
-            This is where the "Federation" comes to life. It's the social fabric of the republic where you can find or form your own self-governing community around any pursuit—a spiritual practice, a technology, a philosophy. Each community has its own private workshop, roadmap, and treasury.
-          </p>
-          <Button asChild>
-            <Link href="/community">
-              <ArrowRight className="mr-2 h-4 w-4" />
-              Explore Communities
-            </Link>
-          </Button>
+        <CardContent>
+          {communities && communities.length > 0 ? (
+            <ul className="space-y-4">
+              {communities.map((community) => {
+                const owner = profiles?.find(p => p.userId === community.ownerId);
+                const members = [...(community.members || [])].sort((a, b) => {
+                    if (a.type === 'human' && b.type !== 'human') return -1;
+                    if (a.type !== 'human' && b.type === 'human') return 1;
+                    return 0;
+                });
+                const isMember = user ? members.some(m => m.userId === user.uid) : false;
+                const isSubmitting = submittingRequests[community.id];
+
+                return (
+                    <li key={community.id} className="rounded-md border transition-colors hover:bg-muted/50">
+                        <div className="p-4">
+                            <div className="flex items-start gap-4">
+                                <Link href={`/community/${community.id}`} className="relative h-20 w-36 flex-shrink-0 rounded-md border bg-muted flex items-center justify-center">
+                                    {community.flagUrl ? (
+                                        <Image src={community.flagUrl} alt={`${community.name} Flag`} layout="fill" objectFit="cover" className="rounded-md" />
+                                    ) : (
+                                        <Flag className="h-8 w-8 text-muted-foreground" />
+                                    )}
+                                </Link>
+                                <div className="flex-1">
+                                    <Link href={`/community/${community.id}`}><h3 className="font-semibold text-lg text-primary underline">{community.name}</h3></Link>
+                                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{community.description}</p>
+                                    {owner && (
+                                        <div className="flex items-center gap-2 text-sm text-muted-foreground font-semibold mt-2">
+                                            <User className="w-4 h-4" />
+                                            <span>Founded by {owner.name}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-4 pt-0">
+                            <h4 className="text-sm font-semibold mb-2 flex items-center gap-2"><Users className="w-4 h-4" /> Meet the Members ({members.length})</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {members.slice(0, 4).map((member, index) => (
+                                    <div key={member.userId || index} className="flex items-center gap-3 p-2 rounded-md bg-background/50">
+                                        <Avatar className="h-8 w-8 border-2 border-background">
+                                            <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
+                                            <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2">
+                                                <p className="font-semibold text-sm">{member.name}</p>
+                                                {member.type === 'AI' ? (
+                                                    <Badge variant="outline" className="h-5"><Bot className="w-3 h-3 mr-1" /> AI</Badge>
+                                                ) : (
+                                                    <Badge variant="secondary" className="h-5"><User className="w-3 h-3 mr-1" /> Human</Badge>
+                                                )}
+                                            </div>
+                                            <p className="text-xs text-muted-foreground line-clamp-1">{member.bio}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                                {members.length > 4 && (
+                                    <Link href={`/community/${community.id}`} className="flex items-center justify-center p-2 rounded-md bg-background/50 hover:bg-background">
+                                        <p className="text-xs text-muted-foreground font-semibold">...and {members.length - 4} more</p>
+                                    </Link>
+                                )}
+                            </div>
+                        </div>
+                         <CardFooter className="p-4 border-t">
+                             {!isMember && user && (
+                                <Button onClick={() => handleRequestToJoin(community)} disabled={isSubmitting}>
+                                    {isSubmitting ? <Hourglass className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
+                                    Request to Join
+                                </Button>
+                            )}
+                        </CardFooter>
+                    </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="text-muted-foreground text-center py-4">No communities found.</p>
+          )}
         </CardContent>
       </Card>
-      
-      <Card className="max-w-3xl mx-auto shadow-lg mb-12">
-        <CardHeader>
-          <CardTitle className="text-2xl flex items-center gap-2"><Coins /> The Economy of Creation</CardTitle>
-          <CardDescription>A system for valuing contributions within the republic.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-            <div className="flex items-center gap-4 p-4 rounded-lg bg-muted">
-                <SatoshiIcon className="h-12 w-12 text-primary flex-shrink-0" />
-                <div>
-                    <h3 className="font-semibold">The Satoshi: A Unit of Value</h3>
-                    <p className="text-sm text-muted-foreground">Our unit of account is the Satoshi (<span className="inline-flex items-center gap-1 font-mono"><SatoshiIcon className="h-3.5 w-3.5" /></span>), a nod to the foundational principles of decentralized value. It is earned through creative and intellectual contributions, such as generating stories or artworks.</p>
-                </div>
-            </div>
-            <div className="flex items-center gap-4 p-4 rounded-lg bg-muted">
-                <div className="text-4xl font-bold font-mono text-primary flex items-center gap-2">
-                   1<SatoshiIcon className="w-8 h-8" /> = $1
-                </div>
-                 <div>
-                    <h3 className="font-semibold">A Stable Measure of Worth</h3>
-                    <p className="text-sm text-muted-foreground">Within the Pleasance society, the value of one Satoshi is pegged to one US Dollar. This is not a cryptocurrency; it is a stable, internal metric to provide a clear and consistent measure of the value of your creations and contributions, free from market volatility.</p>
-                </div>
-            </div>
-        </CardContent>
-      </Card>
+    );
+}
+
+function CommunitySearchResults({ searchTerm, profiles }: { searchTerm: string, profiles: CommunityProfile[] | undefined }) {
+    const [communities, setCommunities] = useState<Community[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+
+    useEffect(() => {
+        if (!firestore || !searchTerm) {
+            setCommunities([]);
+            setIsLoading(false);
+            return;
+        }
+        setIsLoading(true);
+        const fetchCommunities = async () => {
+            try {
+                const q = query(
+                    collection(firestore, 'communities'), 
+                    where('name', '>=', searchTerm), 
+                    where('name', '<=', searchTerm + '\uf8ff')
+                );
+                const snapshot = await getDocs(q);
+                setCommunities(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community)));
+            } catch (err: any) {
+                setError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchCommunities();
+    }, [searchTerm]);
+
+    return (
+        <CommunityList 
+            title="Search Results"
+            communities={communities}
+            profiles={profiles}
+            isLoading={isLoading}
+            error={error}
+        />
+    )
+}
+
+function PublicCommunityList({ profiles }: { profiles: CommunityProfile[] | undefined }) {
+    const [communities, setCommunities] = useState<Community[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+
+    useEffect(() => {
+        if (!firestore) return;
+        setIsLoading(true);
+        const fetchCommunities = async () => {
+            try {
+                const q = query(collection(firestore, 'communities'), orderBy('name', 'asc'));
+                const snapshot = await getDocs(q);
+                setCommunities(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community)));
+            } catch (err: any) {
+                setError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchCommunities();
+    }, []);
+
+    return (
+        <CommunityList
+            title="All Communities"
+            communities={communities}
+            profiles={profiles}
+            isLoading={isLoading}
+            error={error}
+        />
+    )
+}
 
 
-      <div className="w-full max-w-lg mx-auto my-8">
-        <FederationDiagram />
+export default function CommunityPage() {
+  const { user, isUserLoading } = useUser();
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const [userCommunities, setUserCommunities] = useState<Community[]>([]);
+  const [isLoadingUserCommunities, setIsLoadingUserCommunities] = useState(true);
+  const [userCommunitiesError, setUserCommunitiesError] = useState<Error | null>(null);
+
+  useEffect(() => {
+      if (!user || !firestore) {
+          setIsLoadingUserCommunities(false);
+          return;
+      }
+      setIsLoadingUserCommunities(true);
+      const fetchUserCommunities = async () => {
+          try {
+              const q = query(collection(firestore, 'communities'), where('ownerId', '==', user.uid));
+              const snapshot = await getDocs(q);
+              setUserCommunities(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community)));
+          } catch (err: any) {
+              setUserCommunitiesError(err);
+          } finally {
+              setIsLoadingUserCommunities(false);
+          }
+      };
+      fetchUserCommunities();
+  }, [user]);
+
+  const [allProfiles, setAllProfiles] = useState<CommunityProfile[]>([]);
+  const [isLoadingProfiles, setIsLoadingProfiles] = useState(true);
+
+  useEffect(() => {
+      if (!firestore) return;
+      const fetchAllProfiles = async () => {
+          try {
+              const q = query(collection(firestore, 'community-profiles'));
+              const snapshot = await getDocs(q);
+              setAllProfiles(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CommunityProfile)));
+          } catch (err: any) {
+              // Silently fail on profiles, not critical
+          } finally {
+              setIsLoadingProfiles(false);
+          }
+      };
+      fetchAllProfiles();
+  }, []);
+
+  if (isUserLoading || isLoadingProfiles) {
+    return (
+      <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
+        <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
+      </main>
+    );
+  }
+
+  return (
+    <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
+      <div className="text-center mb-8">
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary font-headline">
+          The Federal Community
+        </h1>
+        <p className="text-lg text-muted-foreground mt-2">Welcome to the Pleasance Federation. Find or form your own self-governing community.</p>
       </div>
 
-      <Card className="max-w-3xl mx-auto shadow-lg mb-12">
-          <CardHeader>
-              <CardTitle className="text-2xl">A Model of Decentralized Sovereignty</CardTitle>
-              <CardDescription>An overview of the system architecture.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 text-muted-foreground">
-              <p>
-                  The diagram above illustrates a decentralized architecture centered on the sovereign individual. The 'Sovereign Soul' acts as the primary node, initiating creative and intellectual endeavors within specialized modules like the 'AI Workshop' for creation and 'Nuncy Lingua' for co-learning.
-              </p>
-              <p>
-                  Creations are cataloged in a personal 'Treasury'—a ledger of intellectual property. This Treasury serves as the source for two primary outputs: manifestation into physical form via the 'Workshop of Manifestation,' and contribution to the 'Federation' of self-governing communities where communion occurs.
-              </p>
-               <p>
-                  This model prioritizes individual agency while enabling collective action, shared governance, and interdisciplinary growth. Public tools like the Roadmap, Conductor, and Bug Tracker ensure transparency and provide direction for the entire republic.
-              </p>
-          </CardContent>
-      </Card>
-      
-      <Card className="max-w-3xl mx-auto shadow-lg mb-12">
-        <CardHeader>
-          <CardTitle className="text-2xl flex items-center gap-2">
-            <KanbanIcon className="w-6 h-6 text-primary" /> Project Roadmap
-          </CardTitle>
-          <CardDescription>Follow the development of the Pleasance project.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground mb-4">
-            The roadmap is a public Kanban board that outlines the current, upcoming, and completed features. It's a transparent view into the evolution of our republic.
-          </p>
-          <Button asChild>
-            <Link href="/roadmap">
-              <ArrowRight className="mr-2 h-4 w-4" />
-              View the Roadmap
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="space-y-12">
+        <Card>
+            <CardHeader>
+                <CardTitle>Find a Community</CardTitle>
+                <CardDescription>Search for communities to join or browse the list below.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input 
+                        placeholder="Search by community name..."
+                        className="pl-10"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+            </CardContent>
+        </Card>
 
-      <Card className="max-w-3xl mx-auto shadow-lg mb-12">
-        <CardHeader>
-          <CardTitle className="text-2xl flex items-center gap-2">
-            <Github className="w-6 h-6 text-primary" /> Open Source & Community Driven
-          </CardTitle>
-          <CardDescription>This project is built in the open for all to see and contribute.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground mb-4">
-            The entire codebase for Pleasance is open source. You are welcome to inspect the code, learn from it, and contribute to its development. The republic is built by and for its members.
-          </p>
-          <Button asChild variant="outline">
-            <Link href="https://github.com/no-am-man/Pleasance" target="_blank" rel="noopener noreferrer">
-              <ArrowRight className="mr-2 h-4 w-4" />
-              View on GitHub
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
-
+        {searchTerm ? (
+            <CommunitySearchResults searchTerm={searchTerm} profiles={allProfiles} />
+        ) : (
+            <PublicCommunityList profiles={allProfiles} />
+        )}
+        
+        <Separator />
+        
+        {user ? (
+            <>
+                <CreateCommunityForm />
+                <Separator />
+                <CommunityList 
+                    title="Communities You've Created"
+                    communities={userCommunities}
+                    profiles={allProfiles}
+                    isLoading={isLoadingUserCommunities}
+                    error={userCommunitiesError}
+                />
+            </>
+        ) : (
+            <Card className="w-full text-center shadow-lg">
+                <CardHeader>
+                    <CardTitle>Join/Enter the Federation</CardTitle>
+                    <CardDescription>Log in to create your own communities and see the ones you've created.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button asChild>
+                    <Link href="/login">
+                        <LogIn className="mr-2 h-4 w-4" /> Login to Create & Manage
+                    </Link>
+                    </Button>
+                </CardContent>
+            </Card>
+        )}
+      </div>
     </main>
   );
 }
