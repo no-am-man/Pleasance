@@ -17,6 +17,7 @@ import {
   Wind,
   Coins,
   Github,
+  Users,
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { FederationDiagram } from '@/components/federation-diagram';
@@ -89,6 +90,26 @@ export default function Home() {
                     Join/Enter the Federation
                 </Link>
             </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="max-w-3xl mx-auto shadow-lg mb-12">
+        <CardHeader>
+          <CardTitle className="text-2xl flex items-center gap-2">
+            <Users className="w-6 h-6 text-primary" /> The Federal Community Social
+          </CardTitle>
+          <CardDescription>The social fabric of the republic.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-muted-foreground">
+            This is where the "Federation" comes to life. It's the social fabric of the republic where you can find or form your own self-governing community around any pursuit—a spiritual practice, a technology, a philosophy. Each community has its own private workshop, roadmap, and treasury.
+          </p>
+          <Button asChild>
+            <Link href="/community">
+              <ArrowRight className="mr-2 h-4 w-4" />
+              Explore Communities
+            </Link>
+          </Button>
         </CardContent>
       </Card>
       
@@ -183,6 +204,7 @@ export default function Home() {
     </main>
   );
 }
+
 
 
 
