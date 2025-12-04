@@ -19,6 +19,7 @@ import {
   Bot,
   DollarSign,
   Landmark,
+  Book,
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -51,6 +52,7 @@ export const navLinks = [
   { href: '/roadmap', label: 'Roadmap', icon: KanbanIcon },
   { href: '/bugs', label: 'Bug Tracker', icon: Bug },
   { href: '/pricing', label: 'Pricing', icon: DollarSign },
+  { href: '/wiki', label: 'Wiki', icon: Book },
 ];
 
 const adminLink = { href: '/admin', label: 'Admin', icon: Shield };
