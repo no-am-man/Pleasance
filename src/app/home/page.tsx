@@ -1,4 +1,3 @@
-
 // src/app/home/page.tsx (formerly app/page.tsx)
 "use client";
 
@@ -64,7 +63,7 @@ export default function HomePage() {
                 </p>
             </div>
             
-            <FederationDiagram />
+            <FederationDiagram t={t} />
 
             <div className="mt-16 text-center">
                 <h2 className="text-4xl font-bold font-headline mb-4">{t('flowOfCreationTitle')}</h2>

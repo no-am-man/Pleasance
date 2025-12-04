@@ -6,6 +6,15 @@
   "flowOfCreationDescription": "The diagram above illustrates the journey of an idea within the Pleasance federation, from a sovereign individual's inspiration to a tangible or communal reality. It is a cyclical process where creation, learning, and community engagement perpetually inspire new ideas.",
   "coreConceptsTitle": "Core Concepts",
   "exploreCommunities": "Explore Communities",
+  "diagramRoadmap": "Roadmap",
+  "diagramConductor": "Conductor",
+  "diagramBugTracker": "Bug Tracker",
+  "diagramSovereignSoul": "Sovereign Soul",
+  "diagramNuncyLingua": "Nuncy Lingua",
+  "diagramAIWorkshop": "AI Workshop",
+  "diagramTreasury": "Treasury",
+  "diagramWorkshopOfManifestation": "Workshop of Manifestation",
+  "diagramFederation": "Federation",
   "features": [
     {
       "id": "wiki-community",

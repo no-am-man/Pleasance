@@ -57,7 +57,7 @@ const FlowArrow = ({ path, delay }: { path: string; delay: number }) => (
   />
 );
 
-export const FederationDiagram = () => {
+export const FederationDiagram = ({ t }: { t: (key: string) => string }) => {
   return (
     <div className="w-full max-w-2xl mx-auto my-8">
       <style>
@@ -98,24 +98,24 @@ export const FederationDiagram = () => {
         />
 
         {/* Top Layer: Public Tools */}
-        <DiagramNode label="Roadmap" icon={KanbanIcon} x="150" y="50" delay={200} size={35} />
-        <DiagramNode label="Conductor" icon={Bot} x="300" y="50" delay={300} size={35} />
-        <DiagramNode label="Bug Tracker" icon={Bug} x="450" y="50" delay={400} size={35} />
+        <DiagramNode label={t('diagramRoadmap')} icon={KanbanIcon} x="150" y="50" delay={200} size={35} />
+        <DiagramNode label={t('diagramConductor')} icon={Bot} x="300" y="50" delay={300} size={35} />
+        <DiagramNode label={t('diagramBugTracker')} icon={Bug} x="450" y="50" delay={400} size={35} />
         
 
         {/* Central Node */}
-        <DiagramNode label="Sovereign Soul" icon={User} x="90" y="250" delay={0} size={50}/>
+        <DiagramNode label={t('diagramSovereignSoul')} icon={User} x="90" y="250" delay={0} size={50}/>
         
         {/* Mid Layer: Creation & Learning Tools */}
-        <DiagramNode label="Nuncy Lingua" icon={BookOpen} x="300" y="160" delay={500} />
-        <DiagramNode label="AI Workshop" icon={Sparkles} x="480" y="160" delay={600} />
+        <DiagramNode label={t('diagramNuncyLingua')} icon={BookOpen} x="300" y="160" delay={500} />
+        <DiagramNode label={t('diagramAIWorkshop')} icon={Sparkles} x="480" y="160" delay={600} />
         
         {/* Mid Layer: Declaration */}
-        <DiagramNode label="Treasury" icon={Banknote} x="390" y="280" delay={700} />
+        <DiagramNode label={t('diagramTreasury')} icon={Banknote} x="390" y="280" delay={700} />
 
         {/* Bottom Layer: Action & Community */}
-        <DiagramNode label="Workshop of Manifestation" icon={Warehouse} x="300" y="400" delay={800} />
-        <DiagramNode label="Federation" icon={Users} x="480" y="400" delay={900} />
+        <DiagramNode label={t('diagramWorkshopOfManifestation')} icon={Warehouse} x="300" y="400" delay={800} />
+        <DiagramNode label={t('diagramFederation')} icon={Users} x="480" y="400" delay={900} />
         
         {/* Flow Arrows */}
         {/* Soul -> Creation/Learning */}
