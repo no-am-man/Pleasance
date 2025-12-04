@@ -284,31 +284,23 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
                             </div>
                         </Link>
                         <div className="mt-4 pt-4 border-t">
-                            <h4 className="text-sm font-semibold mb-2 flex items-center gap-2"><Users className="w-4 h-4" /> Meet the Members</h4>
-                            <div className="flex items-center gap-2">
-                                <div className="flex -space-x-2 overflow-hidden">
-                                    {members.slice(0, 10).map((member, index) => (
-                                        <TooltipProvider key={member.userId || index}>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Avatar className="h-8 w-8 border-2 border-background">
-                                                        <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
-                                                        <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-                                                    </Avatar>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <p>{member.name} ({member.role})</p>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                    ))}
-                                </div>
-                                {members.length > 10 && (
-                                    <span className="text-xs text-muted-foreground font-semibold">
-                                        + {members.length - 10} more
-                                    </span>
+                            <h4 className="text-sm font-semibold mb-2 flex items-center gap-2"><Users className="w-4 h-4" /> Meet the Members ({members.length})</h4>
+                            <div className="space-y-3">
+                                {members.slice(0, 5).map((member, index) => (
+                                    <div key={member.userId || index} className="flex items-center gap-3">
+                                        <Avatar className="h-8 w-8 border-2 border-background">
+                                            <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
+                                            <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <p className="font-semibold text-sm">{member.name}</p>
+                                            <p className="text-xs text-muted-foreground">{member.bio}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                                {members.length > 5 && (
+                                    <p className="text-xs text-muted-foreground font-semibold">...and {members.length - 5} more</p>
                                 )}
-                                <span className="text-xs text-muted-foreground font-semibold ml-auto">{members.length} Members</span>
                             </div>
                         </div>
                     </li>
