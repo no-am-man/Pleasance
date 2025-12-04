@@ -10,7 +10,7 @@ import * as z from "zod";
 import Link from "next/link";
 import { useUser, useMemoFirebase } from "@/firebase";
 import { firestore } from "@/firebase/config";
-import { collection, doc, query, where, orderBy, onSnapshot, Unsubscribe, getDocs, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, query, where, orderBy, onSnapshot, Unsubscribe, getDocs, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LogIn, PlusCircle, LoaderCircle, Search, User, Flag, Sparkles, Users, Bot, Hourglass } from "lucide-react";
