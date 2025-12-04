@@ -1,3 +1,4 @@
+
 // src/app/community/[id]/workshop/page.tsx
 'use client';
 
@@ -24,6 +25,7 @@ import { Svg3dCube } from '@/components/icons/svg3d-cube';
 import { formatDistanceToNow } from 'date-fns';
 import { GenerateSvg3dInputSchema, type ColorPixel } from '@/lib/types';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { SatoshiIcon } from '@/components/icons/satoshi-icon';
 
 type Member = {
   name: string;
@@ -176,9 +178,12 @@ function SaveToTreasuryForm({ creation }: { creation: Creation }) {
                             name="value"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Creation Value (satoshis)</FormLabel>
+                                    <FormLabel className="flex items-center gap-1.5">Creation Value</FormLabel>
                                     <FormControl>
-                                        <Input type="number" placeholder="10000" {...field} />
+                                        <div className="relative">
+                                            <SatoshiIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <Input type="number" placeholder="10000" className="pl-8" {...field} />
+                                        </div>
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -370,7 +375,10 @@ export default function CommunityWorkshopPage() {
                 <div className="lg:col-span-1 space-y-8">
                     <Card className="bg-muted/50">
                         <CardHeader>
-                        <CardTitle>Channel a New Creation</CardTitle>
+                            <CardTitle>Channel a New Creation</CardTitle>
+                            <CardDescription className="flex items-center gap-1.5 pt-2">
+                                Each creation is valued at 1 <SatoshiIcon className="w-4 h-4" />.
+                            </CardDescription>
                         </CardHeader>
                         <CardContent>
                         <Form {...form}>
