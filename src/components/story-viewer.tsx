@@ -55,9 +55,7 @@ const KaraokeText = ({ text, totalDuration, currentTime, isMuted, language }: { 
                     isRtlLanguage ? "right-0" : "left-0"
                 )}
                 style={{
-                    clipPath: isRtlLanguage 
-                        ? `inset(0 0 0 ${100 - progress}%)` 
-                        : `inset(0 ${100 - progress}% 0 0)`,
+                    clipPath: `inset(0 0 ${100 - progress}% 0)`,
                 }}
             >
                 <p className={cn("whitespace-pre-wrap leading-relaxed", isRtlLanguage && "text-right")} style={{ textShadow: "0 0 5px hsl(var(--primary) / 0.5)" }} dir={isRtlLanguage ? "rtl" : "ltr"}>{text}</p>
