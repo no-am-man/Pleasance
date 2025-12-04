@@ -15,6 +15,7 @@ import { Fragment, useState, useEffect } from 'react';
 import { Home, LoaderCircle } from 'lucide-react';
 import { firestore } from '@/firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
+import { useTranslation } from '@/hooks/use-translation';
 
 // A custom hook to fetch the community name
 function useCommunityName(communityId: string | null) {
@@ -53,6 +54,7 @@ function useCommunityName(communityId: string | null) {
 
 export function Breadcrumbs() {
   const pathname = usePathname();
+  const { t } = useTranslation();
   const pathSegments = pathname.split('/').filter(Boolean);
 
   const communityId = pathSegments[0] === 'community' && pathSegments.length > 1 ? pathSegments[1] : null;
@@ -67,7 +69,7 @@ export function Breadcrumbs() {
     
     // Special case for home page
     if (segment === 'home' && index === 0) {
-        return 'Wiki';
+        return t('navWiki');
     }
 
     // Default formatting for other segments
