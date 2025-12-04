@@ -1,4 +1,5 @@
 
+
 // src/app/community/page.tsx
 "use client";
 
@@ -12,7 +13,7 @@ import { firestore } from "@/firebase/config";
 import { collection, doc, query, where, orderBy, onSnapshot, Unsubscribe, getDocs } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LogIn, PlusCircle, LoaderCircle, Search, User, Flag, Sparkles } from "lucide-react";
+import { LogIn, PlusCircle, LoaderCircle, Search, User, Flag, Sparkles, Users } from "lucide-react";
 import { createCommunityDetails, refineCommunityPromptAction } from "../actions";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const FormSchema = z.object({
   prompt: z.string().min(10, "Please enter a prompt of at least 10 characters."),
@@ -35,6 +37,7 @@ type Member = {
   bio: string;
   type: 'AI' | 'human';
   userId?: string;
+  avatarUrl?: string;
 };
 
 type Community = {
@@ -256,25 +259,56 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
             <ul className="space-y-4">
               {communities.map((community) => {
                 const owner = profiles?.find(p => p.userId === community.ownerId);
+                const members = community.members || [];
                 return (
                     <li key={community.id} className="rounded-md border transition-colors hover:bg-muted/50">
-                        <Link href={`/community/${community.id}`} className="flex items-start gap-4 p-4">
-                            <div className="relative h-20 w-36 flex-shrink-0 rounded-md border bg-muted flex items-center justify-center">
-                                {community.flagUrl ? (
-                                    <Image src={community.flagUrl} alt={`${community.name} Flag`} layout="fill" objectFit="cover" className="rounded-md" />
-                                ) : (
-                                    <Flag className="h-8 w-8 text-muted-foreground" />
-                                )}
+                        <Link href={`/community/${community.id}`} className="block p-4">
+                            <div className="flex items-start gap-4">
+                                <div className="relative h-20 w-36 flex-shrink-0 rounded-md border bg-muted flex items-center justify-center">
+                                    {community.flagUrl ? (
+                                        <Image src={community.flagUrl} alt={`${community.name} Flag`} layout="fill" objectFit="cover" className="rounded-md" />
+                                    ) : (
+                                        <Flag className="h-8 w-8 text-muted-foreground" />
+                                    )}
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="font-semibold text-lg text-primary underline">{community.name}</h3>
+                                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{community.description}</p>
+                                    {owner && (
+                                        <div className="flex items-center gap-2 text-sm text-muted-foreground font-semibold mt-2">
+                                            <User className="w-4 h-4" />
+                                            <span>Founded by {owner.name}</span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                            <div className="flex-1">
-                                <h3 className="font-semibold text-lg text-primary underline">{community.name}</h3>
-                                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{community.description}</p>
-                                {owner && (
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground font-semibold mt-2">
-                                        <User className="w-4 h-4" />
-                                        <span>Founded by {owner.name}</span>
+                            <div className="mt-4 pt-4 border-t">
+                                <div className="flex items-center gap-2">
+                                    <Users className="w-4 h-4 text-muted-foreground" />
+                                    <div className="flex -space-x-2 overflow-hidden">
+                                        {members.slice(0, 7).map((member, index) => (
+                                            <TooltipProvider key={member.userId || index}>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Avatar className="h-6 w-6 border-2 border-background">
+                                                            <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
+                                                            <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                                                        </Avatar>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>{member.name} ({member.role})</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        ))}
                                     </div>
-                                )}
+                                    {members.length > 7 && (
+                                        <span className="text-xs text-muted-foreground font-semibold">
+                                            + {members.length - 7} more
+                                        </span>
+                                    )}
+                                    <span className="text-xs text-muted-foreground font-semibold ml-auto">{members.length} Members</span>
+                                </div>
                             </div>
                         </Link>
                     </li>
