@@ -39,44 +39,13 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { useTranslation } from '@/hooks/use-translation';
+import { LanguageToggle } from '@/components/language-toggle';
+
 
 const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com';
 
-const navGroups = [
-    {
-        title: 'Federation',
-        links: [
-            { href: '/', label: 'Community', icon: Users },
-            { href: '/museum', label: 'Museum', icon: Landmark },
-        ]
-    },
-    {
-        title: 'Creation',
-        links: [
-            { href: '/svg3d', label: 'AI Workshop', icon: Sparkles },
-            { href: '/story', label: 'Nuncy Lingua', icon: BookOpen },
-            { href: '/fabrication', label: 'Fabrication', icon: Warehouse },
-        ]
-    },
-    {
-        title: 'Governance',
-        links: [
-            { href: '/treasury', label: 'Treasury', icon: Banknote },
-            { href: '/roadmap', label: 'Roadmap', icon: KanbanIcon },
-            { href: '/bugs', label: 'Bug Tracker', icon: Bug },
-            { href: '/conductor', label: 'Conductor', icon: Bot },
-        ]
-    },
-    {
-        title: 'System',
-        links: [
-            { href: '/home', label: 'Wiki', icon: Info },
-            { href: '/pricing', label: 'Pricing', icon: DollarSign },
-        ]
-    }
-];
-
-const adminLink = { href: '/admin', label: 'Admin', icon: Shield };
+const adminLink = { href: '/admin', label: 'navAdmin', icon: Shield };
 
 function NavLink({
   href,
@@ -89,6 +58,7 @@ function NavLink({
   icon: React.ElementType;
   isActive: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <Link
       href={href}
@@ -98,7 +68,7 @@ function NavLink({
       )}
     >
       <Icon className="h-5 w-5" />
-      <span>{label}</span>
+      <span>{t(label)}</span>
     </Link>
   );
 }
@@ -107,11 +77,46 @@ function NavLink({
 export function Header() {
   const pathname = usePathname();
   const { user } = useUser();
+  const { t } = useTranslation();
   const isFounder = user?.email === FOUNDER_EMAIL;
 
   const handleSignOut = async () => {
     await signOut(auth);
   };
+
+  const navGroups = [
+      {
+          title: t('navFederation'),
+          links: [
+              { href: '/', label: 'navCommunity', icon: Users },
+              { href: '/museum', label: 'navMuseum', icon: Landmark },
+          ]
+      },
+      {
+          title: t('navCreation'),
+          links: [
+              { href: '/svg3d', label: 'navAIWorkshop', icon: Sparkles },
+              { href: '/story', label: 'navNuncyLingua', icon: BookOpen },
+              { href: '/fabrication', label: 'navFabrication', icon: Warehouse },
+          ]
+      },
+      {
+          title: t('navGovernance'),
+          links: [
+              { href: '/treasury', label: 'navTreasury', icon: Banknote },
+              { href: '/roadmap', label: 'navRoadmap', icon: KanbanIcon },
+              { href: '/bugs', label: 'navBugTracker', icon: Bug },
+              { href: '/conductor', label: 'navConductor', icon: Bot },
+          ]
+      },
+      {
+          title: t('navSystem'),
+          links: [
+              { href: '/home', label: 'navWiki', icon: Info },
+              { href: '/pricing', label: 'navPricing', icon: DollarSign },
+          ]
+      }
+  ];
 
 
   return (
@@ -119,7 +124,7 @@ export function Header() {
       <Link href="/" className="flex items-center gap-2">
         <Logo className="h-8 w-8 text-primary" />
         <div className="flex items-center gap-2">
-          <span className="text-lg font-semibold text-primary">Pleasance</span>
+          <span className="text-lg font-semibold text-primary">{t('pleasance')}</span>
           <Badge variant="outline" className="text-xs">
             BETA
           </Badge>
@@ -156,7 +161,7 @@ export function Header() {
                         ))}
                         {isFounder && (
                              <div className="mb-4">
-                                <h3 className="px-3 py-2 text-xs font-semibold uppercase text-muted-foreground tracking-wider">Founder</h3>
+                                <h3 className="px-3 py-2 text-xs font-semibold uppercase text-muted-foreground tracking-wider">{t('navFounder')}</h3>
                                 <NavLink
                                     key={adminLink.href}
                                     {...adminLink}
@@ -178,18 +183,21 @@ export function Header() {
                             </Link>
                              <div className="px-3">
                                 <ThemeSwitcher />
+                             </div>
+                             <div className="px-3">
+                                <LanguageToggle />
                             </div>
                             <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start gap-3 px-3">
-                                <LogOut className="h-5 w-5" /> Sign Out
+                                <LogOut className="h-5 w-5" /> {t('navSignOut')}
                             </Button>
                              <AlertDialogTrigger asChild>
                                 <Button variant="ghost" className="w-full justify-start gap-3 px-3 text-destructive hover:bg-destructive/10 hover:text-destructive" disabled={isFounder}>
-                                    <UserX className="h-5 w-5" /> Exit Community
+                                    <UserX className="h-5 w-5" /> {t('navExitCommunity')}
                                 </Button>
                             </AlertDialogTrigger>
                         </div>
                     ) : (
-                        <NavLink href="/login" label="Login" icon={UserCircle} isActive={false} />
+                        <NavLink href="/login" label="navLogin" icon={UserCircle} isActive={false} />
                     )}
                  </div>
             </SheetContent>

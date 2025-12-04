@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Check, Palette } from 'lucide-react';
@@ -14,10 +15,12 @@ import { firestore } from '@/firebase/config';
 import { doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/hooks/use-translation';
 
 export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme();
   const { user } = useUser();
+  const { t } = useTranslation();
 
   const themes = [
     { name: 'Default', value: 'theme-default' },
@@ -39,7 +42,7 @@ export function ThemeSwitcher() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="w-full justify-start gap-3 px-0">
             <Palette className="h-5 w-5" />
-            <span>Theme</span>
+            <span>{t('navTheme')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

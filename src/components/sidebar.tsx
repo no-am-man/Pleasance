@@ -41,46 +41,11 @@ import { ThemeSwitcher } from './theme-switcher';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { LanguageToggle } from './language-toggle';
-
+import { useTranslation } from '@/hooks/use-translation';
 
 const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com';
 
-const navGroups = [
-    {
-        title: 'Federation',
-        links: [
-            { href: '/', label: 'Community', icon: Users },
-            { href: '/museum', label: 'Museum', icon: Landmark },
-        ]
-    },
-    {
-        title: 'Creation',
-        links: [
-            { href: '/svg3d', label: 'AI Workshop', icon: Sparkles },
-            { href: '/story', label: 'Nuncy Lingua', icon: BookOpen },
-            { href: '/fabrication', label: 'Fabrication', icon: Warehouse },
-        ]
-    },
-    {
-        title: 'Governance',
-        links: [
-            { href: '/treasury', label: 'Treasury', icon: Banknote },
-            { href: '/roadmap', label: 'Roadmap', icon: KanbanIcon },
-            { href: '/bugs', label: 'Bug Tracker', icon: Bug },
-            { href: '/conductor', label: 'Conductor', icon: Bot },
-        ]
-    },
-    {
-        title: 'System',
-        links: [
-            { href: '/home', label: 'Wiki', icon: Info },
-            { href: '/pricing', label: 'Pricing', icon: DollarSign },
-        ]
-    }
-];
-
-const adminLink = { href: '/admin', label: 'Admin', icon: Shield };
-
+const adminLink = { href: '/admin', label: 'navAdmin', icon: Shield };
 
 function NavLink({
   href,
@@ -93,6 +58,7 @@ function NavLink({
   icon: React.ElementType;
   isActive: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <Link
       href={href}
@@ -102,13 +68,14 @@ function NavLink({
       )}
     >
       <Icon className="h-5 w-5" />
-      <span>{label}</span>
+      <span>{t(label)}</span>
     </Link>
   );
 }
 
 function UserNav() {
   const { user } = useUser();
+  const { t } = useTranslation();
   const isFounder = user?.email === FOUNDER_EMAIL;
 
   const handleSignOut = async () => {
@@ -119,7 +86,7 @@ function UserNav() {
     return (
       <Link href="/login" className="flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
         <UserCircle className="h-5 w-5" />
-        <span>Login</span>
+        <span>{t('navLogin')}</span>
       </Link>
     );
   }
@@ -133,21 +100,21 @@ function UserNav() {
               <AvatarImage src={user.photoURL || ''} alt={user.displayName || ''} />
               <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
             </Avatar>
-            <span className="truncate text-sidebar-foreground">{user.displayName || 'My Account'}</span>
+            <span className="truncate text-sidebar-foreground">{user.displayName || t('navMyProfile')}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" side="right" align="start" forceMount>
           <DropdownMenuItem asChild>
             <Link href="/profile">
               <UserCircle className="mr-2 h-4 w-4" />
-              <span>My Profile</span>
+              <span>{t('navMyProfile')}</span>
             </Link>
           </DropdownMenuItem>
           {isFounder && (
               <DropdownMenuItem asChild>
                   <Link href="/admin">
                       <Shield className="mr-2 h-4 w-4" />
-                      <span>Admin Panel</span>
+                      <span>{t('navAdmin')}</span>
                   </Link>
               </DropdownMenuItem>
           )}
@@ -161,7 +128,7 @@ function UserNav() {
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut}>
             <LogOut className="mr-2 h-4 w-4" />
-            <span>Sign out</span>
+            <span>{t('navSignOut')}</span>
           </DropdownMenuItem>
           <AlertDialogTrigger asChild>
             <DropdownMenuItem 
@@ -170,7 +137,7 @@ function UserNav() {
                 disabled={isFounder}
             >
               <UserX className="mr-2 h-4 w-4" />
-              <span>Exit Community</span>
+              <span>{t('navExitCommunity')}</span>
             </DropdownMenuItem>
           </AlertDialogTrigger>
         </DropdownMenuContent>
@@ -201,7 +168,42 @@ function UserNav() {
 export function Sidebar() {
     const pathname = usePathname();
     const { user } = useUser();
+    const { t } = useTranslation();
     const isFounder = user?.email === FOUNDER_EMAIL;
+
+    const navGroups = [
+        {
+            title: t('navFederation'),
+            links: [
+                { href: '/', label: 'navCommunity', icon: Users },
+                { href: '/museum', label: 'navMuseum', icon: Landmark },
+            ]
+        },
+        {
+            title: t('navCreation'),
+            links: [
+                { href: '/svg3d', label: 'navAIWorkshop', icon: Sparkles },
+                { href: '/story', label: 'navNuncyLingua', icon: BookOpen },
+                { href: '/fabrication', label: 'navFabrication', icon: Warehouse },
+            ]
+        },
+        {
+            title: t('navGovernance'),
+            links: [
+                { href: '/treasury', label: 'navTreasury', icon: Banknote },
+                { href: '/roadmap', label: 'navRoadmap', icon: KanbanIcon },
+                { href: '/bugs', label: 'navBugTracker', icon: Bug },
+                { href: '/conductor', label: 'navConductor', icon: Bot },
+            ]
+        },
+        {
+            title: t('navSystem'),
+            links: [
+                { href: '/home', label: 'navWiki', icon: Info },
+                { href: '/pricing', label: 'navPricing', icon: DollarSign },
+            ]
+        }
+    ];
 
     return (
         <aside className="fixed inset-y-0 left-0 z-50 hidden w-sidebar flex-col border-r bg-sidebar sm:flex">
@@ -209,7 +211,7 @@ export function Sidebar() {
                 <Link href="/" className="flex items-center gap-2 font-semibold">
                     <Logo className="h-8 w-8 text-primary" />
                     <div className="flex items-center gap-2">
-                        <span className="text-lg font-semibold text-primary">Pleasance</span>
+                        <span className="text-lg font-semibold text-primary">{t('pleasance')}</span>
                         <Badge variant="outline" className="text-xs">
                           BETA
                         </Badge>
@@ -233,7 +235,7 @@ export function Sidebar() {
                      {isFounder && (
                          <div className="mb-2">
                             <Separator className="my-2" />
-                            <h3 className="px-3 py-2 text-xs font-semibold uppercase text-muted-foreground tracking-wider">Founder</h3>
+                            <h3 className="px-3 py-2 text-xs font-semibold uppercase text-muted-foreground tracking-wider">{t('navFounder')}</h3>
                             <NavLink
                                 key={adminLink.href}
                                 {...adminLink}
