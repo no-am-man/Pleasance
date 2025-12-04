@@ -6,8 +6,8 @@
 
 This project is open source. You can find the repository [here](https://github.com/no-am-man/Pleasance).
 
-## 🙏 Version 6.0.0 is on Staging!
-This major update introduces a public "Virtual Museum" to showcase creations from across the federation, private community treasuries, and enhances the distinction between personal and collaborative creative spaces.
+## 🚀 Version 7.0.0 is coming soon!
+This major update will introduce a public bug tracker to enhance transparency and community involvement in the project's development. It will also debut the "Conductor," a central SuperAgent designed to assist users and orchestrate complex actions across the federation.
 
 ## Core Philosophy
 
