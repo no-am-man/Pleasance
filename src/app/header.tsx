@@ -60,12 +60,14 @@ function NavLink({
   isActive: boolean;
 }) {
   const { t } = useTranslation();
+  const { direction } = useLanguage();
   return (
     <Link
       href={href}
       className={cn(
         'flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-        isActive && 'bg-sidebar-primary text-sidebar-primary-foreground'
+        isActive && 'bg-sidebar-primary text-sidebar-primary-foreground',
+        direction === 'rtl' && 'flex-row-reverse'
       )}
     >
       <Icon className="h-5 w-5" />
@@ -176,7 +178,7 @@ export function Header() {
                  <div className="mt-auto p-4 border-t">
                     {user ? (
                         <div className="space-y-2">
-                            <Link href="/profile" className="flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                            <Link href="/profile" className={cn("flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", direction === 'rtl' && 'flex-row-reverse')}>
                                 <Avatar className="w-8 h-8">
                                     <AvatarImage src={user.photoURL || undefined} />
                                     <AvatarFallback>{user.displayName?.charAt(0)}</AvatarFallback>
@@ -189,11 +191,11 @@ export function Header() {
                              <div className="px-3">
                                 <LanguageToggle />
                             </div>
-                            <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start gap-3 px-3">
+                            <Button variant="ghost" onClick={handleSignOut} className={cn("w-full justify-start gap-3 px-3", direction === 'rtl' && 'flex-row-reverse')}>
                                 <LogOut className="h-5 w-5" /> {t('navSignOut')}
                             </Button>
                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" className="w-full justify-start gap-3 px-3 text-destructive hover:bg-destructive/10 hover:text-destructive" disabled={isFounder}>
+                                <Button variant="ghost" className={cn("w-full justify-start gap-3 px-3 text-destructive hover:bg-destructive/10 hover:text-destructive", direction === 'rtl' && 'flex-row-reverse')} disabled={isFounder}>
                                     <UserX className="h-5 w-5" /> {t('navExitCommunity')}
                                 </Button>
                             </AlertDialogTrigger>

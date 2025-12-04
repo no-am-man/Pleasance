@@ -12,15 +12,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useTranslation } from '@/hooks/use-translation';
+import { cn } from '@/lib/utils';
 
 export function LanguageToggle() {
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, direction } = useLanguage();
   const { t } = useTranslation();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="w-full justify-start gap-3 px-0">
+        <Button variant="ghost" className={cn("w-full justify-start gap-3 px-0", direction === 'rtl' && 'flex-row-reverse')}>
           <Globe className="h-5 w-5" />
           <span>{t('navLanguage')}</span>
         </Button>

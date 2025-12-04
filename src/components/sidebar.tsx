@@ -60,12 +60,14 @@ function NavLink({
   isActive: boolean;
 }) {
   const { t } = useTranslation();
+  const { direction } = useLanguage();
   return (
     <Link
       href={href}
       className={cn(
         'flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-        isActive && 'bg-sidebar-primary text-sidebar-primary-foreground'
+        isActive && 'bg-sidebar-primary text-sidebar-primary-foreground',
+        direction === 'rtl' && 'flex-row-reverse'
       )}
     >
       <Icon className="h-5 w-5" />
@@ -86,7 +88,7 @@ function UserNav() {
 
   if (!user) {
     return (
-      <Link href="/login" className="flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+      <Link href="/login" className={cn("flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", direction === 'rtl' && 'flex-row-reverse')}>
         <UserCircle className="h-5 w-5" />
         <span>{t('navLogin')}</span>
       </Link>
@@ -97,7 +99,7 @@ function UserNav() {
     <AlertDialog>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="flex items-center justify-start gap-3 w-full h-auto px-3 py-2">
+          <Button variant="ghost" className={cn("flex items-center justify-start gap-3 w-full h-auto px-3 py-2", direction === 'rtl' && 'flex-row-reverse')}>
             <Avatar className="h-8 w-8">
               <AvatarImage src={user.photoURL || ''} alt={user.displayName || ''} />
               <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
@@ -107,15 +109,15 @@ function UserNav() {
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" side={direction === 'rtl' ? 'left' : 'right'} align="start" forceMount>
           <DropdownMenuItem asChild>
-            <Link href="/profile">
-              <UserCircle className="mr-2 h-4 w-4" />
+            <Link href="/profile" className={cn("flex items-center w-full", direction === 'rtl' && 'flex-row-reverse justify-end')}>
+              <UserCircle className={cn("mr-2 h-4 w-4", direction === 'rtl' && 'ml-2 mr-0')} />
               <span>{t('navMyProfile')}</span>
             </Link>
           </DropdownMenuItem>
           {isFounder && (
               <DropdownMenuItem asChild>
-                  <Link href="/admin">
-                      <Shield className="mr-2 h-4 w-4" />
+                  <Link href="/admin" className={cn("flex items-center w-full", direction === 'rtl' && 'flex-row-reverse justify-end')}>
+                      <Shield className={cn("mr-2 h-4 w-4", direction === 'rtl' && 'ml-2 mr-0')} />
                       <span>{t('navAdmin')}</span>
                   </Link>
               </DropdownMenuItem>
@@ -128,17 +130,17 @@ function UserNav() {
             <LanguageToggle />
           </div>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleSignOut}>
-            <LogOut className="mr-2 h-4 w-4" />
+          <DropdownMenuItem onClick={handleSignOut} className={cn(direction === 'rtl' && 'flex-row-reverse justify-between')}>
+            <LogOut className={cn("mr-2 h-4 w-4", direction === 'rtl' && 'ml-2 mr-0')} />
             <span>{t('navSignOut')}</span>
           </DropdownMenuItem>
           <AlertDialogTrigger asChild>
             <DropdownMenuItem 
-                className="text-destructive focus:bg-destructive focus:text-destructive-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+                className={cn("text-destructive focus:bg-destructive focus:text-destructive-foreground disabled:opacity-50 disabled:cursor-not-allowed", direction === 'rtl' && 'flex-row-reverse justify-between')}
                 onSelect={(e) => isFounder && e.preventDefault()}
                 disabled={isFounder}
             >
-              <UserX className="mr-2 h-4 w-4" />
+              <UserX className={cn("mr-2 h-4 w-4", direction === 'rtl' && 'ml-2 mr-0')} />
               <span>{t('navExitCommunity')}</span>
             </DropdownMenuItem>
           </AlertDialogTrigger>

@@ -16,11 +16,13 @@ import { doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/use-translation';
+import { useLanguage } from './language-provider';
 
 export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme();
   const { user } = useUser();
   const { t } = useTranslation();
+  const { direction } = useLanguage();
 
   const themes = [
     { name: 'Default', value: 'theme-default' },
@@ -40,7 +42,7 @@ export function ThemeSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="w-full justify-start gap-3 px-0">
+        <Button variant="ghost" className={cn("w-full justify-start gap-3 px-0", direction === 'rtl' && 'flex-row-reverse')}>
             <Palette className="h-5 w-5" />
             <span>{t('navTheme')}</span>
         </Button>
