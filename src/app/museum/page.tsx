@@ -1,3 +1,4 @@
+
 // src/app/museum/page.tsx
 'use client';
 
@@ -13,6 +14,7 @@ import { Svg3dCube } from '@/components/icons/svg3d-cube';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { DialogTrigger } from '@radix-ui/react-dialog';
 import Image from 'next/image';
+import { useTranslation } from '@/hooks/use-translation';
 
 // Types from lib/types.ts or similar
 type ColorPixel = {
@@ -41,6 +43,7 @@ type Community = {
 };
 
 function CommunityHall({ community }: { community: Community }) {
+    const { t } = useTranslation();
     const [creations, setCreations] = useState<Creation[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
@@ -96,7 +99,7 @@ function CommunityHall({ community }: { community: Community }) {
                         ) : (
                             <Flag className="h-8 w-8 text-muted-foreground" />
                         )}
-                         <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs p-1">View Community</div>
+                         <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs p-1">{t('museum_view_community')}</div>
                     </Link>
                     <div className="flex-1">
                         <CardTitle className="flex items-center gap-3 text-2xl font-headline text-primary">
@@ -116,7 +119,7 @@ function CommunityHall({ community }: { community: Community }) {
                                         </div>
                                         <CardHeader className="p-4">
                                             <CardTitle className="text-base line-clamp-1 group-hover:underline">{creation.prompt}</CardTitle>
-                                            <CardDescription className="text-xs">by {creation.creatorName}</CardDescription>
+                                            <CardDescription className="text-xs">{t('museum_by_creator', { name: creation.creatorName })}</CardDescription>
                                         </CardHeader>
                                     </Card>
                                 </DialogTrigger>
@@ -124,7 +127,7 @@ function CommunityHall({ community }: { community: Community }) {
                                     <DialogHeader>
                                         <DialogTitle>{creation.prompt}</DialogTitle>
                                         <DialogDescription>
-                                            Created by {creation.creatorName} on {new Date(creation.createdAt.seconds * 1000).toLocaleDateString()}
+                                            {t('museum_created_by', { name: creation.creatorName, date: new Date(creation.createdAt.seconds * 1000).toLocaleDateString() })}
                                         </DialogDescription>
                                     </DialogHeader>
                                     <div className="aspect-square bg-muted rounded-md my-4">
@@ -142,6 +145,7 @@ function CommunityHall({ community }: { community: Community }) {
 
 
 export default function MuseumPage() {
+    const { t } = useTranslation();
     const [communities, setCommunities] = useState<Community[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
@@ -180,11 +184,11 @@ export default function MuseumPage() {
                 <Card className="w-full max-w-lg text-center">
                     <CardHeader>
                         <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
-                        <CardTitle className="mt-4">Error Loading Museum</CardTitle>
+                        <CardTitle className="mt-4">{t('museum_error_title')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <p className="text-muted-foreground mb-4">
-                            There was a problem loading the communities and their creations.
+                           {t('museum_error_desc')}
                         </p>
                         <pre className="mb-4 text-left text-sm bg-muted p-2 rounded-md overflow-x-auto">
                             <code>{error.message}</code>
@@ -199,26 +203,26 @@ export default function MuseumPage() {
         <main className="container mx-auto max-w-7xl py-8">
             <div className="text-center mb-12">
                 <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-                    <Landmark className="w-10 h-10" /> Virtual Museum
+                    <Landmark className="w-10 h-10" /> {t('museum_title')}
                 </h1>
-                <p className="text-lg text-muted-foreground mt-2">A grand hall showcasing the published creations from every community in the federation.</p>
+                <p className="text-lg text-muted-foreground mt-2">{t('museum_subtitle')}</p>
             </div>
             
             <Card className="mb-12 text-center border-primary/20">
                 <CardHeader>
-                    <CardTitle>From Virtual to Real: The Future of the Museum</CardTitle>
+                    <CardTitle>{t('museum_future_title')}</CardTitle>
                     <CardDescription>
-                        This virtual gallery is the precursor to a physical space for art, learning, and community.
+                        {t('museum_future_desc_1')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <p className="text-muted-foreground mb-4">
-                        The creations you see here are the first seeds of a future vision: a real-world museum and center for interdisciplinary spirituality.
+                        {t('museum_future_desc_2')}
                     </p>
                     <Button asChild>
                         <Link href="https://lashirilo.com" target="_blank" rel="noopener noreferrer">
                              <ExternalLink className="mr-2 h-4 w-4" />
-                            Visit Lashirilo.com to learn more
+                            {t('museum_future_cta')}
                         </Link>
                     </Button>
                 </CardContent>
@@ -232,13 +236,13 @@ export default function MuseumPage() {
                 ) : (
                     <Card className="text-center py-16">
                         <CardHeader>
-                            <CardTitle>The Museum is Quiet</CardTitle>
-                            <CardDescription>No communities have published any creations yet.</CardDescription>
+                            <CardTitle>{t('museum_empty_title')}</CardTitle>
+                            <CardDescription>{t('museum_empty_desc')}</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Button asChild>
                                 <Link href="/community">
-                                    Explore Communities
+                                    {t('exploreCommunities')}
                                 </Link>
                             </Button>
                         </CardContent>

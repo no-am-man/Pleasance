@@ -194,5 +194,18 @@
       "imageUrl": "https://picsum.photos/seed/104/600/400",
       "imageHint": "gold coins"
     }
-  ]
+  ],
+  "museum_title": "מוזיאון וירטואלי",
+  "museum_subtitle": "אולם מפואר המציג את היצירות שפורסמו מכל קהילה בפדרציה.",
+  "museum_future_title": "מווירטואלי לאמיתי: עתיד המוזיאון",
+  "museum_future_desc_1": "גלריה וירטואלית זו היא המבשרת למרחב פיזי לאמנות, למידה וקהילה.",
+  "museum_future_desc_2": "היצירות שאתה רואה כאן הן הזרעים הראשונים של חזון עתידי: מוזיאון ומרכז אמיתי לרוחניות בין-תחומית.",
+  "museum_future_cta": "בקר ב-Lashirilo.com למידע נוסף",
+  "museum_error_title": "שגיאה בטעינת המוזיאון",
+  "museum_error_desc": "הייתה בעיה בטעינת הקהילות ויצירותיהן.",
+  "museum_empty_title": "המוזיאון שקט",
+  "museum_empty_desc": "אף קהילה עדיין לא פרסמה יצירות.",
+  "museum_view_community": "צפה בקהילה",
+  "museum_by_creator": "מאת {name}",
+  "museum_created_by": "נוצר על ידי {name} בתאריך {date}"
 }

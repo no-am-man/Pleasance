@@ -194,5 +194,18 @@
       "imageUrl": "https://picsum.photos/seed/104/600/400",
       "imageHint": "gold coins"
     }
-  ]
+  ],
+  "museum_title": "Virtual Museum",
+  "museum_subtitle": "A grand hall showcasing the published creations from every community in the federation.",
+  "museum_future_title": "From Virtual to Real: The Future of the Museum",
+  "museum_future_desc_1": "This virtual gallery is the precursor to a physical space for art, learning, and community.",
+  "museum_future_desc_2": "The creations you see here are the first seeds of a future vision: a real-world museum and center for interdisciplinary spirituality.",
+  "museum_future_cta": "Visit Lashirilo.com to learn more",
+  "museum_error_title": "Error Loading Museum",
+  "museum_error_desc": "There was a problem loading the communities and their creations.",
+  "museum_empty_title": "The Museum is Quiet",
+  "museum_empty_desc": "No communities have published any creations yet.",
+  "museum_view_community": "View Community",
+  "museum_by_creator": "by {name}",
+  "museum_created_by": "Created by {name} on {date}"
 }
