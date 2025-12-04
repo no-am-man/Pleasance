@@ -1,0 +1,135 @@
+
+// src/components/community/JoinRequests.tsx
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { firestore } from '@/firebase/config';
+import { doc, collection, query, where, arrayUnion, updateDoc, getDocs, setDoc } from 'firebase/firestore';
+import { Button } from '@/components/ui/button';
+import { LoaderCircle, Check, X } from 'lucide-react';
+import Link from 'next/link';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { welcomeNewMemberAction } from '@/app/actions';
+
+type Member = {
+    name: string;
+    role: string;
+    bio: string;
+    type: 'AI' | 'human';
+    avatarUrl?: string;
+    userId?: string;
+};
+  
+type CommunityProfile = {
+    id: string;
+    userId: string;
+    name: string;
+    bio: string;
+    nativeLanguage: string;
+    learningLanguage: string;
+    avatarUrl?: string; // Add avatarUrl to profile type
+};
+
+type JoinRequest = {
+    id: string;
+    userId: string;
+    userName: string;
+    userBio: string;
+    status: 'pending' | 'approved' | 'rejected';
+    createdAt: { seconds: number, nanoseconds: number } | null;
+}
+
+export function JoinRequests({ communityId, communityName }: { communityId: string, communityName: string }) {
+    const { toast } = useToast();
+    const [requests, setRequests] = useState<JoinRequest[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const fetchRequests = useCallback(async () => {
+        if (!firestore || !communityId) return;
+        setIsLoading(true);
+        try {
+            const requestsQuery = query(collection(firestore, `communities/${communityId}/joinRequests`), where('status', '==', 'pending'));
+            const querySnapshot = await getDocs(requestsQuery);
+            const requestsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as JoinRequest));
+            setRequests(requestsData);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [communityId]);
+
+    useEffect(() => {
+        if (!firestore || !communityId) return;
+        fetchRequests();
+    }, [firestore, communityId, fetchRequests]);
+
+    const handleRequest = async (request: JoinRequest, newStatus: 'approved' | 'rejected') => {
+        if (!firestore) {
+            toast({ variant: 'destructive', title: 'Firestore not available' });
+            return;
+        }
+        const requestDocRef = doc(firestore, `communities/${communityId}/joinRequests`, request.id);
+        const communityDocRef = doc(firestore, 'communities', communityId);
+        
+        try {
+            if (newStatus === 'approved') {
+                const profileRef = doc(firestore, 'community-profiles', request.userId);
+                const profileSnap = await getDocs(query(collection(firestore, 'community-profiles'), where('userId', '==', request.userId)));
+                const profileData = !profileSnap.empty ? profileSnap.docs[0].data() as CommunityProfile : null;
+
+                const newMember: Member = {
+                    userId: request.userId,
+                    name: request.userName,
+                    bio: request.userBio,
+                    role: 'Member',
+                    type: 'human',
+                    avatarUrl: profileData?.avatarUrl || '',
+                };
+                await updateDoc(communityDocRef, {
+                    members: arrayUnion(newMember)
+                });
+
+                // After member is added, trigger the welcome message flow
+                await welcomeNewMemberAction({ communityId, communityName, newMemberName: newMember.name });
+            }
+            await updateDoc(requestDocRef, { status: newStatus });
+            toast({ title: `Request ${newStatus}.` });
+            fetchRequests(); // Refresh the list
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "An unexpected error occurred.";
+            toast({ variant: 'destructive', title: `Failed to ${newStatus} request`, description: message });
+        }
+    };
+
+    if (isLoading) {
+        return <LoaderCircle className="animate-spin mx-auto" />
+    }
+    
+    if (!requests || requests.length === 0) {
+        return <p className="text-muted-foreground text-center py-4">No pending join requests.</p>;
+    }
+
+    return (
+        <div className="space-y-4">
+            {requests.map(req => (
+                <Card key={req.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <Avatar className="w-12 h-12">
+                        <AvatarImage src={`https://i.pravatar.cc/150?u=${req.userId}`} alt={req.userName} />
+                        <AvatarFallback>{req.userName.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-grow">
+                        <Link href={`/profile/${req.userId}`} className="font-bold underline">{req.userName}</Link>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{req.userBio}</p>
+                    </div>
+                    <div className="flex gap-2 self-start sm:self-center">
+                        <Button size="sm" onClick={() => handleRequest(req, 'approved')}><Check className="mr-2" />Approve</Button>
+                        <Button size="sm" variant="destructive" onClick={() => handleRequest(req, 'rejected')}><X className="mr-2" />Decline</Button>
+                    </div>
+                </Card>
+            ))}
+        </div>
+    );
+}

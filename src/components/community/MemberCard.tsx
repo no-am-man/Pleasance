@@ -1,0 +1,85 @@
+
+// src/components/community/MemberCard.tsx
+'use client';
+
+import Link from 'next/link';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { AiIcon } from '@/components/icons/ai-icon';
+import { HumanIcon } from '@/components/icons/human-icon';
+import { Bot, User, UserX } from 'lucide-react';
+
+type Member = {
+    name: string;
+    role: string;
+    bio: string;
+    type: 'AI' | 'human';
+    avatarUrl?: string;
+    userId?: string;
+};
+
+export function MemberCard({ member, communityId, isOwner, onRemove }: { member: Member; communityId: string; isOwner: boolean; onRemove: (member: Member) => void; }) {
+    const isHuman = member.type === 'human';
+    
+    const Wrapper = isHuman || member.type === 'AI' ? Link : 'div';
+    
+    let href = '#';
+    if(isHuman && member.userId) {
+        href = `/profile/${member.userId}`;
+    } else if (!isHuman) {
+        href = `/community/${communityId}/member/${encodeURIComponent(member.name)}`;
+    }
+
+    return (
+      <div className="flex items-center gap-4 rounded-md border p-4 transition-colors hover:bg-muted/50 group">
+        <Wrapper href={href} className="flex-1 flex items-center gap-4">
+            <Avatar className="w-16 h-16 rounded-lg bg-background border-2 border-primary/20">
+                <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
+                <AvatarFallback>
+                    {isHuman ? (
+                        <HumanIcon className="w-10 h-10 text-primary" />
+                    ) : (
+                        <AiIcon className="w-10 h-10 text-primary" />
+                    )}
+                </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 space-y-1">
+                <h3 className="font-semibold text-lg group-hover:underline">{member.name}</h3>
+                <p className="text-sm text-primary font-medium">{member.role}</p>
+                <p className="text-sm text-muted-foreground line-clamp-2">{member.bio}</p>
+            </div>
+            {isHuman ? (
+                <Badge variant="secondary" className="flex-shrink-0"><User className="w-3 h-3 mr-1" /> Human</Badge>
+            ) : (
+                <Badge variant="outline" className="flex-shrink-0"><Bot className="w-3 h-3 mr-1" /> AI Member</Badge>
+            )}
+        </Wrapper>
+
+        {isOwner && isHuman && (
+          <AlertDialog>
+              <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100">
+                      <UserX className="w-4 h-4" />
+                  </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                  <AlertDialogHeader>
+                      <AlertDialogTitle>Remove {member.name}?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                          Are you sure you want to remove this member from the community? They will need to request to join again.
+                      </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => onRemove(member)} className="bg-destructive hover:bg-destructive/90">
+                          Remove Member
+                      </AlertDialogAction>
+                  </AlertDialogFooter>
+              </AlertDialogContent>
+          </AlertDialog>
+        )}
+      </div>
+    );
+}

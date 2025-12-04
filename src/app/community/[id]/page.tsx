@@ -1,5 +1,4 @@
 
-
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -24,12 +23,12 @@ import { AiIcon } from '@/components/icons/ai-icon';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import Image from 'next/image';
 import { generateCommunityFlagAction, welcomeNewMemberAction, notifyOwnerOfJoinRequestAction } from '@/app/actions';
-import { Svg3dCube } from '@/components/icons/svg3d-cube';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
-import { SaveToTreasuryForm } from '@/components/community/SaveToTreasuryForm';
 import { addDoc } from 'firebase/firestore';
 import { setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-
+import { PresentationHall } from '@/components/community/PresentationHall';
+import { JoinRequests } from '@/components/community/JoinRequests';
+import { MemberCard } from '@/components/community/MemberCard';
 
 type Member = {
   name: string;
@@ -96,88 +95,12 @@ type JoinRequest = {
     createdAt: { seconds: number, nanoseconds: number } | null;
 }
 
-type Creation = {
-    id: string;
-    creatorId: string;
-    creatorName: string;
-    creatorAvatarUrl: string;
-    prompt: string;
-    status: 'in-workshop' | 'published';
-    createdAt: { seconds: number; nanoseconds: number; };
-    pixels: ColorPixel[];
-};
-
 type ColorPixel = {
     x: number;
     y: number;
     z: number;
     color: string;
 };
-
-
-function MemberCard({ member, communityId, isOwner, onRemove }: { member: Member; communityId: string; isOwner: boolean; onRemove: (member: Member) => void; }) {
-    const isHuman = member.type === 'human';
-    
-    const Wrapper = isHuman || member.type === 'AI' ? Link : 'div';
-    
-    let href = '#';
-    if(isHuman && member.userId) {
-        href = `/profile/${member.userId}`;
-    } else if (!isHuman) {
-        href = `/community/${communityId}/member/${encodeURIComponent(member.name)}`;
-    }
-
-    return (
-      <div className="flex items-center gap-4 rounded-md border p-4 transition-colors hover:bg-muted/50 group">
-        <Wrapper href={href} className="flex-1 flex items-center gap-4">
-            <Avatar className="w-16 h-16 rounded-lg bg-background border-2 border-primary/20">
-                <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
-                <AvatarFallback>
-                    {isHuman ? (
-                        <HumanIcon className="w-10 h-10 text-primary" />
-                    ) : (
-                        <AiIcon className="w-10 h-10 text-primary" />
-                    )}
-                </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 space-y-1">
-                <h3 className="font-semibold text-lg group-hover:underline">{member.name}</h3>
-                <p className="text-sm text-primary font-medium">{member.role}</p>
-                <p className="text-sm text-muted-foreground line-clamp-2">{member.bio}</p>
-            </div>
-            {isHuman ? (
-                <Badge variant="secondary" className="flex-shrink-0"><User className="w-3 h-3 mr-1" /> Human</Badge>
-            ) : (
-                <Badge variant="outline" className="flex-shrink-0"><Bot className="w-3 h-3 mr-1" /> AI Member</Badge>
-            )}
-        </Wrapper>
-
-        {isOwner && isHuman && (
-          <AlertDialog>
-              <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100">
-                      <UserX className="w-4 h-4" />
-                  </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                  <AlertDialogHeader>
-                      <AlertDialogTitle>Remove {member.name}?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                          Are you sure you want to remove this member from the community? They will need to request to join again.
-                      </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => onRemove(member)} className="bg-destructive hover:bg-destructive/90">
-                          Remove Member
-                      </AlertDialogAction>
-                  </AlertDialogFooter>
-              </AlertDialogContent>
-          </AlertDialog>
-        )}
-      </div>
-    );
-}
 
 function TextMessageForm({ communityId, onMessageSent }: { communityId: string, onMessageSent: () => void }) {
     const [text, setText] = useState('');
@@ -625,180 +548,6 @@ function Network({ communityId, isOwner, allMembers }: { communityId: string; is
         </Card>
     )
 }
-
-function JoinRequests({ communityId, communityName }: { communityId: string, communityName: string }) {
-    const { toast } = useToast();
-    const [requests, setRequests] = useState<JoinRequest[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-
-    const fetchRequests = useCallback(async () => {
-        if (!firestore || !communityId) return;
-        setIsLoading(true);
-        try {
-            const requestsQuery = query(collection(firestore, `communities/${communityId}/joinRequests`), where('status', '==', 'pending'));
-            const querySnapshot = await getDocs(requestsQuery);
-            const requestsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as JoinRequest));
-            setRequests(requestsData);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [communityId]);
-
-    useEffect(() => {
-        if (!firestore || !communityId) return;
-        fetchRequests();
-    }, [firestore, communityId, fetchRequests]);
-
-    const handleRequest = async (request: JoinRequest, newStatus: 'approved' | 'rejected') => {
-        if (!firestore) {
-            toast({ variant: 'destructive', title: 'Firestore not available' });
-            return;
-        }
-        const requestDocRef = doc(firestore, `communities/${communityId}/joinRequests`, request.id);
-        const communityDocRef = doc(firestore, 'communities', communityId);
-        
-        try {
-            if (newStatus === 'approved') {
-                const profileRef = doc(firestore, 'community-profiles', request.userId);
-                const profileSnap = await getDoc(profileRef);
-                const profileData = profileSnap.exists() ? profileSnap.data() as CommunityProfile : null;
-
-                const newMember: Member = {
-                    userId: request.userId,
-                    name: request.userName,
-                    bio: request.userBio,
-                    role: 'Member',
-                    type: 'human',
-                    avatarUrl: profileData?.avatarUrl || '',
-                };
-                await updateDoc(communityDocRef, {
-                    members: arrayUnion(newMember)
-                });
-
-                // After member is added, trigger the welcome message flow
-                await welcomeNewMemberAction({ communityId, communityName, newMemberName: newMember.name });
-            }
-            await updateDoc(requestDocRef, { status: newStatus });
-            toast({ title: `Request ${newStatus}.` });
-            fetchRequests(); // Refresh the list
-        } catch (error) {
-            const message = error instanceof Error ? error.message : "An unexpected error occurred.";
-            toast({ variant: 'destructive', title: `Failed to ${newStatus} request`, description: message });
-        }
-    };
-
-    if (isLoading) {
-        return <LoaderCircle className="animate-spin mx-auto" />
-    }
-    
-    if (!requests || requests.length === 0) {
-        return <p className="text-muted-foreground text-center py-4">No pending join requests.</p>;
-    }
-
-    return (
-        <div className="space-y-4">
-            {requests.map(req => (
-                <Card key={req.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                    <Avatar className="w-12 h-12">
-                        <AvatarImage src={`https://i.pravatar.cc/150?u=${req.userId}`} alt={req.userName} />
-                        <AvatarFallback>{req.userName.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-grow">
-                        <Link href={`/profile/${req.userId}`} className="font-bold underline">{req.userName}</Link>
-                        <p className="text-sm text-muted-foreground line-clamp-2">{req.userBio}</p>
-                    </div>
-                    <div className="flex gap-2 self-start sm:self-center">
-                        <Button size="sm" onClick={() => handleRequest(req, 'approved')}><Check className="mr-2" />Approve</Button>
-                        <Button size="sm" variant="destructive" onClick={() => handleRequest(req, 'rejected')}><X className="mr-2" />Decline</Button>
-                    </div>
-                </Card>
-            ))}
-        </div>
-    );
-}
-
-function PresentationHall({ communityId }: { communityId: string }) {
-    const [creations, setCreations] = useState<Creation[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<Error | null>(null);
-
-    useEffect(() => {
-        if (!firestore || !communityId) return;
-        const fetchCreations = async () => {
-            setIsLoading(true);
-            try {
-                const q = query(collection(firestore, `communities/${communityId}/creations`), where('status', '==', 'published'), orderBy('createdAt', 'desc'));
-                const snapshot = await getDocs(q);
-                const creationsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Creation));
-                setCreations(creationsData);
-            } catch (e) {
-                setError(e as Error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchCreations();
-    }, [communityId]);
-    
-    if (isLoading) {
-        return (
-            <div className="flex justify-center p-8">
-                <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
-            </div>
-        );
-    }
-    
-    if (!creations || creations.length === 0) {
-        return null; // Don't render the hall if it's empty
-    }
-
-    return (
-        <div className="mb-12">
-            <Card className="shadow-lg bg-gradient-to-br from-primary/10 via-card to-card">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-3xl font-headline text-primary"><Presentation /> Presentation Hall</CardTitle>
-                    <CardDescription>A public showcase of this community's finest creations.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {error && <p className="text-destructive text-center">Error loading creations: {error.message}</p>}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {creations.map(creation => (
-                            <Dialog key={creation.id}>
-                                <DialogTrigger asChild>
-                                    <Card className="overflow-hidden cursor-pointer group">
-                                        <div className="aspect-square bg-muted">
-                                            <Svg3dCube pixels={creation.pixels} />
-                                        </div>
-                                        <CardHeader className="p-4">
-                                            <CardTitle className="text-base line-clamp-1 group-hover:underline">{creation.prompt}</CardTitle>
-                                            <CardDescription className="text-xs">by {creation.creatorName}</CardDescription>
-                                        </CardHeader>
-                                    </Card>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-3xl">
-                                    <DialogHeader>
-                                        <DialogTitle>{creation.prompt}</DialogTitle>
-                                        <DialogDescription>
-                                            Created by {creation.creatorName} on {new Date(creation.createdAt.seconds * 1000).toLocaleDateString()}
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="aspect-square bg-muted rounded-md my-4">
-                                        <Svg3dCube pixels={creation.pixels} />
-                                    </div>
-                                    <SaveToTreasuryForm creation={creation} />
-                                </DialogContent>
-                            </Dialog>
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
-    )
-}
-
-
 
 export default function CommunityProfilePage() {
   const params = useParams();
