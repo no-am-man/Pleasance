@@ -42,8 +42,8 @@ import { ThemeSwitcher } from '@/components/theme-switcher';
 const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com'; // Founder email check
 
 export const navLinks = [
-  { href: '/home', label: 'Wiki', icon: Info },
   { href: '/', label: 'Community', icon: Users },
+  { href: '/home', label: 'Wiki', icon: Info },
   { href: '/museum', label: 'Museum', icon: Landmark },
   { href: '/svg3d', label: 'AI Workshop', icon: Sparkles },
   { href: '/conductor', label: 'Conductor', icon: Bot },
