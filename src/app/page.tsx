@@ -16,6 +16,7 @@ import {
   Scaling,
   Wind,
   Coins,
+  Github,
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { FederationDiagram } from '@/components/federation-diagram';
@@ -159,9 +160,30 @@ export default function Home() {
         </CardContent>
       </Card>
 
+      <Card className="max-w-3xl mx-auto shadow-lg mb-12">
+        <CardHeader>
+          <CardTitle className="text-2xl flex items-center gap-2">
+            <Github className="w-6 h-6 text-primary" /> Open Source & Community Driven
+          </CardTitle>
+          <CardDescription>This project is built in the open for all to see and contribute.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground mb-4">
+            The entire codebase for Pleasance is open source. You are welcome to inspect the code, learn from it, and contribute to its development. The republic is built by and for its members.
+          </p>
+          <Button asChild variant="outline">
+            <Link href="https://github.com/no-am-man/Pleasance" target="_blank" rel="noopener noreferrer">
+              <ArrowRight className="mr-2 h-4 w-4" />
+              View on GitHub
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+
     </main>
   );
 }
+
 
 
 
