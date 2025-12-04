@@ -1173,7 +1173,7 @@ export default function CommunityProfilePage() {
           <CardTitle className="text-3xl font-bold text-center">Meet the Members</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             {allMembers.map((member) => (
               <MemberCard key={member.userId || member.name} member={member} communityId={community.id} />
             ))}
@@ -1276,4 +1276,5 @@ export default function CommunityProfilePage() {
     
 
     
+
 
