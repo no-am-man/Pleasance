@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Languages } from 'lucide-react';
+import { Globe } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,7 +19,7 @@ export function LanguageToggle() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="w-full justify-start gap-3 px-0">
-          <Languages className="h-5 w-5" />
+          <Globe className="h-5 w-5" />
           <span>Language</span>
         </Button>
       </DropdownMenuTrigger>
