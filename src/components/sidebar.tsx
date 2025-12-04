@@ -28,6 +28,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { navLinks } from '@/app/header';
 import { ScrollArea } from './ui/scroll-area';
 import { ThemeSwitcher } from './theme-switcher';
+import { Badge } from './ui/badge';
 
 const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com'; // Founder email check
 
@@ -161,6 +162,9 @@ export function Sidebar() {
                     <Logo className="h-8 w-8 text-primary" />
                     <div className="flex items-center gap-2">
                         <span className="text-lg font-semibold text-primary">Pleasance</span>
+                        <Badge variant="outline" className="text-xs">
+                          BETA
+                        </Badge>
                     </div>
                 </Link>
             </div>
