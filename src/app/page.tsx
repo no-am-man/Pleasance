@@ -25,6 +25,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "@/hooks/use-translation";
 
 const FormSchema = z.object({
   prompt: z.string().min(10, "Please enter a prompt of at least 10 characters."),
@@ -63,6 +64,7 @@ function CreateCommunityForm() {
   const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -74,7 +76,7 @@ function CreateCommunityForm() {
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     if (!user) {
-      setError("You must be logged in to create a community.");
+      setError(t('community_must_be_logged_in'));
       return;
     }
     setIsLoading(true);
@@ -122,8 +124,8 @@ function CreateCommunityForm() {
     if (!prompt) {
       toast({
         variant: 'destructive',
-        title: 'Prompt is required',
-        description: 'Please enter an idea before refining with AI.',
+        title: t('community_prompt_required_title'),
+        description: t('community_prompt_required_desc'),
       });
       return;
     }
@@ -132,14 +134,14 @@ function CreateCommunityForm() {
     if (result.error) {
       toast({
         variant: 'destructive',
-        title: 'AI Refinement Failed',
+        title: t('community_refinement_failed_title'),
         description: result.error,
       });
     } else if (result.refinedPrompt) {
       form.setValue('prompt', result.refinedPrompt, { shouldValidate: true });
       toast({
-        title: 'Idea Refined!',
-        description: 'The AI has expanded on your idea.',
+        title: t('community_idea_refined_title'),
+        description: t('community_idea_refined_desc'),
       });
     }
     setIsRefining(false);
@@ -148,8 +150,8 @@ function CreateCommunityForm() {
   return (
     <Card className="mb-8 shadow-lg">
       <CardHeader>
-        <CardTitle className="text-2xl">Create a New Community</CardTitle>
-        <CardDescription>Describe the community you wish to bring into being. What is its purpose?</CardDescription>
+        <CardTitle className="text-2xl">{t('community_create_title')}</CardTitle>
+        <CardDescription>{t('community_create_desc')}</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -161,11 +163,11 @@ function CreateCommunityForm() {
                         name="prompt"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Community Vision</FormLabel>
+                                <FormLabel>{t('community_vision_label')}</FormLabel>
                                 <FormControl>
                                     <Textarea
                                         {...field}
-                                        placeholder="e.g., 'A community for devout astronomers to share celestial findings, photography, and organize stargazing vigils.'"
+                                        placeholder={t('community_vision_placeholder')}
                                         className="w-full p-2 border rounded-md min-h-[100px] bg-background pr-10"
                                     />
                                 </FormControl>
@@ -187,7 +189,7 @@ function CreateCommunityForm() {
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p>Refine with AI</p>
+                                <p>{t('community_refine_with_ai')}</p>
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
@@ -210,10 +212,10 @@ function CreateCommunityForm() {
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel>
-                      Create with AI Agents
+                      {t('community_create_with_ai')}
                     </FormLabel>
                     <CardDescription>
-                      Automatically generate a few AI members to help guide the conversation.
+                      {t('community_create_with_ai_desc')}
                     </CardDescription>
                   </div>
                 </FormItem>
@@ -224,12 +226,12 @@ function CreateCommunityForm() {
                 {isLoading ? (
                 <>
                     <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                    Creating...
+                    {t('community_creating_button')}...
                 </>
                 ) : (
                 <>
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Create Community
+                    {t('community_create_button')}
                 </>
                 )}
             </Button>
@@ -246,6 +248,7 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
     const [userProfile, setUserProfile] = useState<CommunityProfile | null>(null);
     const { toast } = useToast();
     const [submittingRequests, setSubmittingRequests] = useState<{[key: string]: boolean}>({});
+    const { t } = useTranslation();
 
     useEffect(() => {
         if (user && firestore) {
@@ -335,7 +338,7 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
                                     {owner && (
                                         <div className="flex items-center gap-2 text-sm text-muted-foreground font-semibold mt-2">
                                             <User className="w-4 h-4" />
-                                            <span>Founded by {owner.name}</span>
+                                            <span>{t('community_founded_by')} {owner.name}</span>
                                         </div>
                                     )}
                                 </div>
@@ -343,7 +346,7 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
                         </div>
 
                         <div className="p-4 pt-0">
-                            <h4 className="text-sm font-semibold mb-2 flex items-center gap-2"><Users className="w-4 h-4" /> Meet the Members ({members.length})</h4>
+                            <h4 className="text-sm font-semibold mb-2 flex items-center gap-2"><Users className="w-4 h-4" /> {t('community_meet_members')} ({members.length})</h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {members.slice(0, 4).map((member, index) => (
                                     <div key={member.userId || index} className="flex items-center gap-3 p-2 rounded-md bg-background/50">
@@ -366,7 +369,7 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
                                 ))}
                                 {members.length > 4 && (
                                     <Link href={`/community/${community.id}`} className="flex items-center justify-center p-2 rounded-md bg-background/50 hover:bg-background">
-                                        <p className="text-xs text-muted-foreground font-semibold">...and {members.length - 4} more</p>
+                                        <p className="text-xs text-muted-foreground font-semibold">{t('community_and_more', { count: members.length - 4 })}</p>
                                     </Link>
                                 )}
                             </div>
@@ -375,7 +378,7 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
                              {!isMember && user && (
                                 <Button onClick={() => handleRequestToJoin(community)} disabled={isSubmitting}>
                                     {isSubmitting ? <Hourglass className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
-                                    Request to Join
+                                    {t('community_request_to_join')}
                                 </Button>
                             )}
                         </CardFooter>
@@ -384,7 +387,7 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
               })}
             </ul>
           ) : (
-            <p className="text-muted-foreground text-center py-4">No communities found.</p>
+            <p className="text-muted-foreground text-center py-4">{t('community_none_found')}</p>
           )}
         </CardContent>
       </Card>
@@ -395,6 +398,7 @@ function CommunitySearchResults({ searchTerm, profiles }: { searchTerm: string, 
     const [communities, setCommunities] = useState<Community[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
+    const { t } = useTranslation();
 
     useEffect(() => {
         if (!firestore || !searchTerm) {
@@ -423,7 +427,7 @@ function CommunitySearchResults({ searchTerm, profiles }: { searchTerm: string, 
 
     return (
         <CommunityList 
-            title="Search Results"
+            title={t('community_search_results')}
             communities={communities}
             profiles={profiles}
             isLoading={isLoading}
@@ -436,6 +440,7 @@ function PublicCommunityList({ profiles }: { profiles: CommunityProfile[] | unde
     const [communities, setCommunities] = useState<Community[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
+    const { t } = useTranslation();
 
     useEffect(() => {
         if (!firestore) return;
@@ -456,7 +461,7 @@ function PublicCommunityList({ profiles }: { profiles: CommunityProfile[] | unde
 
     return (
         <CommunityList
-            title="All Communities"
+            title={t('community_all_communities')}
             communities={communities}
             profiles={profiles}
             isLoading={isLoading}
@@ -469,6 +474,7 @@ function PublicCommunityList({ profiles }: { profiles: CommunityProfile[] | unde
 export default function CommunityPage() {
   const { user, isUserLoading } = useUser();
   const [searchTerm, setSearchTerm] = useState('');
+  const { t } = useTranslation();
 
   const [userCommunities, setUserCommunities] = useState<Community[]>([]);
   const [isLoadingUserCommunities, setIsLoadingUserCommunities] = useState(true);
@@ -525,22 +531,22 @@ export default function CommunityPage() {
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-8">
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary font-headline">
-          The Pleasance Federation
+          {t('community_page_title')}
         </h1>
-        <p className="text-lg text-muted-foreground mt-2">A Federation of Social Communities. Find or form your own self-governing community.</p>
+        <p className="text-lg text-muted-foreground mt-2">{t('community_page_subtitle')}</p>
       </div>
 
       <div className="space-y-12">
         <Card>
             <CardHeader>
-                <CardTitle>Find a Community</CardTitle>
-                <CardDescription>Search for communities to join or browse the list below.</CardDescription>
+                <CardTitle>{t('community_find_title')}</CardTitle>
+                <CardDescription>{t('community_find_desc')}</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input 
-                        placeholder="Search by community name..."
+                        placeholder={t('community_search_placeholder')}
                         className="pl-10"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -562,7 +568,7 @@ export default function CommunityPage() {
                 <CreateCommunityForm />
                 <Separator />
                 <CommunityList 
-                    title="Communities You've Created"
+                    title={t('community_your_communities')}
                     communities={userCommunities}
                     profiles={allProfiles}
                     isLoading={isLoadingUserCommunities}
@@ -572,13 +578,13 @@ export default function CommunityPage() {
         ) : (
             <Card className="w-full text-center shadow-lg">
                 <CardHeader>
-                    <CardTitle>Join/Enter the Federation</CardTitle>
-                    <CardDescription>Log in to create your own communities and see the ones you've created.</CardDescription>
+                    <CardTitle>{t('community_join_federation_title')}</CardTitle>
+                    <CardDescription>{t('community_join_federation_desc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Button asChild>
                     <Link href="/login">
-                        <LogIn className="mr-2 h-4 w-4" /> Login to Create & Manage
+                        <LogIn className="mr-2 h-4 w-4" /> {t('community_login_to_manage')}
                     </Link>
                     </Button>
                 </CardContent>
