@@ -261,8 +261,8 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
                 const owner = profiles?.find(p => p.userId === community.ownerId);
                 const members = community.members || [];
                 return (
-                    <li key={community.id} className="rounded-md border transition-colors hover:bg-muted/50">
-                        <Link href={`/community/${community.id}`} className="block p-4">
+                    <li key={community.id} className="rounded-md border transition-colors hover:bg-muted/50 p-4">
+                        <Link href={`/community/${community.id}`} className="block">
                             <div className="flex items-start gap-4">
                                 <div className="relative h-20 w-36 flex-shrink-0 rounded-md border bg-muted flex items-center justify-center">
                                     {community.flagUrl ? (
@@ -282,35 +282,35 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
                                     )}
                                 </div>
                             </div>
-                            <div className="mt-4 pt-4 border-t">
-                                <div className="flex items-center gap-2">
-                                    <Users className="w-4 h-4 text-muted-foreground" />
-                                    <div className="flex -space-x-2 overflow-hidden">
-                                        {members.slice(0, 7).map((member, index) => (
-                                            <TooltipProvider key={member.userId || index}>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Avatar className="h-6 w-6 border-2 border-background">
-                                                            <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
-                                                            <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-                                                        </Avatar>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>{member.name} ({member.role})</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
-                                        ))}
-                                    </div>
-                                    {members.length > 7 && (
-                                        <span className="text-xs text-muted-foreground font-semibold">
-                                            + {members.length - 7} more
-                                        </span>
-                                    )}
-                                    <span className="text-xs text-muted-foreground font-semibold ml-auto">{members.length} Members</span>
-                                </div>
-                            </div>
                         </Link>
+                        <div className="mt-4 pt-4 border-t">
+                            <h4 className="text-sm font-semibold mb-2 flex items-center gap-2"><Users className="w-4 h-4" /> Meet the Members</h4>
+                            <div className="flex items-center gap-2">
+                                <div className="flex -space-x-2 overflow-hidden">
+                                    {members.slice(0, 10).map((member, index) => (
+                                        <TooltipProvider key={member.userId || index}>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Avatar className="h-8 w-8 border-2 border-background">
+                                                        <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
+                                                        <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                                                    </Avatar>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>{member.name} ({member.role})</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    ))}
+                                </div>
+                                {members.length > 10 && (
+                                    <span className="text-xs text-muted-foreground font-semibold">
+                                        + {members.length - 10} more
+                                    </span>
+                                )}
+                                <span className="text-xs text-muted-foreground font-semibold ml-auto">{members.length} Members</span>
+                            </div>
+                        </div>
                     </li>
                 );
               })}
