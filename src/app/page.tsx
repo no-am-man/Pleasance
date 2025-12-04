@@ -15,9 +15,11 @@ import {
   Landmark,
   Scaling,
   Wind,
+  Coins,
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { FederationDiagram } from '@/components/federation-diagram';
+import { SatoshiIcon } from '@/components/icons/satoshi-icon';
 
 export default function Home() {
   return (
@@ -87,6 +89,32 @@ export default function Home() {
             </Button>
         </CardContent>
       </Card>
+      
+      <Card className="max-w-3xl mx-auto shadow-lg mb-12">
+        <CardHeader>
+          <CardTitle className="text-2xl flex items-center gap-2"><Coins /> The Economy of Creation</CardTitle>
+          <CardDescription>A system for valuing contributions within the republic.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+            <div className="flex items-center gap-4 p-4 rounded-lg bg-muted">
+                <SatoshiIcon className="h-12 w-12 text-primary flex-shrink-0" />
+                <div>
+                    <h3 className="font-semibold">The Satoshi: A Unit of Value</h3>
+                    <p className="text-sm text-muted-foreground">Our unit of account is the Satoshi (<span className="inline-flex items-center gap-1 font-mono"><SatoshiIcon className="h-3 w-3" />S</span>), a nod to the foundational principles of decentralized value. It is earned through creative and intellectual contributions, such as generating stories or artworks.</p>
+                </div>
+            </div>
+            <div className="flex items-center gap-4 p-4 rounded-lg bg-muted">
+                <div className="text-4xl font-bold font-mono text-primary flex items-center gap-2">
+                   1<SatoshiIcon className="w-8 h-8" /> = $1
+                </div>
+                 <div>
+                    <h3 className="font-semibold">A Stable Measure of Worth</h3>
+                    <p className="text-sm text-muted-foreground">Within the Pleasance society, the value of one Satoshi is pegged to one US Dollar. This is not a cryptocurrency; it is a stable, internal metric to provide a clear and consistent measure of the value of your creations and contributions, free from market volatility.</p>
+                </div>
+            </div>
+        </CardContent>
+      </Card>
+
 
       <div className="w-full max-w-lg mx-auto my-8">
         <FederationDiagram />
@@ -113,3 +141,4 @@ export default function Home() {
     </main>
   );
 }
+
