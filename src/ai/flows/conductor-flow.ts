@@ -56,6 +56,7 @@ The current user's name is ${input.userName} and their ID is ${input.userId}. Yo
     const userMessagePart = { role: 'user', content: [{ text: input.prompt }] };
     const modelResponseParts = response.content;
     
+    // Update history correctly.
     await conductorDocRef.update({
         history: FieldValue.arrayUnion(userMessagePart, ...modelResponseParts),
     });
