@@ -98,7 +98,7 @@ export default function Home() {
           <CardTitle className="text-2xl flex items-center gap-2">
             <Users className="w-6 h-6 text-primary" /> The Federal Community Social
           </CardTitle>
-          <CardDescription>The social fabric of the republic.</CardDescription>
+          <CardDescription>A purpose to unite!</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground">
@@ -204,6 +204,7 @@ export default function Home() {
     </main>
   );
 }
+
 
 
 
