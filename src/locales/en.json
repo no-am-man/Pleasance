@@ -116,6 +116,55 @@
   "snapshot_title": "Story Snapshot from {date}",
   "snapshot_desc": "A view of your {count} stories from this point in time.",
   "snapshot_close": "Close",
+  "pricing_title": "Tiers of Contribution",
+  "pricing_subtitle": "Choose your level of commitment to the republic. Your contribution supports its growth.",
+  "pricing_note_title": "A Note on Google Genkit Usage Fees",
+  "pricing_note_desc": "The 'Clergy' and 'Founder' tiers are required to access advanced generative models like Gemini 1.5 Pro. An active subscription covers the associated Google Genkit API costs, ensuring the highest quality results for your creations. The free 'Congregation' tier uses standard models.",
+  "pricing_tiers": [
+    {
+      "name": "Congregation",
+      "price": "$0",
+      "frequency": "/ forever",
+      "description": "Join the republic and participate in the community on the free tier.",
+      "features": [
+        "Access to the Community Federation",
+        "Learn with Nuncy Lingua",
+        "View the Project Roadmap & Bug Tracker",
+        "Declare assets in your Treasury",
+        "Uses standard AI models"
+      ],
+      "cta": "Join the Congregation"
+    },
+    {
+      "name": "Clergy",
+      "price": "$10",
+      "frequency": "/ month",
+      "description": "Lead the community with more powerful generative tools.",
+      "features": [
+        "All Congregation features",
+        "Create and lead your own Communities",
+        "Utilize advanced AI models (Gemini 1.5 Pro)",
+        "Generate flags, avatars, and art",
+        "Priority access to the Fabrication workshop"
+      ],
+      "cta": "Become Clergy",
+      "highlight": "Most Popular"
+    },
+    {
+      "name": "Founder",
+      "price": "$100",
+      "frequency": "/ month",
+      "description": "Shape the very fabric of the republic with direct influence.",
+      "features": [
+        "All Clergy features",
+        "Direct access to the founding partners",
+        "Influence the project roadmap",
+        "Highest priority support & fabrication",
+        "Access to alpha features"
+      ],
+      "cta": "Join the Founders"
+    }
+  ],
   "features": [
     {
       "id": "wiki-community",
