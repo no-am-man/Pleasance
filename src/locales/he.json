@@ -524,5 +524,10 @@
   "bug_tracker_reported_by": "דווח על ידי {name}",
   "bug_tracker_login_card_title": "תרום לפרויקט",
   "bug_tracker_login_card_desc": "התחבר כדי לדווח על באג ולעזור לשפר את נעימות.",
-  "bug_tracker_login_button": "התחבר כדי להגיש דיווח"
+  "bug_tracker_login_button": "התחבר כדי להגיש דיווח",
+  "conductor_title": "מנצח על",
+  "conductor_subtitle": "הממשק השיחי שלך ליישום.",
+  "conductor_login_desc": "התחבר כדי לתקשר עם הבינה המלאכותית המרכזית של היישום.",
+  "conductor_login_button": "התחבר כדי להמשיך",
+  "conductor_input_placeholder": "שאל את המנצח... (לדוגמה, 'על מה עובדים עכשיו?')"
 }

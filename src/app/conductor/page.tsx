@@ -17,6 +17,7 @@ import Link from 'next/link';
 import { conductSuperAgent } from '../actions';
 import { marked } from 'marked';
 import { type ContentPart } from 'genkit/generate';
+import { useTranslation } from '@/hooks/use-translation';
 
 
 type Message = {
@@ -49,6 +50,7 @@ function ToolCall({ part }: { part: ContentPart }) {
 
 export default function ConductorPage() {
     const { user, isUserLoading } = useUser();
+    const { t } = useTranslation();
     const [input, setInput] = useState('');
     const [isThinking, setIsThinking] = useState(false);
     const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -114,13 +116,13 @@ export default function ConductorPage() {
             <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
                 <Card className="w-full max-w-md text-center shadow-lg">
                     <CardHeader>
-                        <CardTitle>Conductor SuperAgent</CardTitle>
-                        <CardDescription>Log in to interact with the application's central AI.</CardDescription>
+                        <CardTitle>{t('conductor_title')}</CardTitle>
+                        <CardDescription>{t('conductor_login_desc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Button asChild>
                         <Link href="/login">
-                            <LogIn className="mr-2 h-4 w-4" /> Login to Continue
+                            <LogIn className="mr-2 h-4 w-4" /> {t('conductor_login_button')}
                         </Link>
                         </Button>
                     </CardContent>
@@ -133,9 +135,9 @@ export default function ConductorPage() {
         <main className="container mx-auto max-w-2xl py-8 flex flex-col h-[calc(100vh-8rem)]">
             <div className="text-center mb-8">
                 <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-                    <Bot /> Conductor SuperAgent
+                    <Bot /> {t('conductor_title')}
                 </h1>
-                <p className="text-lg text-muted-foreground mt-2">Your conversational interface to the application.</p>
+                <p className="text-lg text-muted-foreground mt-2">{t('conductor_subtitle')}</p>
             </div>
 
             <Card className="flex-grow flex flex-col shadow-lg">
@@ -184,7 +186,7 @@ export default function ConductorPage() {
                         <Input
                             value={input}
                             onChange={e => setInput(e.target.value)}
-                            placeholder="Ask the Conductor... (e.g., 'What is being worked on right now?')"
+                            placeholder={t('conductor_input_placeholder')}
                             disabled={isThinking}
                         />
                         <Button type="submit" disabled={isThinking || !input.trim()}>

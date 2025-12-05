@@ -524,5 +524,10 @@
   "bug_tracker_reported_by": "Reported by {name}",
   "bug_tracker_login_card_title": "Contribute to the Project",
   "bug_tracker_login_card_desc": "Log in to report a bug and help improve Pleasance.",
-  "bug_tracker_login_button": "Login to Submit a Report"
+  "bug_tracker_login_button": "Login to Submit a Report",
+  "conductor_title": "Conductor SuperAgent",
+  "conductor_subtitle": "Your conversational interface to the application.",
+  "conductor_login_desc": "Log in to interact with the application's central AI.",
+  "conductor_login_button": "Login to Continue",
+  "conductor_input_placeholder": "Ask the Conductor... (e.g., 'What is being worked on right now?')"
 }
