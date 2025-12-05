@@ -1,4 +1,4 @@
-// src/app/home/page.tsx (formerly app/page.tsx)
+// src/app/home/page.tsx
 "use client";
 
 import Image from "next/image";
@@ -8,32 +8,39 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, LoaderCircle } from "lucide-react";
 import { FederationDiagram } from "@/components/federation-diagram";
 import { useTranslation } from "@/hooks/use-translation";
+import {
+    Carousel,
+    CarouselContent,
+    CarouselItem,
+    CarouselNext,
+    CarouselPrevious,
+} from "@/components/ui/carousel"
 
 
-function FeatureCard({ feature, isFirst, t }: { feature: any, isFirst: boolean, t: (key: string) => string }) {
+function FeatureCard({ title, description, imageUrl, imageHint, isFirst, ctaText, ctaLink, t }: { title: string, description: string, imageUrl: string, imageHint: string, isFirst: boolean, ctaText: string, ctaLink: string, t: (key: string) => string }) {
     return (
-        <Card className="flex flex-col md:flex-row items-stretch overflow-hidden shadow-lg transition-transform duration-300 ease-in-out hover:-translate-y-1 hover:shadow-xl">
+        <Card className="flex flex-col md:flex-row items-stretch overflow-hidden shadow-lg transition-transform duration-300 ease-in-out hover:-translate-y-1 hover:shadow-xl h-full">
             <div className="md:w-1/2">
                 <div className="relative w-full h-64 md:h-full">
                     <Image
-                        src={feature.imageUrl}
-                        alt={t(feature.description)}
+                        src={imageUrl}
+                        alt={description}
                         fill
                         style={{ objectFit: 'cover' }}
-                        data-ai-hint={feature.imageHint}
+                        data-ai-hint={imageHint}
                     />
                 </div>
             </div>
             <div className="md:w-1/2 flex flex-col">
                 <CardHeader>
-                    <CardTitle className="font-headline capitalize">{t(feature.title)}</CardTitle>
+                    <CardTitle className="font-headline capitalize">{title}</CardTitle>
                 </CardHeader>
                 <CardContent className="flex-grow flex flex-col">
-                    <p className="text-muted-foreground flex-grow">{t(feature.description)}</p>
+                    <p className="text-muted-foreground flex-grow">{description}</p>
                      {isFirst && (
                         <Button asChild className="mt-6">
-                            <Link href="/community">
-                                {t('exploreCommunities')} <ArrowRight className="ms-2 h-4 w-4" />
+                            <Link href={ctaLink}>
+                                {ctaText} <ArrowRight className="ms-2 h-4 w-4" />
                             </Link>
                         </Button>
                     )}
@@ -55,6 +62,7 @@ export default function HomePage() {
     }
 
     const features = tData('features') || [];
+    const exploreCta = t('exploreCommunities');
 
     return (
         <main className="container mx-auto max-w-4xl py-12 px-4">
@@ -78,11 +86,34 @@ export default function HomePage() {
 
             <div className="mt-20">
                 <h2 className="text-4xl font-bold text-center mb-12 font-headline">{t('coreConceptsTitle')}</h2>
-                <div className="space-y-8">
-                    {features.map((feature: any, index: number) => (
-                        <FeatureCard key={feature.id} feature={feature} isFirst={index === 0} t={t} />
-                    ))}
-                </div>
+                <Carousel
+                    opts={{
+                        align: "start",
+                        loop: true,
+                    }}
+                    className="w-full"
+                >
+                    <CarouselContent>
+                        {features.map((feature: any, index: number) => (
+                            <CarouselItem key={feature.id} className="md:basis-full">
+                                <div className="p-1 h-full">
+                                   <FeatureCard
+                                        title={t(feature.title)}
+                                        description={t(feature.description)}
+                                        imageUrl={feature.imageUrl}
+                                        imageHint={feature.imageHint}
+                                        isFirst={index === 0}
+                                        ctaText={exploreCta}
+                                        ctaLink="/community"
+                                        t={t}
+                                    />
+                                </div>
+                            </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="hidden sm:flex" />
+                    <CarouselNext className="hidden sm:flex" />
+                </Carousel>
             </div>
         </main>
     );
