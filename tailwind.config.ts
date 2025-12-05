@@ -16,7 +16,7 @@ const config: Config = {
       fontFamily: {
         body: ['Roboto', 'sans-serif'],
         headline: ['Merriweather', 'serif'],
-        code: ['monospace'],
+        code: ['monospace']
       },
       colors: {
         background: 'hsl(var(--background))',
