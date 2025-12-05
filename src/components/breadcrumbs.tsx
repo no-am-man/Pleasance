@@ -67,11 +67,13 @@ export function Breadcrumbs() {
         return communityName;
     }
     
-    // Special case for home page
-    if (segment === 'home' && index === 0) {
-        return t('navWiki');
+    // Attempt to translate the segment using its nav key
+    const translationKey = `nav${segment.charAt(0).toUpperCase() + segment.slice(1)}`;
+    const translatedSegment = t(translationKey);
+    if (translatedSegment !== translationKey) {
+        return translatedSegment;
     }
-
+    
     // Default formatting for other segments
     return segment
       .replace(/-/g, ' ')
