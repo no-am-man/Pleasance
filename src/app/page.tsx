@@ -1,3 +1,4 @@
+
 // src/app/page.tsx (formerly community/page.tsx)
 "use client";
 
@@ -318,11 +319,11 @@ function CommunityCard({ community, profiles }: { community: Community, profiles
                         )}
                     </Link>
                     <div className="flex-1">
-                        <Link href={`/community/${community.id}`}>
-                            <h3 className="font-semibold text-lg text-primary hover:underline flex items-center gap-2">
+                         <h3 className="font-semibold text-lg text-primary hover:underline flex items-center gap-2">
+                            <Link href={`/community/${community.id}`}>
                                 {isNameLoading ? <LoaderCircle className="w-4 h-4 animate-spin"/> : translatedName}
-                            </h3>
-                        </Link>
+                            </Link>
+                        </h3>
                         <p className="text-sm text-muted-foreground mt-1 line-clamp-2 flex items-center gap-2">
                             {isDescriptionLoading ? <LoaderCircle className="w-4 h-4 animate-spin"/> : translatedDescription}
                         </p>
@@ -343,7 +344,7 @@ function CommunityCard({ community, profiles }: { community: Community, profiles
                 <h4 className="text-sm font-semibold mb-2 flex items-center gap-2"><Users className="w-4 h-4" /> {t('community_meet_members')} ({members.length})</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {members.slice(0, 4).map((member, index) => (
-                        <div key={member.userId || `${member.name}-${index}`} className="flex items-center gap-3 p-2 rounded-md bg-background/50">
+                        <div key={member.userId || member.name} className="flex items-center gap-3 p-2 rounded-md bg-background/50">
                             <Avatar className="h-8 w-8 border-2 border-background">
                                 <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
                                 <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
