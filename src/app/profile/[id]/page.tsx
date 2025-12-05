@@ -12,6 +12,7 @@ import { LoaderCircle, AlertCircle, ArrowLeft, Languages, User, BookUser } from 
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useTranslation } from '@/hooks/use-translation';
 
 type CommunityProfile = {
     id: string;
@@ -28,6 +29,7 @@ export default function UserProfilePage() {
   const router = useRouter();
   const { user: currentUser } = useUser();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  const { t } = useTranslation();
 
   const [profile, setProfile] = useState<CommunityProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,17 +70,17 @@ export default function UserProfilePage() {
         <Card className="w-full max-w-lg text-center">
           <CardHeader>
             <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
-            <CardTitle className="mt-4">Error Loading Profile</CardTitle>
+            <CardTitle className="mt-4">{t('profile_view_error_title')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-4">
-              There was a problem loading this profile.
+              {t('profile_view_error_desc')}
             </p>
             <pre className="mb-4 text-left text-sm bg-muted p-2 rounded-md overflow-x-auto">
               <code>{error.message}</code>
             </pre>
             <Button onClick={() => router.back()} variant="outline">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
+              <ArrowLeft className="mr-2 h-4 w-4" /> {t('profile_view_go_back')}
             </Button>
           </CardContent>
         </Card>
@@ -91,12 +93,12 @@ export default function UserProfilePage() {
       <main className="container mx-auto flex min-h-[80vh] items-center justify-center">
         <Card className="w-full max-w-md text-center shadow-lg">
           <CardHeader>
-            <CardTitle>Profile Not Found</CardTitle>
-            <CardDescription>This user profile does not exist.</CardDescription>
+            <CardTitle>{t('profile_view_not_found_title')}</CardTitle>
+            <CardDescription>{t('profile_view_not_found_desc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button onClick={() => router.back()}>
-              <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
+              <ArrowLeft className="mr-2 h-4 w-4" /> {t('profile_view_go_back')}
             </Button>
           </CardContent>
         </Card>
@@ -110,7 +112,7 @@ export default function UserProfilePage() {
     <main className="container mx-auto max-w-2xl py-8">
       <div className="mb-4">
         <Button onClick={() => router.back()} variant="ghost">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back
+          <ArrowLeft className="mr-2 h-4 w-4" /> {t('profile_view_back')}
         </Button>
       </div>
       <Card className="shadow-lg">
@@ -123,22 +125,22 @@ export default function UserProfilePage() {
           
           {isOwnProfile && (
              <Button asChild variant="link" className="underline">
-                <Link href="/profile">Edit Your Profile</Link>
+                <Link href="/profile">{t('profile_view_edit_button')}</Link>
              </Button>
           )}
         </CardHeader>
         <CardContent className="space-y-6">
             <div className="space-y-2">
-                <h3 className="font-semibold flex items-center gap-2 text-muted-foreground"><User className="w-5 h-5"/> Bio</h3>
+                <h3 className="font-semibold flex items-center gap-2 text-muted-foreground"><User className="w-5 h-5"/> {t('profile_view_bio_label')}</h3>
                 <p className="text-lg bg-muted p-4 rounded-md">{profile.bio}</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                    <h3 className="font-semibold flex items-center gap-2 text-muted-foreground"><BookUser className="w-5 h-5"/> Native Language</h3>
+                    <h3 className="font-semibold flex items-center gap-2 text-muted-foreground"><BookUser className="w-5 h-5"/> {t('profile_view_native_lang_label')}</h3>
                     <p className="text-lg">{profile.nativeLanguage}</p>
                 </div>
                  <div className="space-y-2">
-                    <h3 className="font-semibold flex items-center gap-2 text-muted-foreground"><Languages className="w-5 h-5"/> Learning Language</h3>
+                    <h3 className="font-semibold flex items-center gap-2 text-muted-foreground"><Languages className="w-5 h-5"/> {t('profile_view_learning_lang_label')}</h3>
                     <p className="text-lg">{profile.learningLanguage}</p>
                 </div>
             </div>

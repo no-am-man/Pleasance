@@ -1,3 +1,4 @@
+
 // src/app/profile/page.tsx
 'use client';
 
@@ -25,6 +26,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { generateProfileAvatars } from '../actions';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { useTranslation } from '@/hooks/use-translation';
 
 const ProfileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -40,6 +42,7 @@ type CommunityProfile = z.infer<typeof ProfileSchema> & {
 };
 
 function AvatarSelectionDialog({ name, onSelectAvatar }: { name: string; onSelectAvatar: (url: string) => void }) {
+    const { t } = useTranslation();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [avatars, setAvatars] = useState<string[]>([]);
@@ -47,7 +50,7 @@ function AvatarSelectionDialog({ name, onSelectAvatar }: { name: string; onSelec
 
     const handleGenerate = async () => {
         if (!name) {
-            setError("Please enter your name first to generate avatars.");
+            setError(t('profile_avatar_name_required'));
             return;
         }
         setIsLoading(true);
@@ -74,27 +77,27 @@ function AvatarSelectionDialog({ name, onSelectAvatar }: { name: string; onSelec
             <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
                     <Sparkles className="mr-2 h-4 w-4" />
-                    Generate Avatars
+                    {t('profile_edit_avatar_button')}
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[625px]">
                 <DialogHeader>
-                    <DialogTitle>Generate Your Avatar</DialogTitle>
+                    <DialogTitle>{t('profile_avatar_dialog_title')}</DialogTitle>
                     <DialogDescription>
-                        Click the button to generate unique, abstract avatars based on your name. Click on an image to select it.
+                        {t('profile_avatar_dialog_desc')}
                     </DialogDescription>
                 </DialogHeader>
                 <div className="flex justify-center my-4">
                     <Button onClick={handleGenerate} disabled={isLoading}>
                         {isLoading ? <LoaderCircle className="animate-spin mr-2" /> : <Sparkles className="mr-2" />}
-                        Generate New Avatars
+                        {t('profile_avatar_generate_button')}
                     </Button>
                 </div>
 
                 {error && (
                     <Alert variant="destructive">
                         <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Generation Failed</AlertTitle>
+                        <AlertTitle>{t('profile_avatar_fail_title')}</AlertTitle>
                         <p>{error}</p>
                     </Alert>
                 )}
@@ -121,7 +124,7 @@ function AvatarSelectionDialog({ name, onSelectAvatar }: { name: string; onSelec
                 )}
                 <DialogFooter>
                     <DialogClose asChild>
-                        <Button type="button">Done</Button>
+                        <Button type="button">{t('profile_avatar_done_button')}</Button>
                     </DialogClose>
                 </DialogFooter>
             </DialogContent>
@@ -133,6 +136,7 @@ export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast()
+  const { t } = useTranslation();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -178,7 +182,7 @@ export default function ProfilePage() {
 
   async function onSubmit(data: z.infer<typeof ProfileSchema>) {
     if (!user) {
-      setError('You must be logged in to update your profile.');
+      setError(t('profile_edit_toast_login_error'));
       return;
     }
     setIsLoading(true);
@@ -195,14 +199,14 @@ export default function ProfilePage() {
     try {
       setDocumentNonBlocking(profileDocRef, profileData, { merge: true });
       toast({
-        title: "Profile Saved!",
-        description: "Your community profile has been updated.",
+        title: t('profile_edit_toast_save_success_title'),
+        description: t('profile_edit_toast_save_success_desc'),
       })
       // Redirect to community page after profile is created/updated
       router.push('/community');
     } catch (e) {
       const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
-      setError(`Failed to save profile. ${message}`);
+      setError(`${t('profile_edit_toast_save_fail')} ${message}`);
     }
     setIsLoading(false);
   }
@@ -224,13 +228,13 @@ export default function ProfilePage() {
       <main className="container mx-auto flex min-h-[80vh] items-center justify-center">
         <Card className="w-full max-w-md text-center shadow-lg">
           <CardHeader>
-            <CardTitle>Please Log In</CardTitle>
-            <CardDescription>You need to be logged in to view or edit your profile.</CardDescription>
+            <CardTitle>{t('profile_edit_login_required_title')}</CardTitle>
+            <CardDescription>{t('profile_edit_login_required_desc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild>
               <Link href="/login">
-                <LogIn className="mr-2 h-4 w-4" /> Login
+                <LogIn className="mr-2 h-4 w-4" /> {t('profile_edit_login_button')}
               </Link>
             </Button>
           </CardContent>
@@ -243,8 +247,8 @@ export default function ProfilePage() {
     <main className="container mx-auto max-w-2xl py-8">
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="text-3xl">Your Community Profile</CardTitle>
-          <CardDescription>This information will be visible to other members in the communities you join.</CardDescription>
+          <CardTitle className="text-3xl">{t('profile_edit_title')}</CardTitle>
+          <CardDescription>{t('profile_edit_desc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -261,9 +265,9 @@ export default function ProfilePage() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Display Name</FormLabel>
+                    <FormLabel>{t('profile_edit_name_label')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Your display name" {...field} />
+                      <Input placeholder={t('profile_edit_name_placeholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -274,9 +278,9 @@ export default function ProfilePage() {
                 name="bio"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Short Bio</FormLabel>
+                    <FormLabel>{t('profile_edit_bio_label')}</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Tell everyone a little about yourself..." {...field} />
+                      <Textarea placeholder={t('profile_edit_bio_placeholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -288,11 +292,11 @@ export default function ProfilePage() {
                   name="nativeLanguage"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Native Language</FormLabel>
+                      <FormLabel>{t('profile_edit_native_lang_label')}</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select your native language" />
+                            <SelectValue placeholder={t('profile_edit_native_lang_placeholder')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -312,11 +316,11 @@ export default function ProfilePage() {
                   name="learningLanguage"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Learning Language</FormLabel>
+                      <FormLabel>{t('profile_edit_learning_lang_label')}</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a language to learn" />
+                            <SelectValue placeholder={t('profile_edit_learning_lang_placeholder')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -336,9 +340,9 @@ export default function ProfilePage() {
               <Button type="submit" disabled={isLoading}>
                 {isLoading ? (
                   <>
-                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> {t('profile_edit_saving_button')}
                   </>
-                ) : 'Save Profile'}
+                ) : t('profile_edit_save_button')}
               </Button>
 
               {error && (
