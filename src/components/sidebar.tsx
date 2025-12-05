@@ -20,7 +20,7 @@ import {
   Info,
   DollarSign,
   Github,
-  CalendarHeart
+  CalendarHeart,
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
