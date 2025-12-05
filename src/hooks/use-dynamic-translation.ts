@@ -18,8 +18,11 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
       return;
     }
 
+    // Immediately set text based on language, using original for 'en'
+    // or falling back to original if no translation is cached yet.
     if (language === 'en') {
       setTranslatedText(originalText);
+      setIsLoading(false);
       return;
     }
 
@@ -27,29 +30,33 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
 
     if (cache.has(cacheKey)) {
       setTranslatedText(cache.get(cacheKey)!);
+      setIsLoading(false);
       return;
     }
 
+    // If not English and not in cache, start fetching.
+    // Show original text while loading.
+    setTranslatedText(originalText);
+    setIsLoading(true);
+
     let isCancelled = false;
+
     const translate = async () => {
-      setIsLoading(true);
       try {
         const result = await translateTextAction({
           text: originalText,
           targetLanguage: language === 'he' ? 'Hebrew' : 'English',
         });
+
         if (!isCancelled) {
-          if (result.translation) {
-            cache.set(cacheKey, result.translation);
-            setTranslatedText(result.translation);
-          } else {
-            // Fallback to original text if translation fails
-            setTranslatedText(originalText);
-          }
+          const translation = result.translation || originalText;
+          cache.set(cacheKey, translation);
+          setTranslatedText(translation);
         }
       } catch (error) {
         console.error("Translation failed:", error);
         if (!isCancelled) {
+          // On error, fall back to original text
           setTranslatedText(originalText);
         }
       } finally {
@@ -61,10 +68,11 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
 
     translate();
 
+    // Cleanup function to prevent state updates on unmounted components
     return () => {
       isCancelled = true;
     };
-  }, [originalText, language]);
+  }, [originalText, language]); // Rerun effect if originalText or language changes
 
   return { translatedText, isLoading };
 }
