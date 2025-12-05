@@ -15,6 +15,7 @@ import {
     CarouselNext,
     CarouselPrevious,
 } from "@/components/ui/carousel"
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 
 function FeatureCard({ title, description, imageUrl, imageHint, isFirst, ctaText, ctaLink, t }: { title: string, description: string, imageUrl: string, imageHint: string, isFirst: boolean, ctaText: string, ctaLink: string, t: (key: string) => string }) {
@@ -51,7 +52,7 @@ function FeatureCard({ title, description, imageUrl, imageHint, isFirst, ctaText
 }
 
 export default function HomePage() {
-    const { t, tData, isLoading } = useTranslation();
+    const { t, isLoading } = useTranslation();
 
     if (isLoading) {
         return (
@@ -60,8 +61,30 @@ export default function HomePage() {
             </div>
         );
     }
+    
+    const features = [
+        {
+          id: "wiki-community",
+          title: "feature_community_title",
+          description: "feature_community_desc",
+        },
+        {
+          id: "wiki-lingua",
+          title: "feature_lingua_title",
+          description: "feature_lingua_desc",
+        },
+        {
+          id: "wiki-fabrication",
+          title: "feature_fabrication_title",
+          description: "feature_fabrication_desc",
+        },
+        {
+          id: "wiki-treasury",
+          title: "feature_treasury_title",
+          description: "feature_treasury_desc",
+        }
+      ];
 
-    const features = tData('features') || [];
     const exploreCta = t('exploreCommunities');
 
     return (
@@ -94,22 +117,25 @@ export default function HomePage() {
                     className="w-full"
                 >
                     <CarouselContent>
-                        {features.map((feature: any, index: number) => (
-                            <CarouselItem key={feature.id} className="md:basis-full">
-                                <div className="p-1 h-full">
-                                   <FeatureCard
-                                        title={t(feature.title)}
-                                        description={t(feature.description)}
-                                        imageUrl={feature.imageUrl}
-                                        imageHint={feature.imageHint}
-                                        isFirst={index === 0}
-                                        ctaText={exploreCta}
-                                        ctaLink="/community"
-                                        t={t}
-                                    />
-                                </div>
-                            </CarouselItem>
-                        ))}
+                        {features.map((feature: any, index: number) => {
+                            const placeholder = PlaceHolderImages.find(p => p.id === feature.id);
+                            return (
+                                <CarouselItem key={feature.id} className="md:basis-full">
+                                    <div className="p-1 h-full">
+                                    <FeatureCard
+                                            title={t(feature.title)}
+                                            description={t(feature.description)}
+                                            imageUrl={placeholder?.imageUrl || ''}
+                                            imageHint={placeholder?.imageHint || ''}
+                                            isFirst={index === 0}
+                                            ctaText={exploreCta}
+                                            ctaLink="/community"
+                                            t={t}
+                                        />
+                                    </div>
+                                </CarouselItem>
+                            )
+                        })}
                     </CarouselContent>
                     <CarouselPrevious className="hidden sm:flex" />
                     <CarouselNext className="hidden sm:flex" />
