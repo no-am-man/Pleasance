@@ -1,3 +1,4 @@
+
 // src/app/api/auth/session/route.ts
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { cookies } from 'next/headers';
@@ -16,11 +17,12 @@ export async function POST(request: NextRequest) {
     const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
     const sessionCookie = await adminApp.auth().createSessionCookie(idToken, { expiresIn });
 
-    await cookies().set('__session', sessionCookie, {
+    cookies().set('__session', sessionCookie, {
       maxAge: expiresIn,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       path: '/',
+      sameSite: 'lax',
     });
 
     return NextResponse.json({ status: 'success' });
@@ -34,7 +36,7 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE() {
   try {
-    await cookies().delete('__session');
+    cookies().delete('__session');
     return NextResponse.json({ status: 'success' });
   } catch (error) {
     console.error('Error deleting session cookie:', error);
