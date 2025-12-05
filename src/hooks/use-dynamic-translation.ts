@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,6 +10,7 @@ const cache = new Map<string, string>();
 export function useDynamicTranslation(originalText: string | undefined | null) {
   const { language } = useLanguage();
   const [translatedText, setTranslatedText] = useState(originalText || '');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!originalText) {
@@ -28,8 +30,9 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
     }
 
     let isCancelled = false;
-
+    
     const translate = async () => {
+      setIsLoading(true);
       try {
         const result = await translateTextAction({
           text: originalText,
@@ -50,6 +53,10 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
         if (!isCancelled) {
           setTranslatedText(originalText); // Fallback on error
         }
+      } finally {
+        if (!isCancelled) {
+            setIsLoading(false);
+        }
       }
     };
 
@@ -60,5 +67,5 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
     };
   }, [originalText, language]);
 
-  return translatedText;
+  return { translatedText, isLoading };
 }

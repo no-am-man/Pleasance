@@ -251,8 +251,8 @@ function CommunityCard({ community, profiles }: { community: Community, profiles
     const [submittingRequests, setSubmittingRequests] = useState<{[key: string]: boolean}>({});
     const { t } = useTranslation();
     
-    const translatedName = useDynamicTranslation(community.name);
-    const translatedDescription = useDynamicTranslation(community.description);
+    const { translatedText: translatedName, isLoading: isNameLoading } = useDynamicTranslation(community.name);
+    const { translatedText: translatedDescription, isLoading: isDescriptionLoading } = useDynamicTranslation(community.description);
 
     useEffect(() => {
         if (user && firestore) {
@@ -319,8 +319,14 @@ function CommunityCard({ community, profiles }: { community: Community, profiles
                         )}
                     </Link>
                     <div className="flex-1">
-                        <Link href={`/community/${community.id}`}><h3 className="font-semibold text-lg text-primary underline">{translatedName}</h3></Link>
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{translatedDescription}</p>
+                        <Link href={`/community/${community.id}`}>
+                            <h3 className="font-semibold text-lg text-primary underline flex items-center gap-2">
+                                {isNameLoading ? <LoaderCircle className="w-4 h-4 animate-spin"/> : translatedName}
+                            </h3>
+                        </Link>
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2 flex items-center gap-2">
+                            {isDescriptionLoading ? <LoaderCircle className="w-4 h-4 animate-spin"/> : translatedDescription}
+                        </p>
                         {owner && (
                             <div className="flex items-center gap-2 text-sm text-muted-foreground font-semibold mt-2">
                                 <User className="w-4 h-4" />
