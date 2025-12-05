@@ -10,17 +10,17 @@ import {
   Menu,
   Shield,
   UserCircle,
-  UserX,
   Users,
-  Landmark,
+  Warehouse,
   Sparkles,
   Bug,
+  UserX,
   Bot,
-  Info,
   DollarSign,
+  Info,
+  Landmark,
   Github,
   CalendarHeart,
-  Warehouse
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
