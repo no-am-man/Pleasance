@@ -529,5 +529,12 @@
   "conductor_subtitle": "Your conversational interface to the application.",
   "conductor_login_desc": "Log in to interact with the application's central AI.",
   "conductor_login_button": "Login to Continue",
-  "conductor_input_placeholder": "Ask the Conductor... (e.g., 'What is being worked on right now?')"
+  "conductor_input_placeholder": "Ask the Conductor... (e.g., 'What is being worked on right now?')",
+  "conductor_explanation_title": "What is the Conductor?",
+  "conductor_explanation_p1": "The Conductor is a 'SuperAgent' for the Pleasance federation. It is a conversational AI that can understand your requests and use tools to perform actions on your behalf.",
+  "conductor_explanation_p2": "You can ask it to perform tasks like:",
+  "conductor_explanation_li1": "Get details about a specific community.",
+  "conductor_explanation_li2": "See what's currently in progress on the public roadmap.",
+  "conductor_explanation_li3": "File a bug report directly through conversation.",
+  "conductor_explanation_p3": "As the project grows, the Conductor's abilities and toolset will expand."
 }

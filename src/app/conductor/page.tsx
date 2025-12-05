@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Bot, User, Send, LoaderCircle, LogIn } from 'lucide-react';
+import { Bot, User, Send, LoaderCircle, LogIn, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { conductSuperAgent } from '../actions';
@@ -46,6 +46,28 @@ function ToolCall({ part }: { part: ContentPart }) {
             </CardContent>
         </Card>
     );
+}
+
+function ConductorExplanation() {
+    const { t } = useTranslation();
+
+    return (
+        <Card className="mt-8">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Info className="text-primary"/> {t('conductor_explanation_title')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-muted-foreground">
+                <p>{t('conductor_explanation_p1')}</p>
+                <p>{t('conductor_explanation_p2')}</p>
+                <ul className="list-disc pl-5 space-y-2">
+                    <li>{t('conductor_explanation_li1')}</li>
+                    <li>{t('conductor_explanation_li2')}</li>
+                    <li>{t('conductor_explanation_li3')}</li>
+                </ul>
+                <p>{t('conductor_explanation_p3')}</p>
+            </CardContent>
+        </Card>
+    )
 }
 
 export default function ConductorPage() {
@@ -132,7 +154,7 @@ export default function ConductorPage() {
     }
 
     return (
-        <main className="container mx-auto max-w-2xl py-8 flex flex-col h-[calc(100vh-8rem)]">
+        <main className="container mx-auto max-w-2xl py-8">
             <div className="text-center mb-8">
                 <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
                     <Bot /> {t('conductor_title')}
@@ -140,7 +162,7 @@ export default function ConductorPage() {
                 <p className="text-lg text-muted-foreground mt-2">{t('conductor_subtitle')}</p>
             </div>
 
-            <Card className="flex-grow flex flex-col shadow-lg">
+            <Card className="flex-grow flex flex-col shadow-lg min-h-[60vh]">
                 <ScrollArea className="flex-grow p-4" ref={scrollAreaRef}>
                     <div className="space-y-4">
                         {history.map((msg, index) => (
@@ -195,6 +217,8 @@ export default function ConductorPage() {
                     </form>
                 </div>
             </Card>
+
+            <ConductorExplanation />
         </main>
     );
 }
