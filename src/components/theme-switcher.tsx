@@ -2,7 +2,7 @@
 'use client';
 
 import { Check, Palette } from 'lucide-react';
-import { useTheme } from '@/components/theme-provider';
+import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -25,13 +25,13 @@ export function ThemeSwitcher() {
   const { direction } = useLanguage();
 
   const themes = [
-    { name: 'Default', value: 'theme-default' },
+    { name: 'Light', value: 'light' },
+    { name: 'Dark', value: 'dark' },
     { name: 'Commune', value: 'theme-commune' },
     { name: 'Founder', value: 'theme-founder' },
-    { name: 'Dark', value: 'dark' },
   ];
 
-  const handleThemeChange = (newTheme: 'theme-default' | 'theme-commune' | 'theme-founder' | 'dark') => {
+  const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme);
     if (user && firestore) {
       const profileRef = doc(firestore, 'community-profiles', user.uid);
@@ -49,7 +49,7 @@ export function ThemeSwitcher() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {themes.map(t => (
-          <DropdownMenuItem key={t.value} onClick={() => handleThemeChange(t.value as any)}>
+          <DropdownMenuItem key={t.value} onClick={() => handleThemeChange(t.value)}>
              <div className={cn("w-4 h-4 mr-2", theme !== t.value && "opacity-0")}>
                 <Check className="h-4 w-4"/>
             </div>
