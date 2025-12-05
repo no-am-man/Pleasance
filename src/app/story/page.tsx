@@ -15,7 +15,7 @@ import { LANGUAGES } from '@/config/languages';
 import { generateStoryAndSpeech, createHistorySnapshot } from '@/app/actions';
 import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useUser, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
 import { collection, query, orderBy, doc, deleteDoc, getDocs, getDoc } from 'firebase/firestore';
 import { Separator } from '@/components/ui/separator';

@@ -3,7 +3,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { useUser, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
 import { collection, query, where, orderBy, doc, getDocs } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
