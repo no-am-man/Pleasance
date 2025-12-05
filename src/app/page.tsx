@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
-import { useUser, useMemoFirebase } from "@/firebase";
+import { useUser } from "@/firebase";
 import { firestore } from "@/firebase/config";
 import { collection, doc, query, where, orderBy, onSnapshot, Unsubscribe, getDocs, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -310,36 +310,38 @@ function CommunityCard({ community, profiles }: { community: Community, profiles
     return (
         <li className="rounded-md border transition-colors hover:bg-muted/50">
             <div className="p-4">
-                <Link href={`/community/${community.id}`} className="flex items-start gap-4">
-                    <div className="relative h-20 w-36 flex-shrink-0 rounded-md border bg-muted flex items-center justify-center">
+                <div className="flex items-start gap-4">
+                    <Link href={`/community/${community.id}`} className="relative h-20 w-36 flex-shrink-0 rounded-md border bg-muted flex items-center justify-center">
                         {community.flagUrl ? (
                             <Image src={community.flagUrl} alt={`${community.name} Flag`} layout="fill" objectFit="cover" className="rounded-md" />
                         ) : (
                             <Flag className="h-8 w-8 text-muted-foreground" />
                         )}
-                    </div>
+                    </Link>
                     <div className="flex-1">
-                        <h3 className="font-semibold text-lg text-primary underline flex items-center gap-2">
-                            {isNameLoading ? <LoaderCircle className="w-4 h-4 animate-spin"/> : translatedName}
-                        </h3>
+                        <Link href={`/community/${community.id}`}>
+                            <h3 className="font-semibold text-lg text-primary underline flex items-center gap-2">
+                                {isNameLoading ? <LoaderCircle className="w-4 h-4 animate-spin"/> : translatedName}
+                            </h3>
+                        </Link>
                         <p className="text-sm text-muted-foreground mt-1 line-clamp-2 flex items-center gap-2">
                             {isDescriptionLoading ? <LoaderCircle className="w-4 h-4 animate-spin"/> : translatedDescription}
                         </p>
                         {owner && (
                             <div className="flex items-center gap-2 text-sm text-muted-foreground font-semibold mt-2">
                                 <User className="w-4 h-4" />
-                                <span>{t('community_founded_by')} {owner.name}</span>
+                                <span>{t('community_founded_by')} <Link href={`/profile/${owner.id}`} className="hover:underline text-primary/80">{owner.name}</Link></span>
                             </div>
                         )}
                     </div>
-                </Link>
+                </div>
             </div>
 
             <div className="p-4 pt-0">
                 <h4 className="text-sm font-semibold mb-2 flex items-center gap-2"><Users className="w-4 h-4" /> {t('community_meet_members')} ({members.length})</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {members.slice(0, 4).map((member) => (
-                        <div key={member.userId || member.name} className="flex items-center gap-3 p-2 rounded-md bg-background/50">
+                    {members.slice(0, 4).map((member, index) => (
+                        <div key={member.userId || `${member.name}-${index}`} className="flex items-center gap-3 p-2 rounded-md bg-background/50">
                             <Avatar className="h-8 w-8 border-2 border-background">
                                 <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
                                 <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>

@@ -64,9 +64,8 @@ export function JoinRequests({ communityId, communityName }: { communityId: stri
     }, [communityId]);
 
     useEffect(() => {
-        if (!firestore || !communityId) return;
         fetchRequests();
-    }, [firestore, communityId, fetchRequests]);
+    }, [fetchRequests]);
 
     const handleRequest = async (request: JoinRequest, newStatus: 'approved' | 'rejected') => {
         if (!firestore) {
