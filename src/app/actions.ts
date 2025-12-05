@@ -34,6 +34,7 @@ import {
     RoadmapColumnSchema,
     GenerateRoadmapIdeaOutputSchema
 } from '@/lib/types';
+import { addDocument } from '@/firebase/non-blocking-updates';
 
 
 export type ChatWithMemberInput = {
@@ -842,7 +843,7 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
           nativeText: originalStory,
           translatedText: translatedText,
           createdAt: FieldValue.serverTimestamp(),
-          status: 'complete',
+          status: 'complete' as const,
           audioUrl: publicUrl,
       };
       
@@ -861,13 +862,14 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
           lastActivity: FieldValue.serverTimestamp(),
       }, { merge: true });
       
-      // --- Step 8: Return immediately to the client ---
+      // --- Step 8: Return a client-safe object ---
+      const clientSafeStoryData = {
+        ...storyData,
+        createdAt: new Date().toISOString(), // Use a serializable format
+      };
+
       return {
-          storyData: {
-              ...storyData,
-              createdAt: new Date().toISOString(),
-              audioUrl: publicUrl,
-          }
+          storyData: clientSafeStoryData
       };
   
     } catch (e) {
@@ -1035,3 +1037,5 @@ export async function translateTextAction(values: z.infer<typeof TranslateTextSc
         return { error: `Translation failed: ${message}` };
     }
 }
+
+    
