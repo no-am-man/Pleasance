@@ -66,6 +66,8 @@
 }
 
 /* Custom CSS for sidebar width */
-:root {
-  --sidebar-width: 280px;
+@layer base {
+  :root {
+    --sidebar-width: 280px;
+  }
 }
