@@ -60,12 +60,13 @@
     --sidebar-primary-foreground: 222.2 47.4% 11.2%;
   }
  
-  * {
-    @apply border-border;
-  }
-
   body {
-    @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  * {
+    border-color: hsl(var(--border));
   }
 }
