@@ -580,8 +580,8 @@ export default function CommunityProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const translatedName = useDynamicTranslation(community?.name);
-  const translatedDescription = useDynamicTranslation(community?.description);
+  const { translatedText: translatedName } = useDynamicTranslation(community?.name);
+  const { translatedText: translatedDescription } = useDynamicTranslation(community?.description);
 
   const [userProfile, setUserProfile] = useState<CommunityProfile | null>(null);
 
