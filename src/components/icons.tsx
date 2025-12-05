@@ -12,15 +12,8 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
       strokeLinejoin="round"
       {...props}
     >
-      {/* Circle representing the secluded "pleasance" */}
       <circle cx="12" cy="12" r="10" />
-      {/* Abstract shape representing a person, growth, and a path */}
-      <path d="M12 12a3 3 0 1 0-3-3" />
-      <path d="M15 12a3 3 0 1 0-3-3" />
-      <path d="M12 12h.01" />
-      <path d="M15 12h.01" />
-      <path d="M8 15c.5-1 2-2 4-2s3.5 1 4 2" />
-      <path d="m15.5 8.5-3 2.5" />
+      <path d="M10 15V9a2 2 0 1 1 4 0v2a2 2 0 1 0 0 4h-4Z" />
     </svg>
   );
 }
