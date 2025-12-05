@@ -14,7 +14,7 @@ import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType
 import { GripVertical, LoaderCircle, PlusCircle, Trash2, Sparkles, ArrowLeft, ArrowRight, UserPlus, Check } from 'lucide-react';
 import { addRoadmapCard, deleteRoadmapCard, refineCardDescription, updateRoadmapCardAssignees, updateRoadmapCardColumn, updateRoadmapCardOrder, generateRoadmapIdeaAction } from '../actions';
 import { useToast } from '@/hooks/use-toast';
-import { useUser, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -230,10 +230,8 @@ function AddIdeaForm() {
     )
 }
 
-function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, dragHandleProps }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; allProfiles: CommunityProfile[]; onUpdateAssignees: (cardId: string, assigneeName: string, shouldAssign: boolean) => void; dragHandleProps?: {listeners: SyntheticListenerMap, attributes: DraggableAttributes} }) {
-  const { user } = useUser();
+function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, isOwner, dragHandleProps, onDelete }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; allProfiles: CommunityProfile[]; onUpdateAssignees: (cardId: string, assigneeName: string, shouldAssign: boolean) => void; isOwner: boolean; dragHandleProps?: {listeners: SyntheticListenerMap, attributes: DraggableAttributes}, onDelete: (cardId: string, columnId: string) => void; }) {
   const { t } = useTranslation();
-  const isFounder = user?.email === 'gg.el0ai.com@gmail.com';
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
   
@@ -245,19 +243,7 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, dr
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    const result = await deleteRoadmapCard(card.id, columnId);
-    if (result.error) {
-        toast({
-            variant: 'destructive',
-            title: t('toast_delete_error'),
-            description: result.error,
-        });
-    } else {
-        toast({
-            title: t('toast_idea_removed'),
-            description: t('toast_idea_removed_desc'),
-        });
-    }
+    onDelete(card.id, columnId);
   };
   
   return (
@@ -276,7 +262,7 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, dr
             <CardTitle className="text-base">{card.title}</CardTitle>
         </div>
         <div className="flex items-center">
-            {isFounder && (
+            {isOwner && (
                 <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
                     {canMoveLeft && (
                         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onMove(card.id, columnId, 'left')}>
@@ -348,7 +334,7 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, dr
                 })}
                 </TooltipProvider>
             </div>
-             {isFounder && (
+             {isOwner && (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-6 w-6">
@@ -377,8 +363,8 @@ function KanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, dr
   );
 }
 
-function SortableKanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; allProfiles: CommunityProfile[]; onUpdateAssignees: (cardId: string, assigneeName: string, shouldAssign: boolean) => void; }) {
-    const isDraggable = columnId === 'ideas';
+function SortableKanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssignees, isOwner, onDelete }: { card: RoadmapCardType; columnId: string; onMove: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; allProfiles: CommunityProfile[]; onUpdateAssignees: (cardId: string, assigneeName: string, shouldAssign: boolean) => void; isOwner: boolean; onDelete: (cardId: string, columnId: string) => void; }) {
+    const isDraggable = columnId === 'ideas' && isOwner;
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ 
         id: card.id,
         disabled: !isDraggable,
@@ -398,16 +384,16 @@ function SortableKanbanCard({ card, columnId, onMove, allProfiles, onUpdateAssig
                 onMove={onMove}
                 allProfiles={allProfiles}
                 onUpdateAssignees={onUpdateAssignees}
+                isOwner={isOwner}
                 dragHandleProps={isDraggable ? {listeners, attributes} : undefined}
+                onDelete={onDelete}
             />
         </div>
     )
 }
 
-function KanbanColumn({ id, title, cards, children, onMoveCard, allProfiles, onUpdateAssignees }: RoadmapColumnType & { children?: React.ReactNode; onMoveCard: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; allProfiles: CommunityProfile[]; onUpdateAssignees: (cardId: string, columnId: string, assigneeName: string, shouldAssign: boolean) => void; }) {
-  const { user } = useUser();
+function KanbanColumn({ id, title, cards, children, onMoveCard, allProfiles, onUpdateAssignees, isOwner, onDeleteCard }: RoadmapColumnType & { children?: React.ReactNode; onMoveCard: (cardId: string, oldColumnId: string, direction: 'left' | 'right') => void; allProfiles: CommunityProfile[]; onUpdateAssignees: (cardId: string, columnId: string, assigneeName: string, shouldAssign: boolean) => void; isOwner: boolean; onDeleteCard: (cardId: string, columnId: string) => void; }) {
   const { t } = useTranslation();
-  const isFounder = user?.email === 'gg.el0ai.com@gmail.com';
   
   const columnInfo: { [key: string]: { titleKey: string, descKey: string } } = {
     ideas: { titleKey: 'roadmap_column_ideas_title', descKey: 'roadmap_column_ideas_desc' },
@@ -428,7 +414,7 @@ function KanbanColumn({ id, title, cards, children, onMoveCard, allProfiles, onU
             {children}
             {cards ? (
                 <SortableContext id={id} items={cards.map(c => c.id)} strategy={verticalListSortingStrategy}>
-                    {cards.map(card => <SortableKanbanCard key={card.id} card={card} columnId={id} onMove={onMoveCard} allProfiles={allProfiles} onUpdateAssignees={(cardId, assignee, shouldAssign) => onUpdateAssignees(cardId, id, assignee, shouldAssign)} />)}
+                    {cards.map(card => <SortableKanbanCard key={card.id} card={card} columnId={id} onMove={onMoveCard} allProfiles={allProfiles} onUpdateAssignees={(cardId, assignee, shouldAssign) => onUpdateAssignees(cardId, id, assignee, shouldAssign)} isOwner={isOwner} onDelete={onDeleteCard} />)}
                 </SortableContext>
             ) : (
               !children && (
@@ -615,6 +601,25 @@ export default function RoadmapPage() {
     }
   }
 
+  const handleDeleteCard = async (cardId: string, columnId: string) => {
+    setColumns(prev => prev.map(c => {
+        if (c.id === columnId) {
+            return { ...c, cards: c.cards.filter(card => card.id !== cardId) };
+        }
+        return c;
+    }));
+
+    const result = await deleteRoadmapCard(cardId, columnId);
+    if (result.error) {
+        toast({ variant: 'destructive', title: t('toast_delete_error'), description: result.error });
+        // Revert UI
+        setColumns(columnsData ? [...columnsData].sort((a, b) => columnOrder.indexOf(a.id) - columnOrder.indexOf(b.id)) : []);
+    } else {
+        toast({ title: t('toast_idea_removed'), description: t('toast_idea_removed_desc') });
+    }
+  };
+
+
   return (
     <main className="container mx-auto min-h-screen py-8">
       <div className="text-center mb-12">
@@ -653,6 +658,8 @@ export default function RoadmapPage() {
                         onMoveCard={handleMoveCard}
                         allProfiles={allProfiles || []}
                         onUpdateAssignees={handleUpdateAssignees}
+                        isOwner={isFounder}
+                        onDeleteCard={handleDeleteCard}
                     >
                         {col.id === 'ideas' && isFounder && (
                             <>
