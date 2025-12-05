@@ -318,11 +318,11 @@ function CommunityCard({ community, profiles }: { community: Community, profiles
                         )}
                     </Link>
                     <div className="flex-1">
-                        <Link href={`/community/${community.id}`}>
-                            <h3 className="font-semibold text-lg text-primary hover:underline flex items-center gap-2">
-                                {isNameLoading ? <LoaderCircle className="w-4 h-4 animate-spin"/> : translatedName}
-                            </h3>
-                        </Link>
+                        <h3 className="font-semibold text-lg text-primary hover:underline flex items-center gap-2">
+                          <Link href={`/community/${community.id}`}>
+                            {isNameLoading ? <LoaderCircle className="w-4 h-4 animate-spin"/> : translatedName}
+                          </Link>
+                        </h3>
                         <p className="text-sm text-muted-foreground mt-1 line-clamp-2 flex items-center gap-2">
                             {isDescriptionLoading ? <LoaderCircle className="w-4 h-4 animate-spin"/> : translatedDescription}
                         </p>
@@ -382,7 +382,7 @@ function CommunityCard({ community, profiles }: { community: Community, profiles
 
 
 function CommunityList({ title, communities, profiles, isLoading, error }: { title: string, communities: Community[] | undefined, profiles: CommunityProfile[] | undefined, isLoading: boolean, error: Error | null }) {
-    const { t } = useTranslation();
+  const { t } = useTranslation();
 
     if (isLoading) {
       return <div className="flex justify-center"><LoaderCircle className="w-8 h-8 animate-spin text-primary" /></div>;
