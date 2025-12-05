@@ -467,6 +467,7 @@
   "treasury_login_button": "התחבר כדי להמשיך",
   "treasury_page_title": "האוצר שלך",
   "treasury_page_subtitle": "נהל את הנכסים הפיזיים והאינטלקטואליים שלך.",
+  "treasury_financial_system_desc": "ערך הנכסים נמדד בסאטושי, כאשר 1 סאטושי מוצמד ל-1 דולר ארה\"ב.",
   "treasury_add_asset_title": "הצהר על נכס חדש",
   "treasury_add_asset_desc": "הוסף נכס פיזי או אינטלקטואלי לאוצר האישי שלך. תוכל להעלות קובץ נתונים (למשל, .stl, .obj, .pdf) לייצור.",
   "treasury_asset_name_label": "שם הנכס",

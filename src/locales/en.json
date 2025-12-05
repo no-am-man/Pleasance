@@ -467,6 +467,7 @@
   "treasury_login_button": "Login to Continue",
   "treasury_page_title": "Your Treasury",
   "treasury_page_subtitle": "Manage your physical and intellectual assets.",
+  "treasury_financial_system_desc": "The value of assets is measured in Satoshis, where 1 Satoshi is pegged to $1 USD.",
   "treasury_add_asset_title": "Declare a New Asset",
   "treasury_add_asset_desc": "Add a physical or intellectual asset to your personal treasury. You can upload a data file (e.g., .stl, .obj, .pdf) for fabrication.",
   "treasury_asset_name_label": "Asset Name",

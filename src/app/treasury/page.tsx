@@ -453,6 +453,7 @@ export default function TreasuryPage() {
           <Coins /> {t('treasury_page_title')}
         </h1>
         <p className="text-lg text-muted-foreground mt-2">{t('treasury_page_subtitle')}</p>
+        <p className="text-sm text-muted-foreground mt-1">{t('treasury_financial_system_desc')}</p>
       </div>
 
       <div className="space-y-8">
