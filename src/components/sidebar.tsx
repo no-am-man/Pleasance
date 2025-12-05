@@ -19,7 +19,8 @@ import {
   Bot,
   Info,
   DollarSign,
-  Github
+  Github,
+  CalendarHeart
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -183,6 +184,7 @@ export function Sidebar() {
             links: [
                 { href: '/', label: 'navCommunity', icon: Users },
                 { href: '/museum', label: 'navMuseum', icon: Landmark },
+                { href: '/events', label: 'navEvents', icon: CalendarHeart },
             ]
         },
         {

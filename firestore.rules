@@ -123,6 +123,11 @@ service cloud.firestore {
             && d.pixels is list && d.pixels.size() > 0
             && d.status == 'in-workshop'; // Creations must start in the workshop
     }
+    
+    // --- Event Validation ---
+    function isEventOrganizer(eventId) {
+        return get(/databases/$(database)/documents/events/$(eventId)).data.organizerId == request.auth.uid;
+    }
 
 
     //================================================================================
@@ -298,6 +303,18 @@ service cloud.firestore {
         allow get, list: if true;
         allow write: if false; // Disallow all client-side writes.
     }
+    
+    /**
+     * @description Manages social events.
+     * @path /events/{eventId}
+     */
+    match /events/{eventId} {
+        allow read: if true;
+        allow create: if isSignedIn() && request.resource.data.organizerId == request.auth.uid;
+        allow update: if isSignedIn() && (isEventOrganizer(eventId) || request.resource.data.attendees.hasOnly(request.auth.uid));
+        allow delete: if isSignedIn() && isEventOrganizer(eventId);
+    }
+
 
     /**
      * @description Secure storage for administrative data, like service account keys.

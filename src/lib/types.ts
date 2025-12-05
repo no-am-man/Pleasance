@@ -73,4 +73,17 @@ export const CommunitySchema = z.object({
   members: z.array(MemberSchema),
 });
 export type Community = z.infer<typeof CommunitySchema>;
-    
+
+// Schema for Events
+export const EventSchema = z.object({
+  id: z.string(),
+  title: z.string().min(3, "Title must be at least 3 characters long."),
+  description: z.string().min(10, "Description must be at least 10 characters long."),
+  date: z.date(),
+  location: z.string().min(2, "Location is required."),
+  organizerId: z.string(),
+  organizerName: z.string(),
+  attendees: z.array(z.string()),
+  communityId: z.string().optional(),
+});
+export type Event = z.infer<typeof EventSchema>;
