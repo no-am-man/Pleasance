@@ -11,6 +11,7 @@
     "start": "next start",
     "lint": "next lint",
     "lint:autofix": "next lint --fix",
+    "test": "playwright test",
     "test:e2e": "playwright test"
   },
   "dependencies": {
