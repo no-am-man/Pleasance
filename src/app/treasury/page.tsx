@@ -22,6 +22,7 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { useSearchParams } from 'next/navigation';
 import { SatoshiIcon } from '@/components/icons/satoshi-icon';
+import { useTranslation } from '@/hooks/use-translation';
 
 const AssetSchema = z.object({
   name: z.string().min(2, 'Asset name must be at least 2 characters.'),
@@ -57,6 +58,7 @@ function AddAssetForm() {
     const { user } = useUser();
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
+    const { t } = useTranslation();
 
     const form = useForm<z.infer<typeof AssetSchema>>({
         resolver: zodResolver(AssetSchema),
@@ -65,7 +67,7 @@ function AddAssetForm() {
 
     async function onSubmit(data: z.infer<typeof AssetSchema>) {
         if (!user) {
-            toast({ variant: 'destructive', title: 'Not Authenticated', description: 'You must be logged in to add an asset.' });
+            toast({ variant: 'destructive', title: t('treasury_toast_not_authenticated'), description: t('treasury_toast_not_authenticated_desc') });
             return;
         }
         setIsLoading(true);
@@ -88,14 +90,14 @@ function AddAssetForm() {
             }
 
             toast({
-                title: 'Asset Added!',
-                description: `${data.name} has been added to your Treasury.`,
+                title: t('treasury_toast_asset_added_title'),
+                description: t('treasury_toast_asset_added_desc', { name: data.name }),
             });
             form.reset();
 
         } catch (e) {
             const message = e instanceof Error ? e.message : 'An unknown error occurred';
-            toast({ variant: 'destructive', title: 'Failed to add asset', description: message });
+            toast({ variant: 'destructive', title: t('treasury_toast_add_failed_title'), description: message });
         } finally {
             setIsLoading(false);
         }
@@ -106,8 +108,8 @@ function AddAssetForm() {
     return (
         <Card className="shadow-lg">
             <CardHeader>
-                <CardTitle>Declare a New Asset</CardTitle>
-                <CardDescription>Add a physical or intellectual asset to your personal treasury. You can upload a data file (e.g., .stl, .obj, .pdf) for fabrication.</CardDescription>
+                <CardTitle>{t('treasury_add_asset_title')}</CardTitle>
+                <CardDescription>{t('treasury_add_asset_desc')}</CardDescription>
             </CardHeader>
             <CardContent>
                 <Form {...form}>
@@ -118,9 +120,9 @@ function AddAssetForm() {
                                 name="name"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Asset Name</FormLabel>
+                                        <FormLabel>{t('treasury_asset_name_label')}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="e.g., Custom 3D Printed Chalice" {...field} />
+                                            <Input placeholder={t('treasury_asset_name_placeholder')} {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -131,7 +133,7 @@ function AddAssetForm() {
                                 name="value"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="flex items-center gap-1.5">Asset Value</FormLabel>
+                                        <FormLabel className="flex items-center gap-1.5">{t('treasury_asset_value_label')}</FormLabel>
                                         <FormControl>
                                             <div className="relative">
                                                 <SatoshiIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -148,9 +150,9 @@ function AddAssetForm() {
                             name="description"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Asset Description</FormLabel>
+                                    <FormLabel>{t('treasury_asset_desc_label')}</FormLabel>
                                     <FormControl>
-                                        <Textarea placeholder="Describe your asset, its value, or its purpose." {...field} />
+                                        <Textarea placeholder={t('treasury_asset_desc_placeholder')} {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -162,17 +164,17 @@ function AddAssetForm() {
                                 name="type"
                                 render={({ field }) => (
                                     <FormItem>
-                                    <FormLabel>Asset Type</FormLabel>
+                                    <FormLabel>{t('treasury_asset_type_label')}</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                         <FormControl>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select the type of asset" />
+                                            <SelectValue placeholder={t('treasury_asset_type_placeholder')} />
                                         </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                        <SelectItem value="physical">Physical</SelectItem>
-                                        <SelectItem value="virtual">Virtual</SelectItem>
-                                        <SelectItem value="ip">Intellectual Property</SelectItem>
+                                        <SelectItem value="physical">{t('treasury_asset_type_physical')}</SelectItem>
+                                        <SelectItem value="virtual">{t('treasury_asset_type_virtual')}</SelectItem>
+                                        <SelectItem value="ip">{t('treasury_asset_type_ip')}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
@@ -184,7 +186,7 @@ function AddAssetForm() {
                                 name="file"
                                 render={({ field }) => (
                                      <FormItem>
-                                        <FormLabel>Data File (Optional)</FormLabel>
+                                        <FormLabel>{t('treasury_data_file_label')}</FormLabel>
                                         <FormControl>
                                             <div className="relative">
                                                 <Input type="file" {...fileRef} className="pl-12" />
@@ -204,7 +206,7 @@ function AddAssetForm() {
                             ) : (
                                 <PlusCircle className="mr-2 h-4 w-4" />
                             )}
-                            Add Asset to Treasury
+                            {t('treasury_add_asset_button')}
                         </Button>
                     </form>
                 </Form>
@@ -218,6 +220,7 @@ function AssetList() {
     const [assets, setAssets] = useState<Asset[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
+    const { t } = useTranslation();
 
     useEffect(() => {
         if (!user || !firestore) {
@@ -246,14 +249,14 @@ function AssetList() {
     }
 
     if (error) {
-        return <p className="text-destructive text-center">Error loading assets: {error.message}</p>;
+        return <p className="text-destructive text-center">{t('treasury_error_loading_assets', { message: error.message })}</p>;
     }
 
     return (
         <Card className="shadow-lg">
             <CardHeader>
-                <CardTitle>Your Declared Assets</CardTitle>
-                <CardDescription>A list of your physical and intellectual assets.</CardDescription>
+                <CardTitle>{t('treasury_your_assets_title')}</CardTitle>
+                <CardDescription>{t('treasury_your_assets_desc')}</CardDescription>
             </CardHeader>
             <CardContent>
                 {assets && assets.length > 0 ? (
@@ -279,7 +282,7 @@ function AssetList() {
                                             <Button asChild variant="outline" size="sm">
                                                 <Link href={`/svg3d?assetUrl=${encodeURIComponent(asset.fileUrl!)}`}>
                                                     <Eye className="mr-2 h-4 w-4" />
-                                                    View
+                                                    {t('treasury_view_button')}
                                                 </Link>
                                             </Button>
                                         )}
@@ -287,7 +290,7 @@ function AssetList() {
                                             <Button asChild variant="secondary" size="sm">
                                                 <Link href={`/fabrication?assetId=${asset.id}`}>
                                                     <Warehouse className="mr-2 h-4 w-4" />
-                                                    Fabricate
+                                                    {t('treasury_fabricate_button')}
                                                 </Link>
                                             </Button>
                                         )}
@@ -298,8 +301,8 @@ function AssetList() {
                     </div>
                 ) : (
                     <div className="text-center py-8 text-muted-foreground">
-                        <p>Your treasury is empty.</p>
-                        <p>Declare your first asset using the form above.</p>
+                        <p>{t('treasury_empty_title')}</p>
+                        <p>{t('treasury_empty_desc')}</p>
                     </div>
                 )}
             </CardContent>
@@ -312,6 +315,7 @@ function OrderList() {
     const [orders, setOrders] = useState<FabricationOrder[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
+    const { t } = useTranslation();
 
      useEffect(() => {
         if (!user || !firestore) {
@@ -368,14 +372,14 @@ function OrderList() {
     }
 
     if (error) {
-        return <p className="text-destructive text-center">Error loading fabrication orders: {error.message}</p>;
+        return <p className="text-destructive text-center">{t('treasury_error_loading_orders', { message: error.message })}</p>;
     }
 
     return (
         <Card className="shadow-lg">
             <CardHeader>
-                <CardTitle>Your Fabrication Orders</CardTitle>
-                <CardDescription>Track the status of your fabrication orders.</CardDescription>
+                <CardTitle>{t('treasury_orders_title')}</CardTitle>
+                <CardDescription>{t('treasury_orders_desc')}</CardDescription>
             </CardHeader>
             <CardContent>
                 {orders && orders.length > 0 ? (
@@ -384,7 +388,13 @@ function OrderList() {
                             <div key={order.id} className="flex items-center gap-4 rounded-md border p-4">
                                 <div className="flex-1">
                                     <h3 className="font-semibold">{order.assetName}</h3>
-                                    <p className="text-sm text-muted-foreground flex items-center gap-1">Supplier: {order.supplier} | Cost: {order.cost > 0 ? <><span className="flex items-center gap-1">{order.cost.toLocaleString()} <SatoshiIcon className="w-4 h-4" /></span></> : 'N/A'}</p>
+                                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                        {t('fabrication_supplier_cost_label', { 
+                                            supplier: order.supplier, 
+                                            cost: order.cost > 0 ? order.cost.toLocaleString() : t('fabrication_cost_na')
+                                        })}
+                                        {order.cost > 0 && <SatoshiIcon className="w-4 h-4" />}
+                                    </p>
                                 </div>
                                 <Badge variant={getStatusVariant(order.status)} className="flex items-center gap-1.5">
                                     {getStatusIcon(order.status)}
@@ -395,7 +405,7 @@ function OrderList() {
                     </div>
                 ) : (
                     <div className="text-center py-8 text-muted-foreground">
-                        <p>You have no active fabrication orders.</p>
+                        <p>{t('treasury_no_orders')}</p>
                     </div>
                 )}
             </CardContent>
@@ -406,6 +416,7 @@ function OrderList() {
 
 export default function TreasuryPage() {
   const { user, isUserLoading } = useUser();
+  const { t } = useTranslation();
 
   if (isUserLoading) {
     return (
@@ -420,13 +431,13 @@ export default function TreasuryPage() {
       <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
         <Card className="w-full max-w-md text-center shadow-lg">
           <CardHeader>
-            <CardTitle>Enter Your Treasury</CardTitle>
-            <CardDescription>Log in to manage your assets.</CardDescription>
+            <CardTitle>{t('treasury_login_title')}</CardTitle>
+            <CardDescription>{t('treasury_login_desc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild>
               <Link href="/login">
-                <LogIn className="mr-2 h-4 w-4" /> Login to Continue
+                <LogIn className="mr-2 h-4 w-4" /> {t('treasury_login_button')}
               </Link>
             </Button>
           </CardContent>
@@ -439,9 +450,9 @@ export default function TreasuryPage() {
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
        <div className="text-center mb-8">
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3 font-headline">
-          <Coins /> Your Treasury
+          <Coins /> {t('treasury_page_title')}
         </h1>
-        <p className="text-lg text-muted-foreground mt-2">Manage your physical and intellectual assets.</p>
+        <p className="text-lg text-muted-foreground mt-2">{t('treasury_page_subtitle')}</p>
       </div>
 
       <div className="space-y-8">
