@@ -217,7 +217,7 @@ export function Sidebar() {
             "fixed inset-y-0 z-50 hidden w-sidebar sm:flex flex-col",
             direction === 'rtl' ? 'right-0 border-l' : 'left-0 border-r'
         )}>
-            <div className="h-full w-full bg-secondary absolute top-0 left-0" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 85%)' }}></div>
+            <div className="h-full w-full bg-secondary absolute top-0 left-0" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 85%, 0 100%)' }}></div>
             <div className="relative z-10 flex flex-col h-full">
                 <div className="flex h-16 items-center border-b px-6 border-white/20">
                     <Link href="/" className="flex items-center gap-2 font-semibold text-white">
