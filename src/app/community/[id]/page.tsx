@@ -30,6 +30,7 @@ import { PresentationHall } from '@/components/community/PresentationHall';
 import { JoinRequests } from '@/components/community/JoinRequests';
 import { MemberCard } from '@/components/community/MemberCard';
 import { useTranslation } from '@/hooks/use-translation';
+import { useDynamicTranslation } from '@/hooks/use-dynamic-translation';
 
 type Member = {
   name: string;
@@ -579,6 +580,9 @@ export default function CommunityProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  const translatedName = useDynamicTranslation(community?.name);
+  const translatedDescription = useDynamicTranslation(community?.description);
+
   const [userProfile, setUserProfile] = useState<CommunityProfile | null>(null);
 
   const [userJoinRequest, setUserJoinRequest] = useState<JoinRequest | null>(null);
@@ -899,9 +903,9 @@ export default function CommunityProfilePage() {
             </div>
             <div className="text-center mt-4">
                 <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary">
-                {community.name}
+                {translatedName}
                 </h1>
-                <p className="text-lg text-accent-foreground mt-2">{community.description}</p>
+                <p className="text-lg text-accent-foreground mt-2">{translatedDescription}</p>
             </div>
         </div>
       
