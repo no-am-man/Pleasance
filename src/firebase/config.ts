@@ -1,5 +1,6 @@
+
 // src/firebase/config.ts
-import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
+import { initializeApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
@@ -15,7 +16,7 @@ export const firebaseConfig = {
 };
 
 // Initialize Firebase
-const firebaseApp: FirebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const firebaseApp: FirebaseApp = initializeApp(firebaseConfig);
 
 // Export singleton instances of Firebase services.
 export const auth: Auth = getAuth(firebaseApp);
