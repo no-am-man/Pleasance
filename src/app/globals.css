@@ -69,14 +69,13 @@
     --sidebar-primary: 210 40% 98%;
     --sidebar-primary-foreground: 222.2 47.4% 11.2%;
   }
-}
 
-@layer base {
-  * {
-    border-color: hsl(var(--border));
-  }
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+  }
+
+  * {
+    border-color: hsl(var(--border));
   }
 }
