@@ -1,4 +1,3 @@
-
 // src/app/page.tsx (formerly community/page.tsx)
 "use client";
 
@@ -320,7 +319,7 @@ function CommunityCard({ community, profiles }: { community: Community, profiles
                     </Link>
                     <div className="flex-1">
                         <Link href={`/community/${community.id}`}>
-                            <h3 className="font-semibold text-lg text-primary underline flex items-center gap-2">
+                            <h3 className="font-semibold text-lg text-primary hover:underline flex items-center gap-2">
                                 {isNameLoading ? <LoaderCircle className="w-4 h-4 animate-spin"/> : translatedName}
                             </h3>
                         </Link>
@@ -330,7 +329,10 @@ function CommunityCard({ community, profiles }: { community: Community, profiles
                         {owner && (
                             <div className="flex items-center gap-2 text-sm text-muted-foreground font-semibold mt-2">
                                 <User className="w-4 h-4" />
-                                <span>{t('community_founded_by')} <Link href={`/profile/${owner.id}`} className="hover:underline text-primary/80">{owner.name}</Link></span>
+                                <span>
+                                    {t('community_founded_by')}{' '}
+                                    <Link href={`/profile/${owner.id}`} className="hover:underline text-primary/80">{owner.name}</Link>
+                                </span>
                             </div>
                         )}
                     </div>

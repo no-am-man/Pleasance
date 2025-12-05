@@ -1,4 +1,3 @@
-
 // src/components/community/MemberCard.tsx
 'use client';
 
@@ -25,30 +24,29 @@ export function MemberCard({ member, communityId, isOwner, onRemove }: { member:
     const { t } = useTranslation();
     const isHuman = member.type === 'human';
     
-    const Wrapper = isHuman || member.type === 'AI' ? Link : 'div';
-    
-    let href = '#';
-    if(isHuman && member.userId) {
-        href = `/profile/${member.userId}`;
-    } else if (!isHuman) {
-        href = `/community/${communityId}/member/${encodeURIComponent(member.name)}`;
-    }
+    const memberLink = isHuman && member.userId
+      ? `/profile/${member.userId}`
+      : !isHuman
+      ? `/community/${communityId}/member/${encodeURIComponent(member.name)}`
+      : '#';
 
     return (
       <div className="flex items-center gap-4 rounded-md border p-4 transition-colors hover:bg-muted/50 group">
-        <Wrapper href={href} className="flex-1 flex items-center gap-4">
-            <Avatar className="w-16 h-16 rounded-lg bg-background border-2 border-primary/20">
-                <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
-                <AvatarFallback>
-                    {isHuman ? (
-                        <HumanIcon className="w-10 h-10 text-primary" />
-                    ) : (
-                        <AiIcon className="w-10 h-10 text-primary" />
-                    )}
-                </AvatarFallback>
-            </Avatar>
+        <div className="flex-1 flex items-center gap-4">
+            <Link href={memberLink}>
+                <Avatar className="w-16 h-16 rounded-lg bg-background border-2 border-primary/20">
+                    <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
+                    <AvatarFallback>
+                        {isHuman ? (
+                            <HumanIcon className="w-10 h-10 text-primary" />
+                        ) : (
+                            <AiIcon className="w-10 h-10 text-primary" />
+                        )}
+                    </AvatarFallback>
+                </Avatar>
+            </Link>
             <div className="flex-1 space-y-1">
-                <h3 className="font-semibold text-lg group-hover:underline">{member.name}</h3>
+                <Link href={memberLink}><h3 className="font-semibold text-lg group-hover:underline">{member.name}</h3></Link>
                 <p className="text-sm text-primary font-medium">{member.role}</p>
                 <p className="text-sm text-muted-foreground line-clamp-2">{member.bio}</p>
             </div>
@@ -57,7 +55,7 @@ export function MemberCard({ member, communityId, isOwner, onRemove }: { member:
             ) : (
                 <Badge variant="outline" className="flex-shrink-0"><Bot className="w-3 h-3 mr-1" /> {t('community_page_member_type_ai')}</Badge>
             )}
-        </Wrapper>
+        </div>
 
         {isOwner && isHuman && (
           <AlertDialog>
