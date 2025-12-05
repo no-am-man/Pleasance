@@ -42,7 +42,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { LanguageToggle } from '@/components/language-toggle';
 import { useTranslation } from '@/hooks/use-translation';
-import { useLanguage } from '@/components/language-provider';
+import { useLanguage } from './language-provider';
 
 const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com';
 
