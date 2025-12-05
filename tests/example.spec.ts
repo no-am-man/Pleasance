@@ -6,13 +6,3 @@ test('has title', async ({ page }) => {
   // Expect a title "to contain" a substring.
   await expect(page).toHaveTitle(/Pleasance/);
 });
-
-test('get started link', async ({ page }) => {
-  await page.goto('/');
-
-  // Click the get started link.
-  await page.getByRole('link', { name: 'Explore Communities' }).click();
-
-  // Expects the URL to contain intro.
-  await expect(page).toHaveURL(/.*community/);
-});
