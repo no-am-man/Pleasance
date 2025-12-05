@@ -10,8 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "lint:autofix": "next lint --fix",
-    "test:e2e": "npm run lint:autofix && playwright test"
+    "lint:fix": "next lint --fix",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
