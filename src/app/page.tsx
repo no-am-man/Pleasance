@@ -26,6 +26,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/hooks/use-translation";
+import { useDynamicTranslation } from "@/hooks/use-dynamic-translation";
 
 const FormSchema = z.object({
   prompt: z.string().min(10, "Please enter a prompt of at least 10 characters."),
@@ -243,12 +244,15 @@ function CreateCommunityForm() {
   );
 }
 
-function CommunityList({ title, communities, profiles, isLoading, error }: { title: string, communities: Community[] | undefined, profiles: CommunityProfile[] | undefined, isLoading: boolean, error: Error | null }) {
+function CommunityCard({ community, profiles }: { community: Community, profiles: CommunityProfile[] | undefined }) {
     const { user } = useUser();
     const [userProfile, setUserProfile] = useState<CommunityProfile | null>(null);
     const { toast } = useToast();
     const [submittingRequests, setSubmittingRequests] = useState<{[key: string]: boolean}>({});
     const { t } = useTranslation();
+    
+    const translatedName = useDynamicTranslation(community.name);
+    const translatedDescription = useDynamicTranslation(community.description);
 
     useEffect(() => {
         if (user && firestore) {
@@ -293,7 +297,84 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
             setSubmittingRequests(prev => ({...prev, [community.id]: false}));
         }
     };
+    
+    const owner = profiles?.find(p => p.userId === community.ownerId);
+    const members = [...(community.members || [])].sort((a, b) => {
+        if (a.type === 'human' && b.type !== 'human') return -1;
+        if (a.type !== 'human' && b.type === 'human') return 1;
+        return 0;
+    });
+    const isMember = user ? members.some(m => m.userId === user.uid) : false;
+    const isSubmitting = submittingRequests[community.id];
 
+    return (
+        <li className="rounded-md border transition-colors hover:bg-muted/50">
+            <div className="p-4">
+                <div className="flex items-start gap-4">
+                    <Link href={`/community/${community.id}`} className="relative h-20 w-36 flex-shrink-0 rounded-md border bg-muted flex items-center justify-center">
+                        {community.flagUrl ? (
+                            <Image src={community.flagUrl} alt={`${community.name} Flag`} layout="fill" objectFit="cover" className="rounded-md" />
+                        ) : (
+                            <Flag className="h-8 w-8 text-muted-foreground" />
+                        )}
+                    </Link>
+                    <div className="flex-1">
+                        <Link href={`/community/${community.id}`}><h3 className="font-semibold text-lg text-primary underline">{translatedName}</h3></Link>
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{translatedDescription}</p>
+                        {owner && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground font-semibold mt-2">
+                                <User className="w-4 h-4" />
+                                <span>{t('community_founded_by')} {owner.name}</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            <div className="p-4 pt-0">
+                <h4 className="text-sm font-semibold mb-2 flex items-center gap-2"><Users className="w-4 h-4" /> {t('community_meet_members')} ({members.length})</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {members.slice(0, 4).map((member, index) => (
+                        <div key={member.userId || index} className="flex items-center gap-3 p-2 rounded-md bg-background/50">
+                            <Avatar className="h-8 w-8 border-2 border-background">
+                                <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
+                                <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                    <p className="font-semibold text-sm">{member.name}</p>
+                                    {member.type === 'AI' ? (
+                                        <Badge variant="outline" className="h-5"><Bot className="w-3 h-3 mr-1" /> AI</Badge>
+                                    ) : (
+                                        <Badge variant="secondary" className="h-5"><User className="w-3 h-3 mr-1" /> Human</Badge>
+                                    )}
+                                </div>
+                                <p className="text-xs text-muted-foreground line-clamp-1">{member.bio}</p>
+                            </div>
+                        </div>
+                    ))}
+                    {members.length > 4 && (
+                        <Link href={`/community/${community.id}`} className="flex items-center justify-center p-2 rounded-md bg-background/50 hover:bg-background">
+                            <p className="text-xs text-muted-foreground font-semibold">{t('community_and_more', { count: members.length - 4 })}</p>
+                        </Link>
+                    )}
+                </div>
+            </div>
+                <CardFooter className="p-4 border-t">
+                    {!isMember && user && (
+                    <Button onClick={() => handleRequestToJoin(community)} disabled={isSubmitting}>
+                        {isSubmitting ? <Hourglass className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
+                        {t('community_request_to_join')}
+                    </Button>
+                )}
+            </CardFooter>
+        </li>
+    );
+}
+
+
+function CommunityList({ title, communities, profiles, isLoading, error }: { title: string, communities: Community[] | undefined, profiles: CommunityProfile[] | undefined, isLoading: boolean, error: Error | null }) {
+    const { t } = useTranslation();
 
     if (isLoading) {
       return <div className="flex justify-center"><LoaderCircle className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -311,80 +392,7 @@ function CommunityList({ title, communities, profiles, isLoading, error }: { tit
         <CardContent>
           {communities && communities.length > 0 ? (
             <ul className="space-y-4">
-              {communities.map((community) => {
-                const owner = profiles?.find(p => p.userId === community.ownerId);
-                const members = [...(community.members || [])].sort((a, b) => {
-                    if (a.type === 'human' && b.type !== 'human') return -1;
-                    if (a.type !== 'human' && b.type === 'human') return 1;
-                    return 0;
-                });
-                const isMember = user ? members.some(m => m.userId === user.uid) : false;
-                const isSubmitting = submittingRequests[community.id];
-
-                return (
-                    <li key={community.id} className="rounded-md border transition-colors hover:bg-muted/50">
-                        <div className="p-4">
-                            <div className="flex items-start gap-4">
-                                <Link href={`/community/${community.id}`} className="relative h-20 w-36 flex-shrink-0 rounded-md border bg-muted flex items-center justify-center">
-                                    {community.flagUrl ? (
-                                        <Image src={community.flagUrl} alt={`${community.name} Flag`} layout="fill" objectFit="cover" className="rounded-md" />
-                                    ) : (
-                                        <Flag className="h-8 w-8 text-muted-foreground" />
-                                    )}
-                                </Link>
-                                <div className="flex-1">
-                                    <Link href={`/community/${community.id}`}><h3 className="font-semibold text-lg text-primary underline">{community.name}</h3></Link>
-                                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{community.description}</p>
-                                    {owner && (
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground font-semibold mt-2">
-                                            <User className="w-4 h-4" />
-                                            <span>{t('community_founded_by')} {owner.name}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="p-4 pt-0">
-                            <h4 className="text-sm font-semibold mb-2 flex items-center gap-2"><Users className="w-4 h-4" /> {t('community_meet_members')} ({members.length})</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {members.slice(0, 4).map((member, index) => (
-                                    <div key={member.userId || index} className="flex items-center gap-3 p-2 rounded-md bg-background/50">
-                                        <Avatar className="h-8 w-8 border-2 border-background">
-                                            <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
-                                            <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2">
-                                                <p className="font-semibold text-sm">{member.name}</p>
-                                                {member.type === 'AI' ? (
-                                                    <Badge variant="outline" className="h-5"><Bot className="w-3 h-3 mr-1" /> AI</Badge>
-                                                ) : (
-                                                    <Badge variant="secondary" className="h-5"><User className="w-3 h-3 mr-1" /> Human</Badge>
-                                                )}
-                                            </div>
-                                            <p className="text-xs text-muted-foreground line-clamp-1">{member.bio}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                                {members.length > 4 && (
-                                    <Link href={`/community/${community.id}`} className="flex items-center justify-center p-2 rounded-md bg-background/50 hover:bg-background">
-                                        <p className="text-xs text-muted-foreground font-semibold">{t('community_and_more', { count: members.length - 4 })}</p>
-                                    </Link>
-                                )}
-                            </div>
-                        </div>
-                         <CardFooter className="p-4 border-t">
-                             {!isMember && user && (
-                                <Button onClick={() => handleRequestToJoin(community)} disabled={isSubmitting}>
-                                    {isSubmitting ? <Hourglass className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
-                                    {t('community_request_to_join')}
-                                </Button>
-                            )}
-                        </CardFooter>
-                    </li>
-                );
-              })}
+              {communities.map((community) => <CommunityCard key={community.id} community={community} profiles={profiles} />)}
             </ul>
           ) : (
             <p className="text-muted-foreground text-center py-4">{t('community_none_found')}</p>

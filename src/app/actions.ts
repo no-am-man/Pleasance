@@ -25,6 +25,7 @@ import { ai } from '@/ai/genkit';
 import { generateCommunityFlag } from '@/ai/flows/generate-flag';
 import { welcomeNewMember } from '@/ai/flows/welcome-new-member';
 import { notifyOwnerOfJoinRequest } from '@/ai/flows/notify-owner-of-join-request';
+import { translateText } from '@/ai/flows/translate-text';
 import {
     GenerateSvg3dInputSchema,
     type GenerateSvg3dInput,
@@ -1008,5 +1009,29 @@ export async function notifyOwnerOfJoinRequestAction(values: z.infer<typeof noti
     }
 }
     
+const TranslateTextSchema = z.object({
+    text: z.string(),
+    targetLanguage: z.string(),
+});
 
-    
+export async function translateTextAction(values: z.infer<typeof TranslateTextSchema>) {
+    try {
+        const validatedFields = TranslateTextSchema.safeParse(values);
+        if (!validatedFields.success) {
+            return { error: 'Invalid input for translation.' };
+        }
+
+        const result = await translateText(validatedFields.data);
+
+        if (!result.translation) {
+            return { error: 'AI failed to translate the text.' };
+        }
+
+        return { translation: result.translation };
+
+    } catch (e) {
+        console.error('Translate Text Action Error:', e);
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Translation failed: ${message}` };
+    }
+}
