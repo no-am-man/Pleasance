@@ -37,9 +37,11 @@ export default function RootLayout({
         )}
       >
         <Providers>
-          <FirebaseErrorListener />
-          <AppLayout>{children}</AppLayout>
-          <Toaster />
+            <FirebaseErrorListener />
+            <AppLayout>
+              {children}
+            </AppLayout>
+            <Toaster />
         </Providers>
       </body>
     </html>

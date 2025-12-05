@@ -64,10 +64,3 @@
     --sidebar-primary-foreground: 240 5.9% 10%;
   }
 }
-
-/* Custom CSS for sidebar width */
-@layer base {
-  :root {
-    --sidebar-width: 280px;
-  }
-}
