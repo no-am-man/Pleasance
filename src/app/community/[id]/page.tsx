@@ -24,7 +24,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import Image from 'next/image';
 import { generateCommunityFlagAction, welcomeNewMemberAction, notifyOwnerOfJoinRequestAction } from '@/app/actions';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
-import { addDocument } from 'firebase/firestore';
+import { addDocument } from '@/firebase/non-blocking-updates';
 import { setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { PresentationHall } from '@/components/community/PresentationHall';
 import { JoinRequests } from '@/components/community/JoinRequests';
@@ -1065,3 +1065,4 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
+
