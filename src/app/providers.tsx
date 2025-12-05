@@ -7,9 +7,9 @@ import { Toaster } from '@/components/ui/toaster';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { Sidebar } from '@/components/sidebar';
-import { ThemeProvider } from '@/components/theme-provider';
 import { LanguageProvider, useLanguage } from '@/components/language-provider';
 import { cn } from '@/lib/utils';
+import { ThemeProvider as NextThemesProvider } from 'next-themes'
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const { direction } = useLanguage();
@@ -19,12 +19,12 @@ function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <div className={cn(
         "flex flex-col flex-1",
-        direction === 'rtl' ? 'sm:mr-sidebar' : 'sm:pl-sidebar'
+        direction === 'rtl' ? 'sm:mr-[var(--sidebar-width)]' : 'sm:pl-[var(--sidebar-width)]'
       )}>
         <Header />
         <div className={cn(
           "fixed top-0 z-40 h-12 bg-background/70 backdrop-blur-sm border-b flex justify-between items-center",
-          direction === 'rtl' ? "left-0 right-sidebar" : "right-0 sm:left-sidebar"
+          direction === 'rtl' ? "left-0 right-[var(--sidebar-width)]" : "right-0 sm:left-[var(--sidebar-width)]"
         )}>
           <Breadcrumbs />
         </div>
@@ -41,15 +41,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthProvider>
-      <ThemeProvider>
-        <LanguageProvider>
-          <FirebaseErrorListener />
-          <AppLayout>
-            {children}
-          </AppLayout>
-          <Toaster />
-        </LanguageProvider>
-      </ThemeProvider>
+      <LanguageProvider>
+        <FirebaseErrorListener />
+        <AppLayout>
+          {children}
+        </AppLayout>
+        <Toaster />
+      </LanguageProvider>
     </AuthProvider>
   );
 }
