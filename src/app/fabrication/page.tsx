@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useSearchParams } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { SatoshiIcon } from '@/components/icons/satoshi-icon';
+import { useTranslation } from '@/hooks/use-translation';
 
 type Asset = {
     id: string;
@@ -60,6 +61,7 @@ function OrderList() {
     const [orders, setOrders] = useState<FabricationOrder[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
+    const { t } = useTranslation();
 
     useEffect(() => {
         if (!user || !firestore) {
@@ -115,14 +117,14 @@ function OrderList() {
     }
 
     if (error) {
-        return <p className="text-destructive text-center">Error loading fabrication orders: {error.message}</p>;
+        return <p className="text-destructive text-center">{t('fabrication_error_loading', { message: error.message })}</p>;
     }
 
     return (
         <Card className="shadow-lg">
             <CardHeader>
-                <CardTitle>Your Fabrication Orders</CardTitle>
-                <CardDescription>Track the status of your fabrication orders.</CardDescription>
+                <CardTitle>{t('fabrication_your_orders_title')}</CardTitle>
+                <CardDescription>{t('fabrication_your_orders_desc')}</CardDescription>
             </CardHeader>
             <CardContent>
                 {orders && orders.length > 0 ? (
@@ -131,7 +133,13 @@ function OrderList() {
                             <div key={order.id} className="flex items-center gap-4 rounded-md border p-4">
                                 <div className="flex-1">
                                     <h3 className="font-semibold">{order.assetName}</h3>
-                                    <p className="text-sm text-muted-foreground flex items-center gap-1">Supplier: {order.supplier} | Cost: {order.cost > 0 ? <><span className="flex items-center gap-1">{order.cost.toLocaleString()} <SatoshiIcon className="w-4 h-4" /></span></> : 'N/A'}</p>
+                                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                        {t('fabrication_supplier_cost_label', { 
+                                            supplier: order.supplier, 
+                                            cost: order.cost > 0 ? order.cost.toLocaleString() : t('fabrication_cost_na')
+                                        })} 
+                                        {order.cost > 0 && <SatoshiIcon className="w-4 h-4" />}
+                                    </p>
                                 </div>
                                 <Badge variant={getStatusVariant(order.status)} className="flex items-center gap-1.5">
                                     {getStatusIcon(order.status)}
@@ -142,7 +150,7 @@ function OrderList() {
                     </div>
                 ) : (
                     <div className="text-center py-8 text-muted-foreground">
-                        <p>You have no active fabrication orders.</p>
+                        <p>{t('fabrication_no_orders')}</p>
                     </div>
                 )}
             </CardContent>
@@ -156,6 +164,7 @@ function NewOrderForm({ assets }: { assets: Asset[] }) {
     const { toast } = useToast();
     const searchParams = useSearchParams();
     const [isLoading, setIsLoading] = useState(false);
+    const { t } = useTranslation();
 
     const preselectedAssetId = searchParams.get('assetId');
 
@@ -172,13 +181,13 @@ function NewOrderForm({ assets }: { assets: Asset[] }) {
 
     async function onSubmit(data: z.infer<typeof OrderSchema>) {
         if (!user || !firestore) {
-            toast({ variant: 'destructive', title: "Not Authenticated" });
+            toast({ variant: 'destructive', title: t('fabrication_not_authenticated_toast') });
             return;
         }
 
         const selectedAsset = assets.find(a => a.id === data.assetId);
         if (!selectedAsset || !selectedAsset.fileUrl) {
-            toast({ variant: 'destructive', title: "Asset's data file not found." });
+            toast({ variant: 'destructive', title: t('fabrication_asset_file_not_found_toast') });
             return;
         }
         
@@ -201,11 +210,11 @@ function NewOrderForm({ assets }: { assets: Asset[] }) {
 
             setDocumentNonBlocking(newOrderRef, { ...newOrder, id: newOrderRef.id }, { merge: false });
 
-            toast({ title: 'Order Submitted!', description: `Your request for "${selectedAsset.name}" has been created.` });
+            toast({ title: t('fabrication_order_submitted_toast_title'), description: t('fabrication_order_submitted_toast_desc', {name: selectedAsset.name}) });
             form.reset();
         } catch (e) {
              const message = e instanceof Error ? e.message : 'An unknown error occurred';
-            toast({ variant: 'destructive', title: 'Failed to submit order', description: message });
+            toast({ variant: 'destructive', title: t('fabrication_submit_failed_toast'), description: message });
         } finally {
             setIsLoading(false);
         }
@@ -214,8 +223,8 @@ function NewOrderForm({ assets }: { assets: Asset[] }) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Submit a Fabrication Order</CardTitle>
-                <CardDescription>Select an asset from your Treasury to bring into the physical world.</CardDescription>
+                <CardTitle>{t('fabrication_new_order_title')}</CardTitle>
+                <CardDescription>{t('fabrication_new_order_desc')}</CardDescription>
             </CardHeader>
             <CardContent>
                 <Form {...form}>
@@ -225,11 +234,11 @@ function NewOrderForm({ assets }: { assets: Asset[] }) {
                             name="assetId"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Asset to Fabricate</FormLabel>
+                                    <FormLabel>{t('fabrication_asset_label')}</FormLabel>
                                     <Select onValueChange={field.onChange} value={field.value}>
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select an asset from your Treasury..." />
+                                                <SelectValue placeholder={t('fabrication_asset_placeholder')} />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
@@ -247,16 +256,16 @@ function NewOrderForm({ assets }: { assets: Asset[] }) {
                             name="supplier"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Supplier</FormLabel>
+                                    <FormLabel>{t('fabrication_supplier_label')}</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select a supplier" />
+                                                <SelectValue placeholder={t('fabrication_supplier_placeholder')} />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="NNO.Studio">NNO.Studio (3D Printing)</SelectItem>
-                                            <SelectItem value="MiLaShem Publisher">MiLaShem Publisher (Print on Demand)</SelectItem>
+                                            <SelectItem value="NNO.Studio">{t('fabrication_supplier_nno')}</SelectItem>
+                                            <SelectItem value="MiLaShem Publisher">{t('fabrication_supplier_milashem')}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
@@ -268,9 +277,9 @@ function NewOrderForm({ assets }: { assets: Asset[] }) {
                             name="notes"
                             render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Instructions (Optional)</FormLabel>
+                                <FormLabel>{t('fabrication_notes_label')}</FormLabel>
                                 <FormControl>
-                                <Textarea placeholder="Any specific requirements for materials, colors, etc." {...field} />
+                                <Textarea placeholder={t('fabrication_notes_placeholder')} {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -278,7 +287,7 @@ function NewOrderForm({ assets }: { assets: Asset[] }) {
                         />
                         <Button type="submit" disabled={isLoading}>
                              {isLoading ? <LoaderCircle className="mr-2 animate-spin" /> : <ShoppingCart className="mr-2" />}
-                            Submit Fabrication Request
+                            {t('fabrication_submit_button')}
                         </Button>
                     </form>
                 </Form>
@@ -291,6 +300,7 @@ export default function FabricationPage() {
   const { user, isUserLoading } = useUser();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [isAssetsLoading, setIsAssetsLoading] = useState(true);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!user || !firestore) {
@@ -326,13 +336,13 @@ export default function FabricationPage() {
         <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
             <Card className="w-full max-w-md text-center shadow-lg">
                 <CardHeader>
-                    <CardTitle>Enter the Workshop</CardTitle>
-                    <CardDescription>Log in to create and track fabrication orders.</CardDescription>
+                    <CardTitle>{t('fabrication_login_title')}</CardTitle>
+                    <CardDescription>{t('fabrication_login_desc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Button asChild>
                     <Link href="/login">
-                        <LogIn className="mr-2 h-4 w-4" /> Login to Continue
+                        <LogIn className="mr-2 h-4 w-4" /> {t('fabrication_login_button')}
                     </Link>
                     </Button>
                 </CardContent>
@@ -347,13 +357,13 @@ export default function FabricationPage() {
         <Card className="shadow-lg text-center">
           <CardHeader>
             <Info className="mx-auto h-12 w-12 text-primary" />
-            <CardTitle>Your Treasury is Empty</CardTitle>
-            <CardDescription>You must first add an asset in your Treasury before it can be fabricated.</CardDescription>
+            <CardTitle>{t('fabrication_empty_treasury_title')}</CardTitle>
+            <CardDescription>{t('fabrication_empty_treasury_desc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild>
               <Link href="/treasury">
-                <PlusCircle className="mr-2 h-4 w-4" /> Go to Treasury
+                <PlusCircle className="mr-2 h-4 w-4" /> {t('fabrication_go_to_treasury_button')}
               </Link>
             </Button>
           </CardContent>
@@ -366,9 +376,9 @@ export default function FabricationPage() {
     <main className="container mx-auto max-w-2xl py-8">
       <div className="text-center mb-8">
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3 font-headline">
-          <Warehouse /> Workshop of Manifestation
+          <Warehouse /> {t('fabrication_page_title')}
         </h1>
-        <p className="text-lg text-muted-foreground mt-2">Create and track fabrication orders for your assets.</p>
+        <p className="text-lg text-muted-foreground mt-2">{t('fabrication_page_desc')}</p>
       </div>
       <div className="space-y-8">
         <NewOrderForm assets={assets} />
@@ -377,3 +387,5 @@ export default function FabricationPage() {
     </main>
   );
 }
+
+    
