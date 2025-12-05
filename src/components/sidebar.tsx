@@ -269,6 +269,18 @@ export function Sidebar() {
                   <Github className="h-5 w-5" />
                   <span>{t('navGithub')}</span>
                 </a>
+                <a
+                  href="https://firebase.google.com/docs/studio"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                    direction === 'rtl' && 'flex-row-reverse'
+                  )}
+                >
+                  <Sparkles className="h-5 w-5" />
+                  <span>{t('navPoweredBy')}</span>
+                </a>
               </div>
               <Separator />
               <UserNav />
