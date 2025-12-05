@@ -9,7 +9,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import {googleAI} from '@genkit-ai/google-genai';
-import wav from 'wav';
+import { WaveFile } from 'wavefile';
 
 const GenerateSpeechInputSchema = z.object({
   text: z.string().describe('The text to convert to speech.'),
@@ -24,25 +24,6 @@ export async function generateSpeech(input: GenerateSpeechInput): Promise<z.infe
   return generateSpeechFlow(input);
 }
 
-// Helper function to convert raw PCM to WAV format
-async function toWav(pcmData: Buffer, channels = 1, rate = 24000, sampleWidth = 2): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const writer = new wav.Writer({
-            channels: channels,
-            sampleRate: rate,
-            bitDepth: sampleWidth * 8,
-        });
-
-        const bufs: any[] = [];
-        writer.on('error', reject);
-        writer.on('data', (d) => bufs.push(d));
-        writer.on('end', () => resolve(Buffer.concat(bufs).toString('base64')));
-
-        writer.write(pcmData);
-        writer.end();
-    });
-}
-
 const generateSpeechFlow = ai.defineFlow(
   {
     name: 'generateSpeechFlow',
@@ -55,6 +36,11 @@ const generateSpeechFlow = ai.defineFlow(
       prompt: input.text,
       config: {
         responseModalities: ['AUDIO'],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: 'Algenib' },
+          },
+        },
       },
     });
 
@@ -66,8 +52,10 @@ const generateSpeechFlow = ai.defineFlow(
     const pcmBase64 = media.url.split(',')[1];
     const pcmBuffer = Buffer.from(pcmBase64, 'base64');
     
-    // Convert the raw PCM buffer to a WAV buffer (as a base64 string)
-    const wavBase64 = await toWav(pcmBuffer);
+    // Use wavefile to convert PCM to WAV
+    let wav = new WaveFile();
+    wav.fromScratch(1, 24000, '16', pcmBuffer);
+    const wavBase64 = wav.toBase64();
 
     return {
       audioUrl: `data:audio/wav;base64,${wavBase64}`,

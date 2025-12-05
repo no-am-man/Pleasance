@@ -32,7 +32,7 @@ function FeatureCard({ feature, isFirst, t }: { feature: any, isFirst: boolean, 
                     <p className="text-muted-foreground flex-grow">{feature.description}</p>
                      {isFirst && (
                         <Button asChild className="mt-6">
-                            <Link href="/">
+                            <Link href="/community">
                                 {t('exploreCommunities')} <ArrowRight className="ms-2 h-4 w-4" />
                             </Link>
                         </Button>
