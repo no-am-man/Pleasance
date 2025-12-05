@@ -88,7 +88,7 @@ export default function HomePage() {
     const exploreCta = t('exploreCommunities');
 
     return (
-        <main className="container mx-auto max-w-4xl py-12 px-4">
+        <div className="container mx-auto max-w-4xl py-12 px-4">
             <div className="text-center mb-12">
                 <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-primary font-headline">
                     {t('pleasance')}
@@ -141,6 +141,6 @@ export default function HomePage() {
                     <CarouselNext className="hidden sm:flex" />
                 </Carousel>
             </div>
-        </main>
+        </div>
     );
 }
