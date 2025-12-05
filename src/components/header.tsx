@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import {
   Banknote,
   BookOpen,
-  Home,
   LogOut,
   Menu,
   Shield,
@@ -21,6 +20,7 @@ import {
   Landmark,
   Info,
   CalendarHeart,
+  Github
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -43,7 +43,6 @@ import { Separator } from '@/components/ui/separator';
 import { useTranslation } from '@/hooks/use-translation';
 import { LanguageToggle } from '@/components/language-toggle';
 import { useLanguage } from '@/components/language-provider';
-
 
 const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com';
 
@@ -175,6 +174,34 @@ export function Header() {
                                 />
                             </div>
                         )}
+                         <div className="mb-2">
+                            <Separator className="my-2 bg-white/20" />
+                            <h3 className={cn("px-3 py-2 text-xs font-semibold uppercase text-white/70 tracking-wider", direction === 'rtl' && 'text-right')}>Open Source</h3>
+                            <a
+                            href="https://github.com/no-am-man/Pleasance"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cn(
+                                'flex items-center gap-3 rounded-lg px-3 py-2 text-white transition-all hover:bg-white/10',
+                                direction === 'rtl' && 'flex-row-reverse'
+                            )}
+                            >
+                            <Github className="h-5 w-5" />
+                            <span>{t('navGithub')}</span>
+                            </a>
+                            <a
+                            href="https://firebase.google.com/docs/studio"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cn(
+                                'flex items-center gap-3 rounded-lg px-3 py-2 text-white transition-all hover:bg-white/10',
+                                direction === 'rtl' && 'flex-row-reverse'
+                            )}
+                            >
+                            <Sparkles className="h-5 w-5" />
+                            <span>{t('navPoweredBy')}</span>
+                            </a>
+                        </div>
                     </nav>
                 </ScrollArea>
                  <div className="mt-auto p-4 border-t">

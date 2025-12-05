@@ -214,7 +214,7 @@ export function Sidebar() {
 
     return (
         <aside className={cn(
-            "fixed inset-y-0 z-50 hidden w-sidebar sm:flex flex-col",
+            "fixed inset-y-0 z-50 hidden w-[var(--sidebar-width)] flex-col sm:flex",
             direction === 'rtl' ? 'right-0 border-l' : 'left-0 border-r'
         )}>
             <div className="h-full w-full bg-secondary absolute top-0 left-0" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 85%, 0 100%)' }}></div>

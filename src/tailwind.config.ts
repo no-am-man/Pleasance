@@ -101,6 +101,9 @@ const config = {
       },
       spacing: {
         'sidebar': 'var(--sidebar-width)',
+      },
+      width: {
+        'sidebar': 'var(--sidebar-width)',
       }
     },
   },

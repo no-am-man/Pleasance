@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Providers } from './providers';
-import { ThemeProvider } from '@/components/ThemeProvider';
+import { AppLayout } from '@/components/layout';
 import { Inter, Lexend } from 'next/font/google'
 import { cn } from '@/lib/utils'
 
@@ -32,14 +32,11 @@ export default function RootLayout({
         inter.variable,
         lexend.variable
       )}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <Providers>{children}</Providers>
-        </ThemeProvider>
+          <Providers>
+            <AppLayout>
+              {children}
+            </AppLayout>
+          </Providers>
       </body>
     </html>
   );
