@@ -19,6 +19,7 @@ import { LoaderCircle, LogIn, Bug, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
+import { useTranslation } from '@/hooks/use-translation';
 
 const BugSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters.'),
@@ -60,6 +61,7 @@ function AddBugForm({ onBugAdded }: { onBugAdded: () => void }) {
     const { user } = useUser();
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
+    const { t } = useTranslation();
 
     const form = useForm<z.infer<typeof BugSchema>>({
         resolver: zodResolver(BugSchema),
@@ -68,19 +70,19 @@ function AddBugForm({ onBugAdded }: { onBugAdded: () => void }) {
 
     async function onSubmit(data: z.infer<typeof BugSchema>) {
         if (!user) {
-            toast({ variant: 'destructive', title: 'Not Authenticated' });
+            toast({ variant: 'destructive', title: t('bug_tracker_toast_not_authenticated') });
             return;
         }
         setIsLoading(true);
 
         try {
             await submitBugReport(data, user);
-            toast({ title: 'Bug Report Received', description: 'Thank you for your contribution.' });
+            toast({ title: t('bug_tracker_toast_report_received'), description: t('bug_tracker_toast_thank_you') });
             form.reset();
             onBugAdded(); // Call the callback to trigger a refresh
         } catch (e) {
              const message = e instanceof Error ? e.message : 'An unknown error occurred';
-            toast({ variant: 'destructive', title: 'Failed to submit bug report', description: message });
+            toast({ variant: 'destructive', title: t('bug_tracker_toast_submit_failed_title'), description: message });
         } finally {
             setIsLoading(false);
         }
@@ -89,8 +91,8 @@ function AddBugForm({ onBugAdded }: { onBugAdded: () => void }) {
     return (
         <Card className="shadow-lg">
             <CardHeader>
-                <CardTitle>Submit a Bug Report</CardTitle>
-                <CardDescription>Found an issue? Let us know so we can fix it.</CardDescription>
+                <CardTitle>{t('bug_tracker_submit_form_title')}</CardTitle>
+                <CardDescription>{t('bug_tracker_submit_form_desc')}</CardDescription>
             </CardHeader>
             <CardContent>
                 <Form {...form}>
@@ -100,9 +102,9 @@ function AddBugForm({ onBugAdded }: { onBugAdded: () => void }) {
                             name="title"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Title</FormLabel>
+                                    <FormLabel>{t('bug_tracker_form_title_label')}</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="e.g., 'Save button is unresponsive in the Altar of Creation'" {...field} />
+                                        <Input placeholder={t('bug_tracker_form_title_placeholder')} {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -113,9 +115,9 @@ function AddBugForm({ onBugAdded }: { onBugAdded: () => void }) {
                             name="description"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Detailed Description</FormLabel>
+                                    <FormLabel>{t('bug_tracker_form_desc_label')}</FormLabel>
                                     <FormControl>
-                                        <Textarea placeholder="Please provide steps to reproduce the issue..." {...field} rows={5} />
+                                        <Textarea placeholder={t('bug_tracker_form_desc_placeholder')} {...field} rows={5} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -126,17 +128,17 @@ function AddBugForm({ onBugAdded }: { onBugAdded: () => void }) {
                             name="priority"
                             render={({ field }) => (
                                 <FormItem>
-                                <FormLabel>Priority</FormLabel>
+                                <FormLabel>{t('bug_tracker_form_priority_label')}</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                     <FormControl>
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select the priority level" />
+                                        <SelectValue placeholder={t('bug_tracker_form_priority_placeholder')} />
                                     </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                    <SelectItem value="low">Low</SelectItem>
-                                    <SelectItem value="medium">Medium</SelectItem>
-                                    <SelectItem value="high">High</SelectItem>
+                                    <SelectItem value="low">{t('bug_tracker_priority_low')}</SelectItem>
+                                    <SelectItem value="medium">{t('bug_tracker_priority_medium')}</SelectItem>
+                                    <SelectItem value="high">{t('bug_tracker_priority_high')}</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -149,7 +151,7 @@ function AddBugForm({ onBugAdded }: { onBugAdded: () => void }) {
                             ) : (
                                 <PlusCircle className="mr-2 h-4 w-4" />
                             )}
-                            Submit Report
+                            {t('bug_tracker_submit_report_button')}
                         </Button>
                     </form>
                 </Form>
@@ -159,6 +161,7 @@ function AddBugForm({ onBugAdded }: { onBugAdded: () => void }) {
 }
 
 function BugList({ bugs, isLoading, error }: { bugs: Bug[], isLoading: boolean, error: Error | null }) {
+    const { t } = useTranslation();
     const getStatusVariant = (status: Bug['status']) => {
         switch (status) {
             case 'done': return 'default';
@@ -181,14 +184,14 @@ function BugList({ bugs, isLoading, error }: { bugs: Bug[], isLoading: boolean, 
     }
 
     if (error) {
-        return <p className="text-destructive text-center">Error loading bug reports: {error.message}</p>;
+        return <p className="text-destructive text-center">{t('bug_tracker_error_loading_reports', { message: error.message })}</p>;
     }
 
     return (
         <Card className="shadow-lg">
             <CardHeader>
-                <CardTitle>Public Bug Tracker</CardTitle>
-                <CardDescription>A list of all issues reported by the community.</CardDescription>
+                <CardTitle>{t('bug_tracker_list_title')}</CardTitle>
+                <CardDescription>{t('bug_tracker_list_desc')}</CardDescription>
             </CardHeader>
             <CardContent>
                 {bugs && bugs.length > 0 ? (
@@ -202,7 +205,7 @@ function BugList({ bugs, isLoading, error }: { bugs: Bug[], isLoading: boolean, 
                                 <p className="text-sm text-muted-foreground mb-3">{bug.description}</p>
                                 <div className="flex justify-between items-end text-xs text-muted-foreground">
                                     <div>
-                                        <p>Reported by {bug.reporterName}</p>
+                                        <p>{t('bug_tracker_reported_by', { name: bug.reporterName })}</p>
                                         <p>{bug.createdAt ? formatDistanceToNow(new Date(bug.createdAt.seconds * 1000), { addSuffix: true }) : ''}</p>
                                     </div>
                                     <Badge variant={getPriorityVariant(bug.priority)} className="capitalize">{bug.priority}</Badge>
@@ -212,7 +215,7 @@ function BugList({ bugs, isLoading, error }: { bugs: Bug[], isLoading: boolean, 
                     </div>
                 ) : (
                     <div className="text-center py-8 text-muted-foreground">
-                        <p>No bugs have been reported. All is in harmony. 🙏</p>
+                        <p>{t('bug_tracker_no_bugs')}</p>
                     </div>
                 )}
             </CardContent>
@@ -225,6 +228,7 @@ export default function BugsPage() {
   const [bugs, setBugs] = useState<Bug[]>([]);
   const [isLoadingBugs, setIsLoadingBugs] = useState(true);
   const [errorBugs, setErrorBugs] = useState<Error | null>(null);
+  const { t } = useTranslation();
 
   const fetchBugs = useCallback(async () => {
     if (!firestore) return;
@@ -257,9 +261,9 @@ export default function BugsPage() {
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
        <div className="text-center mb-8">
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-          <Bug /> Bug Tracker
+          <Bug /> {t('bug_tracker_page_title')}
         </h1>
-        <p className="text-lg text-muted-foreground mt-2">Help maintain the harmony of the project by reporting issues.</p>
+        <p className="text-lg text-muted-foreground mt-2">{t('bug_tracker_page_subtitle')}</p>
       </div>
 
       <div className="space-y-8">
@@ -268,13 +272,13 @@ export default function BugsPage() {
         ) : (
             <Card className="w-full text-center shadow-lg">
                 <CardHeader>
-                    <CardTitle>Contribute to the Project</CardTitle>
-                    <CardDescription>Log in to report a bug and help improve Pleasance.</CardDescription>
+                    <CardTitle>{t('bug_tracker_login_card_title')}</CardTitle>
+                    <CardDescription>{t('bug_tracker_login_card_desc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Button asChild>
                     <Link href="/login">
-                        <LogIn className="mr-2 h-4 w-4" /> Login to Submit a Report
+                        <LogIn className="mr-2 h-4 w-4" /> {t('bug_tracker_login_button')}
                     </Link>
                     </Button>
                 </CardContent>
