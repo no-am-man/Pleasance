@@ -58,3 +58,56 @@
     --ring: 263.4 95.2% 66.3%;
   }
 }
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--secondary));
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--primary) / 0.5);
+  border-radius: 6px;
+  border: 3px solid hsl(var(--secondary));
+}
+
+.dark::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--primary) / 0.7);
+}
+
+/* Custom font styles */
+.font-headline {
+  font-family: var(--font-lexend), sans-serif;
+}
+
+.font-body {
+  font-family: var(--font-sans), sans-serif;
+}
+
+/* Custom animation for slow bounce */
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(-15%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 2s infinite;
+}
