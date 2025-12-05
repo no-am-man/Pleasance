@@ -11,7 +11,7 @@
     "start": "next start",
     "lint": "next lint",
     "lint:autofix": "next lint --fix",
-    "test:e2e": "npx playwright install-deps && playwright test"
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
