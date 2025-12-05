@@ -35,33 +35,40 @@ import {
     StorySchema
 } from '@/lib/types';
 import { addDocument } from '@/firebase/non-blocking-updates';
-import { google } from '@ai-sdk/google';
-import { generateObject } from 'ai';
-
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export async function generateDualStory(topic: string, targetLanguage: string) {
-  
-  const result = await generateObject({
-    model: google('gemini-1.5-flash'),
-    schema: StorySchema,
-    prompt: `
-      You are an expert language tutor for the LinguaTune app.
-      
-      Task:
-      1. Write a short, engaging story (approx. 200 words) about: "${topic}".
-      2. The story must be written in ${targetLanguage}.
-      3. Provide a natural, fluent English translation.
-      4. Extract key vocabulary words.
-      
-      Requirements:
-      - The story should be suitable for an intermediate learner (B1 level).
-      - Use evocative language that conveys emotion effectively.
-      - Ensure the translation captures the nuance, not just a literal word-for-word swap.
-    `,
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+  const model = genAI.getGenerativeModel({ 
+    model: "gemini-1.5-flash",
+    generationConfig: { responseMimeType: "application/json" }
   });
 
-  // The result.object is fully typed and ready to use in your UI
-  return result.object; 
+  const prompt = `
+    You are an expert language tutor for the LinguaTune app.
+    
+    Task:
+    1. Write a short, engaging story (approx. 200 words) about: "${topic}".
+    2. The story must be written in ${targetLanguage}.
+    3. Provide a natural, fluent English translation.
+    4. Extract key vocabulary words.
+    5. Your output MUST be a valid JSON object that conforms to this Zod schema:
+    ${JSON.stringify(StorySchema)}
+    
+    Requirements:
+    - The story should be suitable for an intermediate learner (B1 level).
+    - Use evocative language that conveys emotion effectively.
+    - Ensure the translation captures the nuance, not just a literal word-for-word swap.
+  `;
+
+  const result = await model.generateContent(prompt);
+  const responseText = result.response.text();
+  const parsedObject = JSON.parse(responseText);
+
+  // Validate the object against the Zod schema before returning
+  const validatedData = StorySchema.parse(parsedObject);
+
+  return validatedData;
 }
 
 
