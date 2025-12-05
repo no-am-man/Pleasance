@@ -22,6 +22,9 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
       setTranslatedText(originalText);
       return;
     }
+    
+    // If we are not in english, we should start with the original text until translation is ready
+    setTranslatedText(originalText);
 
     const cacheKey = `${language}:${originalText}`;
     if (cache.has(cacheKey)) {
@@ -44,14 +47,13 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
             cache.set(cacheKey, result.translation);
             setTranslatedText(result.translation);
           } else {
-            // If translation fails, fall back to original text
             setTranslatedText(originalText);
           }
         }
       } catch (error) {
         console.error("Translation failed:", error);
         if (!isCancelled) {
-          setTranslatedText(originalText); // Fallback on error
+          setTranslatedText(originalText);
         }
       } finally {
         if (!isCancelled) {
