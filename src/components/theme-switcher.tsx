@@ -27,8 +27,6 @@ export function ThemeSwitcher() {
   const themes = [
     { name: 'Light', value: 'light' },
     { name: 'Dark', value: 'dark' },
-    { name: 'Commune', value: 'theme-commune' },
-    { name: 'Founder', value: 'theme-founder' },
   ];
 
   const handleThemeChange = (newTheme: string) => {
