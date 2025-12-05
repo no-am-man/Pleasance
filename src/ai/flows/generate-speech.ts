@@ -9,7 +9,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import {googleAI} from '@genkit-ai/google-genai';
-import wav from 'wav';
+import { WaveFile } from 'wavefile';
 
 const GenerateSpeechInputSchema = z.object({
   text: z.string().describe('The text to convert to speech.'),
@@ -52,22 +52,11 @@ const generateSpeechFlow = ai.defineFlow(
     const pcmBase64 = media.url.split(',')[1];
     const pcmBuffer = Buffer.from(pcmBase64, 'base64');
     
-    // Use wav package to convert PCM to WAV
-    const wavData = await new Promise<string>((resolve, reject) => {
-        const writer = new wav.Writer({
-            channels: 1,
-            sampleRate: 24000,
-            bitDepth: 16,
-        });
-
-        const buffers: Buffer[] = [];
-        writer.on('data', (chunk) => buffers.push(chunk));
-        writer.on('end', () => resolve(Buffer.concat(buffers).toString('base64')));
-        writer.on('error', reject);
-
-        writer.write(pcmBuffer);
-        writer.end();
-    });
+    // Use wavefile to convert PCM to WAV
+    let wav = new WaveFile();
+    wav.fromScratch(1, 24000, '16', pcmBuffer);
+    
+    const wavData = wav.toBase64();
 
     return {
       audioUrl: `data:audio/wav;base64,${wavData}`,

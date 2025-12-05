@@ -7,6 +7,9 @@ body {
 }
 
 @layer base {
+  * {
+    @apply border-border;
+  }
   :root,
   html.theme-default {
     --background: 20 20% 98%;
@@ -102,12 +105,7 @@ body {
     --input: 217 33% 18%;
     --ring: 217 91% 60%;
   }
-}
 
-@layer base {
-  * {
-    @apply border-border;
-  }
   body {
     @apply bg-background text-foreground;
   }
