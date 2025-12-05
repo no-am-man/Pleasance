@@ -4,30 +4,32 @@
 
 body {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
 }
 
 @layer base {
   :root,
   html.theme-default {
-    --background: 20 20% 98%;
-    --foreground: 20 10% 10%;
-    --card: 20 20% 100%;
-    --card-foreground: 20 10% 10%;
-    --popover: 20 20% 100%;
-    --popover-foreground: 20 10% 10%;
-    --primary: 206.1, 90.4%, 54.3%;
+    --background: 210 20% 98%;
+    --foreground: 210 10% 23%;
+    --card: 210 20% 100%;
+    --card-foreground: 210 10% 23%;
+    --popover: 210 20% 100%;
+    --popover-foreground: 210 10% 23%;
+    --primary: 211 41% 36%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 30 50% 95%;
-    --secondary-foreground: 20 10% 10%;
-    --muted: 30 50% 90%;
-    --muted-foreground: 20 10% 45%;
-    --accent: 25.7, 92.5%, 52.9%;
-    --accent-foreground: 20 10% 98%;
+    --secondary: 151 28% 51%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 210 10% 45%;
+    --accent: 151 28% 51%;
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 20 20% 85%;
-    --input: 20 20% 90%;
-    --ring: 206.1, 90.4%, 54.3%;
+    --border: 210 20% 85%;
+    --input: 210 20% 90%;
+    --ring: 211 41% 36%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -101,11 +103,6 @@ body {
     --border: 217 33% 18%;
     --input: 217 33% 18%;
     --ring: 217 91% 60%;
-  }
-
-  body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
   }
 }
 

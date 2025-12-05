@@ -1,4 +1,3 @@
-
 import type {Config} from 'tailwindcss';
 
 const config: Config = {
@@ -60,8 +59,8 @@ const config: Config = {
           '5': 'hsl(var(--chart-5))',
         },
         sidebar: {
-            DEFAULT: 'hsl(var(--card))',
-            foreground: 'hsl(var(--card-foreground))',
+            DEFAULT: 'hsl(var(--secondary))',
+            foreground: 'hsl(var(--secondary-foreground))',
             primary: 'hsl(var(--primary))',
             'primary-foreground': 'hsl(var(--primary-foreground))',
             accent: 'hsl(var(--accent) / 0.1)',

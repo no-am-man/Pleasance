@@ -1,4 +1,3 @@
-
 // src/components/sidebar.tsx
 'use client';
 
@@ -67,8 +66,8 @@ function NavLink({
     <Link
       href={href}
       className={cn(
-        'flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-        isActive && 'bg-sidebar-primary text-sidebar-primary-foreground',
+        'flex items-center gap-3 rounded-lg px-3 py-2 text-white transition-all hover:bg-white/10',
+        isActive && 'bg-white/20',
         direction === 'rtl' && 'flex-row-reverse'
       )}
     >
@@ -215,77 +214,80 @@ export function Sidebar() {
 
     return (
         <aside className={cn(
-            "fixed inset-y-0 z-50 hidden w-sidebar flex-col bg-sidebar sm:flex",
+            "fixed inset-y-0 z-50 hidden w-sidebar sm:flex flex-col",
             direction === 'rtl' ? 'right-0 border-l' : 'left-0 border-r'
         )}>
-            <div className="flex h-16 items-center border-b px-6">
-                <Link href="/" className="flex items-center gap-2 font-semibold">
-                    <Logo className="h-8 w-8 text-primary" />
-                    <div className="flex items-center gap-2">
-                        <span className="text-lg font-semibold text-primary">{t('pleasance')}</span>
-                        <Badge variant="outline" className="text-xs">
-                          BETA
-                        </Badge>
-                    </div>
-                </Link>
-            </div>
-            <ScrollArea className="flex-1">
-                <nav className="grid items-start p-4 text-sm font-medium">
-                    {navGroups.map((group, groupIndex) => (
-                        <div key={groupIndex} className="mb-2">
-                            <h3 className={cn("px-3 py-2 text-xs font-semibold uppercase text-muted-foreground tracking-wider", direction === 'rtl' && 'text-right')}>{group.title}</h3>
-                            {group.links.map((link) => (
+            <div className="h-full w-full bg-secondary absolute top-0 left-0" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 85%)' }}></div>
+            <div className="relative z-10 flex flex-col h-full">
+                <div className="flex h-16 items-center border-b px-6 border-white/20">
+                    <Link href="/" className="flex items-center gap-2 font-semibold text-white">
+                        <Logo className="h-8 w-8" />
+                        <div className="flex items-center gap-2">
+                            <span className="text-lg font-semibold">{t('pleasance')}</span>
+                            <Badge variant="secondary" className="text-xs">
+                              BETA
+                            </Badge>
+                        </div>
+                    </Link>
+                </div>
+                <ScrollArea className="flex-1">
+                    <nav className="grid items-start p-4 text-sm font-medium">
+                        {navGroups.map((group, groupIndex) => (
+                            <div key={groupIndex} className="mb-2">
+                                <h3 className={cn("px-3 py-2 text-xs font-semibold uppercase text-white/70 tracking-wider", direction === 'rtl' && 'text-right')}>{group.title}</h3>
+                                {group.links.map((link) => (
+                                    <NavLink
+                                        key={link.href}
+                                        {...link}
+                                        isActive={pathname === link.href}
+                                    />
+                                ))}
+                            </div>
+                        ))}
+                         {isFounder && (
+                             <div className="mb-2">
+                                <Separator className="my-2 bg-white/20" />
+                                <h3 className={cn("px-3 py-2 text-xs font-semibold uppercase text-white/70 tracking-wider", direction === 'rtl' && 'text-right')}>{t('navFounder')}</h3>
                                 <NavLink
-                                    key={link.href}
-                                    {...link}
-                                    isActive={pathname === link.href}
+                                    key={adminLink.href}
+                                    {...adminLink}
+                                    isActive={pathname === adminLink.href}
                                 />
-                            ))}
-                        </div>
-                    ))}
-                     {isFounder && (
-                         <div className="mb-2">
-                            <Separator className="my-2" />
-                            <h3 className={cn("px-3 py-2 text-xs font-semibold uppercase text-muted-foreground tracking-wider", direction === 'rtl' && 'text-right')}>{t('navFounder')}</h3>
-                            <NavLink
-                                key={adminLink.href}
-                                {...adminLink}
-                                isActive={pathname === adminLink.href}
-                            />
-                        </div>
-                    )}
-                </nav>
-            </ScrollArea>
-            <div className="mt-auto p-4 border-t space-y-2">
-              <div className="mb-2">
-                <h3 className={cn("px-3 py-2 text-xs font-semibold uppercase text-muted-foreground tracking-wider", direction === 'rtl' && 'text-right')}>Open Source</h3>
-                <a
-                  href="https://github.com/no-am-man/Pleasance"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                    direction === 'rtl' && 'flex-row-reverse'
-                  )}
-                >
-                  <Github className="h-5 w-5" />
-                  <span>{t('navGithub')}</span>
-                </a>
-                <a
-                  href="https://firebase.google.com/docs/studio"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                    direction === 'rtl' && 'flex-row-reverse'
-                  )}
-                >
-                  <Sparkles className="h-5 w-5" />
-                  <span>{t('navPoweredBy')}</span>
-                </a>
-              </div>
-              <Separator />
-              <UserNav />
+                            </div>
+                        )}
+                    </nav>
+                </ScrollArea>
+                <div className="mt-auto p-4 border-t space-y-2 border-white/20">
+                  <div className="mb-2">
+                    <h3 className={cn("px-3 py-2 text-xs font-semibold uppercase text-white/70 tracking-wider", direction === 'rtl' && 'text-right')}>Open Source</h3>
+                    <a
+                      href="https://github.com/no-am-man/Pleasance"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(
+                        'flex items-center gap-3 rounded-lg px-3 py-2 text-white transition-all hover:bg-white/10',
+                        direction === 'rtl' && 'flex-row-reverse'
+                      )}
+                    >
+                      <Github className="h-5 w-5" />
+                      <span>{t('navGithub')}</span>
+                    </a>
+                    <a
+                      href="https://firebase.google.com/docs/studio"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(
+                        'flex items-center gap-3 rounded-lg px-3 py-2 text-white transition-all hover:bg-white/10',
+                        direction === 'rtl' && 'flex-row-reverse'
+                      )}
+                    >
+                      <Sparkles className="h-5 w-5" />
+                      <span>{t('navPoweredBy')}</span>
+                    </a>
+                  </div>
+                  <Separator className="bg-white/20" />
+                  <UserNav />
+                </div>
             </div>
         </aside>
     )
