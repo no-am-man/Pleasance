@@ -6,8 +6,8 @@
 
 This project is open source. You can find the repository [here](https://github.com/no-am-man/Pleasance).
 
-## 🚀 Version 7.0.0
-This major update introduces a public bug tracker to enhance transparency and community involvement in the project's development. It also debuts the "Conductor," a central SuperAgent designed to assist users and orchestrate complex actions across the federation.
+## 🚀 Version 8.0.0
+This version focuses on internationalization and providing a more robust user experience by translating all public-facing pages and components.
 
 ## Core Philosophy
 
