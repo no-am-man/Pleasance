@@ -25,6 +25,8 @@
     --ring: 262.1 83.3% 57.8%;
     --radius: 0.5rem;
 
+    --sidebar-width: 280px;
+
     /* Custom Sidebar colors */
     --sidebar: 240 10% 3.9%;
     --sidebar-foreground: 210 20% 98%;
@@ -54,13 +56,5 @@
     --border: 215 27.9% 16.9%;
     --input: 215 27.9% 16.9%;
     --ring: 263.4 95.2% 66.3%;
-
-    /* Custom Sidebar colors */
-    --sidebar: 240 10% 3.9%;
-    --sidebar-foreground: 210 20% 98%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 210 20% 98%;
-    --sidebar-primary: 210 20% 98%;
-    --sidebar-primary-foreground: 240 5.9% 10%;
   }
 }
