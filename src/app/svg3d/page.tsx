@@ -22,6 +22,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { saveSvgAsset } from '../actions';
 import Link from 'next/link';
 import { SatoshiIcon } from '@/components/icons/satoshi-icon';
+import { useTranslation } from '@/hooks/use-translation';
 
 
 const Svg3dSchema = GenerateSvg3dInputSchema;
@@ -35,6 +36,7 @@ function SaveToTreasuryForm({ pixels, prompt }: { pixels: ColorPixel[], prompt: 
     const { user } = useUser();
     const { toast } = useToast();
     const [isSaving, setIsSaving] = useState(false);
+    const { t } = useTranslation();
 
     const form = useForm<z.infer<typeof SaveAssetSchema>>({
         resolver: zodResolver(SaveAssetSchema),
@@ -47,7 +49,7 @@ function SaveToTreasuryForm({ pixels, prompt }: { pixels: ColorPixel[], prompt: 
 
     async function onSubmit(data: z.infer<typeof SaveAssetSchema>) {
         if (!user) {
-            toast({ variant: 'destructive', title: 'You must be logged in to save an asset.' });
+            toast({ variant: 'destructive', title: t('workshop_login_to_save_toast') });
             return;
         }
         setIsSaving(true);
@@ -63,13 +65,13 @@ function SaveToTreasuryForm({ pixels, prompt }: { pixels: ColorPixel[], prompt: 
                 throw new Error(result.error);
             }
             toast({
-                title: 'Asset Saved!',
-                description: `"${data.assetName}" has been added to your Treasury.`,
+                title: t('workshop_asset_saved_toast_title'),
+                description: t('workshop_asset_saved_toast_desc', { name: data.assetName }),
             });
             form.reset();
         } catch (e) {
             const message = e instanceof Error ? e.message : 'An unknown error occurred.';
-            toast({ variant: 'destructive', title: 'Failed to Save Asset', description: message });
+            toast({ variant: 'destructive', title: t('workshop_asset_save_failed_toast'), description: message });
         } finally {
             setIsSaving(false);
         }
@@ -80,8 +82,8 @@ function SaveToTreasuryForm({ pixels, prompt }: { pixels: ColorPixel[], prompt: 
     return (
         <Card className="mt-4 bg-muted/50">
             <CardHeader>
-                <CardTitle className="text-lg">Save to Treasury</CardTitle>
-                <CardDescription>Declare this artwork as an intellectual property asset.</CardDescription>
+                <CardTitle className="text-lg">{t('workshop_save_to_treasury_title')}</CardTitle>
+                <CardDescription>{t('workshop_save_to_treasury_desc')}</CardDescription>
             </CardHeader>
             <CardContent>
                 <Form {...form}>
@@ -91,9 +93,9 @@ function SaveToTreasuryForm({ pixels, prompt }: { pixels: ColorPixel[], prompt: 
                             name="assetName"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Artwork Name</FormLabel>
+                                    <FormLabel>{t('workshop_artwork_name_label')}</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="e.g., 'Digital Sunrise'" {...field} />
+                                        <Input placeholder={t('workshop_artwork_name_placeholder')} {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -104,7 +106,7 @@ function SaveToTreasuryForm({ pixels, prompt }: { pixels: ColorPixel[], prompt: 
                             name="value"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="flex items-center gap-1.5">Artwork Value</FormLabel>
+                                    <FormLabel className="flex items-center gap-1.5">{t('workshop_artwork_value_label')}</FormLabel>
                                     <FormControl>
                                         <div className="relative">
                                             <SatoshiIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -117,7 +119,7 @@ function SaveToTreasuryForm({ pixels, prompt }: { pixels: ColorPixel[], prompt: 
                         />
                         <Button type="submit" disabled={isSaving}>
                             {isSaving ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                            Save Asset
+                            {t('workshop_save_asset_button')}
                         </Button>
                     </form>
                 </Form>
@@ -133,59 +135,60 @@ v 5.0000 5.0000 25.0000 0.2000 0.3412 1.0000
 `;
 
 function AboutSvg3d() {
+    const { t } = useTranslation();
     return (
         <div className="mt-12 space-y-8">
-            <h2 className="text-3xl font-bold text-center">About SVG3D</h2>
+            <h2 className="text-3xl font-bold text-center">{t('workshop_about_title')}</h2>
             <Card>
                 <CardHeader>
-                    <CardTitle>What is SVG3D?</CardTitle>
-                    <CardDescription>From a prompt to a constellation of pixels.</CardDescription>
+                    <CardTitle>{t('workshop_about_what_is_it_title')}</CardTitle>
+                    <CardDescription>{t('workshop_about_what_is_it_desc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <p>In the context of our republic, "SVG3D" is the name we give to the generative art created in the Community Gallery. It's a <strong>3D point-cloud</strong>, a collection of colored points in a three-dimensional space, rendered within a Scalable Vector Graphic (SVG).</p>
-                    <p>Think of it as a digital sculpture made of light. Each point has an X, Y, and Z coordinate, along with a color. When you provide a prompt to the AI, it doesn't just create a flat image; it imagines a 3D structure and represents it as this cloud of pixels. The interactive viewer then allows you to rotate and explore this structure in real-time.</p>
+                    <p dangerouslySetInnerHTML={{ __html: t('workshop_about_what_is_it_p1') }} />
+                    <p>{t('workshop_about_what_is_it_p2')}</p>
                 </CardContent>
             </Card>
             
             <Card>
                 <CardHeader>
-                    <CardTitle>The Generation Process</CardTitle>
-                    <CardDescription>How the AI translates your vision.</CardDescription>
+                    <CardTitle>{t('workshop_about_generation_title')}</CardTitle>
+                    <CardDescription>{t('workshop_about_generation_desc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <p>When you submit a prompt in the gallery, you're providing the AI with a conceptual seed. The AI uses this seed to determine the shape, color palette, and arrangement of the pixels. The parameters you control have a direct impact:</p>
+                    <p>{t('workshop_about_generation_p1')}</p>
                     <ul className="list-disc pl-5 space-y-2">
-                        <li><strong>Prompt:</strong> The most critical input. Concepts like "a lonely star" might produce a sparse, bright cloud, while "a dense nebula" would create a thick, colorful cluster.</li>
-                        <li><strong>Cube Size:</strong> This defines the conceptual boundary of the 3D space. While all points are mapped to a -50 to 50 range internally, this parameter can influence the perceived scale in the AI's generation.</li>
-                        <li><strong>Density:</strong> This controls the number of points in the cloud. Low density is sparse (~300-500 points), while High density is rich and detailed (~2000-3000 points).</li>
+                        <li dangerouslySetInnerHTML={{ __html: t('workshop_about_generation_li_prompt') }} />
+                        <li dangerouslySetInnerHTML={{ __html: t('workshop_about_generation_li_cubesize') }} />
+                        <li dangerouslySetInnerHTML={{ __html: t('workshop_about_generation_li_density') }} />
                     </ul>
                 </CardContent>
             </Card>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>The .obj File Format</CardTitle>
-                    <CardDescription>The blueprint for physical creation.</CardDescription>
+                    <CardTitle>{t('workshop_about_obj_title')}</CardTitle>
+                    <CardDescription>{t('workshop_about_obj_desc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <p>When you download your creation, you receive a <code>.obj</code> file. This is a standard 3D geometry definition file format. For our point clouds, the format is simple. Each line starts with a 'v', followed by the X, Y, and Z coordinates, and then the R, G, and B values for the color (normalized from 0 to 1).</p>
+                    <p>{t('workshop_about_obj_p1')}</p>
                     <pre className="p-4 bg-muted rounded-md text-xs overflow-x-auto"><code>{objExample}</code></pre>
-                    <p>This file is the digital blueprint that can be read by 3D fabrication software, bridging the gap between your virtual creation and a physical object.</p>
+                    <p>{t('workshop_about_obj_p2')}</p>
                 </CardContent>
             </Card>
              <Card>
                 <CardHeader>
-                    <CardTitle>From Virtual to Physical</CardTitle>
-                    <CardDescription>Manifesting your creation in the real world.</CardDescription>
+                    <CardTitle>{t('workshop_about_physical_title')}</CardTitle>
+                    <CardDescription>{t('workshop_about_physical_desc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <p>The true power of this tool is realized when you manifest your creation. After saving your SVG3D artwork to your Treasury, you can submit it to the <strong>Workshop of Manifestation</strong>. The <code>.obj</code> file you generated is the key.</p>
-                    <p>A network of artisans (like NNO.Studio for 3D printing) can use this file to create a physical representation of your digital sculpture. This is the final step in the journey from a simple idea to a tangible asset, a testament to the creative power of the republic.</p>
+                    <p dangerouslySetInnerHTML={{ __html: t('workshop_about_physical_p1') }} />
+                    <p>{t('workshop_about_physical_p2')}</p>
                      <div className="flex justify-center p-4">
                         <Button asChild>
                             <Link href="/fabrication">
                                 <Warehouse className="mr-2 h-4 w-4" />
-                                Go to the Workshop of Manifestation
+                                {t('workshop_about_physical_cta')}
                             </Link>
                         </Button>
                     </div>
@@ -203,6 +206,7 @@ export default function PersonalWorkshopPage() {
   const searchParams = useSearchParams();
   const { user } = useUser();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const form = useForm<z.infer<typeof Svg3dSchema>>({
     resolver: zodResolver(Svg3dSchema),
@@ -233,14 +237,14 @@ export default function PersonalWorkshopPage() {
           }
         } catch (e) {
           const message = e instanceof Error ? e.message : 'An unknown error occurred.';
-          setError(`Failed to load asset: ${message}`);
+          setError(t('workshop_failed_to_load_asset', { message }));
         } finally {
           setIsLoading(false);
         }
       };
       loadAsset();
     }
-  }, [searchParams]);
+  }, [searchParams, t]);
 
   async function onSubmit(data: z.infer<typeof Svg3dSchema>) {
     setIsLoading(true);
@@ -273,18 +277,18 @@ export default function PersonalWorkshopPage() {
     <main className="container mx-auto max-w-4xl py-8">
        <div className="text-center mb-8">
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-          <Sparkles className="w-10 h-10" /> AI Workshop
+          <Sparkles className="w-10 h-10" /> {t('workshop_title')}
         </h1>
-        <p className="text-lg text-muted-foreground mt-2">A public sandbox to experiment with generative AI tools.</p>
+        <p className="text-lg text-muted-foreground mt-2">{t('workshop_subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         <div className="space-y-8">
             <Card className="shadow-lg">
                 <CardHeader>
-                <CardTitle>Tool: 3D Point-Cloud Generator</CardTitle>
+                <CardTitle>{t('workshop_tool_title')}</CardTitle>
                 <CardDescription>
-                    Enter a prompt and watch the AI bring your idea to life in a rotatable 3D space.
+                    {t('workshop_tool_desc')}
                 </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -295,9 +299,9 @@ export default function PersonalWorkshopPage() {
                         name="prompt"
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Your Prompt</FormLabel>
+                            <FormLabel>{t('workshop_prompt_label')}</FormLabel>
                             <FormControl>
-                            <Input placeholder="e.g., 'The birth of a star', 'Silent forest morning'" {...field} />
+                            <Input placeholder={t('workshop_prompt_placeholder')} {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -310,7 +314,7 @@ export default function PersonalWorkshopPage() {
                             name="cubeSize"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Cube Size (mm)</FormLabel>
+                                    <FormLabel>{t('workshop_cubesize_label')}</FormLabel>
                                     <FormControl>
                                         <Input type="number" {...field} />
                                     </FormControl>
@@ -323,7 +327,7 @@ export default function PersonalWorkshopPage() {
                             name="density"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Pixel Density</FormLabel>
+                                    <FormLabel>{t('workshop_density_label')}</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                         <FormControl>
                                             <SelectTrigger>
@@ -331,9 +335,9 @@ export default function PersonalWorkshopPage() {
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="low">Low</SelectItem>
-                                            <SelectItem value="medium">Medium</SelectItem>
-                                            <SelectItem value="high">High</SelectItem>
+                                            <SelectItem value="low">{t('workshop_density_low')}</SelectItem>
+                                            <SelectItem value="medium">{t('workshop_density_medium')}</SelectItem>
+                                            <SelectItem value="high">{t('workshop_density_high')}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
@@ -345,11 +349,11 @@ export default function PersonalWorkshopPage() {
                     <Button type="submit" disabled={isLoading} className="w-full">
                         {isLoading ? (
                         <>
-                            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> Generating...
+                            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> {t('workshop_generating_button')}
                         </>
                         ) : (
                         <>
-                            <Sparkles className="mr-2 h-4 w-4" /> Generate
+                            <Sparkles className="mr-2 h-4 w-4" /> {t('workshop_generate_button')}
                         </>
                         )}
                     </Button>
@@ -376,7 +380,7 @@ export default function PersonalWorkshopPage() {
                         {error && (
                             <div className="flex w-full h-full justify-center items-center p-4">
                                 <Alert variant="destructive">
-                                    <AlertTitle>Generation Failed</AlertTitle>
+                                    <AlertTitle>{t('workshop_generation_failed_toast_title')}</AlertTitle>
                                     <AlertDescription>{error}</AlertDescription>
                                 </Alert>
                             </div>
@@ -389,7 +393,7 @@ export default function PersonalWorkshopPage() {
                         {!isLoading && !error && !pixels && (
                              <div className="flex w-full h-full flex-col gap-4 justify-center items-center text-center text-muted-foreground p-4">
                                 <Svg3dCube pixels={[]} className="w-16 h-16" />
-                                <p>Your generated 3D art will appear here. <br/> Click and drag to rotate.</p>
+                                <p dangerouslySetInnerHTML={{ __html: t('workshop_placeholder_text')}} />
                             </div>
                         )}
                     </div>
@@ -401,3 +405,5 @@ export default function PersonalWorkshopPage() {
     </main>
   );
 }
+
+    
