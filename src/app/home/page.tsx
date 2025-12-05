@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, LoaderCircle } from "lucide-react";
 import { FederationDiagram } from "@/components/federation-diagram";
 import { useTranslation } from "@/hooks/use-translation";
 
@@ -17,7 +17,7 @@ function FeatureCard({ feature, isFirst, t }: { feature: any, isFirst: boolean, 
                 <div className="relative w-full h-64 md:h-full">
                     <Image
                         src={feature.imageUrl}
-                        alt={feature.description}
+                        alt={t(feature.description)}
                         fill
                         style={{ objectFit: 'cover' }}
                         data-ai-hint={feature.imageHint}
@@ -26,10 +26,10 @@ function FeatureCard({ feature, isFirst, t }: { feature: any, isFirst: boolean, 
             </div>
             <div className="md:w-1/2 flex flex-col">
                 <CardHeader>
-                    <CardTitle className="font-headline capitalize">{feature.title}</CardTitle>
+                    <CardTitle className="font-headline capitalize">{t(feature.title)}</CardTitle>
                 </CardHeader>
                 <CardContent className="flex-grow flex flex-col">
-                    <p className="text-muted-foreground flex-grow">{feature.description}</p>
+                    <p className="text-muted-foreground flex-grow">{t(feature.description)}</p>
                      {isFirst && (
                         <Button asChild className="mt-6">
                             <Link href="/community">
@@ -47,7 +47,11 @@ export default function HomePage() {
     const { t, tData, isLoading } = useTranslation();
 
     if (isLoading) {
-        return <div>Loading...</div>;
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
+            </div>
+        );
     }
 
     const features = tData('features') || [];
