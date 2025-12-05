@@ -865,7 +865,7 @@ export async function generateStoryAndSpeech(values: z.infer<typeof storyTextSch
       return {
           storyData: {
               ...storyData,
-              createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 },
+              createdAt: new Date().toISOString(),
               audioUrl: publicUrl,
           }
       };
