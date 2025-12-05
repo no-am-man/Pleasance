@@ -24,7 +24,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import Image from 'next/image';
 import { generateCommunityFlagAction, welcomeNewMemberAction, notifyOwnerOfJoinRequestAction } from '@/app/actions';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
-import { addDoc } from 'firebase/firestore';
+import { addDocument } from 'firebase/firestore';
 import { setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { PresentationHall } from '@/components/community/PresentationHall';
 import { JoinRequests } from '@/components/community/JoinRequests';
@@ -132,7 +132,7 @@ function TextMessageForm({ communityId, onMessageSent }: { communityId: string, 
         };
 
         try {
-            await addDoc(messagesColRef, newMessage);
+            await addDocument(messagesColRef, newMessage);
             setText('');
             onMessageSent(); // This is now less critical but good for immediate feedback if needed elsewhere
         } catch (error) {
@@ -180,7 +180,7 @@ function TextCommentForm({ communityId, messageId, onCommentSent }: { communityI
             createdAt: serverTimestamp(),
         };
         try {
-            await addDoc(commentsColRef, newComment);
+            await addDocument(commentsColRef, newComment);
             setText('');
             onCommentSent();
         } catch(error) {
@@ -881,7 +881,7 @@ export default function CommunityProfilePage() {
        <div className="mb-8">
             <div className="relative rounded-lg overflow-hidden border-2 border-primary aspect-[16/9] bg-muted flex items-center justify-center">
                 {community.flagUrl ? (
-                    <Image src={community.flagUrl} alt={`${community.name} Flag`} fill objectFit="cover" />
+                    <Image src={community.flagUrl} alt={`${community.name} Flag`} fill style={{ objectFit: 'cover' }} />
                 ) : (
                     <div className="text-center text-muted-foreground">
                         <Flag className="h-12 w-12 mx-auto" />
