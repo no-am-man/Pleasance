@@ -46,7 +46,7 @@ export function MemberCard({ member, communityId, isOwner, onRemove }: { member:
                 </Avatar>
             </Link>
             <div className="flex-1 space-y-1">
-                <Link href={memberLink}><h3 className="font-semibold text-lg group-hover:underline">{member.name}</h3></Link>
+                <Link href={memberLink} className="font-semibold text-lg group-hover:underline">{member.name}</Link>
                 <p className="text-sm text-primary font-medium">{member.role}</p>
                 <p className="text-sm text-muted-foreground line-clamp-2">{member.bio}</p>
             </div>

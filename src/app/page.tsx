@@ -307,7 +307,7 @@ function CommunityCard({ community, profiles }: { community: Community, profiles
     const isSubmitting = submittingRequests[community.id];
 
     return (
-        <li className="rounded-md border transition-colors hover:bg-muted/50">
+        <li className="rounded-md border transition-colors hover:bg-muted/50 flex flex-col">
             <div className="p-4">
                 <div className="flex items-start gap-4">
                     <Link href={`/community/${community.id}`} className="relative h-20 w-36 flex-shrink-0 rounded-md border bg-muted flex items-center justify-center">
@@ -339,11 +339,11 @@ function CommunityCard({ community, profiles }: { community: Community, profiles
                 </div>
             </div>
 
-            <div className="p-4 pt-0">
+            <div className="p-4 pt-0 flex-grow">
                 <h4 className="text-sm font-semibold mb-2 flex items-center gap-2"><Users className="w-4 h-4" /> {t('community_meet_members')} ({members.length})</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {members.slice(0, 4).map((member) => (
-                        <div key={member.userId || member.name} className="flex items-center gap-3 p-2 rounded-md bg-background/50">
+                    {members.slice(0, 4).map((member, index) => (
+                        <div key={member.userId || `${member.name}-${index}`} className="flex items-center gap-3 p-2 rounded-md bg-background/50">
                             <Avatar className="h-8 w-8 border-2 border-background">
                                 <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
                                 <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
@@ -368,14 +368,14 @@ function CommunityCard({ community, profiles }: { community: Community, profiles
                     )}
                 </div>
             </div>
-                <CardFooter className="p-4 border-t">
-                    {!isMember && user && (
-                    <Button onClick={() => handleRequestToJoin(community)} disabled={isSubmitting}>
-                        {isSubmitting ? <Hourglass className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
-                        {t('community_request_to_join')}
-                    </Button>
-                )}
-            </CardFooter>
+            <CardFooter className="p-4 border-t">
+                {!isMember && user && (
+                <Button onClick={() => handleRequestToJoin(community)} disabled={isSubmitting}>
+                    {isSubmitting ? <Hourglass className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
+                    {t('community_request_to_join')}
+                </Button>
+            )}
+        </CardFooter>
         </li>
     );
 }
