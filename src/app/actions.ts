@@ -1,4 +1,3 @@
-
 'use server';
 
 import { z } from 'zod';
@@ -32,9 +31,38 @@ import {
     MemberSchema,
     RoadmapCardSchema,
     RoadmapColumnSchema,
-    GenerateRoadmapIdeaOutputSchema
+    GenerateRoadmapIdeaOutputSchema,
+    StorySchema
 } from '@/lib/types';
 import { addDocument } from '@/firebase/non-blocking-updates';
+import { google } from '@ai-sdk/google';
+import { generateObject } from 'ai';
+
+
+export async function generateDualStory(topic: string, targetLanguage: string) {
+  
+  const result = await generateObject({
+    model: google('gemini-1.5-flash'),
+    schema: StorySchema,
+    prompt: `
+      You are an expert language tutor for the LinguaTune app.
+      
+      Task:
+      1. Write a short, engaging story (approx. 200 words) about: "${topic}".
+      2. The story must be written in ${targetLanguage}.
+      3. Provide a natural, fluent English translation.
+      4. Extract key vocabulary words.
+      
+      Requirements:
+      - The story should be suitable for an intermediate learner (B1 level).
+      - Use evocative language that conveys emotion effectively.
+      - Ensure the translation captures the nuance, not just a literal word-for-word swap.
+    `,
+  });
+
+  // The result.object is fully typed and ready to use in your UI
+  return result.object; 
+}
 
 
 export type ChatWithMemberInput = {

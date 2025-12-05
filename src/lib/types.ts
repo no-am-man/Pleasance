@@ -1,4 +1,3 @@
-
 // src/lib/types.ts
 import { z } from 'zod';
 
@@ -87,3 +86,16 @@ export const EventSchema = z.object({
   communityId: z.string().optional(),
 });
 export type Event = z.infer<typeof EventSchema>;
+
+// LinguaTune Story Schema
+export const StorySchema = z.object({
+  titleOriginal: z.string().describe("The title of the story in the target language"),
+  titleTranslated: z.string().describe("The English translation of the title"),
+  contentOriginal: z.string().describe("The full story text in the target language"),
+  contentTranslated: z.string().describe("The full story text translated into English"),
+  vocabulary: z.array(z.object({
+    word: z.string(),
+    translation: z.string(),
+    context: z.string().describe("How this word was used in the story")
+  })).describe("5-7 key vocabulary words from the story")
+});
