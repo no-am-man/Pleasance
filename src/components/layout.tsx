@@ -4,7 +4,6 @@
 
 import { Header } from '@/components/header';
 import { Sidebar } from '@/components/sidebar';
-import { Breadcrumbs } from './breadcrumbs';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
