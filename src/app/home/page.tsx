@@ -18,8 +18,8 @@ function FeatureCard({ feature, isFirst, t }: { feature: any, isFirst: boolean, 
                     <Image
                         src={feature.imageUrl}
                         alt={feature.description}
-                        layout="fill"
-                        objectFit="cover"
+                        fill
+                        style={{ objectFit: 'cover' }}
                         data-ai-hint={feature.imageHint}
                     />
                 </div>
