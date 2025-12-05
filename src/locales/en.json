@@ -75,6 +75,8 @@
   "community_refinement_failed_title": "AI Refinement Failed",
   "community_idea_refined_title": "Idea Refined!",
   "community_idea_refined_desc": "The AI has expanded on your idea.",
+  "federation_what_is_title": "What is the Federation?",
+  "federation_documentation": "Pleasance is structured as a Federation of Social Communities. This means it is not a single, monolithic group, but a network of independent, autonomous communities. Each one is a sovereign entity with its own members, treasury, and creative workshop, united under a common umbrella for co-learning and creation.",
   "nuncy_lingua_title": "Nuncy Lingua",
   "nuncy_lingua_subtitle": "Generate a short story at your level, then practice with our karaoke-style player.",
   "story_login_card_title": "Welcome to the Scriptorium",

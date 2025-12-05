@@ -12,7 +12,7 @@ import { firestore } from "@/firebase/config";
 import { collection, doc, query, where, orderBy, onSnapshot, Unsubscribe, getDocs, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LogIn, PlusCircle, LoaderCircle, Search, User, Flag, Sparkles, Users, Bot, Hourglass } from "lucide-react";
+import { LogIn, PlusCircle, LoaderCircle, Search, User, Flag, Sparkles, Users, Bot, Hourglass, Info } from "lucide-react";
 import { createCommunityDetails, refineCommunityPromptAction, notifyOwnerOfJoinRequestAction } from "@/app/actions";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Input } from "@/components/ui/input";
@@ -566,6 +566,15 @@ export default function CommunityPage() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
+            </CardContent>
+        </Card>
+
+        <Card className="bg-primary/5 border-primary/20">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-primary"><Info /> {t('federation_what_is_title')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p className="text-muted-foreground">{t('federation_documentation')}</p>
             </CardContent>
         </Card>
 
