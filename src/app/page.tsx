@@ -311,13 +311,15 @@ function CommunityCard({ community, profiles }: { community: Community, profiles
         <li className="rounded-md border transition-colors hover:bg-muted/50 flex flex-col">
             <div className="p-4">
                 <div className="flex items-start gap-4">
-                    <Link href={`/community/${community.id}`} className="relative h-20 w-36 flex-shrink-0 rounded-md border bg-muted flex items-center justify-center">
-                        {community.flagUrl ? (
-                            <Image src={community.flagUrl} alt={`${community.name} Flag`} layout="fill" objectFit="cover" className="rounded-md" />
-                        ) : (
-                            <Flag className="h-8 w-8 text-muted-foreground" />
-                        )}
-                    </Link>
+                    <div className="relative h-20 w-36 flex-shrink-0 rounded-md border bg-muted flex items-center justify-center">
+                        <Link href={`/community/${community.id}`} className="block w-full h-full">
+                            {community.flagUrl ? (
+                                <Image src={community.flagUrl} alt={`${community.name} Flag`} layout="fill" objectFit="cover" className="rounded-md" />
+                            ) : (
+                                <Flag className="h-8 w-8 text-muted-foreground m-auto" />
+                            )}
+                        </Link>
+                    </div>
                     <div className="flex-1">
                          <h3 className="font-semibold text-lg text-primary hover:underline flex items-center gap-2">
                             <Link href={`/community/${community.id}`}>
@@ -344,7 +346,7 @@ function CommunityCard({ community, profiles }: { community: Community, profiles
                 <h4 className="text-sm font-semibold mb-2 flex items-center gap-2"><Users className="w-4 h-4" /> {t('community_meet_members')} ({members.length})</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {members.slice(0, 4).map((member, index) => (
-                        <div key={member.userId || `${member.name}-${index}`} className="flex items-center gap-3 p-2 rounded-md bg-background/50">
+                        <div key={member.userId || member.name || index} className="flex items-center gap-3 p-2 rounded-md bg-background/50">
                             <Avatar className="h-8 w-8 border-2 border-background">
                                 <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
                                 <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
