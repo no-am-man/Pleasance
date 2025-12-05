@@ -7,9 +7,6 @@ body {
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
   :root,
   html.theme-default {
     --background: 20 20% 98%;
