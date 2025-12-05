@@ -10,6 +10,7 @@ import { LoaderCircle, Presentation } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Svg3dCube } from '@/components/icons/svg3d-cube';
 import { SaveToTreasuryForm } from './SaveToTreasuryForm';
+import { useTranslation } from '@/hooks/use-translation';
 
 type ColorPixel = {
     x: number;
@@ -33,6 +34,7 @@ export function PresentationHall({ communityId }: { communityId: string }) {
     const [creations, setCreations] = useState<Creation[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
+    const { t } = useTranslation();
 
     useEffect(() => {
         if (!firestore || !communityId) return;
@@ -68,11 +70,11 @@ export function PresentationHall({ communityId }: { communityId: string }) {
         <div className="mb-12">
             <Card className="shadow-lg bg-gradient-to-br from-primary/10 via-card to-card">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-3xl font-headline text-primary"><Presentation /> Presentation Hall</CardTitle>
-                    <CardDescription>A public showcase of this community's finest creations.</CardDescription>
+                    <CardTitle className="flex items-center gap-3 text-3xl font-headline text-primary"><Presentation /> {t('community_page_presentation_hall_title')}</CardTitle>
+                    <CardDescription>{t('community_page_presentation_hall_desc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {error && <p className="text-destructive text-center">Error loading creations: {error.message}</p>}
+                    {error && <p className="text-destructive text-center">{t('community_page_load_creations_error', { message: error.message })}</p>}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {creations.map(creation => (
                             <Dialog key={creation.id}>
@@ -83,7 +85,7 @@ export function PresentationHall({ communityId }: { communityId: string }) {
                                         </div>
                                         <CardHeader className="p-4">
                                             <CardTitle className="text-base line-clamp-1 group-hover:underline">{creation.prompt}</CardTitle>
-                                            <CardDescription className="text-xs">by {creation.creatorName}</CardDescription>
+                                            <CardDescription className="text-xs">{t('community_page_by_creator', { name: creation.creatorName })}</CardDescription>
                                         </CardHeader>
                                     </Card>
                                 </DialogTrigger>
@@ -91,7 +93,7 @@ export function PresentationHall({ communityId }: { communityId: string }) {
                                     <DialogHeader>
                                         <DialogTitle>{creation.prompt}</DialogTitle>
                                         <DialogDescription>
-                                            Created by {creation.creatorName} on {new Date(creation.createdAt.seconds * 1000).toLocaleDateString()}
+                                            {t('community_page_created_by', { name: creation.creatorName, date: new Date(creation.createdAt.seconds * 1000).toLocaleDateString() })}
                                         </DialogDescription>
                                     </DialogHeader>
                                     <div className="aspect-square bg-muted rounded-md my-4">

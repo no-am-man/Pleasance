@@ -29,6 +29,7 @@ import { setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/no
 import { PresentationHall } from '@/components/community/PresentationHall';
 import { JoinRequests } from '@/components/community/JoinRequests';
 import { MemberCard } from '@/components/community/MemberCard';
+import { useTranslation } from '@/hooks/use-translation';
 
 type Member = {
   name: string;
@@ -107,6 +108,7 @@ function TextMessageForm({ communityId, onMessageSent }: { communityId: string, 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useUser();
     const { toast } = useToast();
+    const { t } = useTranslation();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -133,8 +135,8 @@ function TextMessageForm({ communityId, onMessageSent }: { communityId: string, 
             setText('');
             onMessageSent(); // This is now less critical but good for immediate feedback if needed elsewhere
         } catch (error) {
-            const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
-            toast({ variant: 'destructive', title: 'Failed to send message', description: message });
+            const message = error instanceof Error ? error.message : t('community_page_unexpected_error');
+            toast({ variant: 'destructive', title: t('community_page_send_message_fail_title'), description: message });
         } finally {
             setIsSubmitting(false);
         }
@@ -145,7 +147,7 @@ function TextMessageForm({ communityId, onMessageSent }: { communityId: string, 
             <Input
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                placeholder="Type a message..."
+                placeholder={t('community_page_message_placeholder')}
                 disabled={isSubmitting}
             />
             <Button type="submit" disabled={isSubmitting || !text.trim()}>
@@ -160,6 +162,7 @@ function TextCommentForm({ communityId, messageId, onCommentSent }: { communityI
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useUser();
     const { toast } = useToast();
+    const { t } = useTranslation();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -180,8 +183,8 @@ function TextCommentForm({ communityId, messageId, onCommentSent }: { communityI
             setText('');
             onCommentSent();
         } catch(error) {
-            const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
-            toast({ variant: 'destructive', title: 'Failed to send reply', description: message });
+            const message = error instanceof Error ? error.message : t('community_page_unexpected_error');
+            toast({ variant: 'destructive', title: t('community_page_send_reply_fail_title'), description: message });
         } finally {
             setIsSubmitting(false);
         }
@@ -192,7 +195,7 @@ function TextCommentForm({ communityId, messageId, onCommentSent }: { communityI
             <Input
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                placeholder="Write a reply..."
+                placeholder={t('community_page_reply_placeholder')}
                 disabled={isSubmitting}
                 className="h-9"
             />
@@ -207,6 +210,7 @@ function CommentCard({ comment, communityId, messageId, canManage }: { comment: 
     const { toast } = useToast();
     const [isUpdating, setIsUpdating] = useState(false);
     const [isSoftDeleted, setIsSoftDeleted] = useState(comment.deleted);
+    const { t } = useTranslation();
 
     const handleDelete = () => {
         if(!comment.id || !communityId || !messageId || !firestore) return;
@@ -224,7 +228,7 @@ function CommentCard({ comment, communityId, messageId, canManage }: { comment: 
         // Use non-blocking update
         updateDocumentNonBlocking(commentDocRef, updatePayload);
         
-        toast({ title: 'Comment Deleted' });
+        toast({ title: t('community_page_comment_deleted_toast_title') });
         
         // No need to set isUpdating back to false unless you want to allow "undo"
     };
@@ -233,7 +237,7 @@ function CommentCard({ comment, communityId, messageId, canManage }: { comment: 
         return (
             <div className="p-3 rounded-md bg-muted/50 flex gap-3 items-start">
                 <Ban className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground italic">This comment has been deleted.</span>
+                <span className="text-sm text-muted-foreground italic">{t('community_page_comment_deleted_text')}</span>
             </div>
         )
     }
@@ -250,7 +254,7 @@ function CommentCard({ comment, communityId, messageId, canManage }: { comment: 
                      <span className="text-xs text-muted-foreground">
                         {comment.createdAt
                             ? new Date(comment.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                            : "sending..."}
+                            : t('community_page_sending_text')}
                     </span>
                 </div>
                  <p className="text-sm text-foreground whitespace-pre-wrap">{comment.text}</p>
@@ -258,21 +262,21 @@ function CommentCard({ comment, communityId, messageId, canManage }: { comment: 
             {canManage && (
                  <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" disabled={isUpdating || !comment.id} aria-label="Delete comment" className="opacity-0 group-hover:opacity-100">
+                        <Button variant="ghost" size="icon" disabled={isUpdating || !comment.id} aria-label={t('community_page_delete_comment_label')}>
                             <Ban className="w-4 h-4 text-muted-foreground hover:text-destructive" />
                         </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure you want to delete this comment?</AlertDialogTitle>
+                            <AlertDialogTitle>{t('community_page_delete_comment_dialog_title')}</AlertDialogTitle>
                             <AlertDialogDescription>
-                                This will permanently hide the comment content. This action cannot be undone.
+                                {t('community_page_delete_comment_dialog_desc')}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogCancel>{t('community_page_delete_cancel')}</AlertDialogCancel>
                             <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
-                                {isUpdating ? <LoaderCircle className="animate-spin" /> : 'Delete'}
+                                {isUpdating ? <LoaderCircle className="animate-spin" /> : t('community_page_delete_confirm')}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
@@ -332,6 +336,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
     const [isUpdating, setIsUpdating] = useState(false);
     const [isCollapsibleOpen, setIsCollapsibleOpen] = useState(true);
     const [isSoftDeleted, setIsSoftDeleted] = useState(message.deleted);
+    const { t } = useTranslation();
 
     const isDone = message.status === 'done';
     const isReady = !!message.id && !!message.communityId && !!firestore;
@@ -344,7 +349,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
         
         await updateDoc(messageDocRef, { status: newStatus });
         
-        toast({ title: `Message Marked as ${newStatus}` });
+        toast({ title: t('community_page_message_status_toast', { status: newStatus }) });
         if (newStatus === 'done') {
             setIsCollapsibleOpen(false);
         }
@@ -366,14 +371,14 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
 
         updateDocumentNonBlocking(messageDocRef, updatePayload);
         
-        toast({ title: 'Message Deleted' });
+        toast({ title: t('community_page_message_deleted_toast') });
     };
 
      if (isSoftDeleted) {
         return (
             <div className="p-4 rounded-md flex items-center gap-3 bg-muted/50">
                 <Ban className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground italic">This message has been deleted.</span>
+                <span className="text-sm text-muted-foreground italic">{t('community_page_message_deleted_text')}</span>
             </div>
         )
     }
@@ -388,7 +393,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                     <AvatarFallback>{message.userName.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                    <span className="font-semibold text-sm text-muted-foreground">{message.userName}'s message marked as done.</span>
+                    <span className="font-semibold text-sm text-muted-foreground">{t('community_page_message_done_text', { name: message.userName })}</span>
                 </div>
                 {canManage && (
                     <Button variant="ghost" size="icon" onClick={handleToggleStatus} disabled={isUpdating || !isReady}>
@@ -414,7 +419,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                                 <span className="text-xs text-muted-foreground">
                                     {message.createdAt
                                         ? new Date(message.createdAt.seconds * 1000).toLocaleTimeString()
-                                        : "sending..."}
+                                        : t('community_page_sending_text')}
                                 </span>
                             </div>
                         </div>
@@ -423,26 +428,26 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                                 <>
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
-                                            <Button variant="ghost" size="icon" disabled={isUpdating || !isReady} aria-label="Delete message">
+                                            <Button variant="ghost" size="icon" disabled={isUpdating || !isReady} aria-label={t('community_page_delete_message_label')}>
                                                 <Ban className="w-4 h-4 text-muted-foreground hover:text-destructive" />
                                             </Button>
                                         </AlertDialogTrigger>
                                         <AlertDialogContent>
                                             <AlertDialogHeader>
-                                                <AlertDialogTitle>Are you sure you want to delete this message?</AlertDialogTitle>
+                                                <AlertDialogTitle>{t('community_page_delete_message_dialog_title')}</AlertDialogTitle>
                                                 <AlertDialogDescription>
-                                                    This will permanently hide the message content. This action cannot be undone.
+                                                    {t('community_page_delete_message_dialog_desc')}
                                                 </AlertDialogDescription>
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>
-                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogCancel>{t('community_page_delete_cancel')}</AlertDialogCancel>
                                                 <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
-                                                    {isUpdating ? <LoaderCircle className="animate-spin" /> : 'Delete'}
+                                                    {isUpdating ? <LoaderCircle className="animate-spin" /> : t('community_page_delete_confirm')}
                                                 </AlertDialogAction>
                                             </AlertDialogFooter>
                                         </AlertDialogContent>
                                     </AlertDialog>
-                                    <Button variant="ghost" size="icon" onClick={handleToggleStatus} disabled={isUpdating || !isReady} aria-label="Mark as done">
+                                    <Button variant="ghost" size="icon" onClick={handleToggleStatus} disabled={isUpdating || !isReady} aria-label={t('community_page_mark_done_label')}>
                                         {isUpdating ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Circle className="w-4 h-4 text-muted-foreground" />}
                                     </Button>
                                 </>
@@ -457,7 +462,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
                             <CollapsibleTrigger asChild>
                                 <Button variant="ghost" size="sm" className="relative" disabled={!isReady}>
                                     <MessageSquare className="mr-2 h-4 w-4" />
-                                    Comment
+                                    {t('community_page_comment_button')}
                                 </Button>
                             </CollapsibleTrigger>
                         </div>
@@ -473,6 +478,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
 
 function Network({ communityId, isOwner, allMembers }: { communityId: string; isOwner: boolean, allMembers: Member[] }) {
     const { user } = useUser();
+    const { t } = useTranslation();
     
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -527,15 +533,15 @@ function Network({ communityId, isOwner, allMembers }: { communityId: string; is
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div>
-                        <CardTitle className="flex items-center gap-2"><MessageSquare /> Community Network</CardTitle>
-                        <CardDescription>The central feed for community activity and messages.</CardDescription>
+                        <CardTitle className="flex items-center gap-2"><MessageSquare /> {t('community_page_network_title')}</CardTitle>
+                        <CardDescription>{t('community_page_network_desc')}</CardDescription>
                     </div>
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
                 {isLoading && <LoaderCircle className="mx-auto animate-spin" />}
-                {error && <p className="text-destructive">Error loading messages: {error.message}</p>}
-                {!isLoading && filteredMessages && filteredMessages.length === 0 && <p className="text-muted-foreground text-center py-8">No messages yet. Be the first!</p>}
+                {error && <p className="text-destructive">{t('community_page_load_messages_error', { message: error.message })}</p>}
+                {!isLoading && filteredMessages && filteredMessages.length === 0 && <p className="text-muted-foreground text-center py-8">{t('community_page_no_messages')}</p>}
                 <div className="max-h-[40rem] overflow-y-auto space-y-4 pr-2">
                     {filteredMessages?.map(msg => {
                         const key = msg.id || `${msg.userId}-${msg.createdAt?.seconds || Date.now()}`;
@@ -552,7 +558,7 @@ function Network({ communityId, isOwner, allMembers }: { communityId: string; is
                     <Button asChild>
                         <Link href="/login">
                             <LogIn className="mr-2" />
-                            Login to send a message
+                            {t('community_page_login_to_message')}
                         </Link>
                     </Button>
                 </div>
@@ -565,6 +571,7 @@ export default function CommunityProfilePage() {
   const params = useParams();
   const { user } = useUser();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const [isGeneratingFlag, setIsGeneratingFlag] = useState(false);
 
@@ -671,7 +678,7 @@ export default function CommunityProfilePage() {
 
   const handleRequestToJoin = async () => {
     if (!user || !id || !userProfile || !firestore || !community) {
-        toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in and have a profile to join.' });
+        toast({ variant: 'destructive', title: t('community_page_error'), description: t('community_page_login_profile_error') });
         return;
     }
     setIsSubmitting(true);
@@ -691,10 +698,10 @@ export default function CommunityProfilePage() {
             communityName: community.name,
             requestingUserName: userProfile.name,
         });
-        toast({ title: 'Request Sent!', description: 'The community owner has been notified.' });
+        toast({ title: t('community_page_request_sent_title'), description: t('community_page_request_sent_desc') });
     } catch(e) {
-        const message = e instanceof Error ? e.message : 'An error occurred';
-        toast({ variant: 'destructive', title: 'Failed to send request', description: message });
+        const message = e instanceof Error ? e.message : t('community_page_unexpected_error');
+        toast({ variant: 'destructive', title: t('community_page_send_request_fail_title'), description: message });
     } finally {
         setIsSubmitting(false);
     }
@@ -719,20 +726,20 @@ export default function CommunityProfilePage() {
     await welcomeNewMemberAction({ communityId: community.id, communityName: community.name, newMemberName: newMember.name });
 
     toast({
-        title: "Member Invited!",
-        description: `${profile.name} has been added to the community.`
+        title: t('community_page_member_invited_title'),
+        description: t('community_page_member_invited_desc', { name: profile.name })
     })
   };
 
   const handleRemoveMember = async (memberToRemove: Member) => {
     if (!community || !firestore) {
-      toast({ variant: "destructive", title: "Community not found." });
+      toast({ variant: "destructive", title: t('community_page_community_not_found') });
       return;
     }
 
     const isRemovingSelf = user?.uid === memberToRemove.userId;
     if (isOwner && isRemovingSelf) {
-        toast({ variant: "destructive", title: "Owner cannot leave the community."});
+        toast({ variant: "destructive", title: t('community_page_owner_leave_error')});
         return;
     }
     
@@ -741,11 +748,11 @@ export default function CommunityProfilePage() {
       await updateDoc(communityDocRef, {
         members: arrayRemove(memberToRemove)
       });
-      toast({ title: "Member Removed", description: `${memberToRemove.name} has been removed from the community.` });
+      toast({ title: t('community_page_member_removed_title'), description: t('community_page_member_removed_desc', { name: memberToRemove.name }) });
       // UI will update via onSnapshot
     } catch (e) {
-      const message = e instanceof Error ? e.message : "An unexpected error occurred.";
-      toast({ variant: "destructive", title: "Failed to remove member.", description: message });
+      const message = e instanceof Error ? e.message : t('community_page_unexpected_error');
+      toast({ variant: "destructive", title: t('community_page_remove_member_fail_title'), description: message });
     }
   };
 
@@ -754,16 +761,16 @@ export default function CommunityProfilePage() {
     if (!community || !user || !firestore) {
       toast({
         variant: 'destructive',
-        title: 'Missing Information',
-        description: 'Community data is not loaded or you are not logged in.',
+        title: t('community_page_missing_info_title'),
+        description: t('community_page_missing_info_desc'),
       });
       return;
     }
 
     setIsGeneratingFlag(true);
     toast({
-      title: 'Generating New Flag...',
-      description: 'The AI is painting. This may take a moment.',
+      title: t('community_page_generating_flag_title'),
+      description: t('community_page_generating_flag_desc'),
     });
 
     try {
@@ -783,15 +790,15 @@ export default function CommunityProfilePage() {
       await updateDoc(communityRef, { flagUrl: result.data.flagUrl });
 
       toast({
-        title: 'New Flag Hoisted!',
-        description: 'Your community has a new look.',
+        title: t('community_page_new_flag_title'),
+        description: t('community_page_new_flag_desc'),
       });
 
     } catch (e) {
-      const message = e instanceof Error ? e.message : 'An unexpected error occurred';
+      const message = e instanceof Error ? e.message : t('community_page_unexpected_error');
       toast({
         variant: 'destructive',
-        title: 'Flag Generation Failed',
+        title: t('community_page_flag_fail_title'),
         description: message,
       });
     } finally {
@@ -814,11 +821,11 @@ export default function CommunityProfilePage() {
         <Card className="w-full max-w-lg text-center">
           <CardHeader>
             <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
-            <CardTitle className="mt-4">An Error Occurred</CardTitle>
+            <CardTitle className="mt-4">{t('community_page_error_title')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-4">
-              There was a problem loading this community.
+              {t('community_page_error_desc')}
             </p>
             <pre className="mb-4 text-left text-sm bg-muted p-2 rounded-md overflow-x-auto">
               <code>{error.message}</code>
@@ -826,7 +833,7 @@ export default function CommunityProfilePage() {
             <Button asChild variant="outline">
               <Link href="/community">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to All Communities
+                {t('community_page_back_all_button')}
               </Link>
             </Button>
           </CardContent>
@@ -840,14 +847,14 @@ export default function CommunityProfilePage() {
         <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
           <Card className="w-full max-w-lg text-center">
             <CardHeader>
-              <CardTitle>Community Not Found</CardTitle>
+              <CardTitle>{t('community_page_not_found_title')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground mb-4">We couldn't find the community you were looking for. It may have been deleted or the ID is incorrect.</p>
+              <p className="text-muted-foreground mb-4">{t('community_page_not_found_desc')}</p>
               <Button asChild variant="outline">
               <Link href="/community">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to FederalCommunitySocial
+                {t('community_page_back_all_button')}
               </Link>
             </Button>
             </CardContent>
@@ -862,7 +869,7 @@ export default function CommunityProfilePage() {
         <Button asChild variant="ghost">
             <Link href="/community">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to All Communities
+                {t('community_page_back_all_button')}
             </Link>
         </Button>
       </div>
@@ -874,7 +881,7 @@ export default function CommunityProfilePage() {
                 ) : (
                     <div className="text-center text-muted-foreground">
                         <Flag className="h-12 w-12 mx-auto" />
-                        <p>No flag has been generated for this community yet.</p>
+                        <p>{t('community_page_no_flag')}</p>
                     </div>
                 )}
                 {isOwner && (
@@ -885,7 +892,7 @@ export default function CommunityProfilePage() {
                             ) : (
                                 <RefreshCw className="mr-2 h-4 w-4" />
                             )}
-                            Regenerate Flag
+                            {t('community_page_regenerate_flag_button')}
                         </Button>
                     </div>
                 )}
@@ -903,16 +910,16 @@ export default function CommunityProfilePage() {
       {!isMember && (
          <Card className="shadow-lg mb-12 border-2 border-primary bg-primary/5">
             <CardHeader className="items-center text-center">
-                <CardTitle className="text-2xl">Join {community.name}</CardTitle>
-                <CardDescription>Become a member to participate in the community.</CardDescription>
+                <CardTitle className="text-2xl">{t('community_page_join_title', { name: community.name })}</CardTitle>
+                <CardDescription>{t('community_page_join_desc')}</CardDescription>
             </CardHeader>
             <CardContent className="text-center">
                 {!user ? (
-                    <Button asChild><Link href="/login"><LogIn className="mr-2 h-4 w-4" />Login to Join</Link></Button>
+                    <Button asChild><Link href="/login"><LogIn className="mr-2 h-4 w-4" />{t('community_page_login_to_join_button')}</Link></Button>
                 ) : userJoinRequest?.status === 'pending' ? (
-                    <Button disabled><Hourglass className="mr-2 h-4 w-4 animate-spin" />Request Pending</Button>
+                    <Button disabled><Hourglass className="mr-2 h-4 w-4 animate-spin" />{t('community_page_request_pending_button')}</Button>
                 ) : (
-                    <Button onClick={handleRequestToJoin} disabled={isSubmitting}><PlusCircle className="mr-2 h-4 w-4" />Request to Join</Button>
+                    <Button onClick={handleRequestToJoin} disabled={isSubmitting}><PlusCircle className="mr-2 h-4 w-4" />{t('community_request_to_join')}</Button>
                 )}
             </CardContent>
         </Card>
@@ -920,7 +927,7 @@ export default function CommunityProfilePage() {
 
       <Card className="shadow-lg mb-12 border-2 border-primary">
         <CardHeader>
-          <CardTitle>Welcome Message</CardTitle>
+          <CardTitle>{t('community_page_welcome_message_title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-lg leading-relaxed whitespace-pre-wrap">{community.welcomeMessage}</p>
@@ -929,19 +936,19 @@ export default function CommunityProfilePage() {
             <CardFooter>
                  <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <Button variant="destructive"><LogOut className="mr-2 h-4 w-4" />Leave Community</Button>
+                        <Button variant="destructive"><LogOut className="mr-2 h-4 w-4" />{t('community_page_leave_button')}</Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure you want to leave?</AlertDialogTitle>
+                            <AlertDialogTitle>{t('community_page_leave_dialog_title')}</AlertDialogTitle>
                             <AlertDialogDescription>
-                                You will lose access to this community's private content. You can always request to join again later.
+                                {t('community_page_leave_dialog_desc')}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogCancel>{t('community_page_delete_cancel')}</AlertDialogCancel>
                             <AlertDialogAction onClick={() => handleRemoveMember(community.members.find(m => m.userId === user.uid)!)} className="bg-destructive hover:bg-destructive/90">
-                                Leave
+                                {t('community_page_leave_confirm')}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
@@ -952,7 +959,7 @@ export default function CommunityProfilePage() {
       
       <Card className="shadow-lg mb-12">
         <CardHeader>
-          <CardTitle className="text-3xl font-bold text-center">Meet the Members</CardTitle>
+          <CardTitle className="text-3xl font-bold text-center">{t('community_page_meet_members_title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-6">
@@ -966,29 +973,29 @@ export default function CommunityProfilePage() {
        {isMember && (
         <Card className="shadow-lg my-12">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Wrench /> Available Tools</CardTitle>
-                <CardDescription>Use these tools to collaborate and create within the community.</CardDescription>
+                <CardTitle className="flex items-center gap-2"><Wrench /> {t('community_page_tools_title')}</CardTitle>
+                <CardDescription>{t('community_page_tools_desc')}</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Button asChild variant="outline" className="h-auto py-4">
                     <Link href={`/community/${id}/workshop`} className="flex flex-col items-center gap-2">
                         <Sparkles className="w-8 h-8 text-primary" />
-                        <span className="font-semibold">Workshop</span>
-                        <div className="mt-2 text-xs text-center text-muted-foreground">Collaborate on generative art.</div>
+                        <span className="font-semibold">{t('community_page_tool_workshop')}</span>
+                        <div className="mt-2 text-xs text-center text-muted-foreground">{t('community_page_tool_workshop_desc')}</div>
                     </Link>
                 </Button>
                  <Button asChild variant="outline" className="h-auto py-4">
                      <Link href={`/community/${id}/roadmap`} className="flex flex-col items-center gap-2">
                         <KanbanIcon className="w-8 h-8 text-primary" />
-                        <span className="font-semibold">Roadmap</span>
-                        <div className="mt-2 text-xs text-center text-muted-foreground">View the private community roadmap.</div>
+                        <span className="font-semibold">{t('community_page_tool_roadmap')}</span>
+                        <div className="mt-2 text-xs text-center text-muted-foreground">{t('community_page_tool_roadmap_desc')}</div>
                     </Link>
                 </Button>
                 <Button asChild variant="outline" className="h-auto py-4">
                      <Link href={`/community/${id}/treasury`} className="flex flex-col items-center gap-2">
                         <Banknote className="w-8 h-8 text-primary" />
-                        <span className="font-semibold">Treasury</span>
-                        <div className="mt-2 text-xs text-center text-muted-foreground">View the community's creations.</div>
+                        <span className="font-semibold">{t('community_page_tool_treasury')}</span>
+                        <div className="mt-2 text-xs text-center text-muted-foreground">{t('community_page_tool_treasury_desc')}</div>
                     </Link>
                 </Button>
             </CardContent>
@@ -1004,8 +1011,8 @@ export default function CommunityProfilePage() {
             <Separator className="my-12" />
             <Card className="shadow-lg">
                 <CardHeader>
-                    <CardTitle>Pending Join Requests</CardTitle>
-                    <CardDescription>Approve or decline requests from users who want to join your community.</CardDescription>
+                    <CardTitle>{t('community_page_join_requests_title')}</CardTitle>
+                    <CardDescription>{t('community_page_join_requests_desc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <JoinRequests communityId={id} communityName={community.name} />
@@ -1020,7 +1027,7 @@ export default function CommunityProfilePage() {
         <>
             <Separator className="my-12" />
             <div>
-                <h2 className="text-3xl font-bold text-center mb-8">Invite Members</h2>
+                <h2 className="text-3xl font-bold text-center mb-8">{t('community_page_invite_title')}</h2>
                 {isLoadingProfiles ? (
                     <LoaderCircle className="animate-spin mx-auto" />
                 ) : suggestedUsers.length > 0 ? (
@@ -1037,14 +1044,14 @@ export default function CommunityProfilePage() {
                                 </div>
                                 <Button variant="outline" size="sm" onClick={() => handleInvite(profile)}>
                                     <Send className="mr-2 h-4 w-4" />
-                                    Invite
+                                    {t('community_page_invite_button')}
                                 </Button>
                             </Card>
                         ))}
                     </div>
                 ) : (
                     <Card className="flex items-center justify-center p-8">
-                        <p className="text-muted-foreground">All users are already members of this community.</p>
+                        <p className="text-muted-foreground">{t('community_page_all_users_members')}</p>
                     </Card>
                 )}
             </div>

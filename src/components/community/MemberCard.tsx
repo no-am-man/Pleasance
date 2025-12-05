@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { AiIcon } from '@/components/icons/ai-icon';
 import { HumanIcon } from '@/components/icons/human-icon';
 import { Bot, User, UserX } from 'lucide-react';
+import { useTranslation } from '@/hooks/use-translation';
 
 type Member = {
     name: string;
@@ -21,6 +22,7 @@ type Member = {
 };
 
 export function MemberCard({ member, communityId, isOwner, onRemove }: { member: Member; communityId: string; isOwner: boolean; onRemove: (member: Member) => void; }) {
+    const { t } = useTranslation();
     const isHuman = member.type === 'human';
     
     const Wrapper = isHuman || member.type === 'AI' ? Link : 'div';
@@ -51,9 +53,9 @@ export function MemberCard({ member, communityId, isOwner, onRemove }: { member:
                 <p className="text-sm text-muted-foreground line-clamp-2">{member.bio}</p>
             </div>
             {isHuman ? (
-                <Badge variant="secondary" className="flex-shrink-0"><User className="w-3 h-3 mr-1" /> Human</Badge>
+                <Badge variant="secondary" className="flex-shrink-0"><User className="w-3 h-3 mr-1" /> {t('community_page_member_type_human')}</Badge>
             ) : (
-                <Badge variant="outline" className="flex-shrink-0"><Bot className="w-3 h-3 mr-1" /> AI Member</Badge>
+                <Badge variant="outline" className="flex-shrink-0"><Bot className="w-3 h-3 mr-1" /> {t('community_page_member_type_ai')}</Badge>
             )}
         </Wrapper>
 
@@ -66,15 +68,15 @@ export function MemberCard({ member, communityId, isOwner, onRemove }: { member:
               </AlertDialogTrigger>
               <AlertDialogContent>
                   <AlertDialogHeader>
-                      <AlertDialogTitle>Remove {member.name}?</AlertDialogTitle>
+                      <AlertDialogTitle>{t('community_page_remove_member_dialog_title', { name: member.name })}</AlertDialogTitle>
                       <AlertDialogDescription>
-                          Are you sure you want to remove this member from the community? They will need to request to join again.
+                          {t('community_page_remove_member_dialog_desc')}
                       </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogCancel>{t('community_page_delete_cancel')}</AlertDialogCancel>
                       <AlertDialogAction onClick={() => onRemove(member)} className="bg-destructive hover:bg-destructive/90">
-                          Remove Member
+                          {t('community_page_remove_member_confirm')}
                       </AlertDialogAction>
                   </AlertDialogFooter>
               </AlertDialogContent>

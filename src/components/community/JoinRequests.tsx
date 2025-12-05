@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { welcomeNewMemberAction } from '@/app/actions';
+import { useTranslation } from '@/hooks/use-translation';
 
 type Member = {
     name: string;
@@ -43,6 +44,7 @@ type JoinRequest = {
 
 export function JoinRequests({ communityId, communityName }: { communityId: string, communityName: string }) {
     const { toast } = useToast();
+    const { t } = useTranslation();
     const [requests, setRequests] = useState<JoinRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -68,7 +70,7 @@ export function JoinRequests({ communityId, communityName }: { communityId: stri
 
     const handleRequest = async (request: JoinRequest, newStatus: 'approved' | 'rejected') => {
         if (!firestore) {
-            toast({ variant: 'destructive', title: 'Firestore not available' });
+            toast({ variant: 'destructive', title: t('community_page_firestore_not_available') });
             return;
         }
         const requestDocRef = doc(firestore, `communities/${communityId}/joinRequests`, request.id);
@@ -96,11 +98,11 @@ export function JoinRequests({ communityId, communityName }: { communityId: stri
                 await welcomeNewMemberAction({ communityId, communityName, newMemberName: newMember.name });
             }
             await updateDoc(requestDocRef, { status: newStatus });
-            toast({ title: `Request ${newStatus}.` });
+            toast({ title: t('community_page_request_status_toast', { status: newStatus }) });
             fetchRequests(); // Refresh the list
         } catch (error) {
-            const message = error instanceof Error ? error.message : "An unexpected error occurred.";
-            toast({ variant: 'destructive', title: `Failed to ${newStatus} request`, description: message });
+            const message = error instanceof Error ? error.message : t('community_page_unexpected_error');
+            toast({ variant: 'destructive', title: t('community_page_request_update_fail_title', { status: newStatus }), description: message });
         }
     };
 
@@ -109,7 +111,7 @@ export function JoinRequests({ communityId, communityName }: { communityId: stri
     }
     
     if (!requests || requests.length === 0) {
-        return <p className="text-muted-foreground text-center py-4">No pending join requests.</p>;
+        return <p className="text-muted-foreground text-center py-4">{t('community_page_no_join_requests')}</p>;
     }
 
     return (
@@ -125,8 +127,8 @@ export function JoinRequests({ communityId, communityName }: { communityId: stri
                         <p className="text-sm text-muted-foreground line-clamp-2">{req.userBio}</p>
                     </div>
                     <div className="flex gap-2 self-start sm:self-center">
-                        <Button size="sm" onClick={() => handleRequest(req, 'approved')}><Check className="mr-2" />Approve</Button>
-                        <Button size="sm" variant="destructive" onClick={() => handleRequest(req, 'rejected')}><X className="mr-2" />Decline</Button>
+                        <Button size="sm" onClick={() => handleRequest(req, 'approved')}><Check className="mr-2" />{t('community_page_approve_button')}</Button>
+                        <Button size="sm" variant="destructive" onClick={() => handleRequest(req, 'rejected')}><X className="mr-2" />{t('community_page_decline_button')}</Button>
                     </div>
                 </Card>
             ))}
