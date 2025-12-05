@@ -33,23 +33,24 @@ export function MemberCard({ member, communityId, isOwner, onRemove }: { member:
 
     return (
       <div className="flex items-center gap-4 rounded-md border p-4 transition-colors hover:bg-muted/50 group">
-        <Link href={memberLink}>
-            <Avatar className="w-16 h-16 rounded-lg bg-background border-2 border-primary/20">
-                <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
-                <AvatarFallback>
-                    {isHuman ? (
-                        <HumanIcon className="w-10 h-10 text-primary" />
-                    ) : (
-                        <AiIcon className="w-10 h-10 text-primary" />
-                    )}
-                </AvatarFallback>
-            </Avatar>
+        <Link href={memberLink} passHref>
+          <Avatar className="w-16 h-16 rounded-lg bg-background border-2 border-primary/20 cursor-pointer">
+            <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
+            <AvatarFallback>
+                {isHuman ? (
+                    <HumanIcon className="w-10 h-10 text-primary" />
+                ) : (
+                    <AiIcon className="w-10 h-10 text-primary" />
+                )}
+            </AvatarFallback>
+          </Avatar>
         </Link>
-
         <div className="flex-1 space-y-1">
-            <Link href={memberLink} className="font-semibold text-lg group-hover:underline">{member.name}</Link>
-            <p className="text-sm text-primary font-medium">{member.role}</p>
-            <p className="text-sm text-muted-foreground line-clamp-2">{member.bio}</p>
+          <Link href={memberLink} passHref>
+            <span className="font-semibold text-lg group-hover:underline cursor-pointer">{member.name}</span>
+          </Link>
+          <p className="text-sm text-primary font-medium">{member.role}</p>
+          <p className="text-sm text-muted-foreground line-clamp-2">{member.bio}</p>
         </div>
         <div className="flex flex-col items-end gap-2">
             {isHuman ? (
