@@ -153,7 +153,7 @@ export function Header() {
                     <nav className="grid items-start p-4 text-sm font-medium">
                         {navGroups.map((group, groupIndex) => (
                             <div key={groupIndex} className="mb-4">
-                                <h3 className="px-3 py-2 text-xs font-semibold uppercase text-muted-foreground tracking-wider">{group.title}</h3>
+                                <h3 className={cn("px-3 py-2 text-xs font-semibold uppercase text-muted-foreground tracking-wider", direction === 'rtl' && 'text-right')}>{group.title}</h3>
                                 {group.links.map((link) => (
                                     <NavLink
                                         key={link.href}
@@ -165,7 +165,7 @@ export function Header() {
                         ))}
                         {isFounder && (
                              <div className="mb-4">
-                                <h3 className="px-3 py-2 text-xs font-semibold uppercase text-muted-foreground tracking-wider">{t('navFounder')}</h3>
+                                <h3 className={cn("px-3 py-2 text-xs font-semibold uppercase text-muted-foreground tracking-wider", direction === 'rtl' && 'text-right')}>{t('navFounder')}</h3>
                                 <NavLink
                                     key={adminLink.href}
                                     {...adminLink}
