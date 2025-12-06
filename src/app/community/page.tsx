@@ -22,7 +22,7 @@ import { createCommunityDetailsAction } from '@/app/actions';
 import { addDocument } from '@/firebase/non-blocking-updates';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
-import { refineCommunityPromptAction } from './actions';
+import { refineCommunityPromptAction } from '@/app/actions';
 import { useTranslation } from '@/hooks/use-translation';
 import { Textarea } from '@/components/ui/textarea';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
