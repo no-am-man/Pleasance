@@ -1,4 +1,3 @@
-
 // src/app/page.tsx (formerly community/page.tsx)
 'use client';
 
@@ -25,6 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
 import { refineCommunityPromptAction } from './actions';
 import { useTranslation } from '@/hooks/use-translation';
+import { Textarea } from '@/components/ui/textarea';
 
 type Member = {
   name: string;
