@@ -1,4 +1,3 @@
-
 // src/app/actions.ts
 'use server';
 
@@ -145,7 +144,7 @@ export async function addRoadmapCardAction(values: { title: string, description:
         });
         return { success: true };
     } catch (e) {
-        return { error: e instanceof Error ? e.message : 'An unknown error occurred.' };
+        return { error: e instanceof Error ? e.message : 'An unexpected error occurred.' };
     }
 }
 
@@ -167,7 +166,7 @@ export async function deleteRoadmapCardAction(cardId: string, columnId: string) 
         }
         return { success: true };
     } catch (e) {
-        return { error: e instanceof Error ? e.message : 'An unknown error occurred.' };
+        return { error: e instanceof Error ? e.message : 'An unexpected error occurred.' };
     }
 }
 
@@ -179,5 +178,3 @@ export async function declareAssetWithFileAction(formData: FormData) {
 }
 
 export { generateProfileAvatars as generateProfileAvatarsAction };
-
-

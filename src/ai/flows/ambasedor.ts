@@ -1,4 +1,3 @@
-
 // src/ai/flows/ambasedor.ts
 'use server';
 /**
@@ -25,7 +24,7 @@ const AmbasedorOutputSchema = z.any();
 
 
 // This is the internal Genkit flow, not exported.
-const ambasedorFlow = ai.defineFlow(
+const internalAmbasedorFlow = ai.defineFlow(
   {
     name: 'internalAmbasedorFlow',
     inputSchema: z.object({
@@ -76,7 +75,7 @@ export async function conductSuperAgent(values: { userId: string, prompt: string
 
 
         // Call the internal Genkit flow
-        const modelResponseParts = await ambasedorFlow({ userId, userName, prompt, history });
+        const modelResponseParts = await internalAmbasedorFlow({ userId, userName, prompt, history });
         
         const userMessagePart = { role: 'user', content: [{ text: prompt }] };
         
