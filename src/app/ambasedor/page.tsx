@@ -80,8 +80,8 @@ export default function AmbasedorPage() {
     const [isLoadingAmbasedor, setIsLoadingAmbasedor] = useState(true);
 
     useEffect(() => {
-        if (!user || !firestore) {
-            setIsLoadingAmbasedor(false);
+        if (isUserLoading || !user || !firestore) {
+            if (!isUserLoading) setIsLoadingAmbasedor(false);
             return;
         }
 
@@ -106,7 +106,7 @@ export default function AmbasedorPage() {
 
         return () => unsubscribe();
 
-    }, [user]);
+    }, [user, isUserLoading]);
 
     const history = ambasedorData?.history || [];
 

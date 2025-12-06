@@ -1,4 +1,3 @@
-
 // src/app/treasury/page.tsx
 'use client';
 
@@ -216,15 +215,15 @@ function AddAssetForm() {
 }
 
 function AssetList() {
-    const { user } = useUser();
+    const { user, isUserLoading } = useUser();
     const [assets, setAssets] = useState<Asset[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
     const { t } = useTranslation();
 
     useEffect(() => {
-        if (!user || !firestore) {
-            setIsLoading(false);
+        if (isUserLoading || !user || !firestore) {
+            if (!isUserLoading) setIsLoading(false);
             return;
         };
 
@@ -244,7 +243,7 @@ function AssetList() {
         });
 
         return () => unsubscribe();
-    }, [user]);
+    }, [user, isUserLoading]);
 
     if (isLoading) {
         return <div className="flex justify-center p-8"><LoaderCircle className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -313,15 +312,15 @@ function AssetList() {
 }
 
 function OrderList() {
-    const { user } = useUser();
+    const { user, isUserLoading } = useUser();
     const [orders, setOrders] = useState<FabricationOrder[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
     const { t } = useTranslation();
 
      useEffect(() => {
-        if (!user || !firestore) {
-            setIsLoading(false);
+        if (isUserLoading || !user || !firestore) {
+            if (!isUserLoading) setIsLoading(false);
             return;
         }
 
@@ -339,7 +338,7 @@ function OrderList() {
         };
 
         fetchOrders();
-    }, [user]);
+    }, [user, isUserLoading]);
 
 
     const getStatusVariant = (status: FabricationOrder['status']) => {

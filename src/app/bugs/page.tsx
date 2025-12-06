@@ -231,7 +231,7 @@ export default function BugsPage() {
   const { t } = useTranslation();
 
   const fetchBugs = useCallback(async () => {
-    if (!firestore) return;
+    if (isUserLoading || !firestore) return;
     setIsLoadingBugs(true);
     try {
         const bugsQuery = query(collection(firestore, 'bugs'), orderBy('createdAt', 'desc'));
@@ -243,7 +243,7 @@ export default function BugsPage() {
     } finally {
         setIsLoadingBugs(false);
     }
-  }, []);
+  }, [isUserLoading]);
 
   useEffect(() => {
     fetchBugs();
