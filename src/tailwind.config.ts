@@ -76,12 +76,6 @@ const config = {
         sans: ["var(--font-sans)"],
         headline: ["var(--font-lexend)"],
       },
-      spacing: {
-        'sidebar': 'var(--sidebar-width)',
-      },
-      width: {
-        'sidebar': 'var(--sidebar-width)',
-      }
     },
   },
   plugins: [require("tailwindcss-animate")],
