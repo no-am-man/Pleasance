@@ -1,4 +1,3 @@
-
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -152,34 +151,59 @@ function TextFormForm({ communityId, onFormSent }: { communityId: string, onForm
     );
 }
 
-function FormBubble({ form, allCommunities }: { form: Form; allCommunities: Community[] }) {
+function FormBubble({ form, allCommunities, onClick }: { form: Form; allCommunities: Community[]; onClick: () => void }) {
     const originCommunity = allCommunities.find(c => c.id === form.originCommunityId);
-    const isEcho = form.communityId !== form.originCommunityId;
+    
+    // Animation properties for floating effect
+    const animation = {
+        x: [0, Math.random() * 40 - 20, Math.random() * 40 - 20, 0],
+        y: [0, Math.random() * 40 - 20, Math.random() * 40 - 20, 0],
+        transition: {
+            duration: Math.random() * 10 + 15,
+            ease: "easeInOut",
+            repeat: Infinity,
+            repeatType: "mirror" as const
+        }
+    };
 
     return (
-        <Card className="w-full max-w-lg mx-auto bg-card shadow-lg flex items-start gap-4 p-4">
-             <Avatar className="w-12 h-12 border-2 border-background">
-                <AvatarImage src={form.userAvatarUrl || `https://i.pravatar.cc/150?u=${form.userId}`} alt={form.userName} />
-                <AvatarFallback>{form.userName.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span>{form.userName}</span>
-                    {isEcho && originCommunity && (
-                        <>
-                            <span><ArrowRight className="w-3 h-3"/></span>
-                            <span>{originCommunity.name}</span>
-                        </>
-                    )}
+        <motion.div
+            layout
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1, ...animation }}
+            exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.3 } }}
+            whileHover={{ scale: 1.05, zIndex: 10 }}
+            className="absolute cursor-pointer"
+            onClick={onClick}
+            style={{
+                top: `${Math.random() * 80}%`,
+                left: `${Math.random() * 80}%`,
+            }}
+        >
+            <Card className="w-64 max-w-lg mx-auto bg-card shadow-lg flex items-center gap-3 p-3">
+                <Avatar className="w-10 h-10 border-2 border-background flex-shrink-0">
+                    <AvatarImage src={form.userAvatarUrl || `https://i.pravatar.cc/150?u=${form.userId}`} alt={form.userName} />
+                    <AvatarFallback>{form.userName.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <span>{form.userName}</span>
+                        {form.communityId !== form.originCommunityId && originCommunity && (
+                            <>
+                                <CornerDownRight className="w-3 h-3" />
+                                <span className="font-semibold truncate">{originCommunity.name}</span>
+                            </>
+                        )}
+                    </div>
+                    <p className="font-medium text-sm text-foreground mt-0.5 line-clamp-2">{form.text}</p>
                 </div>
-                <p className="font-semibold text-foreground mt-1">{form.text}</p>
-            </div>
-            {originCommunity?.flagUrl && (
-                <div className="w-10 h-10 flex-shrink-0 relative">
-                    <Image src={originCommunity.flagUrl} alt={`${originCommunity.name} Flag`} fill className="rounded-full object-cover border-2 border-border" />
-                </div>
-            )}
-        </Card>
+                 {originCommunity?.flagUrl && (
+                    <div className="w-8 h-8 flex-shrink-0 relative">
+                        <Image src={originCommunity.flagUrl} alt={`${originCommunity.name} Flag`} fill className="rounded-full object-cover border border-border" />
+                    </div>
+                )}
+            </Card>
+        </motion.div>
     );
 }
 
@@ -188,10 +212,11 @@ function CommunityCommunicationNetwork({ communityId, isOwner, allMembers, allCo
     const { t } = useTranslation();
     
     const [forms, setForms] = useState<Form[]>([]);
+    const [visibleForms, setVisibleForms] = useState<Form[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
-    const fetchForms = useCallback(() => {
+    useEffect(() => {
         if (!firestore || !communityId) {
             setIsLoading(false);
             return () => {};
@@ -216,24 +241,15 @@ function CommunityCommunicationNetwork({ communityId, isOwner, allMembers, allCo
         
         return unsubscribe;
     }, [communityId]);
-    
-    useEffect(() => {
-        const unsubscribe = fetchForms();
-        return () => unsubscribe();
-    }, [fetchForms]);
 
-    const filteredForms = useMemo(() => {
-        return forms.filter(form => {
-            if (form.audience === 'owner') {
-                return isOwner;
-            }
-            return true; // Public forms
-        });
+    useEffect(() => {
+        const filtered = forms.filter(form => form.audience !== 'owner' || isOwner);
+        setVisibleForms(filtered);
     }, [forms, isOwner]);
 
-    const handleFormSent = () => {
-        // Callback can be used to provide instant UI feedback if needed
-    }
+    const handleBubbleClick = (formId: string) => {
+        setVisibleForms(prev => prev.filter(f => f.id !== formId));
+    };
 
     return (
         <Card className="shadow-lg">
@@ -248,7 +264,7 @@ function CommunityCommunicationNetwork({ communityId, isOwner, allMembers, allCo
             <CardContent className="space-y-6">
                 {user ? (
                     <div className="p-4 border-b">
-                        <TextFormForm communityId={communityId} onFormSent={handleFormSent} />
+                        <TextFormForm communityId={communityId} onFormSent={() => {}} />
                     </div>
                 ) : (
                     <div className="p-4 text-center border-b">
@@ -262,12 +278,15 @@ function CommunityCommunicationNetwork({ communityId, isOwner, allMembers, allCo
                 )}
                 {isLoading && <LoaderCircle className="mx-auto animate-spin" />}
                 {error && <p className="text-destructive">{t('community_page_load_messages_error', { message: error.message })}</p>}
-                {!isLoading && filteredForms && filteredForms.length === 0 && <p className="text-muted-foreground text-center py-8">{t('community_page_no_messages')}</p>}
-                <div className="space-y-4">
-                    {filteredForms?.map(form => {
-                        const key = form.id || `${form.userId}-${form.createdAt?.seconds || Date.now()}`;
-                        return <FormBubble key={key} form={form} allCommunities={allCommunities} />
-                    })}
+                
+                <div className="relative h-[500px] bg-muted/20 rounded-lg overflow-hidden">
+                    <AnimatePresence>
+                        {visibleForms?.map(form => {
+                            const key = form.id || `${form.userId}-${form.createdAt?.seconds || Date.now()}`;
+                            return <FormBubble key={key} form={form} allCommunities={allCommunities} onClick={() => handleBubbleClick(form.id)} />
+                        })}
+                    </AnimatePresence>
+                    {!isLoading && visibleForms && visibleForms.length === 0 && <p className="absolute inset-0 flex items-center justify-center text-muted-foreground text-center py-8">{t('community_page_no_messages')}</p>}
                 </div>
             </CardContent>
         </Card>
