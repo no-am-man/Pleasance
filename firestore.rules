@@ -202,7 +202,7 @@ service cloud.firestore {
          * @allow Read is public. Create is for any signed-in user. Update is for author or community owner (for soft delete/moderation). Hard delete is disallowed.
          */
         match /forms/{formId} {
-            allow read: if true;
+            allow read: if isSignedIn();
             allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
             allow update: if isCommunityOwner(communityId) || request.auth.uid == resource.data.userId;
             allow delete: if false;
@@ -213,7 +213,7 @@ service cloud.firestore {
              * @allow Read is public. Create is for any signed-in user. Update is for author or community owner. Hard delete is disallowed.
              */
             match /comments/{commentId} {
-                allow read: if true;
+                allow read: if isSignedIn();
                 allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
                 allow update: if isCommunityOwner(communityId) || request.auth.uid == resource.data.userId;
                 allow delete: if false;
@@ -327,4 +327,3 @@ service cloud.firestore {
     }
   }
 }
-
