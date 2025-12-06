@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useUser } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { saveSvgAsset } from '@/app/actions';
+import { saveSvgAssetAction } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -73,7 +73,7 @@ export function SaveToTreasuryForm({ creation }: { creation: Creation }) {
         }
         setIsSaving(true);
         try {
-            const result = await saveSvgAsset({
+            const result = await saveSvgAssetAction({
                 userId: user.uid,
                 assetName: data.assetName,
                 value: data.value,

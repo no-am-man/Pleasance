@@ -1,3 +1,4 @@
+
 // src/app/community/[id]/member/[memberName]/page.tsx
 'use client';
 
@@ -12,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
-import { getAiChatResponse } from '@/app/actions';
+import { chatWithMember } from '@/ai/flows/chat-with-member';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { type ChatHistory } from 'genkit';
@@ -59,7 +60,7 @@ function ChatInterface({ member }: { member: Member }) {
             content: [{ text: msg.text }],
         }));
 
-        const result = await getAiChatResponse({
+        const result = await chatWithMember({
             member,
             userMessage: input,
             history: chatHistory,
@@ -67,13 +68,8 @@ function ChatInterface({ member }: { member: Member }) {
 
         setIsLoading(false);
         
-        if (result.error) {
-            const errorMessage: ChatMessage = { role: 'model', text: `Sorry, I encountered an error: ${result.error}` };
-            setMessages(prev => [...prev, errorMessage]);
-        } else {
-            const aiMessage: ChatMessage = { role: 'model', text: result.response! };
-            setMessages(prev => [...prev, aiMessage]);
-        }
+        const aiMessage: ChatMessage = { role: 'model', text: result.response! };
+        setMessages(prev => [...prev, aiMessage]);
     };
 
     useEffect(() => {

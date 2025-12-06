@@ -8,8 +8,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useUser } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { collection, query, where, serverTimestamp, doc, getDocs } from 'firebase/firestore';
-import { declareAssetWithFile } from '../actions';
+import { collection, query, where, serverTimestamp, doc, getDocs, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { declareAssetWithFileAction } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -83,7 +83,7 @@ function AddAssetForm() {
                 formData.append('file', data.file[0]);
             }
 
-            const result = await declareAssetWithFile(formData);
+            const result = await declareAssetWithFileAction(formData);
 
             if (result.error) {
                 throw new Error(result.error);
@@ -228,20 +228,17 @@ function AssetList() {
             return;
         };
 
-        const fetchAssets = async () => {
-            try {
-                const assetsQuery = query(collection(firestore, 'users', user.uid, 'assets'));
-                const snapshot = await getDocs(assetsQuery);
-                const assetsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Asset));
-                setAssets(assetsData);
-            } catch (err: any) {
-                setError(err);
-            } finally {
-                setIsLoading(false);
-            }
-        };
+        const q = query(collection(firestore, 'users', user.uid, 'assets'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const assetsData = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as Asset));
+            setAssets(assetsData);
+            setIsLoading(false);
+        }, (err) => {
+            setError(err);
+            setIsLoading(false);
+        });
 
-        fetchAssets();
+        return () => unsubscribe();
     }, [user]);
 
     if (isLoading) {

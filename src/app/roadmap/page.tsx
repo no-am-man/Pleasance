@@ -12,7 +12,7 @@ import { firestore } from '@/firebase/config';
 import { collection, query, getDocs } from 'firebase/firestore';
 import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType, CommunityProfile } from '@/lib/types';
 import { GripVertical, LoaderCircle, PlusCircle, Trash2, Sparkles, ArrowLeft, ArrowRight, UserPlus, Check } from 'lucide-react';
-import { addRoadmapCard, deleteRoadmapCard, refineCardDescription, updateRoadmapCardAssignees, updateRoadmapCardColumn, updateRoadmapCardOrder, generateRoadmapIdeaAction } from '../actions';
+import { addRoadmapCardAction, deleteRoadmapCardAction, refineRoadmapCardAction, updateCardAssigneesAction, updateRoadmapCardColumnAction, updateRoadmapCardOrderAction, generateRoadmapIdeaAction } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -125,7 +125,7 @@ function AddIdeaForm() {
 
     async function onSubmit(values: z.infer<typeof AddIdeaSchema>) {
         setIsSubmitting(true);
-        const result = await addRoadmapCard(values);
+        const result = await addRoadmapCardAction(values);
         if (result.error) {
             toast({
                 variant: 'destructive',
@@ -153,7 +153,7 @@ function AddIdeaForm() {
             return;
         }
         setIsRefining(true);
-        const result = await refineCardDescription({ title, description: form.getValues('description') });
+        const result = await refineRoadmapCardAction({ title, description: form.getValues('description') });
         if (result.error) {
             toast({
                 variant: 'destructive',
@@ -519,7 +519,7 @@ export default function RoadmapPage() {
         return newColumns;
     });
 
-    const result = await updateRoadmapCardColumn(cardId, sourceColumn.id, targetColumn.id);
+    const result = await updateRoadmapCardColumnAction(cardId, sourceColumn.id, targetColumn.id);
     if (result.error) {
         toast({ variant: 'destructive', title: t('toast_update_failed'), description: result.error });
         // Revert UI on failure
@@ -562,7 +562,7 @@ export default function RoadmapPage() {
     
     // If reordered, call server action
     if (reorderedCards) {
-      const result = await updateRoadmapCardOrder('ideas', reorderedCards);
+      const result = await updateRoadmapCardOrderAction('ideas', reorderedCards);
       if (result.error) {
         toast({ variant: 'destructive', title: t('toast_reorder_failed'), description: result.error });
         // Revert UI on failure by re-fetching or rolling back state
@@ -590,7 +590,7 @@ export default function RoadmapPage() {
         return newColumns;
     });
     
-    const result = await updateRoadmapCardAssignees({ columnId, cardId, assigneeName, shouldAssign });
+    const result = await updateCardAssigneesAction({ columnId, cardId, assigneeName, shouldAssign });
     
     if (result.error) {
         toast({ variant: 'destructive', title: t('toast_assignment_failed'), description: result.error });
@@ -609,7 +609,7 @@ export default function RoadmapPage() {
         return c;
     }));
 
-    const result = await deleteRoadmapCard(cardId, columnId);
+    const result = await deleteRoadmapCardAction(cardId, columnId);
     if (result.error) {
         toast({ variant: 'destructive', title: t('toast_delete_error'), description: result.error });
         // Revert UI

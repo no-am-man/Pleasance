@@ -12,12 +12,14 @@ import { initializeAdminApp } from '@/firebase/config-admin';
 import { getFirestore, serverTimestamp } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import { ColorPixelSchema } from '@/lib/types';
+import { collection, doc } from 'firebase/firestore';
+
 
 // 1. Define the input schema for the server action
 const SaveAssetInputSchema = z.object({
     userId: z.string(),
     assetName: z.string(),
-    value: z.number(),
+    value: z.coerce.number(),
     pixels: z.array(ColorPixelSchema),
 });
 type SaveAssetInput = z.infer<typeof SaveAssetInputSchema>;
@@ -36,7 +38,7 @@ export async function saveSvgAsset(input: SaveAssetInput): Promise<{ error?: str
         const storage = getStorage(adminApp);
 
         // Step 1: Create a new document reference for the asset to get a unique ID
-        const assetRef = doc(collection(firestore, `users/${userId}/assets`));
+        const assetRef = firestore.collection(`users/${userId}/assets`).doc();
         const assetId = assetRef.id;
 
         // Step 2: Create the JSON content from the pixels array

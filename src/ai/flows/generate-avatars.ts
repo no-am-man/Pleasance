@@ -3,11 +3,11 @@
 /**
  * @fileOverview A flow to generate abstract avatars for user profiles.
  *
- * - generateAvatars - A function that generates a set of abstract avatars.
+ * - generateProfileAvatars - A function that generates a set of abstract avatars.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 
 const GenerateAvatarsInputSchema = z.object({
   name: z.string().describe('The name of the user, to be used as a seed for the avatar style.'),
@@ -18,8 +18,14 @@ const GenerateAvatarsOutputSchema = z.object({
   avatars: z.array(z.string()).describe('A list of generated avatar images as data URIs.'),
 });
 
-export async function generateAvatars(input: GenerateAvatarsInput): Promise<z.infer<typeof GenerateAvatarsOutputSchema>> {
-  return generateAvatarsFlow(input);
+export async function generateProfileAvatars(input: GenerateAvatarsInput): Promise<{error?: string, avatars?: string[]}> {
+    try {
+        const result = await generateAvatarsFlow(input);
+        return { avatars: result.avatars };
+    } catch(e) {
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: message };
+    }
 }
 
 const generateAvatarsFlow = ai.defineFlow(

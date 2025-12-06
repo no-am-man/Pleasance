@@ -1,4 +1,3 @@
-
 // src/ai/flows/ambasedor.ts
 'use server';
 /**
@@ -57,24 +56,23 @@ The current user's name is ${flowInput.userName} and their ID is ${flowInput.use
 );
 
 // This is the main server action exported for client use.
-export async function conductSuperAgent(values: z.infer<typeof AmbasedorInputSchema>) {
+export async function conductSuperAgent(values: { userId: string, prompt: string }) {
     try {
-        const validatedFields = AmbasedorInputSchema.safeParse(values);
-        if (!validatedFields.success) {
-            return { error: 'Invalid input for Ambasedor.' };
-        }
-        
-        const { userId, prompt, userName } = validatedFields.data;
+        const { userId, prompt } = values;
 
         const adminApp = initializeAdminApp();
         const firestore = getFirestore(adminApp);
         const ambasedorDocRef = firestore.collection('ambasedor').doc(userId);
-        
-        const ambasedorDoc = await ambasedorDocRef.get();
+        const userProfileRef = firestore.collection('community-profiles').doc(userId);
+
+        const [ambasedorDoc, userProfileDoc] = await Promise.all([ambasedorDocRef.get(), userProfileRef.get()]);
+
         if (!ambasedorDoc.exists) {
             await ambasedorDocRef.set({ history: [] });
         }
         const history = ambasedorDoc.exists ? ambasedorDoc.data()?.history || [] : [];
+        const userName = userProfileDoc.exists() ? userProfileDoc.data()?.name || 'User' : 'User';
+
 
         // Call the internal Genkit flow
         const modelResponseParts = await ambasedorFlow({ userId, userName, prompt, history });
