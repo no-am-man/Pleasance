@@ -63,6 +63,7 @@ export const CommunityProfileSchema = z.object({
   nativeLanguage: z.string(),
   learningLanguage: z.string(),
   avatarUrl: z.string().optional(),
+  academicLevel: z.string().optional(),
 });
 export type CommunityProfile = z.infer<typeof CommunityProfileSchema>;
 

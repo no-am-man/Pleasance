@@ -17,13 +17,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LANGUAGES } from '@/config/languages';
-import { LoaderCircle, LogIn, AlertCircle, Sparkles, CheckCircle, Warehouse } from 'lucide-react';
+import { LoaderCircle, LogIn, AlertCircle, Sparkles, CheckCircle, Warehouse, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { generateProfileAvatarsAction } from '../actions';
+import { generateProfileAvatarsAction, analyzeAcademicLevelAction } from '../actions';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { useTranslation } from '@/hooks/use-translation';
@@ -34,12 +34,89 @@ const ProfileSchema = z.object({
   nativeLanguage: z.string({ required_error: 'Please select your native language.' }),
   learningLanguage: z.string({ required_error: 'Please select a language to learn.' }),
   avatarUrl: z.string().url().optional(),
+  academicLevel: z.string().optional(),
 });
 
 type CommunityProfile = z.infer<typeof ProfileSchema> & {
   id: string;
   userId: string;
 };
+
+const AcademicAnalysisSchema = z.object({
+    studies: z.string().min(20, 'Please provide a more detailed description of your studies (at least 20 characters).')
+});
+
+
+function AcademicAnalyzer({ onLevelAnalyzed }: { onLevelAnalyzed: (level: string) => void }) {
+    const { t } = useTranslation();
+    const { toast } = useToast();
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    
+    const form = useForm<z.infer<typeof AcademicAnalysisSchema>>({
+        resolver: zodResolver(AcademicAnalysisSchema),
+        defaultValues: { studies: '' },
+    });
+
+    async function onSubmit(data: z.infer<typeof AcademicAnalysisSchema>) {
+        setIsAnalyzing(true);
+        try {
+            const result = await analyzeAcademicLevelAction({ studies: data.studies });
+            if (result.error) {
+                throw new Error(result.error);
+            }
+            onLevelAnalyzed(result.academicLevel);
+            toast({ title: "Analysis Complete", description: "Your academic level has been updated." });
+        } catch(e) {
+            const message = e instanceof Error ? e.message : "An unknown error occurred.";
+            toast({ variant: 'destructive', title: "Analysis Failed", description: message });
+        } finally {
+            setIsAnalyzing(false);
+        }
+    }
+
+    return (
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Analyze Academic Level
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Academic Level AI Analyzer</DialogTitle>
+                    <DialogDescription>
+                        Describe your academic background, formal or self-taught. The AI will analyze it to determine an equivalent academic standing.
+                    </DialogDescription>
+                </DialogHeader>
+                 <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="studies"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Describe Your Studies</FormLabel>
+                                    <FormControl>
+                                        <Textarea placeholder="e.g., 'I have a Bachelor's in Philosophy but have spent the last 5 years as an autodidact studying..." {...field} rows={6}/>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <DialogFooter>
+                            <Button type="submit" disabled={isAnalyzing}>
+                                {isAnalyzing ? <LoaderCircle className="mr-2 animate-spin" /> : <GraduationCap className="mr-2" />}
+                                Analyze
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                 </Form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 
 function AvatarSelectionDialog({ name, onSelectAvatar }: { name: string; onSelectAvatar: (url: string) => void }) {
     const { t } = useTranslation();
@@ -149,6 +226,7 @@ export default function ProfilePage() {
       name: '',
       bio: '',
       avatarUrl: '',
+      academicLevel: '',
     },
   });
 
@@ -171,6 +249,7 @@ export default function ProfilePage() {
                 name: user.displayName || '',
                 bio: '',
                 avatarUrl: user.photoURL || '',
+                academicLevel: '',
             });
             setSelectedAvatarUrl(user.photoURL || null);
         }
@@ -193,7 +272,7 @@ export default function ProfilePage() {
       ...data,
       id: user.uid,
       userId: user.uid,
-      avatarUrl: selectedAvatarUrl || user.photoURL || undefined, // Use selected avatar or fallback
+      avatarUrl: selectedAvatarUrl || user.photoURL || undefined,
     };
 
     try {
@@ -202,7 +281,6 @@ export default function ProfilePage() {
         title: t('profile_edit_toast_save_success_title'),
         description: t('profile_edit_toast_save_success_desc'),
       })
-      // Redirect to community page after profile is created/updated
       router.push('/community');
     } catch (e) {
       const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
@@ -337,14 +415,29 @@ export default function ProfilePage() {
                         )}
                         />
                     </div>
-
-                    <Button type="submit" disabled={isLoading}>
-                        {isLoading ? (
-                        <>
-                            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> {t('profile_edit_saving_button')}
-                        </>
-                        ) : t('profile_edit_save_button')}
-                    </Button>
+                     <FormField
+                        control={form.control}
+                        name="academicLevel"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Academic Level</FormLabel>
+                            <FormControl>
+                            <Input placeholder="Not yet analyzed" {...field} readOnly className="bg-muted"/>
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <div className="flex flex-wrap gap-4 items-center">
+                        <Button type="submit" disabled={isLoading}>
+                            {isLoading ? (
+                            <>
+                                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> {t('profile_edit_saving_button')}
+                            </>
+                            ) : t('profile_edit_save_button')}
+                        </Button>
+                        <AcademicAnalyzer onLevelAnalyzed={(level) => form.setValue('academicLevel', level)} />
+                    </div>
 
                     {error && (
                         <Alert variant="destructive">

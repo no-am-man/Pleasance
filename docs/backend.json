@@ -66,6 +66,10 @@
           "type": "string",
           "description": "The user's selected UI theme.",
           "enum": ["theme-default", "theme-commune", "theme-founder"]
+        },
+        "academicLevel": {
+            "type": "string",
+            "description": "The user's AI-analyzed academic level."
         }
       },
       "required": [

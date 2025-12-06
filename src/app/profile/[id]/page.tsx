@@ -1,3 +1,4 @@
+
 // src/app/profile/[id]/page.tsx
 'use client';
 
@@ -7,7 +8,7 @@ import { firestore } from '@/firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LoaderCircle, AlertCircle, ArrowLeft, Languages, User, BookUser } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Languages, User, BookUser, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
@@ -21,6 +22,7 @@ type CommunityProfile = {
     nativeLanguage: string;
     learningLanguage: string;
     avatarUrl?: string;
+    academicLevel?: string;
 };
 
 export default function UserProfilePage() {
@@ -121,7 +123,11 @@ export default function UserProfilePage() {
             <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
           </Avatar>
           <CardTitle className="text-3xl">{profile.name}</CardTitle>
-          
+           {profile.academicLevel && (
+             <CardDescription className="text-md text-primary font-medium flex items-center gap-2">
+                <GraduationCap className="h-5 w-5" /> {profile.academicLevel}
+             </CardDescription>
+            )}
           {isOwnProfile && (
              <Button asChild variant="link" className="underline">
                 <Link href="/profile">{t('profile_view_edit_button')}</Link>

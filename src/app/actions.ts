@@ -1,3 +1,4 @@
+
 // src/app/actions.ts
 'use server';
 
@@ -23,6 +24,7 @@ import { generateDualStory as generateDualStoryAction } from '@/ai/flows/generat
 import { updateCardAssignees as updateCardAssigneesAction } from '@/ai/flows/update-card-assignees';
 import { updateRoadmapCardColumn as updateRoadmapCardColumnAction } from '@/ai/flows/update-roadmap-card-column';
 import { generateProfileAvatars } from '@/ai/flows/generate-avatars';
+import { analyzeAcademicLevel as analyzeAcademicLevelFlow } from '@/ai/flows/analyze-academic-level';
 
 import { z } from 'zod';
 import { initializeAdminApp } from '@/firebase/config-admin';
@@ -176,3 +178,7 @@ export async function declareAssetWithFileAction(formData: FormData) {
 }
 
 export { generateProfileAvatars as generateProfileAvatarsAction };
+
+export async function analyzeAcademicLevelAction(values: { studies: string }) {
+    return analyzeAcademicLevelFlow(values);
+}
