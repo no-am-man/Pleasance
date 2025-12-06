@@ -1,3 +1,4 @@
+
 // src/app/treasury/page.tsx
 'use client';
 
@@ -324,20 +325,22 @@ function OrderList() {
             return;
         }
 
-        const fetchOrders = async () => {
-            try {
-                const ordersQuery = query(collection(firestore, 'fabricationOrders'), where('userId', '==', user.uid));
-                const snapshot = await getDocs(ordersQuery);
-                const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FabricationOrder));
-                setOrders(ordersData);
-            } catch (err: any) {
-                setError(err);
-            } finally {
-                setIsLoading(false);
-            }
-        };
+        const ordersQuery = query(collection(firestore, 'fabricationOrders'), where('userId', '==', user.uid));
+        const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
+            const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FabricationOrder));
+            setOrders(ordersData);
+            setIsLoading(false);
+        }, (err) => {
+            setError(err);
+            setIsLoading(false);
+             const permissionError = new FirestorePermissionError({
+                path: `fabricationOrders`,
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
 
-        fetchOrders();
+        return () => unsubscribe();
     }, [user, isUserLoading]);
 
 
