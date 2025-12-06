@@ -323,7 +323,7 @@ service cloud.firestore {
      */
     match /presence/{userId} {
         allow read: if true;
-        allow write: if isOwner(userId) || (request.auth == null && request.resource.data.keys().hasOnly(['lastSeen']));
+        allow write: if isOwner(userId);
     }
 
 
@@ -338,5 +338,4 @@ service cloud.firestore {
     }
   }
 }
-
       
