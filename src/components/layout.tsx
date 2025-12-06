@@ -1,4 +1,3 @@
-
 // src/components/layout.tsx
 'use client';
 
@@ -22,7 +21,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <header className={cn(
             "fixed top-0 z-40 hidden h-16 w-full items-center border-b bg-background/80 backdrop-blur-sm sm:flex",
              direction === 'rtl' 
-                ? 'sm:w-[calc(100%-var(--sidebar-width))]' 
+                ? 'right-0 sm:w-[calc(100%-var(--sidebar-width))]' 
                 : 'sm:left-[var(--sidebar-width)] sm:w-[calc(100%-var(--sidebar-width))]'
         )}>
           <Breadcrumbs />
