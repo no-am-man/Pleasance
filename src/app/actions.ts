@@ -13,7 +13,7 @@ import { refineRoadmapCard } from '@/ai/flows/refine-roadmap-card';
 import { refineCommunityPrompt } from '@/ai/flows/refine-community-prompt';
 import { updateCardAssignees } from '@/ai/flows/update-card-assignees';
 import { generateRoadmapIdea } from '@/ai/flows/generate-roadmap-idea';
-import { conductorFlow } from '@/ai/flows/conductor-flow';
+import { ambasedorFlow } from '@/ai/flows/ambasedor-flow';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { firebaseConfig } from '@/firebase/config';
 import admin from 'firebase-admin';
@@ -741,7 +741,7 @@ export async function conductSuperAgent(values: z.infer<typeof ConductSuperAgent
     try {
         const validatedFields = ConductSuperAgentSchema.safeParse(values);
         if (!validatedFields.success) {
-            return { error: 'Invalid input for Conductor.' };
+            return { error: 'Invalid input for Ambasedor.' };
         }
         
         const adminApp = initializeAdminApp();
@@ -751,14 +751,14 @@ export async function conductSuperAgent(values: z.infer<typeof ConductSuperAgent
         const userProfileSnap = await userProfileRef.get();
         const userName = userProfileSnap.exists ? userProfileSnap.data()?.name : 'Anonymous';
 
-        const result = await conductorFlow({ ...validatedFields.data, userName });
+        const result = await ambasedorFlow({ ...validatedFields.data, userName });
         
         return { data: result };
 
     } catch (e) {
-        console.error('Conductor Action Error:', e);
+        console.error('Ambasedor Action Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
-        return { error: `Conductor action failed: ${message}` };
+        return { error: `Ambasedor action failed: ${message}` };
     }
 }
 

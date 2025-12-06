@@ -93,7 +93,7 @@ export function Header() {
       {
           title: t('navFederation'),
           links: [
-              { href: '/community', label: 'navCommunity', icon: Users },
+              { href: '/', label: 'navCommunity', icon: Users },
               { href: '/museum', label: 'navMuseum', icon: Landmark },
               { href: '/events', label: 'navEvents', icon: CalendarHeart },
           ]
@@ -112,13 +112,13 @@ export function Header() {
               { href: '/treasury', label: 'navTreasury', icon: Banknote },
               { href: '/roadmap', label: 'navRoadmap', icon: KanbanIcon },
               { href: '/bugs', label: 'navBugTracker', icon: Bug },
-              { href: '/conductor', label: 'navConductor', icon: Bot },
+              { href: '/ambasedor', label: 'navAmbasedor', icon: Bot },
           ]
       },
       {
           title: t('navSystem'),
           links: [
-              { href: '/', label: 'navWiki', icon: Info },
+              { href: '/home', label: 'navWiki', icon: Info },
               { href: '/pricing', label: 'navPricing', icon: DollarSign },
           ]
       }

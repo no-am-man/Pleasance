@@ -287,11 +287,11 @@ service cloud.firestore {
     }
     
     /**
-     * @description Stores conversation history with the Conductor SuperAgent.
-     * @path /conductor/{userId}
+     * @description Stores conversation history with the Ambasedor SuperAgent.
+     * @path /ambasedor/{userId}
      * @allow Users can only read and write to their own conversation history.
      */
-    match /conductor/{userId} {
+    match /ambasedor/{userId} {
         allow read, write: if isOwner(userId);
     }
 

@@ -99,7 +99,7 @@ export const FederationDiagram = ({ t }: { t: (key: string) => string }) => {
 
         {/* Top Layer: Public Tools */}
         <DiagramNode label={t('diagramRoadmap')} icon={KanbanIcon} x="150" y="50" delay={200} size={35} />
-        <DiagramNode label={t('diagramConductor')} icon={Bot} x="300" y="50" delay={300} size={35} />
+        <DiagramNode label={t('diagramAmbasedor')} icon={Bot} x="300" y="50" delay={300} size={35} />
         <DiagramNode label={t('diagramBugTracker')} icon={Bug} x="450" y="50" delay={400} size={35} />
         
 
