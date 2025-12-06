@@ -1,9 +1,9 @@
-// src/ai/flows/update-community-roadmap-column.ts
+// src/ai/flows/update-roadmap-card-column.ts
 'use server';
 /**
- * @fileOverview A server action to move a card between columns in a community roadmap.
+ * @fileOverview A server action to move a card between columns on the public roadmap.
  *
- * - updateCommunityRoadmapCardColumn - The exported server action.
+ * - updateRoadmapCardColumn - The exported server action.
  */
 
 import { z } from 'zod';
@@ -12,15 +12,14 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import type { RoadmapCard } from '@/lib/types';
 
 const UpdateColumnInputSchema = z.object({
-  communityId: z.string(),
   cardId: z.string(),
   sourceColumnId: z.string(),
   targetColumnId: z.string(),
 });
 
-export async function updateCommunityRoadmapCardColumn(communityId: string, cardId: string, sourceColumnId: string, targetColumnId: string) {
+export async function updateRoadmapCardColumn(cardId: string, sourceColumnId: string, targetColumnId: string) {
     try {
-        const validatedInput = UpdateColumnInputSchema.safeParse({ communityId, cardId, sourceColumnId, targetColumnId });
+        const validatedInput = UpdateColumnInputSchema.safeParse({ cardId, sourceColumnId, targetColumnId });
         if (!validatedInput.success) {
             throw new Error(`Invalid input: ${validatedInput.error.message}`);
         }
@@ -28,9 +27,10 @@ export async function updateCommunityRoadmapCardColumn(communityId: string, card
         const adminApp = initializeAdminApp();
         const firestore = getFirestore(adminApp);
         
-        const sourceColRef = firestore.doc(`communities/${communityId}/roadmap/${sourceColumnId}`);
-        const targetColRef = firestore.doc(`communities/${communityId}/roadmap/${targetColumnId}`);
+        const sourceColRef = firestore.doc(`roadmap/${sourceColumnId}`);
+        const targetColRef = firestore.doc(`roadmap/${targetColumnId}`);
 
+        // Using a transaction to ensure atomicity
         return await firestore.runTransaction(async (transaction) => {
             const sourceDoc = await transaction.get(sourceColRef);
             const targetDoc = await transaction.get(targetColRef);
@@ -47,6 +47,7 @@ export async function updateCommunityRoadmapCardColumn(communityId: string, card
             const cardToMove = sourceData?.cards.find((c: RoadmapCard) => c.id === cardId);
 
             if (!cardToMove) {
+                // It might have been moved already, so we don't throw an error, just log it.
                 console.warn(`Card with ID ${cardId} not found in source column ${sourceColumnId}. It may have already been moved.`);
                 return { success: true, message: 'Card already moved.' };
             }

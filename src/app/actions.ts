@@ -14,7 +14,6 @@ import { addBugReport as addBugReportAction } from '@/ai/tools/bug-reporter-tool
 import { 
     generateRoadmapIdea as generateRoadmapIdeaAction, 
 } from '@/ai/flows/generate-roadmap-idea';
-import { updateRoadmapCardColumn as updateRoadmapCardColumnAction } from '@/ai/flows/update-roadmap-card-column';
 import { conductSuperAgent as conductSuperAgentFlow } from '@/ai/flows/ambasedor';
 import { seedRoadmapData as seedRoadmapDataFlow } from '@/lib/seed-roadmap';
 import { syncAllMembers as syncAllMembersAction } from '@/ai/flows/sync-members';
@@ -25,7 +24,7 @@ import { refineRoadmapCard as refineRoadmapCardAction } from '@/ai/flows/refine-
 import { updateCommunityRoadmapCardColumn as updateCommunityRoadmapCardColumnAction } from '@/ai/flows/update-community-roadmap-column';
 import { generateDualStory as generateDualStoryFlow } from '@/ai/flows/generate-dual-story';
 import { updateCardAssignees as updateCardAssigneesAction } from '@/ai/flows/update-card-assignees';
-
+import { updateRoadmapCardColumn } from '@/ai/flows/update-roadmap-card-column';
 
 import { z } from 'zod';
 import { initializeAdminApp } from '@/firebase/config-admin';
@@ -66,7 +65,10 @@ export async function submitBugReportAction(values: any) {
 
 export { generateRoadmapIdeaAction };
 
-export { updateRoadmapCardColumnAction };
+export async function updateRoadmapCardColumnAction(cardId: string, sourceColumnId: string, targetColumnId: string) {
+    return updateRoadmapCardColumn(cardId, sourceColumnId, targetColumnId);
+}
+
 
 export async function updateRoadmapCardOrderAction(columnId: string, cards: any[]) {
     return updateRoadmapCardOrder(columnId, cards);
