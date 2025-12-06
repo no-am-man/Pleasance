@@ -3,7 +3,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useUser, firestore, database } from '@/firebase';
+import { useUser, firestore, database, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { doc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { ref, onValue, onDisconnect, set, serverTimestamp as dbServerTimestamp } from 'firebase/database';
 
@@ -60,7 +60,13 @@ export function usePresence() {
             set(userStatusDatabaseRef, isOnlineForDatabase);
 
             // And update their presence in Firestore
-            setDoc(userStatusFirestoreRef, isOnlineForFirestore, { merge: true });
+            setDoc(userStatusFirestoreRef, isOnlineForFirestore, { merge: true }).catch(error => {
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: userStatusFirestoreRef.path,
+                    operation: 'write',
+                    requestResourceData: isOnlineForFirestore
+                }));
+            });
         });
     });
 
@@ -72,7 +78,13 @@ export function usePresence() {
             set(userStatusDatabaseRef, isOfflineForDatabase);
         }
         if (userStatusFirestoreRef) {
-            updateDoc(userStatusFirestoreRef, isOfflineForFirestore);
+            updateDoc(userStatusFirestoreRef, isOfflineForFirestore).catch(error => {
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: userStatusFirestoreRef.path,
+                    operation: 'update',
+                    requestResourceData: isOfflineForFirestore
+                }));
+            });
         }
     };
   }, [user]);
