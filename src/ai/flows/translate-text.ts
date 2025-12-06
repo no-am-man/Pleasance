@@ -50,13 +50,8 @@ const translateTextFlow = ai.defineFlow(
       return { translation: '' };
     }
     
-    // Call the prompt function to get the rendered request object
-    const request = await translateTextPrompt(input);
-    
-    // Spread the rendered request into the generate call
-    const { output } = await ai.generate({
-        ...request,
-    });
+    // The prompt itself is a function that can be awaited.
+    const { output } = await translateTextPrompt(input);
 
     return output || { translation: input.text };
   }

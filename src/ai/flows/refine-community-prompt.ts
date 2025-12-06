@@ -50,13 +50,7 @@ const refineCommunityPromptFlow = ai.defineFlow(
     outputSchema: RefinePromptOutputSchema,
   },
   async (input) => {
-    // Call the prompt function to get the rendered request object
-    const request = await refinePromptGenkit(input);
-
-    // Spread the rendered request into the generate call
-    const { output } = await ai.generate({
-        ...request
-    });
+    const { output } = await refinePromptGenkit(input);
     
     if (!output) {
         throw new Error("The AI failed to generate a refined prompt.");
