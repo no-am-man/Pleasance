@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LANGUAGES } from '@/config/languages';
-import { LoaderCircle, LogIn, AlertCircle, Sparkles, CheckCircle, Warehouse, GraduationCap } from 'lucide-react';
+import { LoaderCircle, LogIn, AlertCircle, Sparkles, CheckCircle, Warehouse, GraduationCap, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
@@ -283,7 +283,7 @@ export default function ProfilePage() {
       })
       router.push('/community');
     } catch (e) {
-      const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+      const message = e instanceof Error ? e.message : 'An unknown error occurred.';
       setError(`${t('profile_edit_toast_save_fail')} ${message}`);
     }
     setIsLoading(false);
@@ -437,6 +437,12 @@ export default function ProfilePage() {
                             ) : t('profile_edit_save_button')}
                         </Button>
                         <AcademicAnalyzer onLevelAnalyzed={(level) => form.setValue('academicLevel', level)} />
+                         <Button asChild variant="link">
+                            <Link href={`/profile/${user.uid}`}>
+                                <Eye className="mr-2 h-4 w-4" />
+                                View Public Profile
+                            </Link>
+                        </Button>
                     </div>
 
                     {error && (
