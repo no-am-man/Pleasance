@@ -10,7 +10,7 @@ import { generateSvg3d as generateSvg3dFlow } from '@/ai/flows/generate-svg3d';
 import { saveSvgAsset as saveSvgAssetFlow } from '@/ai/flows/save-svg-asset';
 import { welcomeNewMember as welcomeNewMemberAction } from '@/ai/flows/welcome-new-member';
 import { notifyOwnerOfJoinRequest as notifyOwnerOfJoinRequestAction } from '@/ai/flows/notify-owner-of-join-request';
-import { addBugReport as addBugReportAction } from '@/ai/tools/bug-reporter-tool';
+import { addBugReportTool as addBugReportAction } from '@/ai/tools/bug-reporter-tool';
 import { 
     generateRoadmapIdea as generateRoadmapIdeaAction, 
 } from '@/ai/flows/generate-roadmap-idea';
