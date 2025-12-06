@@ -1,3 +1,4 @@
+
 // src/lib/types.ts
 import { z } from 'zod';
 
@@ -161,4 +162,12 @@ export const CreationSchema = z.object({
     pixels: z.array(ColorPixelSchema),
 });
 export type Creation = z.infer<typeof CreationSchema>;
-    
+
+// Schema for Presence
+export const PresenceSchema = z.object({
+    userId: z.string(),
+    userName: z.string(),
+    avatarUrl: z.string(),
+    lastSeen: z.any(),
+});
+export type Presence = z.infer<typeof PresenceSchema>;

@@ -315,6 +315,15 @@ service cloud.firestore {
         allow delete: if isSignedIn() && isEventOrganizer(eventId);
     }
 
+    /**
+     * @description Tracks user online status. Publicly readable, only writable by the user themselves.
+     * @path /presence/{userId}
+     */
+    match /presence/{userId} {
+      allow read: if true;
+      allow write: if isOwner(userId);
+    }
+
 
     /**
      * @description Secure storage for administrative data, like service account keys.

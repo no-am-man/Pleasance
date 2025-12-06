@@ -469,6 +469,19 @@
         "communityId": { "type": "string", "description": "The ID of the community this event is associated with (optional)." }
       },
       "required": ["id", "title", "description", "date", "location", "organizerId", "organizerName"]
+    },
+    "Presence": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Presence",
+      "type": "object",
+      "description": "Represents a user's online status.",
+      "properties": {
+        "userId": { "type": "string", "description": "The unique ID of the user." },
+        "userName": { "type": "string", "description": "The user's display name." },
+        "avatarUrl": { "type": "string", "format": "uri", "description": "URL of the user's avatar." },
+        "lastSeen": { "type": "string", "format": "date-time", "description": "The timestamp of when the user was last active." }
+      },
+      "required": ["userId", "userName", "lastSeen"]
     }
   },
   "auth": {
@@ -714,8 +727,19 @@
             { "name": "eventId", "description": "The unique ID for the event." }
           ]
         }
+      },
+      {
+        "path": "/presence/{userId}",
+        "definition": {
+          "entityName": "Presence",
+          "schema": { "$ref": "#/backend/entities/Presence" },
+          "description": "Stores user presence information. Publicly readable for real-time UIs.",
+          "params": [
+            { "name": "userId", "description": "The unique identifier for the user." }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities`, `fabricationOrders`, `bugs`, `leaderboard`, `presence`, and `events` in top-level collections, they become queryable. User-specific data is nested under `/users/{userId}` to ensure privacy. Public profiles are in `/community-profiles` to allow discoverability without exposing private account details. The public roadmap is migrated to Firestore for reliable public read access. The new /ambasedor/{userId} collection stores conversation history privately for each user. Community-specific data like creations and roadmaps are nested under `/communities/{communityId}` for privacy and organization. The 'Message' entity and its corresponding collection have been renamed to 'Form' to better represent the concept of a shareable, trackable thought-form within the federation."
+    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities`, `fabricationOrders`, `bugs`, `leaderboard`, `presence`, and `events` in top-level collections, they become queryable. User-specific data is nested under `/users/{userId}` to ensure privacy. Public profiles are in `/community-profiles` to allow discoverability without exposing private account details. The public roadmap is migrated to Firestore for reliable public read access. The new /ambasedor/{userId} collection stores conversation history privately for each user. Community-specific data like creations and roadmaps are nested under `/communities/{communityId}` for privacy and organization. The 'Message' entity and its corresponding collection have been renamed to 'Form' to better represent the concept of a shareable, trackable thought-form within the federation. The new /presence/{userId} collection will track user online status."
   }
 }
