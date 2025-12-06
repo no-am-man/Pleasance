@@ -47,10 +47,11 @@
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: theme(colors.border);
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: theme(colors.background);
+    color: theme(colors.foreground);
     font-family: var(--font-sans), sans-serif;
   }
 }
