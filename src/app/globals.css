@@ -1,8 +1,6 @@
-@import "tailwindcss";
-
-@theme {
-  --radius: 0.5rem;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   :root {
@@ -25,6 +23,7 @@
     --border: 212 20% 89.8%;
     --input: 212 20% 89.8%;
     --ring: 209.7 90.2% 48.4%;
+    --radius: 0.5rem;
   }
 
   .dark {
