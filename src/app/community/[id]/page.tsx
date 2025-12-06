@@ -8,11 +8,11 @@ import { firestore } from '@/firebase/config';
 import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, arrayRemove, updateDoc, getDoc, getDocs, setDoc, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info, LogOut, Wrench, Banknote, UserX } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info, LogOut, Wrench, Banknote, UserX, CornerDownRight } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
@@ -31,6 +31,7 @@ import { JoinRequests } from '@/components/community/JoinRequests';
 import { MemberCard } from '@/components/community/MemberCard';
 import { useTranslation } from '@/hooks/use-translation';
 import { useDynamicTranslation } from '@/hooks/use-dynamic-translation';
+import { motion, AnimatePresence } from 'framer-motion';
 
 type Member = {
   name: string;
@@ -51,17 +52,7 @@ type Community = {
   flagUrl?: string;
 };
 
-type CommunityProfile = {
-    id: string;
-    userId: string;
-    name: string;
-    bio: string;
-    nativeLanguage: string;
-    learningLanguage: string;
-    avatarUrl?: string; // Add avatarUrl to profile type
-};
-
-type Message = {
+type Form = {
     id: string;
     communityId: string;
     userId: string;
@@ -104,7 +95,7 @@ type ColorPixel = {
     color: string;
 };
 
-function TextMessageForm({ communityId, onMessageSent }: { communityId: string, onMessageSent: () => void }) {
+function TextFormForm({ communityId, onFormSent }: { communityId: string, onFormSent: () => void }) {
     const [text, setText] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useUser();
@@ -117,9 +108,9 @@ function TextMessageForm({ communityId, onMessageSent }: { communityId: string, 
 
         setIsSubmitting(true);
         
-        const messagesColRef = collection(firestore, `communities/${communityId}/messages`);
+        const formsColRef = collection(firestore, `communities/${communityId}/forms`);
         
-        const newMessage = {
+        const newForm = {
             communityId,
             userId: user.uid,
             userName: user.displayName || 'Anonymous',
@@ -132,9 +123,9 @@ function TextMessageForm({ communityId, onMessageSent }: { communityId: string, 
         };
 
         try {
-            await addDocument(messagesColRef, newMessage);
+            await addDocument(formsColRef, newForm);
             setText('');
-            onMessageSent(); // This is now less critical but good for immediate feedback if needed elsewhere
+            onFormSent(); // This is now less critical but good for immediate feedback if needed elsewhere
         } catch (error) {
             const message = error instanceof Error ? error.message : t('community_page_unexpected_error');
             toast({ variant: 'destructive', title: t('community_page_send_message_fail_title'), description: message });
@@ -158,7 +149,7 @@ function TextMessageForm({ communityId, onMessageSent }: { communityId: string, 
     );
 }
 
-function TextCommentForm({ communityId, messageId, onCommentSent }: { communityId: string, messageId: string, onCommentSent: () => void; }) {
+function CommentForm({ communityId, formId, onCommentSent }: { communityId: string, formId: string, onCommentSent: () => void; }) {
     const [text, setText] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useUser();
@@ -167,10 +158,10 @@ function TextCommentForm({ communityId, messageId, onCommentSent }: { communityI
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!text.trim() || !user || !messageId || !communityId || !firestore) return;
+        if (!text.trim() || !user || !formId || !communityId || !firestore) return;
 
         setIsSubmitting(true);
-        const commentsColRef = collection(firestore, `communities/${communityId}/messages/${messageId}/comments`);
+        const commentsColRef = collection(firestore, `communities/${communityId}/forms/${formId}/comments`);
         const newComment = {
             userId: user.uid,
             userName: user.displayName || 'Anonymous',
@@ -207,102 +198,37 @@ function TextCommentForm({ communityId, messageId, onCommentSent }: { communityI
     );
 }
 
-function CommentCard({ comment, communityId, messageId, canManage }: { comment: Comment; communityId: string; messageId: string, canManage: boolean; }) {
-    const { toast } = useToast();
-    const [isUpdating, setIsUpdating] = useState(false);
-    const [isSoftDeleted, setIsSoftDeleted] = useState(comment.deleted);
-    const { t } = useTranslation();
-
-    const handleDelete = () => {
-        if(!comment.id || !communityId || !messageId || !firestore) return;
-        
-        setIsUpdating(true); // Provide immediate feedback
-        setIsSoftDeleted(true);
-
-        const commentDocRef = doc(firestore, `communities/${communityId}/messages/${messageId}/comments`, comment.id);
-        const updatePayload = {
-            deleted: true,
-            deletedAt: serverTimestamp(),
-            text: '',
-        };
-
-        // Use non-blocking update
-        updateDocumentNonBlocking(commentDocRef, updatePayload);
-        
-        toast({ title: t('community_page_comment_deleted_toast_title') });
-        
-        // No need to set isUpdating back to false unless you want to allow "undo"
-    };
-
-    if (isSoftDeleted) {
-        return (
-            <div className="p-3 rounded-md bg-muted/50 flex gap-3 items-start">
-                <Ban className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground italic">{t('community_page_comment_deleted_text')}</span>
-            </div>
-        )
-    }
-
+function CommentCard({ comment }: { comment: Comment }) {
     return (
-        <div className="p-3 rounded-md bg-muted/50 flex gap-3 items-start group">
-            <Avatar className="w-8 h-8">
+        <motion.div 
+            className="flex items-center gap-2"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+        >
+            <Avatar className="w-8 h-8 border-2 border-background shadow-md">
                 <AvatarImage src={comment.userAvatarUrl || `https://i.pravatar.cc/150?u=${comment.userId}`} alt={comment.userName} />
                 <AvatarFallback>{comment.userName.charAt(0)}</AvatarFallback>
             </Avatar>
-            <div className="flex-1 space-y-1.5">
-                <div className="flex justify-between items-center">
-                    <span className="font-semibold text-sm">{comment.userName}</span>
-                     <span className="text-xs text-muted-foreground">
-                        {comment.createdAt
-                            ? new Date(comment.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                            : t('community_page_sending_text')}
-                    </span>
-                </div>
-                 <p className="text-sm text-foreground whitespace-pre-wrap">{comment.text}</p>
+            <div className="bg-muted px-3 py-1.5 rounded-lg text-sm">
+                <span className="font-semibold">{comment.userName}</span>: {comment.text}
             </div>
-            {canManage && (
-                 <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" disabled={isUpdating || !comment.id} aria-label={t('community_page_delete_comment_label')}>
-                            <Ban className="w-4 h-4 text-muted-foreground hover:text-destructive" />
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>{t('community_page_delete_comment_dialog_title')}</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                {t('community_page_delete_comment_dialog_desc')}
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>{t('community_page_delete_cancel')}</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
-                                {isUpdating ? <LoaderCircle className="animate-spin" /> : t('community_page_delete_confirm')}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-            )}
-        </div>
+        </motion.div>
     )
 }
 
-function CommentThread({ message, canManage }: { message: Message; canManage: boolean; }) {
-    const { user } = useUser();
-    const params = useParams();
-    const communityId = Array.isArray(params.id) ? params.id[0] : params.id;
-
+function CommentThread({ form, isExpanded }: { form: Form, isExpanded: boolean }) {
     const [comments, setComments] = useState<Comment[]>([]);
-    const [isLoadingComments, setIsLoadingComments] = useState(true);
+    const [isLoadingComments, setIsLoadingComments] = useState(false);
 
     const fetchComments = useCallback(() => {
-        if (!firestore || !message.communityId || !message.id) {
+        if (!firestore || !form.communityId || !form.id) {
             setIsLoadingComments(false);
             return () => {};
         }
 
         setIsLoadingComments(true);
-        const commentsQuery = query(collection(firestore, `communities/${message.communityId}/messages/${message.id}/comments`), orderBy('createdAt', 'asc'));
+        const commentsQuery = query(collection(firestore, `communities/${form.communityId}/forms/${form.id}/comments`), orderBy('createdAt', 'asc'));
         
         const unsubscribe = onSnapshot(commentsQuery, (querySnapshot) => {
             const commentsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Comment));
@@ -314,178 +240,83 @@ function CommentThread({ message, canManage }: { message: Message; canManage: bo
         });
 
         return unsubscribe;
-    }, [message.communityId, message.id]);
+    }, [form.communityId, form.id]);
     
     useEffect(() => {
-        const unsubscribe = fetchComments();
+        let unsubscribe: Unsubscribe = () => {};
+        if (isExpanded) {
+            unsubscribe = fetchComments();
+        }
         return () => unsubscribe();
-    }, [fetchComments]);
+    }, [isExpanded, fetchComments]);
 
     return (
-        <div className="pl-12 pr-4 pb-4 space-y-4">
-            <div className="max-h-60 overflow-y-auto space-y-3 pr-2">
-                {isLoadingComments && <LoaderCircle className="mx-auto animate-spin" />}
-                {comments && comments.length > 0 && comments.map(comment => <CommentCard key={comment.id} comment={comment} communityId={communityId} messageId={message.id} canManage={canManage || user?.uid === message.userId} />)}
-            </div>
-            {user && <TextCommentForm communityId={message.communityId} messageId={message.id} onCommentSent={() => {}} />}
-        </div>
+        <AnimatePresence>
+            {isExpanded && (
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="pl-16 pr-4 pb-4 space-y-3"
+                >
+                    {isLoadingComments && <LoaderCircle className="mx-auto animate-spin" />}
+                    {comments && comments.length > 0 && comments.map(comment => <CommentCard key={comment.id} comment={comment} />)}
+                    <CommentForm communityId={form.communityId} formId={form.id} onCommentSent={() => {}} />
+                </motion.div>
+            )}
+        </AnimatePresence>
     );
 }
 
-function MessageCard({ message, canManage }: { message: Message; canManage: boolean; }) {
-    const { toast } = useToast();
-    const [isUpdating, setIsUpdating] = useState(false);
-    const [isCollapsibleOpen, setIsCollapsibleOpen] = useState(true);
-    const [isSoftDeleted, setIsSoftDeleted] = useState(message.deleted);
+function FormSphere({ form, canManage }: { form: Form; canManage: boolean; }) {
     const { t } = useTranslation();
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [isSoftDeleted, setIsSoftDeleted] = useState(form.deleted);
+    const { toast } = useToast();
 
-    const isDone = message.status === 'done';
-    const isReady = !!message.id && !!message.communityId && !!firestore;
-    
-    const handleToggleStatus = async () => {
-        if (!isReady || !firestore) return;
-        setIsUpdating(true);
-        const newStatus = isDone ? 'active' : 'done';
-        const messageDocRef = doc(firestore, 'communities', message.communityId, 'messages', message.id);
-        
-        await updateDoc(messageDocRef, { status: newStatus });
-        
-        toast({ title: t('community_page_message_status_toast', { status: newStatus }) });
-        if (newStatus === 'done') {
-            setIsCollapsibleOpen(false);
-        }
-        setIsUpdating(false);
-    };
-
-    const handleDelete = () => {
-        if (!isReady || !firestore) return;
-        
-        setIsUpdating(true);
-        setIsSoftDeleted(true);
-
-        const messageDocRef = doc(firestore, `communities/${message.communityId}/messages`, message.id);
-        const updatePayload = {
-            deleted: true,
-            deletedAt: serverTimestamp(),
-            text: '', 
-        };
-
-        updateDocumentNonBlocking(messageDocRef, updatePayload);
-        
-        toast({ title: t('community_page_message_deleted_toast') });
-    };
-
-     if (isSoftDeleted) {
+    if (isSoftDeleted) {
         return (
-            <div className="p-4 rounded-md flex items-center gap-3 bg-muted/50">
+             <div className="p-4 rounded-full flex items-center gap-3 bg-muted/50 w-full max-w-lg mx-auto">
                 <Ban className="h-5 w-5 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground italic">{t('community_page_message_deleted_text')}</span>
             </div>
         )
     }
-
-
-    if (isDone) {
-        return (
-             <div className={cn("p-2 rounded-md flex items-center gap-3 transition-all", isUpdating && "opacity-50")}>
-                <CheckCircle className="h-5 w-5 text-green-500" />
-                 <Avatar className="w-8 h-8">
-                    <AvatarImage src={message.userAvatarUrl || `https://i.pravatar.cc/150?u=${message.userId}`} alt={message.userName} />
-                    <AvatarFallback>{message.userName.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                    <span className="font-semibold text-sm text-muted-foreground">{t('community_page_message_done_text', { name: message.userName })}</span>
-                </div>
-                {canManage && (
-                    <Button variant="ghost" size="icon" onClick={handleToggleStatus} disabled={isUpdating || !isReady}>
-                         {isUpdating ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Undo2 className="w-4 h-4 text-muted-foreground" />}
-                    </Button>
-                )}
-            </div>
-        )
-    }
-
+    
     return (
-        <Collapsible open={isCollapsibleOpen} onOpenChange={setIsCollapsibleOpen}>
-            <Card className={cn("flex flex-col", isUpdating && "opacity-50", message.audience === 'owner' && 'bg-primary/10 border-primary')}>
-                <div>
-                    <CardHeader className="flex flex-row items-start gap-4 pb-4">
-                        <Avatar>
-                            <AvatarImage src={message.userAvatarUrl || `https://i.pravatar.cc/150?u=${message.userId}`} alt={message.userName} />
-                            <AvatarFallback>{message.userName.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                            <div className="flex justify-between items-center">
-                                <span className="font-bold">{message.userName}</span>
-                                <span className="text-xs text-muted-foreground">
-                                    {message.createdAt
-                                        ? new Date(message.createdAt.seconds * 1000).toLocaleTimeString()
-                                        : t('community_page_sending_text')}
-                                </span>
-                            </div>
-                        </div>
-                        <div className="flex items-center">
-                            {canManage && (
-                                <>
-                                    <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                            <Button variant="ghost" size="icon" disabled={isUpdating || !isReady} aria-label={t('community_page_delete_message_label')}>
-                                                <Ban className="w-4 h-4 text-muted-foreground hover:text-destructive" />
-                                            </Button>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                                <AlertDialogTitle>{t('community_page_delete_message_dialog_title')}</AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                    {t('community_page_delete_message_dialog_desc')}
-                                                </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                                <AlertDialogCancel>{t('community_page_delete_cancel')}</AlertDialogCancel>
-                                                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
-                                                    {isUpdating ? <LoaderCircle className="animate-spin" /> : t('community_page_delete_confirm')}
-                                                </AlertDialogAction>
-                                            </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
-                                    <Button variant="ghost" size="icon" onClick={handleToggleStatus} disabled={isUpdating || !isReady} aria-label={t('community_page_mark_done_label')}>
-                                        {isUpdating ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Circle className="w-4 h-4 text-muted-foreground" />}
-                                    </Button>
-                                </>
-                            )}
-                         </div>
-                    </CardHeader>
-                    <CardContent className="flex-grow space-y-4">
-                        <p className="text-sm text-foreground whitespace-pre-wrap">{message.text}</p>
-                    </CardContent>
-                    <CardFooter className="bg-muted/50 p-2">
-                        <div className="flex items-center gap-2">
-                            <CollapsibleTrigger asChild>
-                                <Button variant="ghost" size="sm" className="relative" disabled={!isReady}>
-                                    <MessageSquare className="mr-2 h-4 w-4" />
-                                    {t('community_page_comment_button')}
-                                </Button>
-                            </CollapsibleTrigger>
-                        </div>
-                    </CardFooter>
+        <div className="w-full max-w-lg mx-auto">
+            <motion.div 
+                layout 
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="relative p-4 rounded-full bg-card shadow-lg cursor-pointer hover:shadow-primary/20 transition-shadow flex items-center gap-4"
+            >
+                <Avatar className="w-16 h-16 border-4 border-background">
+                    <AvatarImage src={form.userAvatarUrl || `https://i.pravatar.cc/150?u=${form.userId}`} alt={form.userName} />
+                    <AvatarFallback>{form.userName.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                    <p className="text-sm text-muted-foreground">{form.userName}</p>
+                    <p className="font-semibold truncate">{form.text}</p>
                 </div>
-                <CollapsibleContent>
-                   <CommentThread message={message} canManage={canManage} />
-                </CollapsibleContent>
-            </Card>
-        </Collapsible>
-        )
+                <div className="flex items-center gap-1 text-muted-foreground">
+                    <CornerDownRight className="w-4 h-4" />
+                    <span>?</span> 
+                </div>
+            </motion.div>
+            <CommentThread form={form} isExpanded={isExpanded} />
+        </div>
+    )
 }
 
 function CommunityCommunicationNetwork({ communityId, isOwner, allMembers }: { communityId: string; isOwner: boolean, allMembers: Member[] }) {
     const { user } = useUser();
     const { t } = useTranslation();
     
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [forms, setForms] = useState<Form[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
-    const fetchMessages = useCallback(() => {
+    const fetchForms = useCallback(() => {
         if (!firestore || !communityId) {
             setIsLoading(false);
             return () => {};
@@ -493,16 +324,16 @@ function CommunityCommunicationNetwork({ communityId, isOwner, allMembers }: { c
         setIsLoading(true);
         setError(null);
         
-        const messagesQuery = query(collection(firestore, `communities/${communityId}/messages`), orderBy('createdAt', 'desc'));
+        const formsQuery = query(collection(firestore, `communities/${communityId}/forms`), orderBy('createdAt', 'desc'));
         
-        const unsubscribe = onSnapshot(messagesQuery, 
+        const unsubscribe = onSnapshot(formsQuery, 
             (snapshot) => {
-                const messagesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
-                setMessages(messagesData);
+                const formsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Form));
+                setForms(formsData);
                 setIsLoading(false);
             }, 
             (err) => {
-                console.error("Error fetching messages:", err);
+                console.error("Error fetching forms:", err);
                 setError(err);
                 setIsLoading(false);
             }
@@ -512,20 +343,20 @@ function CommunityCommunicationNetwork({ communityId, isOwner, allMembers }: { c
     }, [communityId]);
     
     useEffect(() => {
-        const unsubscribe = fetchMessages();
+        const unsubscribe = fetchForms();
         return () => unsubscribe();
-    }, [fetchMessages]);
+    }, [fetchForms]);
 
-    const filteredMessages = useMemo(() => {
-        return messages.filter(msg => {
-            if (msg.audience === 'owner') {
+    const filteredForms = useMemo(() => {
+        return forms.filter(form => {
+            if (form.audience === 'owner') {
                 return isOwner;
             }
-            return true; // Public messages
+            return true; // Public forms
         });
-    }, [messages, isOwner]);
+    }, [forms, isOwner]);
 
-    const handleMessageSent = () => {
+    const handleFormSent = () => {
         // No longer needed to manually trigger, but kept for potential future use
     }
 
@@ -539,31 +370,31 @@ function CommunityCommunicationNetwork({ communityId, isOwner, allMembers }: { c
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
+                {user ? (
+                    <div className="p-4 border-b">
+                        <TextFormForm communityId={communityId} onFormSent={handleFormSent} />
+                    </div>
+                ) : (
+                    <div className="p-4 text-center border-b">
+                        <Button asChild>
+                            <Link href="/login">
+                                <LogIn className="mr-2" />
+                                {t('community_page_login_to_message')}
+                            </Link>
+                        </Button>
+                    </div>
+                )}
                 {isLoading && <LoaderCircle className="mx-auto animate-spin" />}
                 {error && <p className="text-destructive">{t('community_page_load_messages_error', { message: error.message })}</p>}
-                {!isLoading && filteredMessages && filteredMessages.length === 0 && <p className="text-muted-foreground text-center py-8">{t('community_page_no_messages')}</p>}
-                <div className="max-h-[40rem] overflow-y-auto space-y-4 pr-2">
-                    {filteredMessages?.map(msg => {
-                        const key = msg.id || `${msg.userId}-${msg.createdAt?.seconds || Date.now()}`;
-                        return <MessageCard key={key} message={msg} canManage={isOwner || msg.userId === user?.uid}/>
+                {!isLoading && filteredForms && filteredForms.length === 0 && <p className="text-muted-foreground text-center py-8">{t('community_page_no_messages')}</p>}
+                <div className="space-y-4">
+                    {filteredForms?.map(form => {
+                        const key = form.id || `${form.userId}-${form.createdAt?.seconds || Date.now()}`;
+                        return <FormSphere key={key} form={form} canManage={isOwner || form.userId === user?.uid}/>
                     })}
                 </div>
             </CardContent>
-            {user ? (
-                <div className="border-t p-4 space-y-4">
-                    <TextMessageForm communityId={communityId} onMessageSent={handleMessageSent} />
-                </div>
-            ) : (
-                <div className="border-t p-4 text-center">
-                    <Button asChild>
-                        <Link href="/login">
-                            <LogIn className="mr-2" />
-                            {t('community_page_login_to_message')}
-                        </Link>
-                    </Button>
-                </div>
-            )}
         </Card>
     )
 }
@@ -646,7 +477,7 @@ export default function CommunityProfilePage() {
   useEffect(() => {
     if (user && id && firestore) {
         setIsRequestLoading(true);
-        const requestDocRef = doc(firestore, 'communities', id, 'joinRequests', user.uid);
+        const requestDocRef = doc(firestore, `communities/${id}/joinRequests/${user.uid}`);
         const unsubscribe = onSnapshot(requestDocRef, (docSnap) => {
             setUserJoinRequest(docSnap.exists() ? docSnap.data() as JoinRequest : null);
             setIsRequestLoading(false);
