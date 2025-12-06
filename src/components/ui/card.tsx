@@ -8,7 +8,7 @@ const Card = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     className={cn(
-      "rounded-lg bg-gradient-to-r from-fuchsia-500 to-yellow-500 p-[2px]",
+      "rounded-lg bg-gradient-to-r from-fuchsia-500 to-yellow-500 p-[1px]",
       className
     )}
   >
