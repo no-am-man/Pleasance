@@ -108,7 +108,9 @@ export default function HomePage() {
                 </p>
             </div>
             
-            <FederationDiagram t={t} />
+            <div className="w-full max-w-lg mx-auto my-8">
+                <FederationDiagram t={t} />
+            </div>
 
             <div className="mt-16 text-center">
                 <h2 className="text-4xl font-bold font-headline mb-4">{t('flowOfCreationTitle')}</h2>
