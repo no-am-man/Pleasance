@@ -49,7 +49,15 @@ const translateTextFlow = ai.defineFlow(
     if (!input.text.trim()) {
       return { translation: '' };
     }
-    const { output } = await translateTextPrompt(input);
+    
+    // Pass the prompt's config explicitly to the generate call
+    const { output } = await ai.generate({
+        prompt: translateTextPrompt.prompt,
+        model: 'googleai/gemini-1.5-flash-001',
+        input,
+        output: { schema: translateTextPrompt.output?.schema },
+    });
+
     return output || { translation: input.text };
   }
 );
