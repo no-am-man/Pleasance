@@ -29,6 +29,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
 import { Shield } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 type Member = {
   name: string;
