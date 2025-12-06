@@ -3,7 +3,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
+import { useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { firestore } from '@/firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -158,8 +158,8 @@ export default function AiMemberProfilePage() {
     
     const fetchCommunity = async () => {
         setIsLoading(true);
+        const communityDocRef = doc(firestore, 'communities', communityId);
         try {
-            const communityDocRef = doc(firestore, 'communities', communityId);
             const docSnap = await getDoc(communityDocRef);
             if (docSnap.exists()) {
                 setCommunity({ id: docSnap.id, ...docSnap.data() } as Community);
@@ -167,6 +167,11 @@ export default function AiMemberProfilePage() {
                 setError(new Error('Community not found.'));
             }
         } catch(e) {
+            const permissionError = new FirestorePermissionError({
+                path: communityDocRef.path,
+                operation: 'get',
+            });
+            errorEmitter.emit('permission-error', permissionError);
             setError(e as Error);
         } finally {
             setIsLoading(false);
