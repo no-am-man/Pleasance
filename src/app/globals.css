@@ -1,6 +1,8 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --radius: 0.5rem;
+}
 
 @layer base {
   :root {
@@ -23,7 +25,6 @@
     --border: 212 20% 89.8%;
     --input: 212 20% 89.8%;
     --ring: 209.7 90.2% 48.4%;
-    --radius: 0.5rem;
   }
 
   .dark {
@@ -87,18 +88,15 @@
   font-family: var(--font-sans), sans-serif;
 }
 
-/* Custom animation for slow bounce */
-@keyframes bounce-slow {
-  0%, 100% {
-    transform: translateY(-15%);
-    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+@layer base {
+  @keyframes bounce-slow {
+    from, to {
+      transform: translateY(-15%);
+      animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    50% {
+      transform: translateY(0);
+      animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
   }
-  50% {
-    transform: translateY(0);
-    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
-  }
-}
-
-.animate-bounce-slow {
-  animation: bounce-slow 1.5s infinite;
 }
