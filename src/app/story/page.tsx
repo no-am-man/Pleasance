@@ -8,6 +8,7 @@ import * as z from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LoaderCircle, Sparkles, LogIn, History, BookOpen, PencilRuler, Camera, Clock, X } from 'lucide-react';
 import { LANGUAGES } from '@/config/languages';
