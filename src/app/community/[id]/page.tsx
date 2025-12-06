@@ -1,4 +1,3 @@
-
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -253,6 +252,8 @@ export default function CommunityProfilePage() {
         setCommunity(doc.exists() ? { id: doc.id, ...doc.data() } as Community : null);
         setIsLoading(false);
     }, (err) => {
+        const permissionError = new FirestorePermissionError({ path: `communities/${id}`, operation: 'get' });
+        errorEmitter.emit('permission-error', permissionError);
         setError(err as Error);
         setIsLoading(false);
     });
