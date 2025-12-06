@@ -1,3 +1,4 @@
+
 // src/components/layout.tsx
 'use client';
 
@@ -13,7 +14,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className={cn("flex min-h-screen w-full", direction === 'rtl' ? 'rtl' : 'ltr')}>
       <Sidebar />
-      <div className={cn("flex flex-1 flex-col", direction === 'rtl' ? 'sm:mr-[var(--sidebar-width)]' : 'sm:pl-[var(--sidebar-width)]')}>
+      <div className={cn(
+          "flex flex-1 flex-col",
+          direction === 'rtl' ? 'sm:mr-[var(--sidebar-width)]' : 'sm:pl-[var(--sidebar-width)]'
+        )}>
         <Header />
         <header className={cn(
             "fixed top-0 z-40 hidden h-16 w-full items-center border-b bg-background/80 backdrop-blur-sm sm:flex",

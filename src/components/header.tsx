@@ -1,3 +1,4 @@
+
 // src/components/header.tsx
 'use client';
 
@@ -12,13 +13,12 @@ import {
   UserCircle,
   UserX,
   Users,
-  Warehouse,
+  Landmark,
   Sparkles,
   Bug,
   Bot,
-  DollarSign,
   Info,
-  Landmark,
+  DollarSign,
   Github,
   CalendarHeart,
 } from 'lucide-react';
