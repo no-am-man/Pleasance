@@ -89,34 +89,19 @@ function TextFormForm({ communityId, onFormSent }: { communityId: string, onForm
 
 function FormBubble({ form, allCommunities, onClick }: { form: Form; allCommunities: Community[]; onClick: () => void }) {
     const originCommunity = allCommunities.find(c => c.id === form.originCommunityId);
-    
-    // Animation properties for floating effect
-    const animation = {
-        x: [0, Math.random() * 40 - 20, Math.random() * 40 - 20, 0],
-        y: [0, Math.random() * 40 - 20, Math.random() * 40 - 20, 0],
-        transition: {
-            duration: Math.random() * 10 + 15,
-            ease: "easeInOut",
-            repeat: Infinity,
-            repeatType: "mirror" as const
-        }
-    };
 
     return (
         <motion.div
             layout
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1, ...animation }}
+            initial={{ opacity: 0, y: -50, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.3 } }}
-            whileHover={{ scale: 1.05, zIndex: 10 }}
-            className="absolute cursor-pointer"
+            transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+            whileHover={{ scale: 1.02, zIndex: 10 }}
+            className="w-full max-w-lg mx-auto cursor-pointer -mt-8 first:mt-0"
             onClick={onClick}
-            style={{
-                top: `${Math.random() * 80}%`,
-                left: `${Math.random() * 80}%`,
-            }}
         >
-            <Card className="w-64 max-w-lg mx-auto bg-card shadow-lg flex items-center gap-3 p-3">
+            <Card className="bg-card shadow-lg flex items-center gap-3 p-3">
                 <Avatar className="w-10 h-10 border-2 border-background flex-shrink-0">
                     <AvatarImage src={form.userAvatarUrl || `https://i.pravatar.cc/150?u=${form.userId}`} alt={form.userName} />
                     <AvatarFallback>{form.userName.charAt(0)}</AvatarFallback>
@@ -142,6 +127,7 @@ function FormBubble({ form, allCommunities, onClick }: { form: Form; allCommunit
         </motion.div>
     );
 }
+
 
 function CommunityCommunicationNetwork({ communityId, isOwner, allMembers, allCommunities }: { communityId: string; isOwner: boolean, allMembers: Member[], allCommunities: Community[] }) {
     const { user } = useUser();
@@ -219,14 +205,14 @@ function CommunityCommunicationNetwork({ communityId, isOwner, allMembers, allCo
                 {isLoading && <LoaderCircle className="mx-auto animate-spin" />}
                 {error && <p className="text-destructive">{t('community_page_load_messages_error', { message: error.message })}</p>}
                 
-                <div className="relative h-[500px] bg-muted/20 rounded-lg overflow-hidden">
+                <div className="h-[500px] overflow-y-auto bg-muted/20 rounded-lg p-8 flex flex-col items-center">
                     <AnimatePresence>
                         {visibleForms?.map(form => {
                             const key = form.id || `${form.userId}-${form.createdAt?.seconds || Date.now()}`;
                             return <FormBubble key={key} form={form} allCommunities={allCommunities} onClick={() => handleBubbleClick(form.id)} />
                         })}
                     </AnimatePresence>
-                    {!isLoading && visibleForms && visibleForms.length === 0 && <p className="absolute inset-0 flex items-center justify-center text-muted-foreground text-center py-8">{t('community_page_no_messages')}</p>}
+                    {!isLoading && visibleForms && visibleForms.length === 0 && <p className="flex items-center justify-center text-muted-foreground text-center h-full">{t('community_page_no_messages')}</p>}
                 </div>
             </CardContent>
         </Card>
@@ -730,4 +716,6 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
+    
+
     
