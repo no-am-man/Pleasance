@@ -1,0 +1,89 @@
+
+// src/ai/flows/generate-story-and-speech.ts
+'use server';
+/**
+ * @fileOverview Orchestrates the generation of a story, its translation, and speech synthesis.
+ *
+ * - generateStoryAndSpeech - The main server action for this process.
+ */
+
+import { generateStory } from './generate-story';
+import { translateStory } from './translate-story';
+import { generateSpeech } from './generate-speech';
+import { firestore } from '@/firebase/config';
+import { collection, serverTimestamp } from 'firebase/firestore';
+import { addDocument } from '@/firebase/non-blocking-updates';
+import { z } from 'zod';
+import type { Story } from '@/lib/types';
+
+const InputSchema = z.object({
+  userId: z.string(),
+  userName: z.string(),
+  userAvatar: z.string(),
+  difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
+  sourceLanguage: z.string(),
+  targetLanguage: z.string(),
+});
+
+type InputType = z.infer<typeof InputSchema>;
+
+export async function generateStoryAndSpeech(values: InputType) {
+    try {
+        const validatedFields = InputSchema.safeParse(values);
+        if (!validatedFields.success) {
+            return { error: 'Invalid input.' };
+        }
+        
+        const { userId, difficulty, sourceLanguage, targetLanguage } = validatedFields.data;
+
+        // Step 1: Generate the story in the source language
+        const storyResult = await generateStory({ difficultyLevel: difficulty, sourceLanguage });
+        if (!storyResult.story) {
+            throw new Error('Failed to generate the initial story text.');
+        }
+
+        // Step 2: Translate the story to the target language
+        const translationResult = await translateStory({
+            storyText: storyResult.story,
+            sourceLanguage,
+            targetLanguage,
+        });
+        if (!translationResult.translatedText) {
+            throw new Error('Failed to translate the story.');
+        }
+
+        // Step 3: Generate speech from the translated text
+        const speechResult = await generateSpeech({
+            text: translationResult.translatedText,
+        });
+        if (!speechResult.audioUrl) {
+            throw new Error('Failed to generate speech audio.');
+        }
+        
+        // Step 4: Prepare the story data for Firestore
+        const storyData: Omit<Story, 'id'> = {
+            userId,
+            level: difficulty,
+            sourceLanguage,
+            targetLanguage,
+            nativeText: storyResult.story,
+            translatedText: translationResult.translatedText,
+            audioUrl: speechResult.audioUrl,
+            createdAt: serverTimestamp(),
+            status: 'complete' as const,
+        };
+
+        // Step 5: Save the story to Firestore (non-blocking)
+        const storiesColRef = collection(firestore, `users/${userId}/stories`);
+        const newDocRef = await addDocument(storiesColRef, storyData);
+        
+        const finalStoryData = { ...storyData, id: newDocRef.id, createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } };
+
+        return { storyData: finalStoryData };
+
+    } catch (e) {
+        const message = e instanceof Error ? e.message : 'An unknown error occurred during story generation.';
+        console.error('generateStoryAndSpeech Error:', message);
+        return { error: message };
+    }
+}
