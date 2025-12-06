@@ -1,3 +1,4 @@
+
 // src/app/home/page.tsx (formerly page.tsx)
 "use client";
 
@@ -108,7 +109,7 @@ export default function HomePage() {
                 </p>
             </div>
             
-            <div className="w-full max-w-lg mx-auto my-8">
+            <div className="w-full max-w-sm mx-auto my-12">
                 <FederationDiagram t={t} />
             </div>
 
