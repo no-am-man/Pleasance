@@ -26,6 +26,9 @@ import Image from 'next/image';
 import { refineCommunityPromptAction } from './actions';
 import { useTranslation } from '@/hooks/use-translation';
 import { Textarea } from '@/components/ui/textarea';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Separator } from '@/components/ui/separator';
+import { Shield } from 'lucide-react';
 
 type Member = {
   name: string;
@@ -50,12 +53,12 @@ const CreateCommunitySchema = z.object({
   includeAiAgents: z.boolean().default(false),
 });
 
-function CommunityCard({ community }: { community: Community }) {
+function CommunityCard({ community, isOwner }: { community: Community, isOwner: boolean }) {
   const router = useRouter();
 
   return (
     <Card 
-      className="overflow-hidden shadow-lg transition-all duration-300 ease-in-out hover:shadow-primary/20 hover:-translate-y-1 cursor-pointer"
+      className="overflow-hidden shadow-lg transition-all duration-300 ease-in-out hover:shadow-primary/20 hover:-translate-y-1 cursor-pointer flex flex-col h-full"
       onClick={() => router.push(`/community/${community.id}`)}
     >
       <div className="relative h-48 w-full bg-muted">
@@ -66,26 +69,34 @@ function CommunityCard({ community }: { community: Community }) {
                 <Users className="h-16 w-16 text-muted-foreground" />
             </div>
         )}
-      </div>
-      <CardHeader>
-        <CardTitle>{community.name}</CardTitle>
-        <CardDescription className="line-clamp-2">{community.description}</CardDescription>
-      </CardHeader>
-      <CardFooter>
-        <div className="flex -space-x-2 overflow-hidden">
-          {community.members.slice(0, 5).map((member, index) => (
-            <Avatar key={index} className="inline-block h-8 w-8 rounded-full ring-2 ring-background">
-              <AvatarImage src={`https://i.pravatar.cc/150?u=${member.name}`} />
-              <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-          ))}
-        </div>
-        {community.members.length > 5 && (
-          <span className="pl-4 text-sm text-muted-foreground">
-            + {community.members.length - 5} more
-          </span>
+         {isOwner && (
+            <Badge variant="secondary" className="absolute top-2 right-2 flex items-center gap-1 border-primary/50">
+                <Shield className="h-3 w-3" />
+                Owner
+            </Badge>
         )}
-      </CardFooter>
+      </div>
+      <div className="flex flex-col flex-grow">
+        <CardHeader>
+            <CardTitle>{community.name}</CardTitle>
+            <CardDescription className="line-clamp-2">{community.description}</CardDescription>
+        </CardHeader>
+        <CardFooter className="mt-auto">
+            <div className="flex -space-x-2 overflow-hidden">
+            {community.members.slice(0, 5).map((member, index) => (
+                <Avatar key={index} className="inline-block h-8 w-8 rounded-full ring-2 ring-background">
+                <AvatarImage src={`https://i.pravatar.cc/150?u=${member.name}`} />
+                <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+            ))}
+            </div>
+            {community.members.length > 5 && (
+            <span className="pl-4 text-sm text-muted-foreground">
+                + {community.members.length - 5} more
+            </span>
+            )}
+        </CardFooter>
+      </div>
     </Card>
   );
 }
@@ -144,22 +155,25 @@ function CreateCommunityForm() {
         setIsSubmitting(true);
         try {
             const communityDetails = await createCommunityDetailsAction(values);
-            if (communityDetails.error) throw new Error(communityDetails.error);
             
             const communityColRef = collection(firestore, 'communities');
-            const docRef = await addDocument(communityColRef, {
+            const newCommunityRef = doc(communityColRef); // Create a new doc ref to get an ID
+
+            const newCommunityData = {
+                id: newCommunityRef.id,
                 name: communityDetails.name,
                 description: communityDetails.description,
                 welcomeMessage: communityDetails.welcomeMessage,
                 ownerId: user.uid,
-                members: communityDetails.members,
-            });
+                members: [], // Start with no members
+            };
             
             // Add owner as a member
             const ownerProfileDoc = await getDoc(doc(firestore, 'community-profiles', user.uid));
+            let ownerMember;
             if (ownerProfileDoc.exists()) {
                 const ownerProfile = ownerProfileDoc.data();
-                const ownerMember = {
+                ownerMember = {
                     userId: user.uid,
                     name: ownerProfile.name,
                     bio: ownerProfile.bio,
@@ -167,11 +181,18 @@ function CreateCommunityForm() {
                     type: 'human',
                     avatarUrl: ownerProfile.avatarUrl || user.photoURL || '',
                 };
-                 await addDocument(collection(firestore, `communities/${docRef.id}/members`), ownerMember);
             }
+            
+            const finalMembers = [
+                ...(ownerMember ? [ownerMember] : []),
+                ...(communityDetails.members || [])
+            ];
+
+            await addDocument(communityColRef, { ...newCommunityData, members: finalMembers });
+            
 
             toast({ title: "Community Created!", description: `Your community "${communityDetails.name}" is now live.` });
-            router.push(`/community/${docRef.id}`);
+            router.push(`/community/${newCommunityData.id}`);
 
         } catch (error) {
             const message = error instanceof Error ? error.message : 'An unknown error occurred';
@@ -272,6 +293,7 @@ export default function CommunityPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const { t } = useTranslation();
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
 
     useEffect(() => {
         if (!firestore) return;
@@ -290,17 +312,6 @@ export default function CommunityPage() {
         );
     }, [communities, searchQuery]);
     
-    const yourCommunities = useMemo(() => {
-        if (!user) return [];
-        return communities.filter(c => c.ownerId === user.uid);
-    }, [communities, user]);
-    
-    const otherCommunities = useMemo(() => {
-        if (!user) return filteredCommunities;
-        return filteredCommunities.filter(c => c.ownerId !== user.uid);
-    }, [filteredCommunities, user]);
-
-
     if (isLoading) {
         return (
             <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
@@ -318,21 +329,27 @@ export default function CommunityPage() {
                 <p className="text-lg text-muted-foreground mt-2">{t('community_page_subtitle')}</p>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                <div className="lg:col-span-1 space-y-8">
-                    <CreateCommunityForm />
-                    <Card className="shadow-lg">
-                        <CardHeader>
-                            <CardTitle>{t('federation_what_is_title')}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-muted-foreground">{t('federation_documentation')}</p>
-                        </CardContent>
-                    </Card>
-                </div>
+            <div className="space-y-8">
+                <Collapsible open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+                    <CollapsibleTrigger asChild>
+                        <div className="flex justify-center">
+                            <Button variant="outline">
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                {isCreateOpen ? "Hide Creation Form" : "Create a New Community"}
+                            </Button>
+                        </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-6">
+                        <div className="max-w-2xl mx-auto">
+                            <CreateCommunityForm />
+                        </div>
+                    </CollapsibleContent>
+                </Collapsible>
                 
-                <div className="lg:col-span-2 space-y-6">
-                    <Card className="shadow-lg">
+                <Separator />
+
+                <div className="max-w-2xl mx-auto">
+                     <Card className="shadow-lg">
                         <CardHeader>
                             <CardTitle>{t('community_find_title')}</CardTitle>
                             <CardDescription>{t('community_find_desc')}</CardDescription>
@@ -349,26 +366,21 @@ export default function CommunityPage() {
                             </div>
                         </CardContent>
                     </Card>
-
-                    {yourCommunities.length > 0 && (
-                        <div>
-                            <h3 className="text-xl font-semibold mb-4">{t('community_your_communities')}</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {yourCommunities.map(community => <CommunityCard key={community.id} community={community} />)}
-                            </div>
-                            <hr className="my-8" />
-                        </div>
-                    )}
-
-                    <h3 className="text-xl font-semibold mb-4">{t('community_all_communities')}</h3>
-                    {otherCommunities.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {otherCommunities.map(community => <CommunityCard key={community.id} community={community} />)}
-                        </div>
-                    ) : (
-                        <p className="text-muted-foreground">{t('community_none_found')}</p>
-                    )}
                 </div>
+                
+                {filteredCommunities.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredCommunities.map(community => (
+                            <CommunityCard 
+                                key={community.id} 
+                                community={community}
+                                isOwner={user?.uid === community.ownerId}
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-muted-foreground text-center py-12">{t('community_none_found')}</p>
+                )}
             </div>
         </main>
     );
