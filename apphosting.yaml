@@ -3,10 +3,10 @@
 
 runConfig:
   cpu: 2
-  memoryMiB: 4096
+  memoryMiB: 8192
 
 env:
   - variable: NODE_OPTIONS
-    value: "--max-old-space-size=3072"
+    value: "--max-old-space-size=6144"
     availability:
       - BUILD
