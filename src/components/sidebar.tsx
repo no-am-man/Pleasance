@@ -5,22 +5,23 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+  Banknote,
+  BookOpen,
   LogOut,
+  Menu,
   Shield,
   UserCircle,
   UserX,
   Users,
   Landmark,
   Sparkles,
-  BookOpen,
-  Warehouse,
-  Banknote,
   Bug,
   Bot,
   Info,
   DollarSign,
   Github,
   CalendarHeart,
+  Warehouse,
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
