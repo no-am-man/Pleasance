@@ -1,4 +1,3 @@
-
 // src/components/presence-bar.tsx
 'use client';
 
@@ -36,11 +35,16 @@ export function PresenceBar() {
         return () => unsubscribe();
     }, []);
 
+    // Filter out duplicate users based on userId, keeping only the first occurrence.
+    const uniqueUsers = activeUsers.filter((user, index, self) =>
+        index === self.findIndex((t) => t.userId === user.userId)
+    );
+
     return (
         <div className="flex items-center px-4 h-full">
             <div className="flex items-center -space-x-2">
                 <TooltipProvider>
-                    {activeUsers.slice(0, 10).map((user) => (
+                    {uniqueUsers.slice(0, 10).map((user) => (
                         <Tooltip key={user.userId}>
                             <TooltipTrigger asChild>
                                 <Avatar className="h-8 w-8 border-2 border-background cursor-pointer">
@@ -54,9 +58,9 @@ export function PresenceBar() {
                         </Tooltip>
                     ))}
                 </TooltipProvider>
-                {activeUsers.length > 10 && (
+                {uniqueUsers.length > 10 && (
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground border-2 border-background">
-                        +{activeUsers.length - 10}
+                        +{uniqueUsers.length - 10}
                     </div>
                 )}
             </div>
