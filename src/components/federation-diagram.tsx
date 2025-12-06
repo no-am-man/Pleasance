@@ -1,3 +1,4 @@
+
 // src/components/federation-diagram.tsx
 'use client';
 
@@ -59,7 +60,7 @@ const FlowArrow = ({ path, delay }: { path: string; delay: number }) => (
 
 export const FederationDiagram = ({ t }: { t: (key: string) => string }) => {
   return (
-    <div className="w-full mx-auto my-8">
+    <div className="mx-auto my-8">
       <style>
         {`
           @keyframes fadeIn {
