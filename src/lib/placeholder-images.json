@@ -6,6 +6,16 @@
       "imageHint": "community people"
     },
     {
+      "id": "wiki-workshop",
+      "imageUrl": "https://images.unsplash.com/photo-1544928147-79a2dbc1f389?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxhcnQlMjB3b3Jrc2hvcHxlbnwwfHx8fDE3NjQ5ODYwMzR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "art workshop"
+    },
+    {
+      "id": "wiki-museum",
+      "imageUrl": "https://images.unsplash.com/photo-1569783721854-33a99b4c0bae?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxhcnQlMjBnYWxsZXJ5fGVufDB8fHx8MTc2NDkwODM4NXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "art gallery"
+    },
+    {
       "id": "wiki-lingua",
       "imageUrl": "https://images.unsplash.com/photo-1631888717853-61ead530b522?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxsYW5ndWFnZSUyMGJvb2tzfGVufDB8fHx8MTc2NDk1ODgxMnww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "language books"
@@ -19,16 +29,6 @@
       "id": "wiki-treasury",
       "imageUrl": "https://images.unsplash.com/photo-1624365168775-0110f8105e7d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8Z29sZCUyMGNvaW5zfGVufDB8fHx8MTc2NDkxMjAxNnww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "gold coins"
-    },
-    {
-      "id": "wiki-satoshi",
-      "imageUrl": "https://images.unsplash.com/photo-1761083042130-3875fe970bd5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxnbG93aW5nJTIwY29pbnxlbnwwfHx8fDE3NjUwMDcyNjN8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "glowing coin"
-    },
-    {
-      "id": "wiki-euro",
-      "imageUrl": "https://images.unsplash.com/photo-1641889054670-0c431edf60af?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHx0ZWFtJTIwY29pbnN8ZW58MHx8fHwxNzY1MDA3MjYzfDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "team coins"
     }
   ]
 }

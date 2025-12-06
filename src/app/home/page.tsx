@@ -64,36 +64,36 @@ export default function HomePage() {
     
     const features = [
         {
-          id: "wiki-community",
-          title: "feature_community_title",
-          description: "feature_community_desc",
+            "id": "wiki-community",
+            "title": "feature_community_title",
+            "description": "feature_community_desc"
         },
         {
-          id: "wiki-lingua",
-          title: "feature_lingua_title",
-          description: "feature_lingua_desc",
+            "id": "wiki-workshop",
+            "title": "feature_workshop_title",
+            "description": "feature_workshop_desc"
         },
         {
-          id: "wiki-fabrication",
-          title: "feature_fabrication_title",
-          description: "feature_fabrication_desc",
+            "id": "wiki-museum",
+            "title": "feature_museum_title",
+            "description": "feature_museum_desc"
         },
         {
-          id: "wiki-treasury",
-          title: "feature_treasury_title",
-          description: "feature_treasury_desc",
+            "id": "wiki-lingua",
+            "title": "feature_lingua_title",
+            "description": "feature_lingua_desc"
         },
         {
-          id: "wiki-satoshi",
-          title: "feature_satoshi_title",
-          description: "feature_satoshi_desc",
+            "id": "wiki-fabrication",
+            "title": "feature_fabrication_title",
+            "description": "feature_fabrication_desc"
         },
         {
-          id: "wiki-euro",
-          title: "feature_euro_title",
-          description: "feature_euro_desc",
+            "id": "wiki-treasury",
+            "title": "feature_treasury_title",
+            "description": "feature_treasury_desc"
         }
-      ];
+    ];
 
     const exploreCta = t('exploreCommunities');
 
