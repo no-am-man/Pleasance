@@ -50,8 +50,13 @@ const translateTextFlow = ai.defineFlow(
       return { translation: '' };
     }
     
-    // Pass the prompt's config explicitly to the generate call
-    const { output } = await translateTextPrompt(input);
+    // Explicitly call ai.generate with the prompt's details
+    const { output } = await ai.generate({
+        prompt: translateTextPrompt.prompt,
+        model: translateTextPrompt.config.model,
+        input: input,
+        output: { schema: translateTextPrompt.output?.schema },
+    });
 
     return output || { translation: input.text };
   }
