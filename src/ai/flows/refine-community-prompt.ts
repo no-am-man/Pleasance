@@ -30,7 +30,7 @@ const refinePromptGenkit = ai.definePrompt({
     input: { schema: RefinePromptInputSchema },
     output: { schema: RefinePromptOutputSchema },
     config: {
-        model: 'googleai/gemini-1.5-flash',
+        model: 'googleai/gemini-1.5-flash-001',
     },
     prompt: `You are an expert community builder. Your task is to take a user's rough idea and expand it into a detailed, evocative prompt. This new prompt will be fed into another AI to generate a community name, description, welcome message, and AI members.
 
@@ -52,7 +52,7 @@ const refineCommunityPromptFlow = ai.defineFlow(
   async (input) => {
     const { output } = await ai.generate({
         prompt: refinePromptGenkit.prompt,
-        model: 'googleai/gemini-1.5-flash',
+        model: 'googleai/gemini-1.5-flash-001',
         input: input,
         output: { schema: refinePromptGenkit.output?.schema },
     });

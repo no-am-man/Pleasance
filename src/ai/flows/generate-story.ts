@@ -31,7 +31,7 @@ const generateStoryPrompt = ai.definePrompt({
   input: {schema: GenerateStoryInputSchema},
   output: {schema: GenerateStoryOutputSchema},
   config: {
-    model: 'googleai/gemini-1.5-flash',
+    model: 'googleai/gemini-1.5-flash-001',
     safetySettings: [
         {
             category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
