@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { LoaderCircle, User, Users, PlusCircle, LogIn, Search, Sparkles } from 'lucide-react';
+import { LoaderCircle, User, Users, PlusCircle, LogIn, Search, Sparkles, Shield, Info } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -28,7 +28,6 @@ import { useTranslation } from '@/hooks/use-translation';
 import { Textarea } from '@/components/ui/textarea';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
-import { Shield } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 type Member = {
@@ -331,6 +330,15 @@ export default function CommunityPage() {
             </div>
             
             <div className="space-y-8">
+                <Card className="shadow-lg bg-background/80 backdrop-blur-sm border-primary/20">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-xl font-headline"><Info className="text-primary"/> {t('federation_what_is_title')}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground">{t('federation_documentation')}</p>
+                    </CardContent>
+                </Card>
+
                 <Collapsible open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                     <CollapsibleTrigger asChild>
                         <div className="flex justify-center">
