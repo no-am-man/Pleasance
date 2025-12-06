@@ -1,8 +1,9 @@
+
 // src/app/events/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useUser, firestore } from '@/firebase';
+import { useUser, firestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, LoaderCircle, CalendarHeart } from 'lucide-react';
@@ -35,8 +36,13 @@ export default function EventsPage() {
       setEvents(eventsData);
       setIsLoading(false);
     }, (error) => {
-      console.error("Error fetching events:", error);
-      setIsLoading(false);
+        const permissionError = new FirestorePermissionError({
+            path: 'events',
+            operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        console.error("Error fetching events:", error);
+        setIsLoading(false);
     });
 
     return () => unsubscribe();
