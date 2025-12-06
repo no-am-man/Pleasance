@@ -1,46 +1,19 @@
-
 // src/app/museum/page.tsx
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
-import { useUser } from '@/firebase';
-import { firestore } from '@/firebase/config';
-import { collection, query, where, orderBy, doc, getDocs } from 'firebase/firestore';
+import { useState, useEffect } from 'react';
+import { firestore } from '@/firebase';
+import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, AlertCircle, Landmark, Flag, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { Svg3dCube } from '@/components/icons/svg3d-cube';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { DialogTrigger } from '@radix-ui/react-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import Image from 'next/image';
 import { useTranslation } from '@/hooks/use-translation';
+import type { Creation, Community } from '@/lib/types';
 
-// Types from lib/types.ts or similar
-type ColorPixel = {
-    x: number;
-    y: number;
-    z: number;
-    color: string;
-};
-
-type Creation = {
-    id: string;
-    creatorId: string;
-    creatorName: string;
-    creatorAvatarUrl: string;
-    prompt: string;
-    status: 'in-workshop' | 'published';
-    createdAt: { seconds: number; nanoseconds: number; };
-    pixels: ColorPixel[];
-};
-
-type Community = {
-  id: string;
-  name: string;
-  description: string;
-  flagUrl?: string;
-};
 
 function CommunityHall({ community }: { community: Community }) {
     const { t } = useTranslation();
@@ -95,7 +68,7 @@ function CommunityHall({ community }: { community: Community }) {
                  <CardHeader className="flex flex-row items-center gap-4">
                      <Link href={`/community/${community.id}`} className="relative h-20 w-36 flex-shrink-0 rounded-md border bg-muted flex items-center justify-center group">
                         {community.flagUrl ? (
-                            <Image src={community.flagUrl} alt={`${community.name} Flag`} layout="fill" objectFit="cover" className="rounded-md" />
+                            <Image src={community.flagUrl} alt={`${community.name} Flag`} fill style={{ objectFit: 'cover' }} className="rounded-md" />
                         ) : (
                             <Flag className="h-8 w-8 text-muted-foreground" />
                         )}
@@ -109,6 +82,7 @@ function CommunityHall({ community }: { community: Community }) {
                     </div>
                  </CardHeader>
                 <CardContent>
+                    {error && <p className="text-destructive text-center">{t('community_page_load_creations_error', { message: error.message })}</p>}
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         {creations.map(creation => (
                             <Dialog key={creation.id}>
@@ -133,6 +107,7 @@ function CommunityHall({ community }: { community: Community }) {
                                     <div className="aspect-square bg-muted rounded-md my-4">
                                         <Svg3dCube pixels={creation.pixels} />
                                     </div>
+                                    
                                 </DialogContent>
                             </Dialog>
                         ))}
