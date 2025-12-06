@@ -50,12 +50,12 @@ const translateTextFlow = ai.defineFlow(
       return { translation: '' };
     }
     
-    // Explicitly call ai.generate with the prompt's details
+    // Call the prompt function to get the rendered request object
+    const request = await translateTextPrompt(input);
+    
+    // Spread the rendered request into the generate call
     const { output } = await ai.generate({
-        prompt: translateTextPrompt.prompt,
-        model: 'googleai/gemini-1.5-flash-001',
-        input: input,
-        output: { schema: translateTextPrompt.output?.schema },
+        ...request,
     });
 
     return output || { translation: input.text };
