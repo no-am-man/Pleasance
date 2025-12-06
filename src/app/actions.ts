@@ -1,4 +1,4 @@
-
+// src/app/actions.ts
 'use server';
 
 import { z } from 'zod';
@@ -14,7 +14,7 @@ import { refineRoadmapCard } from '@/ai/flows/refine-roadmap-card';
 import { refineCommunityPrompt } from '@/ai/flows/refine-community-prompt';
 import { updateCardAssignees } from '@/ai/flows/update-card-assignees';
 import { generateRoadmapIdea } from '@/ai/flows/generate-roadmap-idea';
-import { ambasedorFlow } from '@/ai/flows/ambasedor-flow';
+import { ambasedorFlow as conductSuperAgentFlow } from '@/ai/flows/ambasedor-flow';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { firebaseConfig } from '@/firebase/config';
 import admin from 'firebase-admin';
@@ -752,7 +752,7 @@ export async function conductSuperAgent(values: z.infer<typeof ConductSuperAgent
         const userProfileSnap = await userProfileRef.get();
         const userName = userProfileSnap.exists ? userProfileSnap.data()?.name : 'Anonymous';
 
-        const result = await ambasedorFlow({ ...validatedFields.data, userName });
+        const result = await conductSuperAgentFlow({ ...validatedFields.data, userName });
         
         return { data: result };
 
@@ -1073,5 +1073,7 @@ export async function translateTextAction(values: z.infer<typeof TranslateTextSc
         return { error: `Translation failed: ${message}` };
     }
 }
+
+    
 
     

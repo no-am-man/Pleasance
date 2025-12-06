@@ -13,7 +13,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Bot, User, Send, LoaderCircle, LogIn, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-import { ambasedorFlow } from '../actions';
+import { conductSuperAgent } from '../actions';
 import { marked } from 'marked';
 import { type ContentPart } from 'genkit/generate';
 import { useTranslation } from '@/hooks/use-translation';
@@ -113,7 +113,7 @@ export default function AmbasedorPage() {
         setInput('');
         setIsThinking(true);
         
-        await ambasedorFlow({ userId: user.uid, prompt: currentInput });
+        await conductSuperAgent({ userId: user.uid, prompt: currentInput });
         
         setIsThinking(false);
     };
