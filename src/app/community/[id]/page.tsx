@@ -128,7 +128,7 @@ function FormBubble({ form, allCommunities, onClick }: { form: Form; allCommunit
 }
 
 
-function CommunityCommunicationNetwork({ communityId, isOwner, allMembers, allCommunities }: { communityId: string; isOwner: boolean, allMembers: Member[], allCommunities: Community[] }) {
+function SphericalizingChatRoom({ communityId, isOwner, allMembers, allCommunities }: { communityId: string; isOwner: boolean, allMembers: Member[], allCommunities: Community[] }) {
     const { user } = useUser();
     const { t } = useTranslation();
     
@@ -585,7 +585,7 @@ export default function CommunityProfilePage() {
                 {isOwner && <TabsTrigger value="admin">{t('community_tab_admin')}</TabsTrigger>}
             </TabsList>
             <TabsContent value="feed" className="mt-6">
-                <CommunityCommunicationNetwork communityId={community.id} isOwner={isOwner} allMembers={allMembers} allCommunities={allCommunities} />
+                <SphericalizingChatRoom communityId={community.id} isOwner={isOwner} allMembers={allMembers} allCommunities={allCommunities} />
             </TabsContent>
             <TabsContent value="members" className="mt-6">
                 <Card>

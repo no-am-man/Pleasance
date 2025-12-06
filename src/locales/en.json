@@ -306,7 +306,7 @@
   "community_page_delete_message_dialog_desc": "This will permanently hide the message content. This action cannot be undone.",
   "community_page_mark_done_label": "Mark as done",
   "community_page_comment_button": "Comment",
-  "community_page_ccn_title": "Communication Network",
+  "community_page_ccn_title": "Sphericalizing Chat Room",
   "community_page_ccn_desc": "The central feed for community activity.",
   "community_page_ccn_desc_spheres": "A network of spheres in and around spheres.",
   "community_page_load_messages_error": "Error loading messages: {message}",
