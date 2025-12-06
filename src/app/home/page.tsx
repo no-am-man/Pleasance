@@ -108,7 +108,7 @@ export default function HomePage() {
                 </p>
             </div>
             
-            <div className="w-full max-w-xs mx-auto my-16">
+             <div className="w-full max-w-xs mx-auto my-16">
                 <FederationDiagram t={t} />
             </div>
 
