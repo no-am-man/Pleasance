@@ -8,13 +8,6 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, LoaderCircle } from "lucide-react";
 import { FederationDiagram } from "@/components/federation-diagram";
 import { useTranslation } from "@/hooks/use-translation";
-import {
-    Carousel,
-    CarouselContent,
-    CarouselItem,
-    CarouselNext,
-    CarouselPrevious,
-} from "@/components/ui/carousel"
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 
@@ -108,7 +101,7 @@ export default function HomePage() {
                 </p>
             </div>
             
-             <div className="w-full max-w-xs mx-auto my-16">
+             <div className="my-16 mx-auto max-w-sm">
                 <FederationDiagram t={t} />
             </div>
 
@@ -121,37 +114,24 @@ export default function HomePage() {
 
             <div className="mt-20">
                 <h2 className="text-4xl font-bold text-center mb-12 font-headline">{t('coreConceptsTitle')}</h2>
-                <Carousel
-                    opts={{
-                        align: "start",
-                        loop: true,
-                    }}
-                    className="w-full"
-                >
-                    <CarouselContent>
-                        {features.map((feature: any, index: number) => {
-                            const placeholder = PlaceHolderImages.find(p => p.id === feature.id);
-                            return (
-                                <CarouselItem key={feature.id} className="md:basis-full">
-                                    <div className="p-1 h-full">
-                                    <FeatureCard
-                                            title={t(feature.title)}
-                                            description={t(feature.description)}
-                                            imageUrl={placeholder?.imageUrl || ''}
-                                            imageHint={placeholder?.imageHint || ''}
-                                            isFirst={index === 0}
-                                            ctaText={exploreCta}
-                                            ctaLink="/community"
-                                            t={t}
-                                        />
-                                    </div>
-                                </CarouselItem>
-                            )
-                        })}
-                    </CarouselContent>
-                    <CarouselPrevious className="hidden sm:flex" />
-                    <CarouselNext className="hidden sm:flex" />
-                </Carousel>
+                <div className="grid grid-cols-1 gap-8">
+                    {features.map((feature: any, index: number) => {
+                        const placeholder = PlaceHolderImages.find(p => p.id === feature.id);
+                        return (
+                            <FeatureCard
+                                key={feature.id}
+                                title={t(feature.title)}
+                                description={t(feature.description)}
+                                imageUrl={placeholder?.imageUrl || ''}
+                                imageHint={placeholder?.imageHint || ''}
+                                isFirst={index === 0}
+                                ctaText={exploreCta}
+                                ctaLink="/community"
+                                t={t}
+                            />
+                        )
+                    })}
+                </div>
             </div>
         </div>
     );
