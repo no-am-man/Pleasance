@@ -4,7 +4,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useUser, firestore, database, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { doc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { ref, onValue, onDisconnect, set, serverTimestamp as dbServerTimestamp } from 'firebase/database';
 
 export function usePresence() {
@@ -79,8 +79,9 @@ export function usePresence() {
             set(userStatusDatabaseRef, isOfflineForDatabase);
         }
         if (userStatusFirestoreRef) {
-            // Use updateDoc here as the document should exist if the user was online.
-            updateDoc(userStatusFirestoreRef, isOfflineForFirestore).catch(error => {
+            // Use setDoc with merge:true here as well. This is the crucial fix.
+            // It handles the case where the browser closes before the initial online status is written.
+            setDoc(userStatusFirestoreRef, isOfflineForFirestore, { merge: true }).catch(error => {
                 errorEmitter.emit('permission-error', new FirestorePermissionError({
                     path: userStatusFirestoreRef.path,
                     operation: 'update',
