@@ -47,25 +47,25 @@
 
 @layer base {
   :root {
-    --background: 40 10% 96%;
-    --foreground: 20 14.3% 4.1%;
-    --card: 40 10% 96%;
-    --card-foreground: 20 14.3% 4.1%;
-    --popover: 40 10% 96%;
-    --popover-foreground: 20 14.3% 4.1%;
-    --primary: 38 92% 50%;
-    --primary-foreground: 48 95.8% 94.1%;
-    --secondary: 40 5.9% 90%;
-    --secondary-foreground: 20 14.3% 4.1%;
-    --muted: 40 5.9% 90%;
-    --muted-foreground: 20 8% 40%;
-    --accent: 40 5.9% 90%;
-    --accent-foreground: 20 14.3% 4.1%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 40 5.9% 80%;
-    --input: 40 5.9% 80%;
-    --ring: 38 92% 50%;
+    --background: 38 77% 96%; /* Warm cream */
+    --foreground: 30 30% 25%; /* Dark, earthy brown */
+    --card: 38 77% 96%;
+    --card-foreground: 30 30% 25%;
+    --popover: 38 77% 96%;
+    --popover-foreground: 30 30% 25%;
+    --primary: 25 60% 50%; /* Terracotta/Rust */
+    --primary-foreground: 25 100% 98%; /* Light cream for text on primary */
+    --secondary: 40 20% 90%; /* Lighter earthy tone */
+    --secondary-foreground: 30 30% 25%;
+    --muted: 40 20% 90%;
+    --muted-foreground: 30 20% 45%;
+    --accent: 40 20% 90%;
+    --accent-foreground: 30 30% 25%;
+    --destructive: 0 74% 45%; /* A slightly softer red */
+    --destructive-foreground: 0 0% 100%;
+    --border: 38 30% 85%;
+    --input: 38 30% 85%;
+    --ring: 25 60% 50%;
     --radius: 0.5rem;
     --sidebar-width: 280px;
 
