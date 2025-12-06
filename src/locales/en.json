@@ -307,7 +307,7 @@
   "community_page_mark_done_label": "Mark as done",
   "community_page_comment_button": "Comment",
   "community_page_ccn_title": "Community Communication Network",
-  "community_page_ccn_desc": "The central feed for community activity and messages.",
+  "community_page_ccn_desc": "The central feed for community activity. A network of spheres within spheres.",
   "community_page_load_messages_error": "Error loading messages: {message}",
   "community_page_no_messages": "No messages yet. Be the first!",
   "community_page_login_to_message": "Login to send a message",
