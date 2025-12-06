@@ -1,4 +1,3 @@
-
 // src/app/home/page.tsx (formerly page.tsx)
 "use client";
 
@@ -83,6 +82,16 @@ export default function HomePage() {
           id: "wiki-treasury",
           title: "feature_treasury_title",
           description: "feature_treasury_desc",
+        },
+        {
+          id: "wiki-satoshi",
+          title: "feature_satoshi_title",
+          description: "feature_satoshi_desc",
+        },
+        {
+          id: "wiki-euro",
+          title: "feature_euro_title",
+          description: "feature_euro_desc",
         }
       ];
 
