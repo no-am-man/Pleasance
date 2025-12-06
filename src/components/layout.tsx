@@ -13,17 +13,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className={cn("flex min-h-screen w-full", direction === 'rtl' ? 'rtl' : 'ltr')}>
       <Sidebar />
-      <div className={cn(
-          "flex flex-1 flex-col",
-          direction === 'rtl' ? 'sm:mr-[var(--sidebar-width)]' : 'sm:pl-[var(--sidebar-width)]'
-        )}>
+      <div className="flex flex-1 flex-col sm:ml-[var(--sidebar-margin-left)] sm:mr-[var(--sidebar-margin-right)]">
         <Header />
-        <header className={cn(
-            "fixed top-0 z-40 hidden h-16 w-full items-center border-b bg-background/80 backdrop-blur-sm sm:flex",
-             direction === 'rtl' 
-                ? 'right-0 sm:w-[calc(100%-var(--sidebar-width))]' 
-                : 'sm:left-[var(--sidebar-width)] sm:w-[calc(100%-var(--sidebar-width))]'
-        )}>
+        <header className="fixed top-0 z-40 hidden h-16 w-full items-center border-b bg-background/80 backdrop-blur-sm sm:flex sm:w-[calc(100%-var(--sidebar-width))]">
           <Breadcrumbs />
         </header>
         <main className="flex-grow pt-16">

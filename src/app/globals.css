@@ -67,6 +67,11 @@
     --input: 40 5.9% 80%;
     --ring: 38 92% 50%;
     --radius: 0.5rem;
+    --sidebar-width: 280px;
+
+    /* Directional layout variables */
+    --sidebar-margin-left: var(--sidebar-width);
+    --sidebar-margin-right: 0px;
   }
  
   .dark {
@@ -89,6 +94,11 @@
     --border: 20 7% 12%;
     --input: 20 7% 12%;
     --ring: 48 95.8% 94.1%;
+  }
+
+  .rtl {
+    --sidebar-margin-left: 0px;
+    --sidebar-margin-right: var(--sidebar-width);
   }
 }
 
