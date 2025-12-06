@@ -6,7 +6,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useUser } from '@/firebase';
+import { useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { firestore } from '@/firebase/config';
 import { collection, query, where, serverTimestamp, doc, getDocs, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { declareAssetWithFileAction } from '../actions';
@@ -236,6 +236,11 @@ function AssetList() {
         }, (err) => {
             setError(err);
             setIsLoading(false);
+            const permissionError = new FirestorePermissionError({
+                path: `users/${user.uid}/assets`,
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
         });
 
         return () => unsubscribe();
