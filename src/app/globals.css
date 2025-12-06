@@ -1,52 +1,48 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer base {
-  :root {
-    --background: 204 20% 98%;
-    --foreground: 205.1 100% 9%;
-    --card: 204 20% 98%;
-    --card-foreground: 205.1 100% 9%;
-    --popover: 204 20% 98%;
-    --popover-foreground: 205.1 100% 9%;
-    --primary: 209.7 90.2% 48.4%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 212 20% 96.5%;
-    --secondary-foreground: 205.1 100% 9%;
-    --muted: 212 20% 96.5%;
-    --muted-foreground: 205.7 30% 40.8%;
-    --accent: 28 80% 50%;
-    --accent-foreground: 205.1 100% 9%;
-    --destructive: 0 72.2% 50.6%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 212 20% 89.8%;
-    --input: 212 20% 89.8%;
-    --ring: 209.7 90.2% 48.4%;
-    --radius: 0.5rem;
-  }
+@theme {
+  --background: 204 20% 98%;
+  --foreground: 205.1 100% 9%;
+  --card: 204 20% 98%;
+  --card-foreground: 205.1 100% 9%;
+  --popover: 204 20% 98%;
+  --popover-foreground: 205.1 100% 9%;
+  --primary: 209.7 90.2% 48.4%;
+  --primary-foreground: 210 20% 98%;
+  --secondary: 212 20% 96.5%;
+  --secondary-foreground: 205.1 100% 9%;
+  --muted: 212 20% 96.5%;
+  --muted-foreground: 205.7 30% 40.8%;
+  --accent: 28 80% 50%;
+  --accent-foreground: 205.1 100% 9%;
+  --destructive: 0 72.2% 50.6%;
+  --destructive-foreground: 210 20% 98%;
+  --border: 212 20% 89.8%;
+  --input: 212 20% 89.8%;
+  --ring: 209.7 90.2% 48.4%;
+  --radius: 0.5rem;
+}
 
-  .dark {
-    --background: 205.1 100% 9%;
-    --foreground: 210 20% 98%;
-    --card: 205.1 100% 9%;
-    --card-foreground: 210 20% 98%;
-    --popover: 205.1 100% 9%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 209.7 90.2% 48.4%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 64.9%;
-    --accent: 28 80% 50%;
-    --accent-foreground: 210 20% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
-    --ring: 209.7 90.2% 48.4%;
-  }
+@theme .dark {
+  --background: 205.1 100% 9%;
+  --foreground: 210 20% 98%;
+  --card: 205.1 100% 9%;
+  --card-foreground: 210 20% 98%;
+  --popover: 205.1 100% 9%;
+  --popover-foreground: 210 20% 98%;
+  --primary: 209.7 90.2% 48.4%;
+  --primary-foreground: 210 20% 98%;
+  --secondary: 215 27.9% 16.9%;
+  --secondary-foreground: 210 20% 98%;
+  --muted: 215 27.9% 16.9%;
+  --muted-foreground: 217.9 10.6% 64.9%;
+  --accent: 28 80% 50%;
+  --accent-foreground: 210 20% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 20% 98%;
+  --border: 215 27.9% 16.9%;
+  --input: 215 27.9% 16.9%;
+  --ring: 209.7 90.2% 48.4%;
 }
 
 @layer base {
@@ -87,15 +83,31 @@
   font-family: var(--font-sans), sans-serif;
 }
 
-@layer base {
-  @keyframes bounce-slow {
-    from, to {
-      transform: translateY(-15%);
-      animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
-    }
-    50% {
-      transform: translateY(0);
-      animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
-    }
+@keyframes accordion-down {
+  from { height: 0 }
+  to { height: var(--radix-accordion-content-height) }
+}
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height) }
+  to { height: 0 }
+}
+@keyframes bounce-slow {
+  from, to {
+    transform: translateY(-15%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
   }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+.animate-accordion-down {
+  animation: accordion-down 0.2s ease-out;
+}
+.animate-accordion-up {
+  animation: accordion-up 0.2s ease-out;
+}
+.animate-bounce-slow {
+  animation: bounce-slow 1s infinite;
 }
