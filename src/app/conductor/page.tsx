@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useUser } from '@/firebase';
+import { useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { firestore } from '@/firebase/config';
 import { doc, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -95,7 +95,11 @@ export default function AmbasedorPage() {
             }
             setIsLoadingAmbasedor(false);
         }, (error) => {
-            console.error("Failed to listen to ambasedor history:", error);
+            const permissionError = new FirestorePermissionError({
+                path: docRef.path,
+                operation: 'get',
+            });
+            errorEmitter.emit('permission-error', permissionError);
             setIsLoadingAmbasedor(false);
         });
 
