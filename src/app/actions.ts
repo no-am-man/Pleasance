@@ -12,7 +12,7 @@ import { welcomeNewMember as welcomeNewMemberAction } from '@/ai/flows/welcome-n
 import { notifyOwnerOfJoinRequest as notifyOwnerOfJoinRequestAction } from '@/ai/flows/notify-owner-of-join-request';
 import { addBugReportTool as addBugReportAction } from '@/ai/tools/bug-reporter-tool';
 import { generateRoadmapIdea as generateRoadmapIdeaAction } from '@/ai/flows/generate-roadmap-idea';
-import { conductSuperAgent as conductSuperAgentFlow } from '@/ai/flows/ambasedor-flow';
+import { conductSuperAgent as conductSuperAgentFlow } from '@/ai/flows/ambasedor';
 import { seedRoadmapData as seedRoadmapDataFlow } from '@/lib/seed-roadmap';
 import { syncAllMembers as syncAllMembersAction } from '@/ai/flows/sync-members';
 import { translateText as translateTextAction } from '@/ai/flows/translate-text';
@@ -179,4 +179,5 @@ export async function declareAssetWithFileAction(formData: FormData) {
 }
 
 export { generateProfileAvatars as generateProfileAvatarsAction };
+
 

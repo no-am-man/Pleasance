@@ -50,9 +50,10 @@ export async function notifyOwnerOfJoinRequest(input: NotifyInput): Promise<{ su
         const firestore = getFirestore(adminApp);
         
         // Step 2: Post the message to the community's feed, but mark it for the owner only
-        const messagesColRef = firestore.collection(`communities/${input.communityId}/messages`);
-        const newMessage = {
+        const formsColRef = firestore.collection(`communities/${input.communityId}/forms`);
+        const newForm = {
             communityId: input.communityId,
+            originCommunityId: input.communityId,
             userId: 'concierge-agent', // A static ID for the agent
             userName: 'Concierge',
             userAvatarUrl: `https://i.pravatar.cc/150?u=concierge`,
@@ -60,10 +61,10 @@ export async function notifyOwnerOfJoinRequest(input: NotifyInput): Promise<{ su
             text: output.notificationMessage,
             status: 'active' as const,
             createdAt: serverTimestamp(),
-            audience: 'owner' as const, // <-- This is the new field
+            audience: 'owner' as const,
         };
 
-        await messagesColRef.add(newMessage);
+        await formsColRef.add(newForm);
 
         return { success: true };
     } catch (e) {

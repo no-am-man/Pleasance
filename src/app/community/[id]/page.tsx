@@ -55,6 +55,7 @@ type Community = {
 type Form = {
     id: string;
     communityId: string;
+    originCommunityId: string;
     userId: string;
     userName: string;
     userAvatarUrl?: string;
@@ -66,6 +67,7 @@ type Form = {
     deletedAt?: { seconds: number, nanoseconds: number } | null;
     audience?: 'public' | 'owner';
 };
+
 
 type Comment = {
     id: string;
@@ -112,6 +114,7 @@ function TextFormForm({ communityId, onFormSent }: { communityId: string, onForm
         
         const newForm = {
             communityId,
+            originCommunityId: communityId, // Initially, origin is the current community
             userId: user.uid,
             userName: user.displayName || 'Anonymous',
             userAvatarUrl: user.photoURL || undefined,
@@ -125,7 +128,7 @@ function TextFormForm({ communityId, onFormSent }: { communityId: string, onForm
         try {
             await addDocument(formsColRef, newForm);
             setText('');
-            onFormSent(); // This is now less critical but good for immediate feedback if needed elsewhere
+            onFormSent();
         } catch (error) {
             const message = error instanceof Error ? error.message : t('community_page_unexpected_error');
             toast({ variant: 'destructive', title: t('community_page_send_message_fail_title'), description: message });
@@ -149,166 +152,38 @@ function TextFormForm({ communityId, onFormSent }: { communityId: string, onForm
     );
 }
 
-function CommentForm({ communityId, formId, onCommentSent }: { communityId: string, formId: string, onCommentSent: () => void; }) {
-    const [text, setText] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const { user } = useUser();
-    const { toast } = useToast();
-    const { t } = useTranslation();
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!text.trim() || !user || !formId || !communityId || !firestore) return;
-
-        setIsSubmitting(true);
-        const commentsColRef = collection(firestore, `communities/${communityId}/forms/${formId}/comments`);
-        const newComment = {
-            userId: user.uid,
-            userName: user.displayName || 'Anonymous',
-            userAvatarUrl: user.photoURL || undefined,
-            type: 'text' as const,
-            text: text.trim(),
-            createdAt: serverTimestamp(),
-        };
-        try {
-            await addDocument(commentsColRef, newComment);
-            setText('');
-            onCommentSent();
-        } catch(error) {
-            const message = error instanceof Error ? error.message : t('community_page_unexpected_error');
-            toast({ variant: 'destructive', title: t('community_page_send_reply_fail_title'), description: message });
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
+function FormBubble({ form, allCommunities }: { form: Form; allCommunities: Community[] }) {
+    const originCommunity = allCommunities.find(c => c.id === form.originCommunityId);
+    const isEcho = form.communityId !== form.originCommunityId;
 
     return (
-        <form onSubmit={handleSubmit} className="flex gap-2">
-            <Input
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder={t('community_page_reply_placeholder')}
-                disabled={isSubmitting}
-                className="h-9"
-            />
-            <Button type="submit" size="icon" variant="ghost" disabled={isSubmitting || !text.trim()}>
-                {isSubmitting ? <LoaderCircle className="animate-spin" /> : <Send className="w-4 h-4" />}
-            </Button>
-        </form>
-    );
-}
-
-function CommentCard({ comment }: { comment: Comment }) {
-    return (
-        <motion.div 
-            className="flex items-center gap-2"
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.5 }}
-        >
-            <Avatar className="w-8 h-8 border-2 border-background shadow-md">
-                <AvatarImage src={comment.userAvatarUrl || `https://i.pravatar.cc/150?u=${comment.userId}`} alt={comment.userName} />
-                <AvatarFallback>{comment.userName.charAt(0)}</AvatarFallback>
+        <Card className="w-full max-w-lg mx-auto bg-card shadow-lg flex items-start gap-4 p-4">
+             <Avatar className="w-12 h-12 border-2 border-background">
+                <AvatarImage src={form.userAvatarUrl || `https://i.pravatar.cc/150?u=${form.userId}`} alt={form.userName} />
+                <AvatarFallback>{form.userName.charAt(0)}</AvatarFallback>
             </Avatar>
-            <div className="bg-muted px-3 py-1.5 rounded-lg text-sm">
-                <span className="font-semibold">{comment.userName}</span>: {comment.text}
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>{form.userName}</span>
+                    {isEcho && originCommunity && (
+                        <>
+                            <span><ArrowRight className="w-3 h-3"/></span>
+                            <span>{originCommunity.name}</span>
+                        </>
+                    )}
+                </div>
+                <p className="font-semibold text-foreground mt-1">{form.text}</p>
             </div>
-        </motion.div>
-    )
-}
-
-function CommentThread({ form, isExpanded }: { form: Form, isExpanded: boolean }) {
-    const [comments, setComments] = useState<Comment[]>([]);
-    const [isLoadingComments, setIsLoadingComments] = useState(false);
-
-    const fetchComments = useCallback(() => {
-        if (!firestore || !form.communityId || !form.id) {
-            setIsLoadingComments(false);
-            return () => {};
-        }
-
-        setIsLoadingComments(true);
-        const commentsQuery = query(collection(firestore, `communities/${form.communityId}/forms/${form.id}/comments`), orderBy('createdAt', 'asc'));
-        
-        const unsubscribe = onSnapshot(commentsQuery, (querySnapshot) => {
-            const commentsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Comment));
-            setComments(commentsData);
-            setIsLoadingComments(false);
-        }, (error) => {
-            console.error("Error fetching comments:", error);
-            setIsLoadingComments(false);
-        });
-
-        return unsubscribe;
-    }, [form.communityId, form.id]);
-    
-    useEffect(() => {
-        let unsubscribe: Unsubscribe = () => {};
-        if (isExpanded) {
-            unsubscribe = fetchComments();
-        }
-        return () => unsubscribe();
-    }, [isExpanded, fetchComments]);
-
-    return (
-        <AnimatePresence>
-            {isExpanded && (
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="pl-16 pr-4 pb-4 space-y-3"
-                >
-                    {isLoadingComments && <LoaderCircle className="mx-auto animate-spin" />}
-                    {comments && comments.length > 0 && comments.map(comment => <CommentCard key={comment.id} comment={comment} />)}
-                    <CommentForm communityId={form.communityId} formId={form.id} onCommentSent={() => {}} />
-                </motion.div>
+            {originCommunity?.flagUrl && (
+                <div className="w-10 h-10 flex-shrink-0 relative">
+                    <Image src={originCommunity.flagUrl} alt={`${originCommunity.name} Flag`} fill className="rounded-full object-cover border-2 border-border" />
+                </div>
             )}
-        </AnimatePresence>
+        </Card>
     );
 }
 
-function FormSphere({ form, canManage }: { form: Form; canManage: boolean; }) {
-    const { t } = useTranslation();
-    const [isExpanded, setIsExpanded] = useState(false);
-    const [isSoftDeleted, setIsSoftDeleted] = useState(form.deleted);
-    const { toast } = useToast();
-
-    if (isSoftDeleted) {
-        return (
-             <div className="p-4 rounded-full flex items-center gap-3 bg-muted/50 w-full max-w-lg mx-auto">
-                <Ban className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground italic">{t('community_page_message_deleted_text')}</span>
-            </div>
-        )
-    }
-    
-    return (
-        <div className="w-full max-w-lg mx-auto">
-            <motion.div 
-                layout 
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="relative p-4 rounded-full bg-card shadow-lg cursor-pointer hover:shadow-primary/20 transition-shadow flex items-center gap-4"
-            >
-                <Avatar className="w-16 h-16 border-4 border-background">
-                    <AvatarImage src={form.userAvatarUrl || `https://i.pravatar.cc/150?u=${form.userId}`} alt={form.userName} />
-                    <AvatarFallback>{form.userName.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                    <p className="text-sm text-muted-foreground">{form.userName}</p>
-                    <p className="font-semibold truncate">{form.text}</p>
-                </div>
-                <div className="flex items-center gap-1 text-muted-foreground">
-                    <CornerDownRight className="w-4 h-4" />
-                    <span>?</span> 
-                </div>
-            </motion.div>
-            <CommentThread form={form} isExpanded={isExpanded} />
-        </div>
-    )
-}
-
-function CommunityCommunicationNetwork({ communityId, isOwner, allMembers }: { communityId: string; isOwner: boolean, allMembers: Member[] }) {
+function CommunityCommunicationNetwork({ communityId, isOwner, allMembers, allCommunities }: { communityId: string; isOwner: boolean, allMembers: Member[], allCommunities: Community[] }) {
     const { user } = useUser();
     const { t } = useTranslation();
     
@@ -357,7 +232,7 @@ function CommunityCommunicationNetwork({ communityId, isOwner, allMembers }: { c
     }, [forms, isOwner]);
 
     const handleFormSent = () => {
-        // No longer needed to manually trigger, but kept for potential future use
+        // Callback can be used to provide instant UI feedback if needed
     }
 
     return (
@@ -391,7 +266,7 @@ function CommunityCommunicationNetwork({ communityId, isOwner, allMembers }: { c
                 <div className="space-y-4">
                     {filteredForms?.map(form => {
                         const key = form.id || `${form.userId}-${form.createdAt?.seconds || Date.now()}`;
-                        return <FormSphere key={key} form={form} canManage={isOwner || form.userId === user?.uid}/>
+                        return <FormBubble key={key} form={form} allCommunities={allCommunities} />
                     })}
                 </div>
             </CardContent>
@@ -420,7 +295,8 @@ export default function CommunityProfilePage() {
   const [isRequestLoading, setIsRequestLoading] = useState(true);
   
   const [allProfiles, setAllProfiles] = useState<CommunityProfile[]>([]);
-  const [isLoadingProfiles, setIsLoadingProfiles] = useState(true);
+  const [allCommunities, setAllCommunities] = useState<Community[]>([]);
+  const [isLoadingAncillary, setIsLoadingAncillary] = useState(true);
 
   useEffect(() => {
     if (!id || !firestore) {
@@ -435,33 +311,28 @@ export default function CommunityProfilePage() {
         setError(err as Error);
         setIsLoading(false);
     });
+
+    // Fetch all communities and profiles for context (e.g., origin community flags/names)
+    const fetchAncillaryData = async () => {
+      setIsLoadingAncillary(true);
+      try {
+        const [communitiesSnapshot, profilesSnapshot] = await Promise.all([
+          getDocs(query(collection(firestore, 'communities'))),
+          getDocs(query(collection(firestore, 'community-profiles')))
+        ]);
+        setAllCommunities(communitiesSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as Community)));
+        setAllProfiles(profilesSnapshot.docs.map(d => d.data() as CommunityProfile));
+      } catch (e) {
+        console.error("Error fetching ancillary data:", e);
+      } finally {
+        setIsLoadingAncillary(false);
+      }
+    };
+    fetchAncillaryData();
+
+
     return () => unsubscribe();
   }, [id]);
-
-  useEffect(() => {
-    if (!firestore) return;
-    const fetchProfiles = async () => {
-        setIsLoadingProfiles(true);
-        try {
-            const profilesQuery = query(collection(firestore, 'community-profiles'));
-            const snapshot = await getDocs(profilesQuery);
-            const profiles = snapshot.docs.map(doc => doc.data() as CommunityProfile);
-            setAllProfiles(profiles);
-        } catch (error) {
-            console.error("Error fetching all profiles:", error);
-        } finally {
-            setIsLoadingProfiles(false);
-        }
-    };
-    fetchProfiles();
-  }, []);
-
-  const suggestedUsers = useMemo(() => {
-    if (!community || !allProfiles) return [];
-    const memberIds = new Set(community.members.map(m => m.userId));
-    return allProfiles.filter(p => p.userId !== user?.uid && !memberIds.has(p.userId));
-  }, [community, allProfiles, user]);
-
 
   useEffect(() => {
     if (user && firestore) {
@@ -642,7 +513,7 @@ export default function CommunityProfilePage() {
   };
 
 
-  if (isLoading || isRequestLoading || isLoadingProfiles) {
+  if (isLoading || isRequestLoading || isLoadingAncillary) {
     return (
       <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
         <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
@@ -838,7 +709,7 @@ export default function CommunityProfilePage() {
       )}
       
        <div className="my-12">
-        <CommunityCommunicationNetwork communityId={community.id} isOwner={isOwner} allMembers={allMembers} />
+        <CommunityCommunicationNetwork communityId={community.id} isOwner={isOwner} allMembers={allMembers} allCommunities={allCommunities} />
        </div>
       
       {isOwner && (
@@ -863,11 +734,11 @@ export default function CommunityProfilePage() {
             <Separator className="my-12" />
             <div>
                 <h2 className="text-3xl font-bold text-center mb-8">{t('community_page_invite_title')}</h2>
-                {isLoadingProfiles ? (
+                {isLoadingAncillary ? (
                     <LoaderCircle className="animate-spin mx-auto" />
-                ) : suggestedUsers.length > 0 ? (
+                ) : allProfiles.length > 0 ? (
                     <div className="space-y-4">
-                        {suggestedUsers.map(profile => (
+                        {allProfiles.filter(p => p.userId !== user?.uid && !allMembers.some(m => m.userId === p.userId)).map(profile => (
                             <Card key={profile.id} className="flex items-center p-4">
                                 <Avatar className="w-12 h-12 mr-4">
                                     <AvatarImage src={profile.avatarUrl || `https://i.pravatar.cc/150?u=${profile.name}`} alt={profile.name} />

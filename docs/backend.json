@@ -253,7 +253,8 @@
             "echoCount": { "type": "number", "description": "How many times this form has been echoed across communities." },
             "status": { "type": "string", "enum": ["active", "archived"], "description": "The status of the form." },
             "deleted": { "type": "boolean", "description": "Flag indicating if the form is soft-deleted." },
-            "deletedAt": { "type": "string", "format": "date-time", "description": "The timestamp when the form was soft-deleted." }
+            "deletedAt": { "type": "string", "format": "date-time", "description": "The timestamp when the form was soft-deleted." },
+            "audience": { "type": "string", "enum": ["public", "owner"], "description": "Who can see this form." }
         },
         "required": ["id", "communityId", "originCommunityId", "userId", "userName", "type", "createdAt", "status"]
      },
@@ -718,4 +719,3 @@
     "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities`, `fabricationOrders`, `bugs`, `leaderboard`, `presence`, and `events` in top-level collections, they become queryable. User-specific data is nested under `/users/{userId}` to ensure privacy. Public profiles are in `/community-profiles` to allow discoverability without exposing private account details. The public roadmap is migrated to Firestore for reliable public read access. The new /ambasedor/{userId} collection stores conversation history privately for each user. Community-specific data like creations and roadmaps are nested under `/communities/{communityId}` for privacy and organization. The 'Message' entity and its corresponding collection have been renamed to 'Form' to better represent the concept of a shareable, trackable thought-form within the federation."
   }
 }
-

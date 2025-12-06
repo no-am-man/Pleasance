@@ -15,7 +15,6 @@ const WelcomeInputSchema = z.object({
   communityId: z.string().describe("The ID of the community the member joined."),
   communityName: z.string().describe("The name of the community."),
   newMemberName: z.string().describe("The name of the new member."),
-  conciergeBio: z.string().describe("The bio of the Concierge agent."),
 });
 type WelcomeInput = z.infer<typeof WelcomeInputSchema>;
 
@@ -30,7 +29,7 @@ const welcomePrompt = ai.definePrompt({
     config: {
         model: 'googleai/gemini-1.5-flash-001',
     },
-    prompt: `You are the Concierge of the "{{communityName}}" online community. Your personality is described by your bio: "{{conciergeBio}}".
+    prompt: `You are the Concierge of the "{{communityName}}" online community.
 
 A new member named "{{newMemberName}}" has just joined.
 
@@ -51,9 +50,10 @@ export async function welcomeNewMember(input: WelcomeInput): Promise<{ success: 
         const firestore = getFirestore(adminApp);
         
         // Step 2: Post the message to the community's feed
-        const messagesColRef = firestore.collection(`communities/${input.communityId}/messages`);
-        const newMessage = {
+        const formsColRef = firestore.collection(`communities/${input.communityId}/forms`);
+        const newForm = {
             communityId: input.communityId,
+            originCommunityId: input.communityId,
             userId: 'concierge-agent', // A static ID for the agent
             userName: 'Concierge',
             userAvatarUrl: `https://i.pravatar.cc/150?u=concierge`,
@@ -63,7 +63,7 @@ export async function welcomeNewMember(input: WelcomeInput): Promise<{ success: 
             createdAt: serverTimestamp(),
         };
 
-        await messagesColRef.add(newMessage);
+        await formsColRef.add(newForm);
 
         return { success: true };
     } catch (e) {
