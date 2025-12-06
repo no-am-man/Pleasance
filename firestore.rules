@@ -316,12 +316,14 @@ service cloud.firestore {
     }
 
     /**
-     * @description Tracks user online status. Publicly readable, only writable by the user themselves.
+     * @description Tracks user online status. Publicly readable.
+     * A user can write to their own presence document.
+     * The `onDisconnect` hook is also allowed to write here to set the `lastSeen` timestamp.
      * @path /presence/{userId}
      */
     match /presence/{userId} {
-      allow read: if true;
-      allow write: if isOwner(userId);
+        allow read: if true;
+        allow write: if isOwner(userId) || (request.auth == null && request.resource.data.keys().hasOnly(['lastSeen']));
     }
 
 
