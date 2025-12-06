@@ -49,25 +49,20 @@ export function usePresence() {
     const unsubscribe = onValue(connectedRef, (snapshot) => {
         const isConnected = snapshot.val() === true;
         if (!isConnected) {
-            // We're not connected, so we can't do anything.
-            // onDisconnect will handle this when connection is lost.
             return;
         }
         
-        // Use a ref to avoid re-running this on every user object change if already online.
         if (isOnlineRef.current) {
             return;
         }
 
-        // Set the onDisconnect hook on the Realtime Database.
-        // This should be done only once per session.
         onDisconnect(userStatusDatabaseRef).set(isOfflineForDatabase).then(() => {
             isOnlineRef.current = true;
-            // If the onDisconnect is successfully set, update the user's state to online
             set(userStatusDatabaseRef, isOnlineForDatabase);
 
-            // And update their presence in Firestore (with error handling)
-            setDoc(userStatusFirestoreRef, isOnlineForFirestore, { merge: true }).catch(error => {
+            // Use setDoc with merge to handle both creation and updates safely.
+            setDoc(userStatusFirestoreRef, isOnlineForFirestore, { merge: true })
+              .catch(error => {
                 errorEmitter.emit('permission-error', new FirestorePermissionError({
                     path: userStatusFirestoreRef.path,
                     operation: 'write',
@@ -80,12 +75,11 @@ export function usePresence() {
     return () => {
         isOnlineRef.current = false;
         unsubscribe();
-        // Clean up when component unmounts or user changes by setting status to offline.
-        // This covers cases like signing out.
         if (userStatusDatabaseRef) {
             set(userStatusDatabaseRef, isOfflineForDatabase);
         }
         if (userStatusFirestoreRef) {
+            // Use updateDoc here as the document should exist if the user was online.
             updateDoc(userStatusFirestoreRef, isOfflineForFirestore).catch(error => {
                 errorEmitter.emit('permission-error', new FirestorePermissionError({
                     path: userStatusFirestoreRef.path,

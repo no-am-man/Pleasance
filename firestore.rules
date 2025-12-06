@@ -79,7 +79,7 @@ service cloud.firestore {
     // Rule for user presence.
     match /presence/{userId} {
         allow read: if true; // Anyone can see who is online
-        allow write: if isOwner(userId) || (request.resource.data.keys().hasOnly(['lastSeen']) && request.resource.data.lastSeen == request.time);
+        allow write: if isOwner(userId); // User can write to their own presence doc
     }
     
     // Rule for events.
