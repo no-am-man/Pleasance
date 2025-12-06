@@ -1,7 +1,8 @@
+
 // src/app/actions.ts
 'use server';
 
-import { generateStoryAndSpeech } from '@/ai/flows/generate-story-and-speech';
+import { generateStoryAndSpeech as generateStoryAndSpeechFlow } from '@/ai/flows/generate-story-and-speech';
 import { generateCommunity } from '@/ai/flows/generate-community';
 import { refineCommunityPrompt as refineCommunityPromptAction } from '@/ai/flows/refine-community-prompt';
 import { generateCommunityFlag as generateCommunityFlagAction } from '@/ai/flows/generate-flag';
@@ -19,7 +20,7 @@ import { seedCommunityRoadmapData as seedCommunityRoadmapAction } from '@/lib/se
 import { updateRoadmapCardOrder } from '@/ai/flows/update-card-order';
 import { refineRoadmapCard as refineRoadmapCardAction } from '@/ai/flows/refine-roadmap-card';
 import { updateCommunityRoadmapCardColumn as updateCommunityRoadmapCardColumnAction } from '@/ai/flows/update-community-roadmap-column';
-import { generateDualStory as generateDualStoryFlow } from '@/ai/flows/generate-dual-story';
+import { generateDualStory as generateDualStoryAction } from '@/ai/flows/generate-dual-story';
 import { updateCardAssignees as updateCardAssigneesAction } from '@/ai/flows/update-card-assignees';
 import { updateRoadmapCardColumn as updateRoadmapCardColumnAction } from '@/ai/flows/update-roadmap-card-column';
 import { generateProfileAvatars } from '@/ai/flows/generate-avatars';
@@ -31,7 +32,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 
 export async function generateStoryAndSpeechAction(values: any) {
-    return generateStoryAndSpeech(values);
+    return generateStoryAndSpeechFlow(values);
 }
 
 export async function createCommunityDetailsAction(values: any) {
@@ -96,9 +97,7 @@ export async function seedCommunityRoadmapData(values: { communityId: string }) 
     }
 }
 
-export async function generateDualStoryAction(values: { prompt: string, targetLanguage: string }) {
-    return generateDualStoryFlow(values);
-}
+export { generateDualStoryAction };
 
 export async function createHistorySnapshot(values: { userId: string }) {
     const { userId } = values;

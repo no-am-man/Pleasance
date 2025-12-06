@@ -1,3 +1,4 @@
+
 // src/app/story/page.tsx
 'use client';
 
@@ -96,14 +97,14 @@ function StoryHistory({ onSelectStory, onClearStory }: { onSelectStory: (story: 
                 {stories && stories.length > 0 && (
                     <ul className="space-y-2 max-h-80 overflow-y-auto">
                         {stories.map((story, index) => (
-                            <li key={`${story.titleOriginal}-${index}`}>
+                            <li key={`${story.id}-${index}`}>
                                 <button 
                                     onClick={() => handleSelect(story)}
                                     className="w-full text-left p-3 rounded-md hover:bg-accent/20 transition-colors border-b border-border/50"
                                 >
                                     <p className="font-semibold truncate">{story.titleOriginal}</p>
                                     <p className="text-sm text-muted-foreground">
-                                        {story.targetLanguage} &middot; {new Date(story.createdAt.seconds * 1000).toLocaleDateString()}
+                                        {story.targetLanguage} &middot; {story.createdAt ? new Date(story.createdAt.seconds * 1000).toLocaleDateString() : 'Just now'}
                                     </p>
                                 </button>
                             </li>
@@ -309,8 +310,15 @@ export default function StoryPage() {
       return;
     }
     
-    setActiveStory(result);
-    toast({ title: t('toast_story_generated_title'), description: t('toast_story_generated_desc') });
+    // The schema from the action needs to be validated before setting state
+    const parsedStory = StoryDataTypeSchema.safeParse(result);
+
+    if (parsedStory.success) {
+        setActiveStory(parsedStory.data);
+        toast({ title: t('toast_story_generated_title'), description: t('toast_story_generated_desc') });
+    } else {
+        setError(`The AI returned data in an unexpected format. ${parsedStory.error.message}`);
+    }
   }
 
   const handleSelectStoryFromHistory = (story: StoryDataType) => {

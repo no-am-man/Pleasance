@@ -7,21 +7,18 @@
  * - generateStoryAndSpeech - The main server action for this process.
  */
 
-import { generateStory } from './generate-story';
-import { translateStory } from './translate-story';
+import { generateDualStory } from './generate-dual-story';
 import { generateSpeech } from './generate-speech';
 import { firestore } from '@/firebase/config';
 import { collection, serverTimestamp } from 'firebase/firestore';
 import { addDocument } from '@/firebase/non-blocking-updates';
 import { z } from 'zod';
 import type { Story } from '@/lib/types';
+import { DualLanguageStorySchema } from '@/lib/types';
 
 const InputSchema = z.object({
   userId: z.string(),
-  userName: z.string(),
-  userAvatar: z.string(),
-  difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
-  sourceLanguage: z.string(),
+  prompt: z.string(),
   targetLanguage: z.string(),
 });
 
@@ -34,50 +31,49 @@ export async function generateStoryAndSpeech(values: InputType) {
             return { error: 'Invalid input.' };
         }
         
-        const { userId, difficulty, sourceLanguage, targetLanguage } = validatedFields.data;
+        const { userId, prompt, targetLanguage } = validatedFields.data;
 
-        // Step 1: Generate the story in the source language
-        const storyResult = await generateStory({ difficultyLevel: difficulty, sourceLanguage });
-        if (!storyResult.story) {
-            throw new Error('Failed to generate the initial story text.');
+        // Step 1: Generate the story in dual language format
+        const storyResult = await generateDualStory({ prompt, targetLanguage });
+        if ('error' in storyResult || !storyResult) {
+            throw new Error(storyResult?.error || 'Failed to generate the initial story text.');
         }
 
-        // Step 2: Translate the story to the target language
-        const translationResult = await translateStory({
-            storyText: storyResult.story,
-            sourceLanguage,
-            targetLanguage,
-        });
-        if (!translationResult.translatedText) {
-            throw new Error('Failed to translate the story.');
-        }
-
-        // Step 3: Generate speech from the translated text
+        // Step 2: Generate speech from the translated text
         const speechResult = await generateSpeech({
-            text: translationResult.translatedText,
+            text: storyResult.contentOriginal, // Use the original content for speech
         });
         if (!speechResult.audioUrl) {
             throw new Error('Failed to generate speech audio.');
         }
         
-        // Step 4: Prepare the story data for Firestore
+        // Step 3: Prepare the story data for Firestore
         const storyData: Omit<Story, 'id'> = {
             userId,
-            level: difficulty,
-            sourceLanguage,
+            level: 'beginner', // Assuming a default level, or it can be passed in
+            sourceLanguage: 'English', // Assuming source is always English for now
             targetLanguage,
-            nativeText: storyResult.story,
-            translatedText: translationResult.translatedText,
+            nativeText: storyResult.contentTranslated,
+            translatedText: storyResult.contentOriginal,
             audioUrl: speechResult.audioUrl,
             createdAt: serverTimestamp(),
             status: 'complete' as const,
+            titleOriginal: storyResult.titleOriginal,
+            titleTranslated: storyResult.titleTranslated,
+            contentOriginal: storyResult.contentOriginal,
+            contentTranslated: storyResult.contentTranslated,
+            vocabulary: storyResult.vocabulary,
         };
 
-        // Step 5: Save the story to Firestore (non-blocking)
+        // Step 4: Save the story to Firestore (non-blocking)
         const storiesColRef = collection(firestore, `users/${userId}/stories`);
         const newDocRef = await addDocument(storiesColRef, storyData);
         
-        const finalStoryData = { ...storyData, id: newDocRef.id, createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } };
+        const finalStoryData: Story = {
+          ...storyData,
+          id: newDocRef.id,
+          createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
+        };
 
         return { storyData: finalStoryData };
 

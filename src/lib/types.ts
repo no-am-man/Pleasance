@@ -116,10 +116,10 @@ export const StorySchema = z.object({
     targetLanguage: z.string(),
     nativeText: z.string(),
     translatedText: z.string(),
-    audioUrl: z.string().optional(),
+    audioUrl: z.string(),
     createdAt: z.any(),
     status: z.enum(['processing', 'complete', 'failed']),
-});
+}).merge(DualLanguageStorySchema);
 export type Story = z.infer<typeof StorySchema>;
 
 

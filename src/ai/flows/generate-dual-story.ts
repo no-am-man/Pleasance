@@ -8,8 +8,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { StorySchema } from '@/lib/types';
-import type { StorySchema as StoryDataType } from '@/lib/types';
+import { DualLanguageStorySchema as StorySchema } from '@/lib/types';
+import type { DualLanguageStory as StoryDataType } from '@/lib/types';
 
 const GenerateDualStoryInputSchema = z.object({
   prompt: z.string().describe("A simple prompt or theme for the story."),
@@ -18,8 +18,15 @@ const GenerateDualStoryInputSchema = z.object({
 
 export async function generateDualStory(
   input: z.infer<typeof GenerateDualStoryInputSchema>
-): Promise<StoryDataType> {
-  return generateDualStoryFlow(input);
+): Promise<StoryDataType | { error: string }> {
+    try {
+        const result = await generateDualStoryFlow(input);
+        return result;
+    } catch (e) {
+        const message = e instanceof Error ? e.message : 'An unknown error occurred.';
+        console.error("Error in generateDualStory action:", message);
+        return { error: message };
+    }
 }
 
 const dualStoryPrompt = ai.definePrompt({
