@@ -28,7 +28,7 @@ const welcomePrompt = ai.definePrompt({
     input: { schema: WelcomeInputSchema },
     output: { schema: WelcomeOutputSchema },
     config: {
-        model: 'googleai/gemini-1.5-flash-latest',
+        model: 'googleai/gemini-1.5-flash',
     },
     prompt: `You are the Concierge of the "{{communityName}}" online community. Your personality is described by your bio: "{{conciergeBio}}".
 

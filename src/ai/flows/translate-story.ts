@@ -29,7 +29,7 @@ const translateStoryPrompt = ai.definePrompt({
   input: {schema: TranslateStoryInputSchema},
   output: {schema: TranslateStoryOutputSchema},
   config: {
-    model: 'googleai/gemini-1.5-flash-latest',
+    model: 'googleai/gemini-1.5-flash',
   },
   prompt: `Translate the following story from {{sourceLanguage}} to {{targetLanguage}}:\n\n{{{storyText}}}`,
 });

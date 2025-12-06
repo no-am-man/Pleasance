@@ -27,7 +27,7 @@ const generateIdeaPrompt = ai.definePrompt({
     input: { schema: GenerateIdeaInputSchema },
     output: { schema: GenerateRoadmapIdeaOutputSchema },
     config: {
-        model: "googleai/gemini-1.5-flash-latest",
+        model: "googleai/gemini-1.5-flash",
     },
     prompt: `You are an expert product manager. Your task is to take a user's raw idea and expand it into a well-defined roadmap card.
 

@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A generic flow to translate a piece of text.
@@ -29,7 +30,7 @@ const translateTextPrompt = ai.definePrompt(
     input: { schema: TranslateTextInputSchema },
     output: { schema: TranslateTextOutputSchema },
     config: {
-      model: 'googleai/gemini-1.5-flash-latest',
+      model: 'googleai/gemini-1.5-flash',
     },
     prompt: `Translate the following text to {{targetLanguage}}. Return only the translated text, with no additional commentary or formatting.
 

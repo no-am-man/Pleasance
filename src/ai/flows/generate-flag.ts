@@ -54,7 +54,7 @@ const generateFlagFlow = ai.defineFlow(
   async (input) => {
     const { output } = await ai.generate({
         prompt: PROMPT_TEMPLATE,
-        model: 'googleai/gemini-1.5-flash-latest',
+        model: 'googleai/gemini-1.5-flash',
         input,
         output: { schema: GenerateFlagOutputSchema },
     });
