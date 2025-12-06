@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { LoaderCircle, ShieldCheck, AlertTriangle, CheckCircle, Bone, Database, Info } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { runMemberSync, seedRoadmapData } from '../actions';
+import { useTranslation } from '@/hooks/use-translation';
 
 // This is a simple check. In a real-world app, this should be a secure custom claim.
 export const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com';
@@ -19,6 +20,7 @@ type SyncResult = {
 };
 
 function AdminDashboard() {
+    const { t } = useTranslation();
     const [syncIsLoading, setSyncIsLoading] = useState(false);
     const [syncError, setSyncError] = useState<string | null>(null);
     const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
@@ -157,6 +159,7 @@ function AdminDashboard() {
 
 export default function AdminPage() {
     const { user, isUserLoading } = useUser();
+    const { t } = useTranslation();
 
     if (isUserLoading) {
         return (
@@ -182,7 +185,7 @@ export default function AdminPage() {
     return (
         <main className="container mx-auto max-w-2xl py-8">
             <div className="text-center mb-8">
-                <h1 className="text-4xl font-bold text-primary">Admin Panel</h1>
+                <h1 className="text-4xl font-bold text-primary">{t('navAdmin')}</h1>
                 <p className="text-muted-foreground">Application Maintenance Tools</p>
             </div>
             <AdminDashboard />
