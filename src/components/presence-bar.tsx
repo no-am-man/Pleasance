@@ -28,7 +28,10 @@ export function PresenceBar() {
         );
 
         const unsubscribe = onSnapshot(presenceQuery, (snapshot) => {
-            const users = snapshot.docs.map(doc => doc.data() as Presence);
+            const users = snapshot.docs.map(doc => ({
+                ...(doc.data() as Omit<Presence, 'userId'>),
+                userId: doc.id,
+              })) as Presence[];
             setActiveUsers(users);
         });
 
