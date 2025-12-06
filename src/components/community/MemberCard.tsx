@@ -1,4 +1,3 @@
-
 // src/components/community/MemberCard.tsx
 'use client';
 
@@ -11,15 +10,7 @@ import { AiIcon } from '@/components/icons/ai-icon';
 import { HumanIcon } from '@/components/icons/human-icon';
 import { Bot, User, UserX } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
-
-type Member = {
-    name: string;
-    role: string;
-    bio: string;
-    type: 'AI' | 'human';
-    avatarUrl?: string;
-    userId?: string;
-};
+import type { Member } from '@/lib/types';
 
 export function MemberCard({ member, communityId, isOwner, onRemove }: { member: Member; communityId: string; isOwner: boolean; onRemove: (member: Member) => void; }) {
     const { t } = useTranslation();
@@ -86,3 +77,4 @@ export function MemberCard({ member, communityId, isOwner, onRemove }: { member:
       </div>
     );
 }
+    

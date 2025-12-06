@@ -1,4 +1,3 @@
-
 // src/components/community/JoinRequests.tsx
 'use client';
 
@@ -13,34 +12,8 @@ import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { welcomeNewMemberAction } from '@/app/actions';
 import { useTranslation } from '@/hooks/use-translation';
+import type { JoinRequest, CommunityProfile, Member } from '@/lib/types';
 
-type Member = {
-    name: string;
-    role: string;
-    bio: string;
-    type: 'AI' | 'human';
-    avatarUrl?: string;
-    userId?: string;
-};
-  
-type CommunityProfile = {
-    id: string;
-    userId: string;
-    name: string;
-    bio: string;
-    nativeLanguage: string;
-    learningLanguage: string;
-    avatarUrl?: string; // Add avatarUrl to profile type
-};
-
-type JoinRequest = {
-    id: string;
-    userId: string;
-    userName: string;
-    userBio: string;
-    status: 'pending' | 'approved' | 'rejected';
-    createdAt: { seconds: number, nanoseconds: number } | null;
-}
 
 export function JoinRequests({ communityId, communityName }: { communityId: string, communityName: string }) {
     const { toast } = useToast();
@@ -134,3 +107,4 @@ export function JoinRequests({ communityId, communityName }: { communityId: stri
         </div>
     );
 }
+    

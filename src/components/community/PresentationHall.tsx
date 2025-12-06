@@ -1,4 +1,3 @@
-
 // src/components/community/PresentationHall.tsx
 'use client';
 
@@ -11,24 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Svg3dCube } from '@/components/icons/svg3d-cube';
 import { SaveToTreasuryForm } from './SaveToTreasuryForm';
 import { useTranslation } from '@/hooks/use-translation';
+import type { Creation } from '@/lib/types';
 
-type ColorPixel = {
-    x: number;
-    y: number;
-    z: number;
-    color: string;
-};
-
-type Creation = {
-    id: string;
-    creatorId: string;
-    creatorName: string;
-    creatorAvatarUrl: string;
-    prompt: string;
-    status: 'in-workshop' | 'published';
-    createdAt: { seconds: number; nanoseconds: number; };
-    pixels: ColorPixel[];
-};
 
 export function PresentationHall({ communityId }: { communityId: string }) {
     const [creations, setCreations] = useState<Creation[]>([]);
@@ -109,3 +92,4 @@ export function PresentationHall({ communityId }: { communityId: string }) {
         </div>
     )
 }
+    

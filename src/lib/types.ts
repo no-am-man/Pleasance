@@ -23,7 +23,10 @@ export const MemberSchema = z.object({
   role: z.string().describe("The member's role in the community."),
   bio: z.string().describe("A short bio describing the member's personality and purpose."),
   type: z.enum(['AI', 'human']).describe('The type of member.'),
+  avatarUrl: z.string().optional(),
+  userId: z.string().optional(),
 });
+export type Member = z.infer<typeof MemberSchema>;
 
 // Schema for the Roadmap Kanban board (Firestore version)
 export const RoadmapCardSchema = z.object({
@@ -70,6 +73,8 @@ export const CommunitySchema = z.object({
   description: z.string(),
   ownerId: z.string(),
   members: z.array(MemberSchema),
+  flagUrl: z.string().optional(),
+  welcomeMessage: z.string(),
 });
 export type Community = z.infer<typeof CommunitySchema>;
 
@@ -88,7 +93,7 @@ export const EventSchema = z.object({
 export type Event = z.infer<typeof EventSchema>;
 
 // LinguaTune Story Schema
-export const StorySchema = z.object({
+export const DualLanguageStorySchema = z.object({
   titleOriginal: z.string().describe("The title of the story in the target language"),
   titleTranslated: z.string().describe("The English translation of the title"),
   contentOriginal: z.string().describe("The full story text in the target language"),
@@ -99,3 +104,61 @@ export const StorySchema = z.object({
     context: z.string().describe("How this word was used in the story")
   })).describe("5-7 key vocabulary words from the story")
 });
+export type DualLanguageStory = z.infer<typeof DualLanguageStorySchema>;
+
+// This is the Firestore representation of the story.
+export const StorySchema = z.object({
+    id: z.string(),
+    userId: z.string(),
+    level: z.string(),
+    sourceLanguage: z.string(),
+    targetLanguage: z.string(),
+    nativeText: z.string(),
+    translatedText: z.string(),
+    audioUrl: z.string().optional(),
+    createdAt: z.any(),
+    status: z.enum(['processing', 'complete', 'failed']),
+});
+export type Story = z.infer<typeof StorySchema>;
+
+
+// Schema for "Forms" (Bubbles in CCN)
+export const FormSchema = z.object({
+    id: z.string(),
+    communityId: z.string(),
+    originCommunityId: z.string(),
+    userId: z.string(),
+    userName: z.string(),
+    userAvatarUrl: z.string().optional(),
+    type: z.literal('text'),
+    text: z.string().optional().nullable(),
+    createdAt: z.any(),
+    status: z.enum(['active', 'done']),
+    deleted: z.boolean().optional(),
+    deletedAt: z.any().optional(),
+    audience: z.enum(['public', 'owner']).optional(),
+});
+export type Form = z.infer<typeof FormSchema>;
+
+export const JoinRequestSchema = z.object({
+    id: z.string(),
+    userId: z.string(),
+    userName: z.string(),
+    userBio: z.string(),
+    status: z.enum(['pending', 'approved', 'rejected']),
+    createdAt: z.any().optional(),
+});
+export type JoinRequest = z.infer<typeof JoinRequestSchema>;
+
+export const CreationSchema = z.object({
+    id: z.string(),
+    creatorId: z.string(),
+    creatorName: z.string(),
+    creatorAvatarUrl: z.string(),
+    prompt: z.string(),
+    status: z.enum(['in-workshop', 'published']),
+    createdAt: z.any(),
+    pixels: z.array(ColorPixelSchema),
+});
+export type Creation = z.infer<typeof CreationSchema>;
+    

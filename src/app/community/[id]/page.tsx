@@ -1,4 +1,3 @@
-
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -18,14 +17,10 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
-import { HumanIcon } from '@/components/icons/human-icon';
-import { AiIcon } from '@/components/icons/ai-icon';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import Image from 'next/image';
 import { generateCommunityFlagAction, welcomeNewMemberAction, notifyOwnerOfJoinRequestAction } from '@/app/actions';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { addDocument } from '@/firebase/non-blocking-updates';
-import { setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { PresentationHall } from '@/components/community/PresentationHall';
 import { JoinRequests } from '@/components/community/JoinRequests';
 import { MemberCard } from '@/components/community/MemberCard';
@@ -33,70 +28,8 @@ import { useTranslation } from '@/hooks/use-translation';
 import { useDynamicTranslation } from '@/hooks/use-dynamic-translation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { Member, Community, Form, CommunityProfile } from '@/lib/types';
 
-type Member = {
-  name: string;
-  role: string;
-  bio: string;
-  type: 'AI' | 'human';
-  avatarUrl?: string;
-  userId?: string;
-};
-
-type Community = {
-  id:string;
-  name: string;
-  description: string;
-  welcomeMessage: string;
-  ownerId: string;
-  members: Member[];
-  flagUrl?: string;
-};
-
-type Form = {
-    id: string;
-    communityId: string;
-    originCommunityId: string;
-    userId: string;
-    userName: string;
-    userAvatarUrl?: string;
-    type: 'text';
-    text?: string | null;
-    createdAt: { seconds: number, nanoseconds: number } | null;
-    status: 'active' | 'done';
-    deleted?: boolean;
-    deletedAt?: { seconds: number, nanoseconds: number } | null;
-    audience?: 'public' | 'owner';
-};
-
-
-type Comment = {
-    id: string;
-    userId: string;
-    userName: string;
-    userAvatarUrl?: string;
-    type: 'text';
-    text?: string;
-    createdAt: { seconds: number, nanoseconds: number } | null;
-    deleted?: boolean;
-    deletedAt?: { seconds: number, nanoseconds: number } | null;
-}
-
-type JoinRequest = {
-    id: string;
-    userId: string;
-    userName: string;
-    userBio: string;
-    status: 'pending' | 'approved' | 'rejected';
-    createdAt: { seconds: number, nanoseconds: number } | null;
-}
-
-type ColorPixel = {
-    x: number;
-    y: number;
-    z: number;
-    color: string;
-};
 
 function TextFormForm({ communityId, onFormSent }: { communityId: string, onFormSent: () => void }) {
     const [text, setText] = useState('');
@@ -312,7 +245,7 @@ export default function CommunityProfilePage() {
 
   const [userProfile, setUserProfile] = useState<CommunityProfile | null>(null);
 
-  const [userJoinRequest, setUserJoinRequest] = useState<JoinRequest | null>(null);
+  const [userJoinRequest, setUserJoinRequest] = useState<any | null>(null);
   const [isRequestLoading, setIsRequestLoading] = useState(true);
   
   const [allProfiles, setAllProfiles] = useState<CommunityProfile[]>([]);
@@ -371,7 +304,7 @@ export default function CommunityProfilePage() {
         setIsRequestLoading(true);
         const requestDocRef = doc(firestore, `communities/${id}/joinRequests/${user.uid}`);
         const unsubscribe = onSnapshot(requestDocRef, (docSnap) => {
-            setUserJoinRequest(docSnap.exists() ? docSnap.data() as JoinRequest : null);
+            setUserJoinRequest(docSnap.exists() ? docSnap.data() as any : null);
             setIsRequestLoading(false);
         }, (error) => {
             console.error("Error fetching join request:", error);
@@ -412,7 +345,7 @@ export default function CommunityProfilePage() {
     
     const requestRef = doc(firestore, `communities/${id}/joinRequests/${user.uid}`);
 
-    const newRequest: Omit<JoinRequest, 'id' | 'createdAt'> = {
+    const newRequest: Omit<any, 'id' | 'createdAt'> = {
         userId: user.uid,
         userName: userProfile.name,
         userBio: userProfile.bio,
@@ -792,3 +725,4 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
+    
