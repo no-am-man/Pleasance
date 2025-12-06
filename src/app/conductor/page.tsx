@@ -1,4 +1,3 @@
-
 // src/app/conductor/page.tsx
 'use client';
 
@@ -87,7 +86,7 @@ export default function ConductorPage() {
         }
 
         setIsLoadingAmbassador(true);
-        const docRef = doc(firestore, 'ambassador', user.uid);
+        const docRef = doc(firestore, 'ambasedor', user.uid);
         const unsubscribe: Unsubscribe = onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
                 setAmbassadorData(docSnap.data() as AmbassadorData);
