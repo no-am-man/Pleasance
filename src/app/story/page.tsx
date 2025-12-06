@@ -1,4 +1,3 @@
-
 // src/app/story/page.tsx
 'use client';
 
@@ -10,9 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { LoaderCircle, Sparkles, LogIn, History, BookOpen, PencilRuler, Camera, Clock } from 'lucide-react';
+import { LoaderCircle, Sparkles, LogIn, History, BookOpen, PencilRuler, Camera, Clock, X } from 'lucide-react';
 import { LANGUAGES } from '@/config/languages';
-import { generateStoryAndSpeech, createHistorySnapshot } from '@/app/actions';
+import { generateDualStory as generateDualStoryAction, createHistorySnapshot } from '@/app/actions';
 import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useUser } from '@/firebase';
@@ -32,46 +31,24 @@ import {
 } from '@/components/ui/dialog';
 import Leaderboard from '@/components/leaderboard';
 import { useTranslation } from '@/hooks/use-translation';
+import { StorySchema as StoryDataTypeSchema, type StorySchema as StoryDataType } from '@/lib/types';
 
 const StoryFormSchema = z.object({
-  difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
-  sourceLanguage: z.string({ required_error: 'Please select a source language.' }),
-  targetLanguage: z.string({ required_error: 'Please select a target language.' }),
+  prompt: z.string().min(3, "Please enter a theme or idea for your story."),
+  targetLanguage: z.string({ required_error: 'Please select a language to learn.' }),
 });
-
-type Story = {
-    id: string;
-    userId: string;
-    level: string;
-    sourceLanguage: string;
-    targetLanguage: string;
-    nativeText: string;
-    translatedText: string;
-    createdAt: { seconds: number; nanoseconds: number; } | null;
-    audioUrl?: string; 
-    status?: 'processing' | 'complete' | 'failed';
-};
-
-type HistorySnapshot = {
-    id: string;
-    userId: string;
-    createdAt: { seconds: number; nanoseconds: number; } | null;
-    storyCount: number;
-    stories: Story[];
-};
 
 type CommunityProfile = {
     nativeLanguage: string;
     learningLanguage: string;
-    avatarUrl?: string;
 };
 
 
-function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void; }) {
-    const { user, isUserLoading } = useUser();
+function StoryHistory({ onSelectStory, onClearStory }: { onSelectStory: (story: StoryDataType) => void; onClearStory: () => void; }) {
+    const { user } = useUser();
     const { t } = useTranslation();
     
-    const [stories, setStories] = useState<Story[]>([]);
+    const [stories, setStories] = useState<StoryDataType[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
@@ -85,7 +62,7 @@ function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void
             try {
                 const storiesQuery = query(collection(firestore, 'users', user.uid, 'stories'), orderBy('createdAt', 'desc'));
                 const snapshot = await getDocs(storiesQuery);
-                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Story));
+                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as StoryDataType));
                 setStories(data);
             } catch (err: any) {
                 setError(err);
@@ -96,16 +73,13 @@ function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void
 
         fetchStories();
     }, [user]);
-
-
-    if (isUserLoading) {
-      return (
-          <div className="flex justify-center p-4">
-              <LoaderCircle className="w-8 h-8 animate-spin text-primary" />
-          </div>
-      );
-    }
     
+    const handleSelect = (story: StoryDataType) => {
+        onClearStory(); // Clear any existing story first
+        setTimeout(() => onSelectStory(story), 50); // Then select the new one
+    };
+
+
     if (!user) return null;
 
     return (
@@ -121,14 +95,14 @@ function StoryHistory({ onSelectStory }: { onSelectStory: (story: Story) => void
                 {stories && stories.length > 0 && (
                     <ul className="space-y-2 max-h-80 overflow-y-auto">
                         {stories.map((story, index) => (
-                            <li key={`${story.id}-${index}`}>
+                            <li key={`${story.titleOriginal}-${index}`}>
                                 <button 
-                                    onClick={() => onSelectStory(story)}
+                                    onClick={() => handleSelect(story)}
                                     className="w-full text-left p-3 rounded-md hover:bg-accent/20 transition-colors border-b border-border/50"
                                 >
-                                    <p className="font-semibold truncate">{story.nativeText}</p>
+                                    <p className="font-semibold truncate">{story.titleOriginal}</p>
                                     <p className="text-sm text-muted-foreground">
-                                        {story.level} &middot; {story.sourceLanguage} to {story.targetLanguage} &middot; {story.createdAt ? new Date(story.createdAt.seconds * 1000).toLocaleDateString() : ''}
+                                        {story.targetLanguage} &middot; {new Date(story.createdAt.seconds * 1000).toLocaleDateString()}
                                     </p>
                                 </button>
                             </li>
@@ -152,15 +126,15 @@ function SnapshotViewer({ snapshot }: { snapshot: HistorySnapshot }) {
       </DialogHeader>
       <div className="flex-grow overflow-y-auto pr-4 space-y-4">
         {snapshot.stories.map((story, index) => (
-          <Card key={`${story.id}-${index}`} className="bg-muted/50">
+          <Card key={`${story.titleOriginal}-${index}`} className="bg-muted/50">
             <CardHeader>
-                <CardTitle className="text-base">{story.nativeText.substring(0, 100)}...</CardTitle>
+                <CardTitle className="text-base">{story.titleOriginal}</CardTitle>
                 <CardDescription className="text-xs">
-                    {story.level} &middot; {story.sourceLanguage} to {story.targetLanguage}
+                    {story.targetLanguage}
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                 <p className="text-sm text-muted-foreground italic whitespace-pre-wrap">{story.translatedText}</p>
+                 <p className="text-sm text-muted-foreground italic whitespace-pre-wrap">{story.contentTranslated}</p>
             </CardContent>
           </Card>
         ))}
@@ -173,6 +147,15 @@ function SnapshotViewer({ snapshot }: { snapshot: HistorySnapshot }) {
     </DialogContent>
   );
 }
+
+type HistorySnapshot = {
+    id: string;
+    userId: string;
+    createdAt: { seconds: number; nanoseconds: number; } | null;
+    storyCount: number;
+    stories: StoryDataType[];
+};
+
 
 function TimeMachine() {
     const { user, isUserLoading } = useUser();
@@ -268,10 +251,9 @@ function TimeMachine() {
 }
 
 export default function StoryPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeStory, setActiveStory] = useState<Story | null>(null);
-  const storyViewerRef = useRef<HTMLDivElement>(null);
+  const [activeStory, setActiveStory] = useState<StoryDataType | null>(null);
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -282,7 +264,7 @@ export default function StoryPage() {
   const form = useForm<z.infer<typeof StoryFormSchema>>({
     resolver: zodResolver(StoryFormSchema),
     defaultValues: {
-      difficulty: 'beginner',
+      prompt: '',
     },
   });
 
@@ -299,8 +281,7 @@ export default function StoryPage() {
             const profileData = docSnap.data() as CommunityProfile;
             setProfile(profileData);
             form.reset({
-                difficulty: form.getValues('difficulty') || 'beginner',
-                sourceLanguage: profileData.nativeLanguage,
+                prompt: '',
                 targetLanguage: profileData.learningLanguage,
             });
         }
@@ -310,45 +291,33 @@ export default function StoryPage() {
   }, [user, isUserLoading, form]);
 
 
-  useEffect(() => {
-    if (activeStory && storyViewerRef.current) {
-      storyViewerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [activeStory]);
-
-
   async function onSubmit(data: z.infer<typeof StoryFormSchema>) {
     if (!user || !profile) {
         setError(t('story_generation_error_profile'));
         return;
     }
-    setIsLoading(true);
+    setIsGenerating(true);
     setError(null);
     setActiveStory(null);
 
-    const result = await generateStoryAndSpeech({ 
-        ...data,
-        userId: user.uid,
-        userName: user.displayName || 'Anonymous',
-        userAvatar: profile.avatarUrl || user.photoURL || ''
-    });
+    const result = await generateDualStoryAction(data);
 
-    setIsLoading(false);
+    setIsGenerating(false);
     if (result.error) {
       setError(result.error);
       return;
     }
     
-    if (result.storyData) {
-        setActiveStory(result.storyData as Story);
-        toast({ title: t('toast_story_generated_title'), description: t('toast_story_generated_desc') });
-    } else {
-      setError(t('story_generation_error_unknown'));
-    }
+    setActiveStory(result);
+    toast({ title: t('toast_story_generated_title'), description: t('toast_story_generated_desc') });
   }
 
-  const handleSelectStoryFromHistory = (story: Story) => {
+  const handleSelectStoryFromHistory = (story: StoryDataType) => {
     setActiveStory(story);
+  }
+
+  const clearActiveStory = () => {
+    setActiveStory(null);
   }
 
   if (isUserLoading || isProfileLoading) {
@@ -391,131 +360,103 @@ export default function StoryPage() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             <div className="lg:col-span-2 space-y-8">
-                <div ref={storyViewerRef} className="scroll-mt-8">
-                    {isLoading && (
-                        <div className="flex justify-center p-8">
-                            <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
-                            <p className="ml-4 text-muted-foreground self-center">{t('story_generating_message')}</p>
-                        </div>
-                    )}
-                    {error && (
-                        <Alert variant="destructive" className="my-8">
-                            <AlertTitle>{t('story_generation_failed_title')}</AlertTitle>
-                            <AlertDescription>{error}</AlertDescription>
-                        </Alert>
-                    )}
-                    {activeStory && (
-                        <div className="mb-8">
-                            <StoryViewer 
-                                key={activeStory.id}
-                                story={activeStory}
-                                autoplay={true}
-                            />
-                        </div>
-                    )}
-                </div>
-                 <Card 
-                    className="shadow-2xl"
-                    style={{
-                        backgroundImage: "url('/chalkboard.jpg')",
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                    }}>
-                    <CardHeader className="text-white">
-                        <CardTitle className="text-3xl font-headline flex items-center gap-2"><PencilRuler/> {t('story_new_lesson_title')}</CardTitle>
-                        <CardDescription className="text-slate-300">{t('story_new_lesson_desc')}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <FormField
-                            control={form.control}
-                            name="sourceLanguage"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel className="text-white font-headline">{t('story_form_your_language')}</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
-                                    <FormControl>
-                                    <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-body">
-                                        <SelectValue placeholder={t('story_form_select_your_language')} />
-                                    </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent className="bg-slate-800 text-white border-slate-600 font-body">
-                                    {LANGUAGES.map((lang) => (
-                                        <SelectItem key={lang.value} value={lang.value}>
-                                        {lang.label}
-                                        </SelectItem>
-                                    ))}
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage className="text-red-400" />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField
-                            control={form.control}
-                            name="targetLanguage"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel className="text-white font-headline">{t('story_form_language_to_learn')}</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
-                                    <FormControl>
-                                    <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-body">
-                                        <SelectValue placeholder={t('story_form_select_a_language')} />
-                                    </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent className="bg-slate-800 text-white border-slate-600 font-body">
-                                    {LANGUAGES.map((lang) => (
-                                        <SelectItem key={lang.value} value={lang.value}>
-                                        {lang.label}
-                                        </SelectItem>
-                                    ))}
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage className="text-red-400" />
-                                </FormItem>
-                            )}
-                            />
-                             <FormField
-                            control={form.control}
-                            name="difficulty"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel className="text-white font-headline">{t('story_form_difficulty')}</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                    <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-body">
-                                        <SelectValue placeholder={t('story_form_select_difficulty')} />
-                                    </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent className="bg-slate-800 text-white border-slate-600 font-body">
-                                        <SelectItem value="beginner">{t('story_form_difficulty_beginner')}</SelectItem>
-                                        <SelectItem value="intermediate">{t('story_form_difficulty_intermediate')}</SelectItem>
-                                        <SelectItem value="advanced">{t('story_form_difficulty_advanced')}</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage className="text-red-400" />
-                                </FormItem>
-                            )}
-                            />
-                        </div>
-                        <Button type="submit" disabled={isLoading} size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold font-body">
-                            {isLoading ? (
-                                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                            ) : (
-                                <Sparkles className="mr-2 h-4 w-4" />
-                            )}
-                            {t('story_form_generate_button')}
+                {(!activeStory && !isGenerating && !error) && (
+                     <Card 
+                        className="shadow-2xl"
+                        style={{
+                            backgroundImage: "url('/chalkboard.jpg')",
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                        }}>
+                        <CardHeader className="text-white">
+                            <CardTitle className="text-3xl font-headline flex items-center gap-2"><PencilRuler/> {t('story_new_lesson_title')}</CardTitle>
+                            <CardDescription className="text-slate-300">{t('story_new_lesson_desc')}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <FormField
+                                    control={form.control}
+                                    name="prompt"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                        <FormLabel className="text-white font-headline">Theme / Idea</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="e.g., A robot who finds a flower" {...field} className="bg-slate-800/50 border-slate-600 text-white font-body" />
+                                        </FormControl>
+                                        <FormMessage className="text-red-400" />
+                                        </FormItem>
+                                    )}
+                                    />
+                                    <FormField
+                                    control={form.control}
+                                    name="targetLanguage"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                        <FormLabel className="text-white font-headline">{t('story_form_language_to_learn')}</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl>
+                                            <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-body">
+                                                <SelectValue placeholder={t('story_form_select_a_language')} />
+                                            </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent className="bg-slate-800 text-white border-slate-600 font-body">
+                                            {LANGUAGES.map((lang) => (
+                                                <SelectItem key={lang.value} value={lang.value}>
+                                                {lang.label}
+                                                </SelectItem>
+                                            ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage className="text-red-400" />
+                                        </FormItem>
+                                    )}
+                                    />
+                                </div>
+                                <Button type="submit" disabled={isGenerating} size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold font-body">
+                                    {isGenerating ? (
+                                        <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <Sparkles className="mr-2 h-4 w-4" />
+                                    )}
+                                    {t('story_form_generate_button')}
+                                </Button>
+                            </form>
+                        </Form>
+                        </CardContent>
+                    </Card>
+                )}
+                
+                {isGenerating && (
+                    <div className="flex flex-col items-center justify-center p-8 border rounded-lg bg-muted min-h-[300px]">
+                        <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
+                        <p className="ml-4 mt-4 text-muted-foreground self-center">{t('story_generating_message')}</p>
+                    </div>
+                )}
+                {error && (
+                    <Alert variant="destructive" className="my-8">
+                        <AlertTitle>{t('story_generation_failed_title')}</AlertTitle>
+                        <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                )}
+                {activeStory && (
+                    <div className="mb-8 relative">
+                        <StoryViewer 
+                            key={activeStory.titleOriginal}
+                            story={activeStory}
+                            autoplay={true}
+                        />
+                        <Button variant="ghost" size="icon" className="absolute top-0 right-0 m-2" onClick={clearActiveStory}>
+                            <X />
                         </Button>
-                        </form>
-                    </Form>
-                    </CardContent>
-                </Card>
+                    </div>
+                )}
+
             </div>
             <div className="lg:col-span-1 space-y-8">
                  <Leaderboard />
-                 <StoryHistory onSelectStory={handleSelectStoryFromHistory} />
+                 <StoryHistory onSelectStory={handleSelectStoryFromHistory} onClearStory={clearActiveStory} />
                  <TimeMachine />
             </div>
         </div>
