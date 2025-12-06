@@ -220,7 +220,7 @@ function CommunityCommunicationNetwork({ communityId, isOwner, allMembers, allCo
 
 export default function CommunityProfilePage() {
   const params = useParams();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const { t } = useTranslation();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -243,10 +243,11 @@ export default function CommunityProfilePage() {
   const [isLoadingAncillary, setIsLoadingAncillary] = useState(true);
 
   useEffect(() => {
-    if (!id || !firestore) {
-        setIsLoading(false);
+    if (!id || !firestore || isUserLoading) {
+        if (!isUserLoading) setIsLoading(false);
         return;
     };
+    
     const communityDocRef = doc(firestore, 'communities', id);
     const unsubscribe = onSnapshot(communityDocRef, (doc) => {
         setCommunity(doc.exists() ? { id: doc.id, ...doc.data() } as Community : null);
@@ -278,7 +279,7 @@ export default function CommunityProfilePage() {
 
 
     return () => unsubscribe();
-  }, [id]);
+  }, [id, isUserLoading]);
 
   useEffect(() => {
     if (user && firestore) {

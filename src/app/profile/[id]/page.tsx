@@ -1,4 +1,3 @@
-
 // src/app/profile/[id]/page.tsx
 'use client';
 
@@ -27,7 +26,7 @@ type CommunityProfile = {
 export default function UserProfilePage() {
   const params = useParams();
   const router = useRouter();
-  const { user: currentUser } = useUser();
+  const { user: currentUser, isUserLoading } = useUser();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const { t } = useTranslation();
 
@@ -36,8 +35,8 @@ export default function UserProfilePage() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!id || !firestore) {
-        setIsLoading(false);
+    if (!id || !firestore || isUserLoading) {
+        if (!isUserLoading) setIsLoading(false);
         return;
     };
     const fetchProfile = async () => {
@@ -53,7 +52,7 @@ export default function UserProfilePage() {
         }
     }
     fetchProfile();
-  }, [id]);
+  }, [id, isUserLoading]);
 
 
   if (isLoading) {

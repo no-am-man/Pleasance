@@ -287,7 +287,7 @@ function CreateCommunityForm() {
 }
 
 export default function CommunityPage() {
-    const { user } = useUser();
+    const { user, isUserLoading } = useUser();
     const [communities, setCommunities] = useState<Community[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -295,13 +295,19 @@ export default function CommunityPage() {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
 
     useEffect(() => {
-        if (!firestore) return;
+        if (!firestore) {
+             setIsLoading(false);
+             return;
+        }
+
         const fetchCommunities = async () => {
+            setIsLoading(true);
             const communitiesQuery = query(collection(firestore, 'communities'), orderBy('name'));
             const snapshot = await getDocs(communitiesQuery);
             setCommunities(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community)));
             setIsLoading(false);
         };
+
         fetchCommunities();
     }, []);
 
@@ -311,7 +317,7 @@ export default function CommunityPage() {
         );
     }, [communities, searchQuery]);
     
-    if (isLoading) {
+    if (isLoading || isUserLoading) {
         return (
             <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
                 <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
