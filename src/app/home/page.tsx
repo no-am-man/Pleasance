@@ -9,6 +9,7 @@ import { ArrowRight, LoaderCircle } from "lucide-react";
 import { FederationDiagram } from "@/components/federation-diagram";
 import { useTranslation } from "@/hooks/use-translation";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { useEffect, useState } from "react";
 
 
 function FeatureCard({ title, description, imageUrl, imageHint, isFirst, ctaText, ctaLink, t }: { title: string, description: string, imageUrl: string, imageHint: string, isFirst: boolean, ctaText: string, ctaLink: string, t: (key: string) => string }) {
@@ -46,8 +47,13 @@ function FeatureCard({ title, description, imageUrl, imageHint, isFirst, ctaText
 
 export default function HomePage() {
     const { t, isLoading } = useTranslation();
+    const [isClient, setIsClient] = useState(false);
 
-    if (isLoading) {
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    if (isLoading || !isClient) {
         return (
             <div className="flex justify-center items-center min-h-screen">
                 <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
