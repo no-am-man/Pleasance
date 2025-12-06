@@ -1,147 +1,377 @@
 
-// src/app/page.tsx (formerly home/page.tsx)
-"use client";
+// src/app/page.tsx (formerly community/page.tsx)
+'use client';
 
-import Image from "next/image";
-import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useUser } from '@/firebase';
+import { firestore } from '@/firebase/config';
+import { collection, query, where, orderBy, getDocs, doc } from 'firebase/firestore';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, LoaderCircle } from "lucide-react";
-import { FederationDiagram } from "@/components/federation-diagram";
-import { useTranslation } from "@/hooks/use-translation";
-import {
-    Carousel,
-    CarouselContent,
-    CarouselItem,
-    CarouselNext,
-    CarouselPrevious,
-} from "@/components/ui/carousel"
-import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { LoaderCircle, User, Users, PlusCircle, LogIn, Search, Sparkles } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
+import { createCommunityDetails } from '@/app/actions';
+import { addDocument } from '@/firebase/non-blocking-updates';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import Image from 'next/image';
+import { refineCommunityPromptAction } from './actions';
+import { useTranslation } from '@/hooks/use-translation';
 
+type Member = {
+  name: string;
+  role: string;
+  bio: string;
+  type: 'AI' | 'human';
+};
 
-function FeatureCard({ title, description, imageUrl, imageHint, isFirst, ctaText, ctaLink, t }: { title: string, description: string, imageUrl: string, imageHint: string, isFirst: boolean, ctaText: string, ctaLink: string, t: (key: string) => string }) {
-    return (
-        <Card className="flex flex-col md:flex-row items-stretch overflow-hidden shadow-lg transition-transform duration-300 ease-in-out hover:-translate-y-1 hover:shadow-xl h-full">
-            <div className="md:w-1/2">
-                <div className="relative w-full h-64 md:h-full">
-                    <Image
-                        src={imageUrl}
-                        alt={description}
-                        fill
-                        style={{ objectFit: 'cover' }}
-                        data-ai-hint={imageHint}
-                    />
-                </div>
+type Community = {
+  id: string;
+  name: string;
+  description: string;
+  ownerId: string;
+  members: Member[];
+  flagUrl?: string;
+};
+
+const CreateCommunitySchema = z.object({
+  prompt: z.string().min(10, {
+    message: "Your community vision must be at least 10 characters long.",
+  }),
+  includeAiAgents: z.boolean().default(false),
+});
+
+function CommunityCard({ community }: { community: Community }) {
+  const router = useRouter();
+
+  return (
+    <Card 
+      className="overflow-hidden shadow-lg transition-all duration-300 ease-in-out hover:shadow-primary/20 hover:-translate-y-1 cursor-pointer"
+      onClick={() => router.push(`/community/${community.id}`)}
+    >
+      <div className="relative h-48 w-full bg-muted">
+        {community.flagUrl ? (
+            <Image src={community.flagUrl} alt={`${community.name} Flag`} fill style={{ objectFit: 'cover' }} />
+        ) : (
+             <div className="flex h-full w-full items-center justify-center">
+                <Users className="h-16 w-16 text-muted-foreground" />
             </div>
-            <div className="md:w-1/2 flex flex-col">
-                <CardHeader>
-                    <CardTitle className="font-headline capitalize">{title}</CardTitle>
-                </CardHeader>
-                <CardContent className="flex-grow flex flex-col">
-                    <p className="text-muted-foreground flex-grow">{description}</p>
-                     {isFirst && (
-                        <Button asChild className="mt-6">
-                            <Link href={ctaLink}>
-                                {ctaText} <ArrowRight className="ms-2 h-4 w-4" />
-                            </Link>
-                        </Button>
-                    )}
-                </CardContent>
-            </div>
-        </Card>
-    );
+        )}
+      </div>
+      <CardHeader>
+        <CardTitle>{community.name}</CardTitle>
+        <CardDescription className="line-clamp-2">{community.description}</CardDescription>
+      </CardHeader>
+      <CardFooter>
+        <div className="flex -space-x-2 overflow-hidden">
+          {community.members.slice(0, 5).map((member, index) => (
+            <Avatar key={index} className="inline-block h-8 w-8 rounded-full ring-2 ring-background">
+              <AvatarImage src={`https://i.pravatar.cc/150?u=${member.name}`} />
+              <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+          ))}
+        </div>
+        {community.members.length > 5 && (
+          <span className="pl-4 text-sm text-muted-foreground">
+            + {community.members.length - 5} more
+          </span>
+        )}
+      </CardFooter>
+    </Card>
+  );
 }
 
-export default function HomePage() {
-    const { t, isLoading } = useTranslation();
+
+function CreateCommunityForm() {
+    const { user } = useUser();
+    const router = useRouter();
+    const { toast } = useToast();
+    const { t } = useTranslation();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isRefining, setIsRefining] = useState(false);
+
+    const form = useForm<z.infer<typeof CreateCommunitySchema>>({
+        resolver: zodResolver(CreateCommunitySchema),
+        defaultValues: {
+            prompt: '',
+            includeAiAgents: true,
+        }
+    });
+
+    const handleRefine = async () => {
+        const prompt = form.getValues('prompt');
+        if (!prompt) {
+            toast({
+                variant: 'destructive',
+                title: t('community_prompt_required_title'),
+                description: t('community_prompt_required_desc'),
+            });
+            return;
+        }
+        setIsRefining(true);
+        try {
+            const result = await refineCommunityPromptAction({ prompt });
+            if (result.error) throw new Error(result.error);
+            form.setValue('prompt', result.refinedPrompt, { shouldValidate: true });
+            toast({
+                title: t('community_idea_refined_title'),
+                description: t('community_idea_refined_desc'),
+            });
+        } catch (e) {
+            const message = e instanceof Error ? e.message : 'An unknown error occurred';
+            toast({ variant: 'destructive', title: t('community_refinement_failed_title'), description: message });
+        }
+        setIsRefining(false);
+    }
+
+    async function onSubmit(values: z.infer<typeof CreateCommunitySchema>) {
+        if (!user || !firestore) {
+            toast({
+                variant: 'destructive',
+                title: t('community_must_be_logged_in'),
+            });
+            return;
+        }
+        setIsSubmitting(true);
+        try {
+            const communityDetails = await createCommunityDetails(values);
+            if (communityDetails.error) throw new Error(communityDetails.error);
+            
+            const communityColRef = collection(firestore, 'communities');
+            const docRef = await addDocument(communityColRef, {
+                name: communityDetails.name,
+                description: communityDetails.description,
+                welcomeMessage: communityDetails.welcomeMessage,
+                ownerId: user.uid,
+                members: communityDetails.members,
+            });
+            
+            // Add owner as a member
+            const ownerProfileDoc = await getDoc(doc(firestore, 'community-profiles', user.uid));
+            if (ownerProfileDoc.exists()) {
+                const ownerProfile = ownerProfileDoc.data();
+                const ownerMember = {
+                    userId: user.uid,
+                    name: ownerProfile.name,
+                    bio: ownerProfile.bio,
+                    role: 'Founder',
+                    type: 'human',
+                    avatarUrl: ownerProfile.avatarUrl || user.photoURL || '',
+                };
+                 await addDocument(collection(firestore, `communities/${docRef.id}/members`), ownerMember);
+            }
+
+            toast({ title: "Community Created!", description: `Your community "${communityDetails.name}" is now live.` });
+            router.push(`/community/${docRef.id}`);
+
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'An unknown error occurred';
+            toast({
+                variant: 'destructive',
+                title: 'Community Creation Failed',
+                description: message,
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
+    if (!user) {
+        return (
+             <Card className="shadow-lg">
+                <CardHeader>
+                    <CardTitle>{t('community_join_federation_title')}</CardTitle>
+                    <CardDescription>{t('community_join_federation_desc')}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button asChild>
+                        <Link href="/login">
+                            <LogIn className="mr-2 h-4 w-4" /> {t('community_login_to_manage')}
+                        </Link>
+                    </Button>
+                </CardContent>
+            </Card>
+        )
+    }
+
+    return (
+         <Card className="shadow-lg">
+            <CardHeader>
+                <CardTitle>{t('community_create_title')}</CardTitle>
+                <CardDescription>{t('community_create_desc')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <FormField
+                            control={form.control}
+                            name="prompt"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <Label htmlFor="prompt">{t('community_vision_label')}</Label>
+                                    <div className="relative">
+                                    <Textarea id="prompt" placeholder={t('community_vision_placeholder')} {...field} />
+                                    <Button type="button" size="icon" variant="ghost" onClick={handleRefine} disabled={isRefining} className="absolute bottom-2 right-2">
+                                       {isRefining ? <LoaderCircle className="h-4 w-4 animate-spin"/> : <Sparkles className="h-4 w-4 text-primary" />}
+                                    </Button>
+                                    </div>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="includeAiAgents"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                                    <FormControl>
+                                        <Checkbox
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                    <div className="space-y-1 leading-none">
+                                        <Label htmlFor="includeAiAgents" className="cursor-pointer">{t('community_create_with_ai')}</Label>
+                                        <p className="text-xs text-muted-foreground">{t('community_create_with_ai_desc')}</p>
+                                    </div>
+                                </FormItem>
+                            )}
+                        />
+                         <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? (
+                                <>
+                                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                                    {t('community_creating_button')}
+                                </>
+                            ) : (
+                                <>
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    {t('community_create_button')}
+                                </>
+                            )}
+                        </Button>
+                    </form>
+                </Form>
+            </CardContent>
+        </Card>
+    )
+}
+
+export default function CommunityPage() {
+    const { user } = useUser();
+    const [communities, setCommunities] = useState<Community[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
+    const { t } = useTranslation();
+
+    useEffect(() => {
+        if (!firestore) return;
+        const fetchCommunities = async () => {
+            const communitiesQuery = query(collection(firestore, 'communities'), orderBy('name'));
+            const snapshot = await getDocs(communitiesQuery);
+            setCommunities(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community)));
+            setIsLoading(false);
+        };
+        fetchCommunities();
+    }, []);
+
+    const filteredCommunities = useMemo(() => {
+        return communities.filter(community => 
+            community.name.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [communities, searchQuery]);
+    
+    const yourCommunities = useMemo(() => {
+        if (!user) return [];
+        return communities.filter(c => c.ownerId === user.uid);
+    }, [communities, user]);
+    
+    const otherCommunities = useMemo(() => {
+        if (!user) return filteredCommunities;
+        return filteredCommunities.filter(c => c.ownerId !== user.uid);
+    }, [filteredCommunities, user]);
+
 
     if (isLoading) {
         return (
-            <div className="flex justify-center items-center min-h-screen">
+            <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
                 <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
-            </div>
+            </main>
         );
     }
-    
-    const features = [
-        {
-          id: "wiki-community",
-          title: "feature_community_title",
-          description: "feature_community_desc",
-        },
-        {
-          id: "wiki-lingua",
-          title: "feature_lingua_title",
-          description: "feature_lingua_desc",
-        },
-        {
-          id: "wiki-fabrication",
-          title: "feature_fabrication_title",
-          description: "feature_fabrication_desc",
-        },
-        {
-          id: "wiki-treasury",
-          title: "feature_treasury_title",
-          description: "feature_treasury_desc",
-        }
-      ];
-
-    const exploreCta = t('exploreCommunities');
 
     return (
-        <div className="container mx-auto max-w-4xl py-12 px-4">
-            <div className="text-center mb-12">
-                <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-primary font-headline">
-                    {t('pleasance')}
+        <main className="container mx-auto min-h-screen max-w-5xl py-8 px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-8">
+                <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
+                    <Users /> {t('community_page_title')}
                 </h1>
-                <p className="mt-4 text-xl text-muted-foreground">
-                    {t('federationSubtitle')}
-                </p>
+                <p className="text-lg text-muted-foreground mt-2">{t('community_page_subtitle')}</p>
             </div>
             
-            <FederationDiagram t={t} />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                <div className="lg:col-span-2 space-y-8">
+                    <Card className="shadow-lg">
+                        <CardHeader>
+                            <CardTitle>{t('community_find_title')}</CardTitle>
+                            <CardDescription>{t('community_find_desc')}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                                <Input 
+                                    placeholder={t('community_search_placeholder')}
+                                    className="pl-10"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
 
-            <div className="mt-16 text-center">
-                <h2 className="text-4xl font-bold font-headline mb-4">{t('flowOfCreationTitle')}</h2>
-                <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                    {t('flowOfCreationDescription')}
-                </p>
+                    <div className="space-y-6">
+                        {searchQuery && (
+                            <h2 className="text-2xl font-bold">{t('community_search_results')}</h2>
+                        )}
+                        {yourCommunities.length > 0 && (
+                            <div>
+                                <h3 className="text-xl font-semibold mb-4">{t('community_your_communities')}</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {yourCommunities.map(community => <CommunityCard key={community.id} community={community} />)}
+                                </div>
+                                <hr className="my-8" />
+                            </div>
+                        )}
+                        <h3 className="text-xl font-semibold mb-4">{t('community_all_communities')}</h3>
+                        {otherCommunities.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {otherCommunities.map(community => <CommunityCard key={community.id} community={community} />)}
+                            </div>
+                        ) : (
+                            <p className="text-muted-foreground">{t('community_none_found')}</p>
+                        )}
+                    </div>
+                </div>
+                <div className="lg:col-span-1 space-y-8 lg:sticky lg:top-24">
+                     <CreateCommunityForm />
+                     <Card className="shadow-lg">
+                        <CardHeader>
+                            <CardTitle>{t('federation_what_is_title')}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-muted-foreground">{t('federation_documentation')}</p>
+                        </CardContent>
+                     </Card>
+                </div>
             </div>
-
-            <div className="mt-20">
-                <h2 className="text-4xl font-bold text-center mb-12 font-headline">{t('coreConceptsTitle')}</h2>
-                <Carousel
-                    opts={{
-                        align: "start",
-                        loop: true,
-                    }}
-                    className="w-full"
-                >
-                    <CarouselContent>
-                        {features.map((feature: any, index: number) => {
-                            const placeholder = PlaceHolderImages.find(p => p.id === feature.id);
-                            return (
-                                <CarouselItem key={feature.id} className="md:basis-full">
-                                    <div className="p-1 h-full">
-                                    <FeatureCard
-                                            title={t(feature.title)}
-                                            description={t(feature.description)}
-                                            imageUrl={placeholder?.imageUrl || ''}
-                                            imageHint={placeholder?.imageHint || ''}
-                                            isFirst={index === 0}
-                                            ctaText={exploreCta}
-                                            ctaLink="/community"
-                                            t={t}
-                                        />
-                                    </div>
-                                </CarouselItem>
-                            )
-                        })}
-                    </CarouselContent>
-                    <CarouselPrevious className="hidden sm:flex" />
-                    <CarouselNext className="hidden sm:flex" />
-                </Carousel>
-            </div>
-        </div>
+        </main>
     );
 }
