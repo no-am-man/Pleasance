@@ -23,7 +23,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { generateProfileAvatars } from '../actions';
+import { generateProfileAvatarsAction } from '../actions';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { useTranslation } from '@/hooks/use-translation';
@@ -57,7 +57,7 @@ function AvatarSelectionDialog({ name, onSelectAvatar }: { name: string; onSelec
         setError(null);
         setAvatars([]);
 
-        const result = await generateProfileAvatars({ name });
+        const result = await generateProfileAvatarsAction({ name });
 
         if (result.error) {
             setError(result.error);

@@ -65,6 +65,7 @@ function GenerateIdeaForm() {
     async function onSubmit(values: z.infer<typeof GenerateIdeaSchema>) {
         setIsSubmitting(true);
         const result = await generateRoadmapIdeaAction(values);
+        // This is a fire-and-forget action for the demo, no need to update state
         if (result.error) {
             toast({
                 variant: 'destructive',
@@ -602,6 +603,7 @@ export default function RoadmapPage() {
   }
 
   const handleDeleteCard = async (cardId: string, columnId: string) => {
+    // Optimistic UI update
     setColumns(prev => prev.map(c => {
         if (c.id === columnId) {
             return { ...c, cards: c.cards.filter(card => card.id !== cardId) };
