@@ -12,7 +12,7 @@ import { firestore } from '@/firebase/config';
 import { collection, query, doc, getDoc, where, getDocs, updateDoc, FieldValue, arrayRemove, arrayUnion } from 'firebase/firestore';
 import type { RoadmapCard as RoadmapCardType, RoadmapColumn as RoadmapColumnType, CommunityProfile } from '@/lib/types';
 import { GripVertical, LoaderCircle, PlusCircle, Trash2, Sparkles, ArrowLeft, ArrowRight, UserPlus, Check, Database } from 'lucide-react';
-import { addRoadmapCard, deleteRoadmapCard, refineCardDescription, updateRoadmapCardAssignees, updateRoadmapCardColumn, updateRoadmapCardOrder, generateRoadmapIdeaAction, seedCommunityRoadmapData, updateCommunityRoadmapCardColumn } from '@/app/actions';
+import { updateCardAssigneesAction, updateCommunityRoadmapCardColumnAction, seedCommunityRoadmapData as seedCommunityRoadmapData } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -344,7 +344,7 @@ export default function CommunityRoadmapPage() {
         return c;
     }));
 
-    const result = await updateCommunityRoadmapCardColumn(communityId, cardId, sourceColumn.id, targetColumn.id);
+    const result = await updateCommunityRoadmapCardColumnAction(communityId, cardId, sourceColumn.id, targetColumn.id);
     if (result.error) {
         toast({ variant: 'destructive', title: 'Update Failed', description: result.error });
         setColumns(columnsData ? [...columnsData].sort((a, b) => columnOrder.indexOf(a.id) - columnOrder.indexOf(b.id)) : []);
@@ -476,7 +476,7 @@ export default function CommunityRoadmapPage() {
                         cards={col.cards}
                         onMoveCard={handleMoveCard}
                         allProfiles={memberProfiles || []}
-                        onUpdateAssignees={handleUpdateAssignees}
+                        onUpdateAssignees={updateCardAssigneesAction}
                         isOwner={isOwner}
                         onDeleteCard={handleDeleteCard}
                     >
