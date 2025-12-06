@@ -29,6 +29,7 @@
   "navBugs": "Bug Tracker",
   "navBugTracker": "Bug Tracker",
   "navAmbasedor": "Ambassador",
+  "navConductor": "Ambassador",
   "navSystem": "System",
   "navHome": "Wiki",
   "navWiki": "Wiki",
@@ -383,5 +384,8 @@
   "community_tab_members": "Members",
   "community_tab_tools": "Tools",
   "community_tab_about": "About",
-  "community_tab_admin": "Admin"
+  "community_tab_admin": "Admin",
+  "profile_artisan_title": "For Artisans & Fabricators",
+  "profile_artisan_desc": "Are you an artist? Do you have a workshop or creation space? Want to be a supplier?",
+  "profile_artisan_cta": "Visit the Workshop of Manifestation"
 }

@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LANGUAGES } from '@/config/languages';
-import { LoaderCircle, LogIn, AlertCircle, Sparkles, CheckCircle } from 'lucide-react';
+import { LoaderCircle, LogIn, AlertCircle, Sparkles, CheckCircle, Warehouse } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
@@ -245,117 +245,134 @@ export default function ProfilePage() {
 
   return (
     <main className="container mx-auto max-w-2xl py-8">
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-3xl">{t('profile_edit_title')}</CardTitle>
-          <CardDescription>{t('profile_edit_desc')}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="flex flex-col items-center space-y-4">
-                    <Avatar className="w-32 h-32 border-4 border-primary">
-                        <AvatarImage src={currentAvatarUrl || undefined} alt={nameValue} />
-                        <AvatarFallback>{nameValue?.charAt(0) || 'U'}</AvatarFallback>
-                    </Avatar>
-                    <AvatarSelectionDialog name={nameValue} onSelectAvatar={setSelectedAvatarUrl} />
-                </div>
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('profile_edit_name_label')}</FormLabel>
-                    <FormControl>
-                      <Input placeholder={t('profile_edit_name_placeholder')} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="bio"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('profile_edit_bio_label')}</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder={t('profile_edit_bio_placeholder')} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="nativeLanguage"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('profile_edit_native_lang_label')}</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('profile_edit_native_lang_placeholder')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {LANGUAGES.map((lang) => (
-                            <SelectItem key={lang.value} value={lang.value}>
-                              {lang.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="learningLanguage"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('profile_edit_learning_lang_label')}</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('profile_edit_learning_lang_placeholder')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {LANGUAGES.map((lang) => (
-                            <SelectItem key={lang.value} value={lang.value}>
-                              {lang.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+        <div className="space-y-8">
+            <Card className="shadow-lg">
+                <CardHeader>
+                <CardTitle className="text-3xl">{t('profile_edit_title')}</CardTitle>
+                <CardDescription>{t('profile_edit_desc')}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <div className="flex flex-col items-center space-y-4">
+                            <Avatar className="w-32 h-32 border-4 border-primary">
+                                <AvatarImage src={currentAvatarUrl || undefined} alt={nameValue} />
+                                <AvatarFallback>{nameValue?.charAt(0) || 'U'}</AvatarFallback>
+                            </Avatar>
+                            <AvatarSelectionDialog name={nameValue} onSelectAvatar={setSelectedAvatarUrl} />
+                        </div>
+                    <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>{t('profile_edit_name_label')}</FormLabel>
+                            <FormControl>
+                            <Input placeholder={t('profile_edit_name_placeholder')} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="bio"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>{t('profile_edit_bio_label')}</FormLabel>
+                            <FormControl>
+                            <Textarea placeholder={t('profile_edit_bio_placeholder')} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                        control={form.control}
+                        name="nativeLanguage"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>{t('profile_edit_native_lang_label')}</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder={t('profile_edit_native_lang_placeholder')} />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                {LANGUAGES.map((lang) => (
+                                    <SelectItem key={lang.value} value={lang.value}>
+                                    {lang.label}
+                                    </SelectItem>
+                                ))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="learningLanguage"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>{t('profile_edit_learning_lang_label')}</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder={t('profile_edit_learning_lang_placeholder')} />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                {LANGUAGES.map((lang) => (
+                                    <SelectItem key={lang.value} value={lang.value}>
+                                    {lang.label}
+                                    </SelectItem>
+                                ))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    </div>
 
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> {t('profile_edit_saving_button')}
-                  </>
-                ) : t('profile_edit_save_button')}
-              </Button>
+                    <Button type="submit" disabled={isLoading}>
+                        {isLoading ? (
+                        <>
+                            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> {t('profile_edit_saving_button')}
+                        </>
+                        ) : t('profile_edit_save_button')}
+                    </Button>
 
-              {error && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Error</AlertTitle>
-                  <p>{error}</p>
-                </Alert>
-              )}
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+                    {error && (
+                        <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Error</AlertTitle>
+                        <p>{error}</p>
+                        </Alert>
+                    )}
+                    </form>
+                </Form>
+                </CardContent>
+            </Card>
+
+            <Card className="mt-8 bg-muted/50">
+                 <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Warehouse className="text-primary"/>
+                        {t('profile_artisan_title')}
+                    </CardTitle>
+                 </CardHeader>
+                 <CardContent className="space-y-4">
+                    <p className="text-muted-foreground">{t('profile_artisan_desc')}</p>
+                    <Button asChild variant="secondary">
+                        <Link href="/fabrication">{t('profile_artisan_cta')}</Link>
+                    </Button>
+                 </CardContent>
+            </Card>
+        </div>
     </main>
   );
 }
