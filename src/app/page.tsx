@@ -1,3 +1,4 @@
+
 // src/app/page.tsx (formerly community/page.tsx)
 'use client';
 
@@ -309,7 +310,7 @@ export default function CommunityPage() {
     }
 
     return (
-        <main className="container mx-auto min-h-screen max-w-5xl py-8 px-4 sm:px-6 lg:px-8">
+        <main className="container mx-auto min-h-screen max-w-6xl py-8 px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-8">
                 <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
                     <Users /> {t('community_page_title')}
@@ -317,53 +318,51 @@ export default function CommunityPage() {
                 <p className="text-lg text-muted-foreground mt-2">{t('community_page_subtitle')}</p>
             </div>
             
-            <div className="max-w-xl mx-auto space-y-8">
-                <CreateCommunityForm />
-                <Card className="shadow-lg">
-                    <CardHeader>
-                        <CardTitle>{t('federation_what_is_title')}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-muted-foreground">{t('federation_documentation')}</p>
-                    </CardContent>
-                </Card>
-            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                <div className="lg:col-span-1 space-y-8">
+                    <CreateCommunityForm />
+                    <Card className="shadow-lg">
+                        <CardHeader>
+                            <CardTitle>{t('federation_what_is_title')}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-muted-foreground">{t('federation_documentation')}</p>
+                        </CardContent>
+                    </Card>
+                </div>
+                
+                <div className="lg:col-span-2 space-y-6">
+                    <Card className="shadow-lg">
+                        <CardHeader>
+                            <CardTitle>{t('community_find_title')}</CardTitle>
+                            <CardDescription>{t('community_find_desc')}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                                <Input 
+                                    placeholder={t('community_search_placeholder')}
+                                    className="pl-10"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
 
-            <div className="mt-12">
-                <Card className="shadow-lg">
-                    <CardHeader>
-                        <CardTitle>{t('community_find_title')}</CardTitle>
-                        <CardDescription>{t('community_find_desc')}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                            <Input 
-                                placeholder={t('community_search_placeholder')}
-                                className="pl-10"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <div className="mt-8 space-y-6">
-                    {searchQuery && (
-                        <h2 className="text-2xl font-bold">{t('community_search_results')}</h2>
-                    )}
                     {yourCommunities.length > 0 && (
                         <div>
                             <h3 className="text-xl font-semibold mb-4">{t('community_your_communities')}</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {yourCommunities.map(community => <CommunityCard key={community.id} community={community} />)}
                             </div>
                             <hr className="my-8" />
                         </div>
                     )}
+
                     <h3 className="text-xl font-semibold mb-4">{t('community_all_communities')}</h3>
                     {otherCommunities.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {otherCommunities.map(community => <CommunityCard key={community.id} community={community} />)}
                         </div>
                     ) : (
