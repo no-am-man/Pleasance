@@ -1,4 +1,3 @@
-
 // src/components/events/event-form.tsx
 'use client';
 
@@ -19,6 +18,7 @@ import { addDoc, collection, doc, serverTimestamp, setDoc, Timestamp } from 'fir
 import { firestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import type { User } from 'firebase/auth';
+import { useTranslation } from '@/hooks/use-translation';
 
 interface EventFormProps {
     user: User;
@@ -29,6 +29,7 @@ interface EventFormProps {
 
 export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFormProps) {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const form = useForm<Event>({
     resolver: zodResolver(EventSchema),
     defaultValues: eventToEdit ? {
@@ -49,7 +50,7 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
 
   const onSubmit = async (values: Event) => {
     if (!firestore) {
-        toast({ variant: "destructive", title: "Database error" });
+        toast({ variant: "destructive", title: t('toast_db_error') });
         return;
     }
     
@@ -57,18 +58,18 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
         if (eventToEdit) {
             const eventDocRef = doc(firestore, 'events', eventToEdit.id);
             await setDoc(eventDocRef, { ...values, date: Timestamp.fromDate(values.date) }, { merge: true });
-            toast({ title: 'Event updated successfully!' });
+            toast({ title: t('toast_event_updated') });
         } else {
             const collectionRef = collection(firestore, 'events');
             await addDoc(collectionRef, { ...values, date: Timestamp.fromDate(values.date) });
-            toast({ title: 'Event created successfully!' });
+            toast({ title: t('toast_event_created') });
         }
         onFormSubmit();
     } catch (error) {
         console.error("Error saving event:", error);
         toast({
             variant: "destructive",
-            title: "Failed to save event",
+            title: t('toast_event_save_failed_title'),
             description: error instanceof Error ? error.message : "An unknown error occurred.",
         });
     }
@@ -77,8 +78,8 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{eventToEdit ? 'Edit Event' : 'Create a New Event'}</CardTitle>
-        <CardDescription>Fill out the details for your get-together.</CardDescription>
+        <CardTitle>{eventToEdit ? t('event_form_edit_title') : t('event_form_create_title')}</CardTitle>
+        <CardDescription>{t('event_form_desc')}</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -88,9 +89,9 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Event Title</FormLabel>
+                  <FormLabel>{t('event_form_title_label')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Weekly Chess Meetup" {...field} />
+                    <Input placeholder={t('event_form_title_placeholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -101,9 +102,9 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>{t('event_form_desc_label')}</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Tell us about the event..." {...field} />
+                    <Textarea placeholder={t('event_form_desc_placeholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -115,9 +116,9 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
                 name="location"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Location</FormLabel>
+                    <FormLabel>{t('event_form_location_label')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Central Park or Discord link" {...field} />
+                      <Input placeholder={t('event_form_location_placeholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -128,7 +129,7 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
                 name="date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Date & Time</FormLabel>
+                    <FormLabel>{t('event_form_date_label')}</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -142,7 +143,7 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
                             {field.value ? (
                               format(field.value, "PPP")
                             ) : (
-                              <span>Pick a date</span>
+                              <span>{t('event_form_date_placeholder')}</span>
                             )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
@@ -164,10 +165,10 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
               />
             </div>
             <div className="flex gap-2 justify-end">
-              <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>
+              <Button type="button" variant="ghost" onClick={onCancel}>{t('dialog_cancel')}</Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-                {eventToEdit ? 'Save Changes' : 'Create Event'}
+                {eventToEdit ? t('event_form_save_button') : t('events_create_button')}
               </Button>
             </div>
           </form>

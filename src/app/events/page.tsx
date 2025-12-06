@@ -1,4 +1,3 @@
-
 // src/app/events/page.tsx
 'use client';
 
@@ -10,9 +9,11 @@ import { PlusCircle, LoaderCircle, CalendarHeart } from 'lucide-react';
 import { EventForm } from '@/components/events/event-form';
 import { EventCard } from '@/components/events/event-card';
 import { type Event } from '@/lib/types';
+import { useTranslation } from '@/hooks/use-translation';
 
 export default function EventsPage() {
   const { user } = useUser();
+  const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -57,14 +58,14 @@ export default function EventsPage() {
         <div className="text-center sm:text-left">
           <h1 className="text-4xl font-bold tracking-tight text-primary flex items-center gap-3">
             <CalendarHeart className="w-10 h-10" />
-            Community Events
+            {t('events_page_title')}
           </h1>
-          <p className="text-lg text-muted-foreground mt-2">Find and organize get-togethers.</p>
+          <p className="text-lg text-muted-foreground mt-2">{t('events_page_subtitle')}</p>
         </div>
         {user && !showForm && (
           <Button onClick={() => setShowForm(true)}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Create Event
+            {t('events_create_button')}
           </Button>
         )}
       </div>
@@ -92,8 +93,8 @@ export default function EventsPage() {
         </div>
       ) : (
         <div className="text-center py-16 text-muted-foreground">
-          <p>No upcoming events.</p>
-          <p>Be the first to create one!</p>
+          <p>{t('events_no_events_p1')}</p>
+          <p>{t('events_no_events_p2')}</p>
         </div>
       )}
     </main>

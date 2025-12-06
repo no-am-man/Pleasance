@@ -182,6 +182,44 @@
       "cta": "Join the Founders"
     }
   ],
+  "features": [
+    {
+      "id": "wiki-community",
+      "title": "feature_community_title",
+      "description": "feature_community_desc",
+      "imageUrl": "https://picsum.photos/seed/101/600/400",
+      "imageHint": "קהילת אנשים"
+    },
+    {
+      "id": "wiki-lingua",
+      "title": "feature_lingua_title",
+      "description": "feature_lingua_desc",
+      "imageUrl": "https://picsum.photos/seed/102/600/400",
+      "imageHint": "ספרי שפה"
+    },
+    {
+      "id": "wiki-fabrication",
+      "title": "feature_fabrication_title",
+      "description": "feature_fabrication_desc",
+      "imageUrl": "https://picsum.photos/seed/103/600/400",
+      "imageHint": "מדפסת תלת מימד"
+    },
+    {
+      "id": "wiki-treasury",
+      "title": "feature_treasury_title",
+      "description": "feature_treasury_desc",
+      "imageUrl": "https://picsum.photos/seed/104/600/400",
+      "imageHint": "מטבעות זהב"
+    }
+  ],
+  "feature_community_title": "The Federal Community",
+  "feature_community_desc": "The Federal Community is the social fabric of the republic where you can find or form your own self-governing community around any pursuit—a spiritual practice, a technology, or a philosophy. Each community has its own private workshop, roadmap, and treasury.",
+  "feature_lingua_title": "Nuncy Lingua",
+  "feature_lingua_desc": "A tool for co-learning and increasing your intellectual holdings. Use Nuncy Lingua to learn new languages through AI-generated parables and listen to them with a karaoke-style speech player.",
+  "feature_fabrication_title": "Workshop of Manifestation",
+  "feature_fabrication_desc": "The Workshop of Manifestation is where the ethereal becomes tangible. Submit creations from your Treasury to the ticketing system to have them manifested by a network of artisans and track your creation from concept to delivery.",
+  "feature_treasury_title": "The Treasury",
+  "feature_treasury_desc": "Your worth is measured by your creations. The Treasury is your personal, sovereign ledger where you declare and manage your holdings, both physical and intellectual. Each community also has its own private treasury to archive all of its creations.",
   "museum_title": "Virtual Museum",
   "museum_subtitle": "A grand hall showcasing the published creations from every community in the federation.",
   "museum_future_title": "From Virtual to Real: The Future of the Museum",
@@ -517,5 +555,40 @@
   "ambasedor_explanation_li1": "Get details about a specific community.",
   "ambasedor_explanation_li2": "See what's currently in progress on the public roadmap.",
   "ambasedor_explanation_li3": "File a bug report directly through conversation.",
-  "ambasedor_explanation_p3": "As the project grows, the Ambasedor's abilities and toolset will expand."
+  "ambasedor_explanation_p3": "As the project grows, the Ambasedor's abilities and toolset will expand.",
+  "events_page_title": "Community Events",
+  "events_page_subtitle": "Find and organize get-togethers.",
+  "events_create_button": "Create Event",
+  "events_no_events_p1": "No upcoming events.",
+  "events_no_events_p2": "Be the first to create one!",
+  "event_card_organized_by": "Organized by {name}",
+  "event_card_attending": "attending",
+  "event_card_cancel_rsvp": "Cancel RSVP",
+  "event_card_rsvp": "RSVP",
+  "event_card_delete_dialog_title": "Are you sure?",
+  "event_card_delete_dialog_desc": "This action will permanently delete the event \"{title}\". This cannot be undone.",
+  "toast_rsvp_login_required": "You must be logged in to RSVP.",
+  "toast_rsvp_cancelled": "You are no longer attending.",
+  "toast_rsvp_success": "You are now attending!",
+  "toast_rsvp_failed": "Failed to update RSVP.",
+  "toast_event_deleted": "Event deleted successfully.",
+  "toast_event_delete_failed": "Failed to delete event.",
+  "dialog_cancel": "Cancel",
+  "dialog_delete": "Delete",
+  "toast_db_error": "Database error",
+  "toast_event_updated": "Event updated successfully!",
+  "toast_event_created": "Event created successfully!",
+  "toast_event_save_failed_title": "Failed to save event",
+  "event_form_edit_title": "Edit Event",
+  "event_form_create_title": "Create a New Event",
+  "event_form_desc": "Fill out the details for your get-together.",
+  "event_form_title_label": "Event Title",
+  "event_form_title_placeholder": "e.g., Weekly Chess Meetup",
+  "event_form_desc_label": "Description",
+  "event_form_desc_placeholder": "Tell us about the event...",
+  "event_form_location_label": "Location",
+  "event_form_location_placeholder": "e.g., Central Park or Discord link",
+  "event_form_date_label": "Date & Time",
+  "event_form_date_placeholder": "Pick a date",
+  "event_form_save_button": "Save Changes"
 }

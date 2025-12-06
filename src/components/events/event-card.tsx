@@ -1,4 +1,3 @@
-
 // src/components/events/event-card.tsx
 'use client';
 
@@ -14,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { User } from 'firebase/auth';
 import type { Event } from '@/lib/types';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useTranslation } from '@/hooks/use-translation';
 
 interface EventCardProps {
   event: Event;
@@ -23,12 +23,13 @@ interface EventCardProps {
 
 export function EventCard({ event, currentUser, onEdit }: EventCardProps) {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const isOrganizer = currentUser?.uid === event.organizerId;
   const isAttending = event.attendees.includes(currentUser?.uid || '');
 
   const handleRsvp = async () => {
     if (!currentUser || !firestore) {
-        toast({ variant: "destructive", title: "You must be logged in to RSVP."});
+        toast({ variant: "destructive", title: t('toast_rsvp_login_required')});
         return;
     };
     const eventDocRef = doc(firestore, 'events', event.id);
@@ -36,10 +37,10 @@ export function EventCard({ event, currentUser, onEdit }: EventCardProps) {
         await updateDoc(eventDocRef, {
             attendees: isAttending ? arrayRemove(currentUser.uid) : arrayUnion(currentUser.uid)
         });
-        toast({ title: isAttending ? "You are no longer attending." : "You are now attending!" });
+        toast({ title: isAttending ? t('toast_rsvp_cancelled') : t('toast_rsvp_success') });
     } catch(e) {
         console.error("RSVP error:", e);
-        toast({ variant: "destructive", title: "Failed to update RSVP." });
+        toast({ variant: "destructive", title: t('toast_rsvp_failed') });
     }
   };
   
@@ -48,10 +49,10 @@ export function EventCard({ event, currentUser, onEdit }: EventCardProps) {
     const eventDocRef = doc(firestore, 'events', event.id);
     try {
         await deleteDoc(eventDocRef);
-        toast({ title: "Event deleted successfully." });
+        toast({ title: t('toast_event_deleted') });
     } catch(e) {
         console.error("Delete error:", e);
-        toast({ variant: "destructive", title: "Failed to delete event." });
+        toast({ variant: "destructive", title: t('toast_event_delete_failed') });
     }
   };
 
@@ -61,7 +62,7 @@ export function EventCard({ event, currentUser, onEdit }: EventCardProps) {
         <div className="flex justify-between items-start">
             <div>
                 <CardTitle>{event.title}</CardTitle>
-                <CardDescription>Organized by {event.organizerName}</CardDescription>
+                <CardDescription>{t('event_card_organized_by', { name: event.organizerName })}</CardDescription>
             </div>
             {isOrganizer && (
                 <div className="flex gap-2">
@@ -76,14 +77,14 @@ export function EventCard({ event, currentUser, onEdit }: EventCardProps) {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                             <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogTitle>{t('event_card_delete_dialog_title')}</AlertDialogTitle>
                             <AlertDialogDescription>
-                                This action will permanently delete the event &quot;{event.title}&quot;. This cannot be undone.
+                                {t('event_card_delete_dialog_desc', { title: event.title })}
                             </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                            <AlertDialogCancel>{t('dialog_cancel')}</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">{t('dialog_delete')}</AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>
                     </AlertDialog>
@@ -107,11 +108,11 @@ export function EventCard({ event, currentUser, onEdit }: EventCardProps) {
       <CardFooter className="flex justify-between items-center">
         <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-muted-foreground" />
-            <span className="text-sm font-medium">{event.attendees.length} attending</span>
+            <span className="text-sm font-medium">{event.attendees.length} {t('event_card_attending')}</span>
         </div>
         {currentUser && (
             <Button onClick={handleRsvp} variant={isAttending ? "secondary" : "default"}>
-                {isAttending ? 'Cancel RSVP' : 'RSVP'}
+                {isAttending ? t('event_card_cancel_rsvp') : t('event_card_rsvp')}
             </Button>
         )}
       </CardFooter>
