@@ -2,8 +2,11 @@
 # https://firebase.google.com/docs/app-hosting/configure
 
 runConfig:
-  # Increase this value if you'd like to automatically spin up
-  # more instances in response to increased traffic.
   cpu: 2
   memoryMiB: 4096
-  maxInstances: 1
+
+env:
+  - variable: NODE_OPTIONS
+    value: "--max-old-space-size=3072"
+    availability:
+      - BUILD
