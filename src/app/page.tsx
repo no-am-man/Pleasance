@@ -19,7 +19,7 @@ import { LoaderCircle, User, Users, PlusCircle, LogIn, Search, Sparkles } from '
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { createCommunityDetails } from '@/app/actions';
+import { createCommunityDetailsAction } from '@/app/actions';
 import { addDocument } from '@/firebase/non-blocking-updates';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
@@ -143,7 +143,7 @@ function CreateCommunityForm() {
         }
         setIsSubmitting(true);
         try {
-            const communityDetails = await createCommunityDetails(values);
+            const communityDetails = await createCommunityDetailsAction(values);
             if (communityDetails.error) throw new Error(communityDetails.error);
             
             const communityColRef = collection(firestore, 'communities');

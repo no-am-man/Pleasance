@@ -1,25 +1,30 @@
 // src/app/actions.ts
 'use server';
 
-import { generateStory, translateStory, generateSpeech } from '@/ai/flows/generate-story-and-speech';
-import { generateCommunity, refineCommunityPrompt } from '@/ai/flows/create-community';
-import { generateCommunityFlag } from '@/ai/flows/generate-flag';
-import { generateSvg3d as generateSvg3dFlow, saveSvgAsset as saveSvgAssetFlow } from '@/ai/flows/generate-svg-3d-asset';
-import { welcomeNewMember, notifyOwnerOfJoinRequest } from '@/ai/flows/community-actions';
-import { addBugReport } from '@/ai/tools/bug-reporter-tool';
+import { generateStoryAndSpeech } from '@/ai/flows/generate-story-and-speech';
+import { generateCommunity as createCommunityDetails } from '@/ai/flows/generate-community';
+import { refineCommunityPrompt as refineCommunityPromptAction } from '@/ai/flows/refine-community-prompt';
+import { generateCommunityFlag as generateCommunityFlagAction } from '@/ai/flows/generate-flag';
+import { generateSvg3d as generateSvg3dFlow } from '@/ai/flows/generate-svg3d';
+import { saveSvgAsset as saveSvgAssetFlow } from '@/ai/flows/save-svg-asset';
+import { welcomeNewMember as welcomeNewMemberAction } from '@/ai/flows/welcome-new-member';
+import { notifyOwnerOfJoinRequest as notifyOwnerOfJoinRequestAction } from '@/ai/flows/notify-owner-of-join-request';
+import { addBugReport as addBugReportAction } from '@/ai/tools/bug-reporter-tool';
 import { 
-    generateRoadmapIdea, 
-    addRoadmapCard, 
-    updateRoadmapCardColumn, 
-    updateRoadmapCardOrder, 
-    refineRoadmapCard,
-    updateCardAssignees
-} from '@/ai/flows/roadmap-actions';
-import { ambasedorFlow as conductSuperAgentFlow } from '@/ai/flows/ambasedor-flow';
+    generateRoadmapIdea as generateRoadmapIdeaAction, 
+} from '@/ai/flows/generate-roadmap-idea';
+import { updateRoadmapCardColumn as updateRoadmapCardColumnAction } from '@/ai/flows/update-roadmap-card-column';
+import { conductSuperAgent as conductSuperAgentFlow } from '@/ai/flows/ambasedor';
 import { seedRoadmapData as seedRoadmapDataFlow } from '@/lib/seed-roadmap';
-import { syncAllMembers } from '@/ai/flows/sync-members';
-import { translateText } from '@/ai/flows/translate-text';
-import { seedCommunityRoadmapData as seedCommunityRoadmap } from '@/lib/seed-roadmap';
+import { syncAllMembers as syncAllMembersAction } from '@/ai/flows/sync-members';
+import { translateText as translateTextAction } from '@/ai/flows/translate-text';
+import { seedCommunityRoadmapData as seedCommunityRoadmapAction } from '@/lib/seed-roadmap';
+import { updateRoadmapCardOrder } from '@/ai/flows/update-card-order';
+import { refineRoadmapCard as refineRoadmapCardAction } from '@/ai/flows/refine-roadmap-card';
+import { updateCommunityRoadmapCardColumn as updateCommunityRoadmapCardColumnAction } from '@/ai/flows/update-community-roadmap-column';
+import { generateDualStory as generateDualStoryFlow } from '@/ai/flows/generate-dual-story';
+import { updateCardAssignees as updateCardAssigneesAction } from '@/ai/flows/update-card-assignees';
+
 
 import { z } from 'zod';
 import { initializeAdminApp } from '@/firebase/config-admin';
@@ -29,23 +34,19 @@ export async function generateStoryAndSpeechAction(values: any) {
     return generateStoryAndSpeech(values);
 }
 
-export async function createCommunityDetails(values: any) {
-    return generateCommunity(values);
+export async function createCommunityDetailsAction(values: any) {
+    return createCommunityDetails(values);
 }
 
-export async function generateCommunityFlagAction(values: any) {
-    return generateCommunityFlag(values);
-}
+export { generateCommunityFlagAction };
 
-export async function refineCommunityPromptAction(values: any) {
-    return refineCommunityPrompt(values);
-}
+export { refineCommunityPromptAction };
 
-export async function generateSvg3d(values: any) {
+export async function generateSvg3dAction(values: any) {
     return generateSvg3dFlow(values);
 }
 
-export async function saveSvgAsset(values: any) {
+export async function saveSvgAssetAction(values: any) {
     return saveSvgAssetFlow(values);
 }
 
@@ -54,61 +55,29 @@ export async function getAiChatResponse(values: any) {
     return { response: "This is a placeholder AI response." };
 }
 
-export async function welcomeNewMemberAction(values: any) {
-    return welcomeNewMember(values);
-}
+export { welcomeNewMemberAction };
 
-export async function notifyOwnerOfJoinRequestAction(values: any) {
-    return notifyOwnerOfJoinRequest(values);
-}
+export { notifyOwnerOfJoinRequestAction };
 
 export async function submitBugReportAction(values: any) {
-    return addBugReport(values);
+    return addBugReportAction(values);
 }
 
-export async function generateRoadmapIdeaAction(values: any) {
-    return generateRoadmapIdea(values);
-}
+export { generateRoadmapIdeaAction };
 
-export async function addRoadmapCardAction(values: any) {
-    return addRoadmapCard(values);
-}
-
-export async function updateRoadmapCardColumnAction(cardId: string, oldColumnId: string, newColumnId: string) {
-    return updateRoadmapCardColumn(cardId, oldColumnId, newColumnId);
-}
+export { updateRoadmapCardColumnAction };
 
 export async function updateRoadmapCardOrderAction(columnId: string, cards: any[]) {
     return updateRoadmapCardOrder(columnId, cards);
 }
 
-export async function refineCardDescription(values: any) {
-    return refineRoadmapCard(values);
-}
+export { refineRoadmapCardAction };
 
-export async function updateRoadmapCardAssignees(values: any) {
-    return updateCardAssignees(values);
-}
+export { updateCardAssigneesAction };
 
-export async function deleteRoadmapCard(cardId: string, columnId: string) {
-    // Placeholder for delete action
-    console.log(`Deleting ${cardId} from ${columnId}`);
-    return { success: true };
-}
-
-const AmbasedorInputSchema = z.object({
-  userId: z.string(),
-  prompt: z.string(),
-});
-
-export async function conductSuperAgent(values: z.infer<typeof AmbasedorInputSchema>) {
+export async function conductSuperAgent(values: { userId: string; prompt: string; }) {
     try {
-        const validatedFields = AmbasedorInputSchema.safeParse(values);
-        if (!validatedFields.success) {
-            return { error: 'Invalid input for Ambasedor.' };
-        }
-        
-        const { userId, prompt } = validatedFields.data;
+        const { userId, prompt } = values;
 
         const adminApp = initializeAdminApp();
         const firestore = getFirestore(adminApp);
@@ -144,7 +113,7 @@ export async function conductSuperAgent(values: z.infer<typeof AmbasedorInputSch
 
 export async function runMemberSync() {
     try {
-        const result = await syncAllMembers();
+        const result = await syncAllMembersAction();
         return { data: result };
     } catch (e) {
         return { error: e instanceof Error ? e.message : 'Unknown error' };
@@ -160,26 +129,19 @@ export async function seedRoadmapData() {
     }
 }
 
-export async function translateTextAction(values: any) {
-    return translateText(values);
-}
+export { translateTextAction };
 
-export async function updateCommunityRoadmapCardColumn(communityId: string, cardId: string, oldColumnId: string, newColumnId: string) {
-    // This is a placeholder for the actual implementation
-    console.log(`Moving card ${cardId} from ${oldColumnId} to ${newColumnId} in community ${communityId}`);
-    return { success: true };
-}
+export { updateCommunityRoadmapCardColumnAction };
 
 export async function seedCommunityRoadmapData(values: { communityId: string }) {
      try {
-        const result = await seedCommunityRoadmap(values);
+        const result = await seedCommunityRoadmapAction(values);
         return { message: result };
     } catch(e) {
         return { error: e instanceof Error ? e.message : 'Unknown error' };
     }
 }
 
-export async function generateDualStory(prompt: string, targetLanguage: string) {
-    console.log("This function is not fully implemented yet.");
-    return { error: "Not implemented" };
+export async function generateDualStory(values: { prompt: string, targetLanguage: string }) {
+    return generateDualStoryFlow(values);
 }
