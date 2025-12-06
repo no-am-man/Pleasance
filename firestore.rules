@@ -28,6 +28,10 @@ service cloud.firestore {
     function isCommunityOwner(communityId) {
         return isSignedIn() && get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId == request.auth.uid;
     }
+
+    function isCommunityMember(communityId) {
+      return isSignedIn() && get(/databases/$(database)/documents/communities/$(communityId)).data.members.hasAny([request.auth.uid]);
+    }
     
     //================================================================================
     // Collection Rules
@@ -55,6 +59,12 @@ service cloud.firestore {
         allow get, list: if true; // All communities are publicly visible
         allow create: if isSignedIn(); // Any signed-in user can create a community
         allow update, delete: if isCommunityOwner(communityId); // Only the owner can modify or delete
+
+        // Community Assets: Readable by members, writable by the community owner
+        match /assets/{assetId} {
+          allow read: if isCommunityMember(communityId);
+          allow write: if isCommunityOwner(communityId);
+        }
 
         // Rules for subcollections within a community
         match /{subcollection}/{document=**} {

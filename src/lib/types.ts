@@ -73,7 +73,7 @@ export const CommunitySchema = z.object({
   name: z.string(),
   description: z.string(),
   ownerId: z.string(),
-  members: z.array(MemberSchema),
+  members: z.array(z.union([z.string(), MemberSchema])),
   flagUrl: z.string().optional(),
   welcomeMessage: z.string(),
 });
@@ -171,3 +171,16 @@ export const PresenceSchema = z.object({
     lastSeen: z.any(),
 });
 export type Presence = z.infer<typeof PresenceSchema>;
+
+export const AssetSchema = z.object({
+  id: z.string(),
+  ownerId: z.string(),
+  name: z.string(),
+  description: z.string(),
+  type: z.enum(['physical', 'virtual', 'ip']),
+  value: z.number(),
+  createdAt: z.any(),
+  fileUrl: z.string().optional(),
+  communityId: z.string().optional(),
+});
+export type Asset = z.infer<typeof AssetSchema>;
