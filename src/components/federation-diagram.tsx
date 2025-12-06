@@ -59,7 +59,7 @@ const FlowArrow = ({ path, delay }: { path: string; delay: number }) => (
 
 export const FederationDiagram = ({ t }: { t: (key: string) => string }) => {
   return (
-    <div className="w-full mx-auto my-8 aspect-[6/5]">
+    <div className="w-full mx-auto my-8">
       <style>
         {`
           @keyframes fadeIn {
