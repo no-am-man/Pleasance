@@ -1,3 +1,4 @@
+
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -31,6 +32,7 @@ import { MemberCard } from '@/components/community/MemberCard';
 import { useTranslation } from '@/hooks/use-translation';
 import { useDynamicTranslation } from '@/hooks/use-dynamic-translation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type Member = {
   name: string;
@@ -256,8 +258,8 @@ function CommunityCommunicationNetwork({ communityId, isOwner, allMembers, allCo
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div>
-                        <CardTitle className="flex items-center gap-2"><MessageSquare /> {t('community_page_ccn_title')}</CardTitle>
-                        <CardDescription>{t('community_page_ccn_desc')}</CardDescription>
+                        <CardTitle className="flex items-center gap-2">{t('community_page_ccn_title')}</CardTitle>
+                        <CardDescription>{t('community_page_ccn_desc_spheres')}</CardDescription>
                     </div>
                 </div>
             </CardHeader>
@@ -630,8 +632,6 @@ export default function CommunityProfilePage() {
             </div>
         </div>
       
-      <PresentationHall communityId={community.id} />
-
       {!isMember && (
          <Card className="shadow-lg mb-12 border-2 border-primary bg-primary/5">
             <CardHeader className="items-center text-center">
@@ -650,138 +650,144 @@ export default function CommunityProfilePage() {
         </Card>
       )}
 
-      <Card className="shadow-lg mb-12 border-2 border-primary">
-        <CardHeader>
-          <CardTitle>{t('community_page_welcome_message_title')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-lg leading-relaxed whitespace-pre-wrap">{community.welcomeMessage}</p>
-        </CardContent>
-         {isMember && !isOwner && (
-            <CardFooter>
-                 <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button variant="destructive"><LogOut className="mr-2 h-4 w-4" />{t('community_page_leave_button')}</Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>{t('community_page_leave_dialog_title')}</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                {t('community_page_leave_dialog_desc')}
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>{t('community_page_delete_cancel')}</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleRemoveMember(community.members.find(m => m.userId === user.uid)!)} className="bg-destructive hover:bg-destructive/90">
-                                {t('community_page_leave_confirm')}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-            </CardFooter>
-        )}
-      </Card>
-      
-      <Card className="shadow-lg mb-12">
-        <CardHeader>
-          <CardTitle className="text-3xl font-bold text-center">{t('community_page_meet_members_title')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-6">
-            {allMembers.map((member) => (
-              <MemberCard key={member.userId || member.name} member={member} communityId={community.id} isOwner={isOwner} onRemove={handleRemoveMember} />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-      
-       {isMember && (
-        <Card className="shadow-lg my-12">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Wrench /> {t('community_page_tools_title')}</CardTitle>
-                <CardDescription>{t('community_page_tools_desc')}</CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Button asChild variant="outline" className="h-auto py-4">
-                    <Link href={`/community/${id}/workshop`} className="flex flex-col items-center gap-2">
-                        <Sparkles className="w-8 h-8 text-primary" />
-                        <span className="font-semibold">{t('community_page_tool_workshop')}</span>
-                        <div className="mt-2 text-xs text-center text-muted-foreground">{t('community_page_tool_workshop_desc')}</div>
-                    </Link>
-                </Button>
-                 <Button asChild variant="outline" className="h-auto py-4">
-                     <Link href={`/community/${id}/roadmap`} className="flex flex-col items-center gap-2">
-                        <KanbanIcon className="w-8 h-8 text-primary" />
-                        <span className="font-semibold">{t('community_page_tool_roadmap')}</span>
-                        <div className="mt-2 text-xs text-center text-muted-foreground">{t('community_page_tool_roadmap_desc')}</div>
-                    </Link>
-                </Button>
-                <Button asChild variant="outline" className="h-auto py-4">
-                     <Link href={`/community/${id}/treasury`} className="flex flex-col items-center gap-2">
-                        <Banknote className="w-8 h-8 text-primary" />
-                        <span className="font-semibold">{t('community_page_tool_treasury')}</span>
-                        <div className="mt-2 text-xs text-center text-muted-foreground">{t('community_page_tool_treasury_desc')}</div>
-                    </Link>
-                </Button>
-            </CardContent>
-        </Card>
-      )}
-      
-       <div className="my-12">
-        <CommunityCommunicationNetwork communityId={community.id} isOwner={isOwner} allMembers={allMembers} allCommunities={allCommunities} />
-       </div>
-      
-      {isOwner && (
-         <>
-            <Separator className="my-12" />
-            <Card className="shadow-lg">
-                <CardHeader>
-                    <CardTitle>{t('community_page_join_requests_title')}</CardTitle>
-                    <CardDescription>{t('community_page_join_requests_desc')}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <JoinRequests communityId={id} communityName={community.name} />
-                </CardContent>
-            </Card>
-        </>
-      )}
-
-      <Separator className="my-12" />
-      
-      {isOwner && (
-        <>
-            <Separator className="my-12" />
-            <div>
-                <h2 className="text-3xl font-bold text-center mb-8">{t('community_page_invite_title')}</h2>
-                {isLoadingAncillary ? (
-                    <LoaderCircle className="animate-spin mx-auto" />
-                ) : allProfiles.length > 0 ? (
-                    <div className="space-y-4">
-                        {allProfiles.filter(p => p.userId !== user?.uid && !allMembers.some(m => m.userId === p.userId)).map(profile => (
-                            <Card key={profile.id} className="flex items-center p-4">
-                                <Avatar className="w-12 h-12 mr-4">
-                                    <AvatarImage src={profile.avatarUrl || `https://i.pravatar.cc/150?u=${profile.name}`} alt={profile.name} />
-                                    <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <div className="flex-grow">
-                                    <Link href={`/profile/${profile.id}`} className="font-bold underline">{profile.name}</Link>
-                                    <p className="text-sm text-muted-foreground line-clamp-2">{profile.bio}</p>
-                                </div>
-                                <Button variant="outline" size="sm" onClick={() => handleInvite(profile)}>
-                                    <Send className="mr-2 h-4 w-4" />
-                                    {t('community_page_invite_button')}
-                                </Button>
-                            </Card>
-                        ))}
-                    </div>
-                ) : (
-                    <Card className="flex items-center justify-center p-8">
-                        <p className="text-muted-foreground">{t('community_page_all_users_members')}</p>
-                    </Card>
-                )}
-            </div>
-        </>
-      )}
+        <Tabs defaultValue="feed" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 md:grid-cols-5">
+                <TabsTrigger value="feed">{t('community_tab_feed')}</TabsTrigger>
+                <TabsTrigger value="members">{t('community_tab_members')}</TabsTrigger>
+                {isMember && <TabsTrigger value="tools">{t('community_tab_tools')}</TabsTrigger>}
+                <TabsTrigger value="about">{t('community_tab_about')}</TabsTrigger>
+                {isOwner && <TabsTrigger value="admin">{t('community_tab_admin')}</TabsTrigger>}
+            </TabsList>
+            <TabsContent value="feed" className="mt-6">
+                <CommunityCommunicationNetwork communityId={community.id} isOwner={isOwner} allMembers={allMembers} allCommunities={allCommunities} />
+            </TabsContent>
+            <TabsContent value="members" className="mt-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-3xl font-bold text-center">{t('community_page_meet_members_title')}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-1 gap-6">
+                            {allMembers.map((member) => (
+                                <MemberCard key={member.userId || member.name} member={member} communityId={community.id} isOwner={isOwner} onRemove={handleRemoveMember} />
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+                 {isOwner && (
+                    <>
+                        <Separator className="my-8" />
+                        <Card>
+                             <CardHeader>
+                                <CardTitle>{t('community_page_invite_title')}</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {isLoadingAncillary ? (
+                                    <LoaderCircle className="animate-spin mx-auto" />
+                                ) : allProfiles.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {allProfiles.filter(p => p.userId !== user?.uid && !allMembers.some(m => m.userId === p.userId)).map(profile => (
+                                            <Card key={profile.id} className="flex items-center p-4">
+                                                <Avatar className="w-12 h-12 mr-4">
+                                                    <AvatarImage src={profile.avatarUrl || `https://i.pravatar.cc/150?u=${profile.name}`} alt={profile.name} />
+                                                    <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                <div className="flex-grow">
+                                                    <Link href={`/profile/${profile.id}`} className="font-bold underline">{profile.name}</Link>
+                                                    <p className="text-sm text-muted-foreground line-clamp-2">{profile.bio}</p>
+                                                </div>
+                                                <Button variant="outline" size="sm" onClick={() => handleInvite(profile)}>
+                                                    <Send className="mr-2 h-4 w-4" />
+                                                    {t('community_page_invite_button')}
+                                                </Button>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-muted-foreground text-center py-4">{t('community_page_all_users_members')}</p>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </>
+                 )}
+            </TabsContent>
+            <TabsContent value="tools" className="mt-6">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">{t('community_page_tools_title')}</CardTitle>
+                        <CardDescription>{t('community_page_tools_desc')}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Button asChild variant="outline" className="h-auto py-4">
+                            <Link href={`/community/${id}/workshop`} className="flex flex-col items-center gap-2">
+                                <Sparkles className="w-8 h-8 text-primary" />
+                                <span className="font-semibold">{t('community_page_tool_workshop')}</span>
+                                <div className="mt-2 text-xs text-center text-muted-foreground">{t('community_page_tool_workshop_desc')}</div>
+                            </Link>
+                        </Button>
+                        <Button asChild variant="outline" className="h-auto py-4">
+                            <Link href={`/community/${id}/roadmap`} className="flex flex-col items-center gap-2">
+                                <KanbanIcon className="w-8 h-8 text-primary" />
+                                <span className="font-semibold">{t('community_page_tool_roadmap')}</span>
+                                <div className="mt-2 text-xs text-center text-muted-foreground">{t('community_page_tool_roadmap_desc')}</div>
+                            </Link>
+                        </Button>
+                        <Button asChild variant="outline" className="h-auto py-4">
+                            <Link href={`/community/${id}/treasury`} className="flex flex-col items-center gap-2">
+                                <Banknote className="w-8 h-8 text-primary" />
+                                <span className="font-semibold">{t('community_page_tool_treasury')}</span>
+                                <div className="mt-2 text-xs text-center text-muted-foreground">{t('community_page_tool_treasury_desc')}</div>
+                            </Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+            <TabsContent value="about" className="mt-6">
+                <Card className="shadow-lg">
+                    <CardHeader>
+                    <CardTitle>{t('community_page_welcome_message_title')}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                    <p className="text-lg leading-relaxed whitespace-pre-wrap">{community.welcomeMessage}</p>
+                    </CardContent>
+                    {isMember && !isOwner && (
+                        <CardFooter>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive"><LogOut className="mr-2 h-4 w-4" />{t('community_page_leave_button')}</Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>{t('community_page_leave_dialog_title')}</AlertDialogTitle>
+                                        <AlertDialogDescription>{t('community_page_leave_dialog_desc')}</AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>{t('community_page_delete_cancel')}</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleRemoveMember(community.members.find(m => m.userId === user.uid)!)} className="bg-destructive hover:bg-destructive/90">
+                                            {t('community_page_leave_confirm')}
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        </CardFooter>
+                    )}
+                </Card>
+                 <div className="mt-8">
+                    <PresentationHall communityId={community.id} />
+                </div>
+            </TabsContent>
+            <TabsContent value="admin" className="mt-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{t('community_page_join_requests_title')}</CardTitle>
+                        <CardDescription>{t('community_page_join_requests_desc')}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <JoinRequests communityId={id} communityName={community.name} />
+                    </CardContent>
+                </Card>
+            </TabsContent>
+        </Tabs>
 
     </main>
   );
