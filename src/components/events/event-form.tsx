@@ -30,11 +30,12 @@ interface EventFormProps {
 export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFormProps) {
   const { toast } = useToast();
   const { t } = useTranslation();
-  const form = useForm<Event>({
+  const form = useForm<z.infer<typeof EventSchema>>({
     resolver: zodResolver(EventSchema),
     defaultValues: eventToEdit ? {
       ...eventToEdit,
-      date: new Date(eventToEdit.date),
+      // Ensure date is a Date object for the form
+      date: eventToEdit.date instanceof Date ? eventToEdit.date : new Date(),
     } : {
       title: '',
       description: '',
@@ -48,20 +49,26 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
 
   const { formState: { isSubmitting } } = form;
 
-  const onSubmit = async (values: Event) => {
+  const onSubmit = async (values: z.infer<typeof EventSchema>) => {
     if (!firestore) {
         toast({ variant: "destructive", title: t('toast_db_error') });
         return;
     }
     
     try {
+        const eventData = { ...values, date: Timestamp.fromDate(values.date as Date) };
+
         if (eventToEdit) {
             const eventDocRef = doc(firestore, 'events', eventToEdit.id);
-            await setDoc(eventDocRef, { ...values, date: Timestamp.fromDate(values.date) }, { merge: true });
+            // Don't include ID in the data to be set
+            const { id, ...dataToUpdate } = eventData;
+            await setDoc(eventDocRef, dataToUpdate, { merge: true });
             toast({ title: t('toast_event_updated') });
         } else {
             const collectionRef = collection(firestore, 'events');
-            await addDoc(collectionRef, { ...values, date: Timestamp.fromDate(values.date) });
+            // Don't include ID for a new document
+            const { id, ...dataToAdd } = eventData;
+            await addDoc(collectionRef, dataToAdd);
             toast({ title: t('toast_event_created') });
         }
         onFormSubmit();
@@ -141,7 +148,7 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
                             )}
                           >
                             {field.value ? (
-                              format(field.value, "PPP")
+                              format(field.value as Date, "PPP")
                             ) : (
                               <span>{t('event_form_date_placeholder')}</span>
                             )}
@@ -152,7 +159,7 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           mode="single"
-                          selected={field.value}
+                          selected={field.value as Date}
                           onSelect={field.onChange}
                           disabled={(date) => date < new Date()}
                           initialFocus

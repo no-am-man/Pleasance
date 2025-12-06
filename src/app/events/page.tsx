@@ -1,4 +1,3 @@
-
 // src/app/events/page.tsx
 'use client';
 
@@ -27,10 +26,12 @@ export default function EventsPage() {
     const unsubscribe = onSnapshot(eventsQuery, (snapshot) => {
       const eventsData = snapshot.docs.map(doc => {
         const data = doc.data();
+        // Check if date is a Firestore Timestamp and convert it
+        const date = data.date && typeof data.date.toDate === 'function' ? data.date.toDate() : new Date();
         return {
           id: doc.id,
           ...data,
-          date: data.date.toDate(),
+          date,
         } as Event;
       });
       setEvents(eventsData);
