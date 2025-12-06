@@ -477,7 +477,7 @@ function MessageCard({ message, canManage }: { message: Message; canManage: bool
         )
 }
 
-function Network({ communityId, isOwner, allMembers }: { communityId: string; isOwner: boolean, allMembers: Member[] }) {
+function CommunityCommunicationNetwork({ communityId, isOwner, allMembers }: { communityId: string; isOwner: boolean, allMembers: Member[] }) {
     const { user } = useUser();
     const { t } = useTranslation();
     
@@ -534,8 +534,8 @@ function Network({ communityId, isOwner, allMembers }: { communityId: string; is
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div>
-                        <CardTitle className="flex items-center gap-2"><MessageSquare /> {t('community_page_network_title')}</CardTitle>
-                        <CardDescription>{t('community_page_network_desc')}</CardDescription>
+                        <CardTitle className="flex items-center gap-2"><MessageSquare /> {t('community_page_ccn_title')}</CardTitle>
+                        <CardDescription>{t('community_page_ccn_desc')}</CardDescription>
                     </div>
                 </div>
             </CardHeader>
@@ -799,7 +799,7 @@ export default function CommunityProfilePage() {
       });
 
     } catch (e) {
-      const message = e instanceof Error ? e.message : t('community_page_unexpected_error');
+      const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
       toast({
         variant: 'destructive',
         title: t('community_page_flag_fail_title'),
@@ -1007,7 +1007,7 @@ export default function CommunityProfilePage() {
       )}
       
        <div className="my-12">
-        <Network communityId={community.id} isOwner={isOwner} allMembers={allMembers} />
+        <CommunityCommunicationNetwork communityId={community.id} isOwner={isOwner} allMembers={allMembers} />
        </div>
       
       {isOwner && (

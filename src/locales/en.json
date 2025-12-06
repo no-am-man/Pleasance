@@ -1,3 +1,4 @@
+
 {
   "pleasance": "Pleasance",
   "federationSubtitle": "A Federation of Social Communities",
@@ -305,8 +306,8 @@
   "community_page_delete_message_dialog_desc": "This will permanently hide the message content. This action cannot be undone.",
   "community_page_mark_done_label": "Mark as done",
   "community_page_comment_button": "Comment",
-  "community_page_network_title": "Community Network",
-  "community_page_network_desc": "The central feed for community activity and messages.",
+  "community_page_ccn_title": "Community Communication Network",
+  "community_page_ccn_desc": "The central feed for community activity and messages.",
   "community_page_load_messages_error": "Error loading messages: {message}",
   "community_page_no_messages": "No messages yet. Be the first!",
   "community_page_login_to_message": "Login to send a message",
@@ -560,5 +561,7 @@
   "event_form_location_placeholder": "e.g., Central Park or Discord link",
   "event_form_date_label": "Date & Time",
   "event_form_date_placeholder": "Pick a date",
-  "event_form_save_button": "Save Changes"
+  "event_form_save_button": "Save Changes",
+  "community_hide_create_form": "Hide Creation Form",
+  "community_create_new_button": "Create a New Community"
 }
