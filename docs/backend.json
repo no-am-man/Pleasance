@@ -233,32 +233,35 @@
       },
       "required": ["name", "role", "bio", "type"]
     },
-     "Message": {
+     "Form": {
         "$schema": "http://json-schema.org/draft-07/schema#",
-        "title": "Message",
+        "title": "Form",
         "type": "object",
-        "description": "Represents a message in a community chat.",
+        "description": "Represents a single 'thought-form' or conversation starter in the federation.",
         "properties": {
             "id": { "type": "string" },
-            "communityId": { "type": "string" },
+            "communityId": { "type": "string", "description": "The ID of the community where this form currently resides." },
+            "originCommunityId": { "type": "string", "description": "The ID of the community where this form was first created." },
+            "originFormId": { "type": "string", "description": "The ID of the original form, if this is an 'echo'." },
             "userId": { "type": "string" },
             "userName": { "type": "string" },
             "userAvatarUrl": { "type": "string", "format": "uri" },
-            "type": { "type": "string", "enum": ["text"], "description": "The type of message." },
-            "text": { "type": "string", "description": "The content of a text message." },
+            "type": { "type": "string", "enum": ["text"], "description": "The type of form." },
+            "text": { "type": "string", "description": "The content of a text form." },
             "createdAt": { "type": "string", "format": "date-time" },
-            "status": { "type": "string", "enum": ["active", "done"], "description": "The status of the message." },
-            "deleted": { "type": "boolean", "description": "Flag indicating if the message is soft-deleted." },
-            "deletedAt": { "type": "string", "format": "date-time", "description": "The timestamp when the message was soft-deleted." },
-            "audience": { "type": "string", "enum": ["public", "owner"], "description": "Who the message is intended for." }
+            "lastEchoAt": { "type": "string", "format": "date-time", "description": "Timestamp of the last time this form was echoed." },
+            "echoCount": { "type": "number", "description": "How many times this form has been echoed across communities." },
+            "status": { "type": "string", "enum": ["active", "archived"], "description": "The status of the form." },
+            "deleted": { "type": "boolean", "description": "Flag indicating if the form is soft-deleted." },
+            "deletedAt": { "type": "string", "format": "date-time", "description": "The timestamp when the form was soft-deleted." }
         },
-        "required": ["id", "communityId", "userId", "userName", "type", "createdAt", "status"]
+        "required": ["id", "communityId", "originCommunityId", "userId", "userName", "type", "createdAt", "status"]
      },
     "Comment": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "Comment",
         "type": "object",
-        "description": "Represents a comment on a message.",
+        "description": "Represents a comment on a form.",
         "properties": {
             "id": { "type": "string" },
             "userId": { "type": "string" },
@@ -574,26 +577,26 @@
         }
       },
        {
-        "path": "/communities/{communityId}/messages/{messageId}",
+        "path": "/communities/{communityId}/forms/{formId}",
         "definition": {
-          "entityName": "Message",
-          "schema": { "$ref": "#/backend/entities/Message" },
-          "description": "Stores messages for a community.",
+          "entityName": "Form",
+          "schema": { "$ref": "#/backend/entities/Form" },
+          "description": "Stores forms (conversation starters) for a community.",
           "params": [
             { "name": "communityId", "description": "The ID of the community." },
-            { "name": "messageId", "description": "The ID of the message." }
+            { "name": "formId", "description": "The ID of the form." }
           ]
         }
       },
       {
-        "path": "/communities/{communityId}/messages/{messageId}/comments/{commentId}",
+        "path": "/communities/{communityId}/forms/{formId}/comments/{commentId}",
         "definition": {
           "entityName": "Comment",
           "schema": { "$ref": "#/backend/entities/Comment" },
-          "description": "Stores comments for a specific message.",
+          "description": "Stores comments for a specific form.",
           "params": [
             { "name": "communityId", "description": "The ID of the community." },
-            { "name": "messageId", "description": "The ID of the message being commented on." },
+            { "name": "formId", "description": "The ID of the form being commented on." },
             { "name": "commentId", "description": "The ID of the comment." }
           ]
         }
@@ -712,6 +715,7 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities`, `fabricationOrders`, `bugs`, `leaderboard`, `presence`, and `events` in top-level collections, they become queryable. User-specific data is nested under `/users/{userId}` to ensure privacy. Public profiles are in `/community-profiles` to allow discoverability without exposing private account details. The public roadmap is migrated to Firestore for reliable public read access. The new /ambasedor/{userId} collection stores conversation history privately for each user. Community-specific data like creations and roadmaps are nested under `/communities/{communityId}` for privacy and organization."
+    "reasoning": "The Firestore structure is designed for scalability and discoverability. By placing `communities`, `fabricationOrders`, `bugs`, `leaderboard`, `presence`, and `events` in top-level collections, they become queryable. User-specific data is nested under `/users/{userId}` to ensure privacy. Public profiles are in `/community-profiles` to allow discoverability without exposing private account details. The public roadmap is migrated to Firestore for reliable public read access. The new /ambasedor/{userId} collection stores conversation history privately for each user. Community-specific data like creations and roadmaps are nested under `/communities/{communityId}` for privacy and organization. The 'Message' entity and its corresponding collection have been renamed to 'Form' to better represent the concept of a shareable, trackable thought-form within the federation."
   }
 }
+

@@ -10,7 +10,7 @@
  *   - `/users/{userId}/assets/{assetId}`: Assets are nested and private to the user.
  * - `/community-profiles/{userId}`: Publicly readable profiles, writable only by the owner.
  * - `/communities/{communityId}`: Publicly readable communities, writable only by the owner.
- *   - `/communities/{communityId}/messages/{messageId}`: Messages are readable by any signed-in user.
+ *   - `/communities/{communityId}/forms/{formId}`: Forms are readable by any signed-in user.
  *   - `/communities/{communityId}/creations/{creationId}`: Creations are private to community members.
  *   - `/communities/{communityId}/roadmap/{columnId}`: Roadmap is private to community members.
  * - `/_private_admin_data/{docId}`: Highly restricted data, only accessible by the founder.
@@ -197,19 +197,19 @@ service cloud.firestore {
         allow delete: if isCommunityOwner(communityId);
 
         /**
-         * @description Manages messages within a community.
-         * @path /communities/{communityId}/messages/{messageId}
+         * @description Manages forms (conversation starters) within a community.
+         * @path /communities/{communityId}/forms/{formId}
          * @allow Read is public. Create is for any signed-in user. Update is for author or community owner (for soft delete/moderation). Hard delete is disallowed.
          */
-        match /messages/{messageId} {
+        match /forms/{formId} {
             allow read: if true;
             allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
             allow update: if isCommunityOwner(communityId) || request.auth.uid == resource.data.userId;
             allow delete: if false;
 
              /**
-             * @description Manages comments on a specific message.
-             * @path /communities/{communityId}/messages/{messageId}/comments/{commentId}
+             * @description Manages comments on a specific form.
+             * @path /communities/{communityId}/forms/{formId}/comments/{commentId}
              * @allow Read is public. Create is for any signed-in user. Update is for author or community owner. Hard delete is disallowed.
              */
             match /comments/{commentId} {
@@ -327,3 +327,4 @@ service cloud.firestore {
     }
   }
 }
+
