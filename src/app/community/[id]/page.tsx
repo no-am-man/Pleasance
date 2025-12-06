@@ -1,8 +1,9 @@
+
 // src/app/community/[id]/page.tsx
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
+import { useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { firestore } from '@/firebase/config';
 import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, arrayRemove, updateDoc, getDoc, getDocs, setDoc, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -168,7 +169,11 @@ function CommunityCommunicationNetwork({ communityId, isOwner, allMembers, allCo
                 setIsLoading(false);
             }, 
             (err) => {
-                console.error("Error fetching forms:", err);
+                const permissionError = new FirestorePermissionError({
+                    path: `communities/${communityId}/forms`,
+                    operation: 'list',
+                });
+                errorEmitter.emit('permission-error', permissionError);
                 setError(err);
                 setIsLoading(false);
             }

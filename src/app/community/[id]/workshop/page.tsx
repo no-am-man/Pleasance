@@ -335,7 +335,7 @@ export default function CommunityWorkshopPage() {
                                 ) : activeCreation ? (
                                     <Svg3dCube pixels={activeCreation.pixels} />
                                 ) : (
-                                    <div className="flex w-full h-full flex-col gap-4 justify-center items-center text-center text-muted-foreground p-4"> <Svg3dCube pixels={[]} className="w-16 h-16" /> <p>Creations from your community will appear here.</p> </div>
+                                    <div className="flex w-full h-full flex-col gap-4 justify-center items-center text-center text-muted-foreground p-4"> <Svg3dCube pixels={[]} className="w-16 h-16" /> <p dangerouslySetInnerHTML={{ __html: "Your generated 3D art will appear here. <br/> Click and drag to rotate."}} /> </div>
                                 )}
                             </div>
                         </CardContent>

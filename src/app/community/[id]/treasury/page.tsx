@@ -1,3 +1,4 @@
+
 // src/app/community/[id]/treasury/page.tsx
 'use client';
 
