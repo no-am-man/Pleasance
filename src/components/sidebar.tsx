@@ -202,7 +202,7 @@ export function Sidebar() {
                 { href: '/treasury', label: 'navTreasury', icon: Banknote },
                 { href: '/roadmap', label: 'navRoadmap', icon: KanbanIcon },
                 { href: '/bugs', label: 'navBugTracker', icon: Bug },
-                { href: '/ambasedor', label: 'navAmbasedor', icon: Bot },
+                { href: '/conductor', label: 'navAmbasedor', icon: Bot },
             ]
         },
         {

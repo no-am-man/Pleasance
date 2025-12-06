@@ -1,3 +1,4 @@
+
 // src/app/conductor/page.tsx
 'use client';
 
@@ -25,7 +26,7 @@ type Message = {
     timestamp: any;
 };
 
-type AmbasedorData = {
+type AmbassadorData = {
     id: string;
     history: Message[];
 };
@@ -47,7 +48,7 @@ function ToolCall({ part }: { part: ContentPart }) {
     );
 }
 
-function AmbasedorExplanation() {
+function AmbassadorExplanation() {
     const { t } = useTranslation();
 
     return (
@@ -69,45 +70,46 @@ function AmbasedorExplanation() {
     )
 }
 
-export default function AmbasedorPage() {
+export default function ConductorPage() {
     const { user, isUserLoading } = useUser();
     const { t } = useTranslation();
     const [input, setInput] = useState('');
     const [isThinking, setIsThinking] = useState(false);
     const scrollAreaRef = useRef<HTMLDivElement>(null);
     
-    const [ambasedorData, setAmbasedorData] = useState<AmbasedorData | null>(null);
-    const [isLoadingAmbasedor, setIsLoadingAmbasedor] = useState(true);
+    const [ambassadorData, setAmbassadorData] = useState<AmbassadorData | null>(null);
+    const [isLoadingAmbassador, setIsLoadingAmbassador] = useState(true);
 
     useEffect(() => {
         if (isUserLoading || !user || !firestore) {
-            if (!isUserLoading) setIsLoadingAmbasedor(false);
+            if (!isUserLoading) setIsLoadingAmbassador(false);
             return;
         }
 
-        setIsLoadingAmbasedor(true);
-        const docRef = doc(firestore, 'ambasedor', user.uid);
+        setIsLoadingAmbassador(true);
+        const docRef = doc(firestore, 'ambassador', user.uid);
         const unsubscribe: Unsubscribe = onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
-                setAmbasedorData(docSnap.data() as AmbasedorData);
+                setAmbassadorData(docSnap.data() as AmbassadorData);
             } else {
-                setAmbasedorData({ id: user.uid, history: [] });
+                setAmbassadorData({ id: user.uid, history: [] });
             }
-            setIsLoadingAmbasedor(false);
+            setIsLoadingAmbassador(false);
         }, (error) => {
+            console.error("Failed to listen to ambassador history:", error);
             const permissionError = new FirestorePermissionError({
                 path: docRef.path,
                 operation: 'get',
             });
             errorEmitter.emit('permission-error', permissionError);
-            setIsLoadingAmbasedor(false);
+            setIsLoadingAmbassador(false);
         });
 
         return () => unsubscribe();
 
     }, [user, isUserLoading]);
 
-    const history = ambasedorData?.history || [];
+    const history = ambassadorData?.history || [];
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -128,7 +130,7 @@ export default function AmbasedorPage() {
         }
     }, [history]);
 
-    if (isUserLoading || isLoadingAmbasedor) {
+    if (isUserLoading || isLoadingAmbassador) {
         return (
             <main className="container mx-auto flex min-h-[80vh] items-center justify-center">
                 <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
@@ -221,7 +223,7 @@ export default function AmbasedorPage() {
                 </div>
             </Card>
 
-            <AmbasedorExplanation />
+            <AmbassadorExplanation />
         </main>
     );
 }

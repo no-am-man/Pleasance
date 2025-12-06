@@ -1,7 +1,8 @@
+
 // src/ai/flows/ambasedor.ts
 'use server';
 /**
- * @fileOverview The main flow and server action for the Ambasedor SuperAgent.
+ * @fileOverview The main flow and server action for the Ambassador SuperAgent.
  *
  * - conductSuperAgent - The server action called by the client.
  */
@@ -36,7 +37,7 @@ const internalAmbasedorFlow = ai.defineFlow(
     outputSchema: AmbasedorOutputSchema,
   },
   async (flowInput) => {
-    const systemPrompt = `You are the Ambasedor, a super-agent for the Pleasance federation.
+    const systemPrompt = `You are the Ambassador, a super-agent for the Pleasance federation.
 Your purpose is to assist users by orchestrating actions and retrieving information using your available tools.
 Be helpful, knowledgeable, and slightly formal.
 When a user asks you to perform an action, use the appropriate tool.
@@ -86,8 +87,8 @@ export async function conductSuperAgent(values: { userId: string, prompt: string
         return { data: modelResponseParts };
 
     } catch (e) {
-        console.error('Ambasedor Action Error:', e);
+        console.error('Ambassador Action Error:', e);
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
-        return { error: `Ambasedor action failed: ${message}` };
+        return { error: `Ambassador action failed: ${message}` };
     }
 }

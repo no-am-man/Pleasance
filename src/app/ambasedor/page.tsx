@@ -1,3 +1,4 @@
+
 // src/app/ambasedor/page.tsx
 'use client';
 
@@ -47,7 +48,7 @@ function ToolCall({ part }: { part: ContentPart }) {
     );
 }
 
-function AmbasedorExplanation() {
+function AmbassadorExplanation() {
     const { t } = useTranslation();
 
     return (
@@ -222,7 +223,7 @@ export default function AmbasedorPage() {
                 </div>
             </Card>
 
-            <AmbasedorExplanation />
+            <AmbassadorExplanation />
         </main>
     );
 }
