@@ -292,7 +292,10 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner
     const { toast } = useToast();
 
     const fetchArticles = useCallback(() => {
-        if (!firestore || !communityId) return; // No-op if firestore/id not ready
+        if (!firestore || !communityId) {
+            setIsLoading(false);
+            return;
+        };
         setIsLoading(true);
         const q = query(collection(firestore, `communities/${communityId}/wiki`), orderBy('title', 'asc'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -415,3 +418,513 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner
         </div>
     )
 }
+
+export default function CommunityProfilePage() {
+  const params = useParams();
+  const { user, isUserLoading } = useUser();
+  const { toast } = useToast();
+  const { t } = useTranslation();
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  const [isGeneratingFlag, setIsGeneratingFlag] = useState(false);
+
+  const [community, setCommunity] = useState<Community | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const { translatedText: translatedName } = useDynamicTranslation(community?.name);
+  const { translatedText: translatedDescription } = useDynamicTranslation(community?.description);
+
+  const [userProfile, setUserProfile] = useState<CommunityProfile | null>(null);
+
+  const [userJoinRequest, setUserJoinRequest] = useState<any | null>(null);
+  const [isRequestLoading, setIsRequestLoading] = useState(true);
+  
+  const [allProfiles, setAllProfiles] = useState<CommunityProfile[]>([]);
+  const [allCommunities, setAllCommunities] = useState<Community[]>([]);
+  const [isLoadingAncillary, setIsLoadingAncillary] = useState(true);
+
+  useEffect(() => {
+    if (!id || !firestore || isUserLoading) {
+        if (!isUserLoading) setIsLoading(false);
+        return;
+    };
+    
+    const communityDocRef = doc(firestore, 'communities', id);
+    const unsubscribe = onSnapshot(communityDocRef, (doc) => {
+        setCommunity(doc.exists() ? { id: doc.id, ...doc.data() } as Community : null);
+        setIsLoading(false);
+    }, (err) => {
+        const permissionError = new FirestorePermissionError({ path: `communities/${id}`, operation: 'get' });
+        errorEmitter.emit('permission-error', permissionError);
+        setError(err as Error);
+        setIsLoading(false);
+    });
+
+    // Fetch all communities and profiles for context (e.g., origin community flags/names)
+    const fetchAncillaryData = async () => {
+      setIsLoadingAncillary(true);
+      try {
+        const [communitiesSnapshot, profilesSnapshot] = await Promise.all([
+          getDocs(query(collection(firestore, 'communities'))),
+          getDocs(query(collection(firestore, 'community-profiles')))
+        ]);
+        setAllCommunities(communitiesSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as Community)));
+        setAllProfiles(profilesSnapshot.docs.map(d => d.data() as CommunityProfile));
+      } catch (e) {
+        console.error("Error fetching ancillary data:", e);
+      } finally {
+        setIsLoadingAncillary(false);
+      }
+    };
+    fetchAncillaryData();
+
+
+    return () => unsubscribe();
+  }, [id, isUserLoading]);
+
+  useEffect(() => {
+    if (user && firestore) {
+        const fetchUserProfile = async () => {
+            const profileDocRef = doc(firestore, 'community-profiles', user.uid);
+            const docSnap = await getDoc(profileDocRef);
+            setUserProfile(docSnap.exists() ? docSnap.data() as CommunityProfile : null);
+        };
+        fetchUserProfile();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user && id && firestore) {
+        setIsRequestLoading(true);
+        const requestDocRef = doc(firestore, `communities/${id}/joinRequests/${user.uid}`);
+        const unsubscribe = onSnapshot(requestDocRef, (docSnap) => {
+            setUserJoinRequest(docSnap.exists() ? docSnap.data() as any : null);
+            setIsRequestLoading(false);
+        }, (error) => {
+            console.error("Error fetching join request:", error);
+            setIsRequestLoading(false);
+        });
+        return () => unsubscribe();
+    } else {
+        setIsRequestLoading(false);
+    }
+  }, [user, id]);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isOwner = useMemo(() => user?.uid === community?.ownerId, [user, community]);
+  
+  const allMembers = useMemo(() => {
+    if (!community?.members) return [];
+    return [...community.members].sort((a, b) => {
+      if (a.type === 'human' && b.type !== 'human') return -1;
+      if (a.type !== 'human' && b.type === 'human') return 1;
+      return 0;
+    });
+  }, [community]);
+
+  const isMember = useMemo(() => {
+    if (!user || !community) return false;
+    if (user.uid === community.ownerId) return true;
+    return community.members.some(member => member.type === 'human' && member.userId === user.uid);
+}, [user, community]);
+
+
+  const handleRequestToJoin = async () => {
+    if (!user || !id || !userProfile || !firestore || !community) {
+        toast({ variant: 'destructive', title: t('community_page_error'), description: t('community_page_login_profile_error') });
+        return;
+    }
+    setIsSubmitting(true);
+    
+    const requestRef = doc(firestore, `communities/${id}/joinRequests/${user.uid}`);
+
+    const newRequest: Omit<any, 'id' | 'createdAt'> = {
+        userId: user.uid,
+        userName: userProfile.name,
+        userBio: userProfile.bio,
+        status: 'pending' as const,
+    };
+    try {
+        await setDoc(requestRef, {...newRequest, createdAt: serverTimestamp()});
+        await notifyOwnerOfJoinRequestAction({
+            communityId: community.id,
+            communityName: community.name,
+            requestingUserName: userProfile.name,
+        });
+        toast({ title: t('community_page_request_sent_title'), description: t('community_page_request_sent_desc') });
+    } catch(e) {
+        const message = e instanceof Error ? e.message : t('community_page_unexpected_error');
+        toast({ variant: 'destructive', title: t('community_page_send_request_fail_title'), description: message });
+    } finally {
+        setIsSubmitting(false);
+    }
+  };
+
+  const handleInvite = async (profile: CommunityProfile) => {
+    if (!community || !firestore) return;
+    
+    const newMember: Member = {
+        userId: profile.userId,
+        name: profile.name,
+        bio: profile.bio,
+        role: 'Member',
+        type: 'human',
+        avatarUrl: profile.avatarUrl || '',
+    };
+    const communityDocRef = doc(firestore, 'communities', community.id);
+    await updateDoc(communityDocRef, {
+        members: arrayUnion(newMember)
+    });
+
+    await welcomeNewMemberAction({ communityId: community.id, communityName: community.name, newMemberName: newMember.name });
+
+    toast({
+        title: t('community_page_member_invited_title'),
+        description: t('community_page_member_invited_desc', { name: profile.name })
+    })
+  };
+
+  const handleRemoveMember = async (memberToRemove: Member) => {
+    if (!community || !firestore) {
+      toast({ variant: "destructive", title: t('community_page_community_not_found') });
+      return;
+    }
+
+    const isRemovingSelf = user?.uid === memberToRemove.userId;
+    if (isOwner && isRemovingSelf) {
+        toast({ variant: "destructive", title: t('community_page_owner_leave_error')});
+        return;
+    }
+    
+    const communityDocRef = doc(firestore, 'communities', community.id);
+    try {
+      await updateDoc(communityDocRef, {
+        members: arrayRemove(memberToRemove)
+      });
+      toast({ title: t('community_page_member_removed_title'), description: t('community_page_member_removed_desc', { name: memberToRemove.name }) });
+      // UI will update via onSnapshot
+    } catch (e) {
+      const message = e instanceof Error ? e.message : t('community_page_unexpected_error');
+      toast({ variant: "destructive", title: t('community_page_remove_member_fail_title'), description: message });
+    }
+  };
+
+
+  const handleGenerateFlag = async () => {
+    if (!community || !user || !firestore) {
+      toast({
+        variant: 'destructive',
+        title: t('community_page_missing_info_title'),
+        description: t('community_page_missing_info_desc'),
+      });
+      return;
+    }
+
+    setIsGeneratingFlag(true);
+    toast({
+      title: t('community_page_generating_flag_title'),
+      description: t('community_page_generating_flag_desc'),
+    });
+
+    try {
+      const idToken = await user.getIdToken();
+      const result = await generateCommunityFlagAction({
+        communityId: community.id,
+        communityName: community.name,
+        communityDescription: community.description,
+        idToken,
+      });
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      
+      const communityRef = doc(firestore, 'communities', community.id);
+      await updateDoc(communityRef, { flagUrl: result.data.flagUrl });
+
+      toast({
+        title: t('community_page_new_flag_title'),
+        description: t('community_page_new_flag_desc'),
+      });
+
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+      toast({
+        variant: 'destructive',
+        title: t('community_page_flag_fail_title'),
+        description: message,
+      });
+    } finally {
+      setIsGeneratingFlag(false);
+    }
+  };
+
+
+  if (isLoading || isRequestLoading || isLoadingAncillary) {
+    return (
+      <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
+        <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
+        <Card className="w-full max-w-lg text-center">
+          <CardHeader>
+            <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
+            <CardTitle className="mt-4">{t('community_page_error_title')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-4">
+              {t('community_page_error_desc')}
+            </p>
+            <pre className="mb-4 text-left text-sm bg-muted p-2 rounded-md overflow-x-auto">
+              <code>{error.message}</code>
+            </pre>
+            <Button asChild variant="outline">
+              <Link href="/community">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                {t('community_page_back_all_button')}
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+  
+  if (!community) {
+    return (
+        <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
+          <Card className="w-full max-w-lg text-center">
+            <CardHeader>
+              <CardTitle>{t('community_page_not_found_title')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground mb-4">{t('community_page_not_found_desc')}</p>
+              <Button asChild variant="outline">
+              <Link href="/community">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                {t('community_page_back_all_button')}
+              </Link>
+            </Button>
+            </CardContent>
+          </Card>
+        </main>
+      );
+  }
+  
+  return (
+    <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
+      <div className="mb-6 flex justify-between items-center">
+        <Button asChild variant="ghost">
+            <Link href="/community">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                {t('community_page_back_all_button')}
+            </Link>
+        </Button>
+      </div>
+
+       <div className="mb-8">
+            <div className="relative rounded-lg overflow-hidden border-2 border-primary aspect-[16/9] bg-muted flex items-center justify-center">
+                {community.flagUrl ? (
+                    <Image src={community.flagUrl} alt={`${community.name} Flag`} fill style={{ objectFit: 'cover' }} />
+                ) : (
+                    <div className="text-center text-muted-foreground">
+                        <Flag className="h-12 w-12 mx-auto" />
+                        <p>{t('community_page_no_flag')}</p>
+                    </div>
+                )}
+                {isOwner && (
+                    <div className="absolute top-2 right-2">
+                        <Button variant="secondary" size="sm" onClick={handleGenerateFlag} disabled={isGeneratingFlag}>
+                            {isGeneratingFlag ? (
+                                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <RefreshCw className="mr-2 h-4 w-4" />
+                            )}
+                            {t('community_page_regenerate_flag_button')}
+                        </Button>
+                    </div>
+                )}
+            </div>
+            <div className="text-center mt-4">
+                <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary">
+                {translatedName}
+                </h1>
+                <p className="text-lg text-accent-foreground mt-2">{translatedDescription}</p>
+            </div>
+        </div>
+      
+      {!isMember && (
+         <Card className="shadow-lg mb-12 border-2 border-primary bg-primary/5">
+            <CardHeader className="items-center text-center">
+                <CardTitle className="text-2xl">{t('community_page_join_title', { name: community.name })}</CardTitle>
+                <CardDescription>{t('community_page_join_desc')}</CardDescription>
+            </CardHeader>
+            <CardContent className="text-center">
+                {!user ? (
+                    <Button asChild><Link href="/login"><LogIn className="mr-2 h-4 w-4" />{t('community_page_login_to_join_button')}</Link></Button>
+                ) : userJoinRequest?.status === 'pending' ? (
+                    <Button disabled><Hourglass className="mr-2 h-4 w-4 animate-spin" />{t('community_page_request_pending_button')}</Button>
+                ) : (
+                    <Button onClick={handleRequestToJoin} disabled={isSubmitting}><PlusCircle className="mr-2 h-4 w-4" />{t('community_request_to_join')}</Button>
+                )}
+            </CardContent>
+        </Card>
+      )}
+
+        <Tabs defaultValue="feed" className="w-full">
+            <TabsList className="grid w-full grid-cols-4 md:grid-cols-6">
+                <TabsTrigger value="feed">{t('community_tab_feed')}</TabsTrigger>
+                <TabsTrigger value="members">{t('community_tab_members')}</TabsTrigger>
+                {isMember && <TabsTrigger value="tools">{t('community_tab_tools')}</TabsTrigger>}
+                {isMember && <TabsTrigger value="wiki">Wiki</TabsTrigger>}
+                <TabsTrigger value="about">{t('community_tab_about')}</TabsTrigger>
+                {isOwner && <TabsTrigger value="admin">{t('community_tab_admin')}</TabsTrigger>}
+            </TabsList>
+            <TabsContent value="feed" className="mt-6">
+                <SphericalizingChatRoom communityId={community.id} isOwner={isOwner} allMembers={allMembers} allCommunities={allCommunities} />
+            </TabsContent>
+            <TabsContent value="members" className="mt-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-3xl font-bold text-center">{t('community_page_meet_members_title')}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-1 gap-6">
+                            {allMembers.map((member) => (
+                                <MemberCard key={member.userId || member.name} member={member} communityId={community.id} isOwner={isOwner} onRemove={handleRemoveMember} />
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+                 {isOwner && (
+                    <>
+                        <Separator className="my-8" />
+                        <Card>
+                             <CardHeader>
+                                <CardTitle>{t('community_page_invite_title')}</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {isLoadingAncillary ? (
+                                    <LoaderCircle className="animate-spin mx-auto" />
+                                ) : allProfiles.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {allProfiles.filter(p => p.userId !== user?.uid && !allMembers.some(m => m.userId === p.userId)).map(profile => (
+                                            <Card key={profile.id} className="flex items-center p-4">
+                                                <Avatar className="w-12 h-12 mr-4">
+                                                    <AvatarImage src={profile.avatarUrl || `https://i.pravatar.cc/150?u=${profile.name}`} alt={profile.name} />
+                                                    <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                <div className="flex-grow">
+                                                    <Link href={`/profile/${profile.id}`} className="font-bold underline">{profile.name}</Link>
+                                                    <p className="text-sm text-muted-foreground line-clamp-2">{profile.bio}</p>
+                                                </div>
+                                                <Button variant="outline" size="sm" onClick={() => handleInvite(profile)}>
+                                                    <Send className="mr-2 h-4 w-4" />
+                                                    {t('community_page_invite_button')}
+                                                </Button>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-muted-foreground text-center py-4">{t('community_page_all_users_members')}</p>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </>
+                 )}
+            </TabsContent>
+            <TabsContent value="tools" className="mt-6">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">{t('community_page_tools_title')}</CardTitle>
+                        <CardDescription>{t('community_page_tools_desc')}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Button asChild variant="outline" className="h-auto py-4">
+                            <Link href={`/community/${id}/workshop`} className="flex flex-col items-center gap-2">
+                                <Sparkles className="w-8 h-8 text-primary" />
+                                <span className="font-semibold">{t('community_page_tool_workshop')}</span>
+                                <div className="mt-2 text-xs text-center text-muted-foreground">{t('community_page_tool_workshop_desc')}</div>
+                            </Link>
+                        </Button>
+                        <Button asChild variant="outline" className="h-auto py-4">
+                            <Link href={`/community/${id}/roadmap`} className="flex flex-col items-center gap-2">
+                                <KanbanIcon className="w-8 h-8 text-primary" />
+                                <span className="font-semibold">{t('community_page_tool_roadmap')}</span>
+                                <div className="mt-2 text-xs text-center text-muted-foreground">{t('community_page_tool_roadmap_desc')}</div>
+                            </Link>
+                        </Button>
+                        <Button asChild variant="outline" className="h-auto py-4">
+                            <Link href={`/community/${id}/treasury`} className="flex flex-col items-center gap-2">
+                                <Banknote className="w-8 h-8 text-primary" />
+                                <span className="font-semibold">{t('community_page_tool_treasury')}</span>
+                                <div className="mt-2 text-xs text-center text-muted-foreground">{t('community_page_tool_treasury_desc')}</div>
+                            </Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+            <TabsContent value="wiki" className="mt-6">
+                <WikiTabContent communityId={id} isOwner={isOwner} />
+            </TabsContent>
+            <TabsContent value="about" className="mt-6">
+                <Card className="shadow-lg">
+                    <CardHeader>
+                    <CardTitle>{t('community_page_welcome_message_title')}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                    <p className="text-lg leading-relaxed whitespace-pre-wrap">{community.welcomeMessage}</p>
+                    </CardContent>
+                    {isMember && !isOwner && (
+                        <CardFooter>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive"><LogOut className="mr-2 h-4 w-4" />{t('community_page_leave_button')}</Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>{t('community_page_leave_dialog_title')}</AlertDialogTitle>
+                                        <AlertDialogDescription>{t('community_page_leave_dialog_desc')}</AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>{t('community_page_delete_cancel')}</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleRemoveMember(community.members.find(m => m.userId === user.uid)!)} className="bg-destructive hover:bg-destructive/90">
+                                            {t('community_page_leave_confirm')}
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        </CardFooter>
+                    )}
+                </Card>
+                 <div className="mt-8">
+                    <PresentationHall communityId={community.id} />
+                </div>
+            </TabsContent>
+            <TabsContent value="admin" className="mt-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{t('community_page_join_requests_title')}</CardTitle>
+                        <CardDescription>{t('community_page_join_requests_desc')}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <JoinRequests communityId={id} communityName={community.name} />
+                    </CardContent>
+                </Card>
+            </TabsContent>
+        </Tabs>
+
+    </main>
+  );
+}
+    
+
+    
+
+
