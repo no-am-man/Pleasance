@@ -1,4 +1,3 @@
-
 // src/hooks/use-presence.ts
 'use client';
 
@@ -49,7 +48,6 @@ export function usePresence() {
     const unsubscribe = onValue(connectedRef, async (snapshot) => {
         const isConnected = snapshot.val() === true;
         if (!isConnected) {
-            // If the user is marked as online in our local state, update Firestore as they go offline.
             if (isOnlineRef.current) {
                 try {
                     await setDoc(userStatusFirestoreRef, isOfflineForFirestore, { merge: true });
@@ -67,11 +65,8 @@ export function usePresence() {
         
         try {
             await onDisconnect(userStatusDatabaseRef).set(isOfflineForDatabase);
-
-            set(userStatusDatabaseRef, isOnlineForDatabase);
-
+            await set(userStatusDatabaseRef, isOnlineForDatabase);
             await setDoc(userStatusFirestoreRef, isOnlineForFirestore, { merge: true });
-
             isOnlineRef.current = true;
         } catch (error) {
              errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -83,22 +78,17 @@ export function usePresence() {
     });
 
     return () => {
-        unsubscribe();
+        unsubscribe(); // Detach the listener
         isOnlineRef.current = false;
-        // Clean up on unmount
-        if (userStatusDatabaseRef) {
-            set(userStatusDatabaseRef, isOfflineForDatabase);
-        }
-        if (userStatusFirestoreRef) {
-            setDoc(userStatusFirestoreRef, isOfflineForFirestore, { merge: true }).catch(error => {
-                 errorEmitter.emit('permission-error', new FirestorePermissionError({
-                    path: userStatusFirestoreRef.path,
-                    operation: 'update',
-                    requestResourceData: isOfflineForFirestore
-                }));
-            });
-        }
+        // Clean up on unmount or user change
+        set(userStatusDatabaseRef, isOfflineForDatabase);
+        setDoc(userStatusFirestoreRef, isOfflineForFirestore, { merge: true }).catch(error => {
+             errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: userStatusFirestoreRef.path,
+                operation: 'update',
+                requestResourceData: isOfflineForFirestore
+            }));
+        });
     };
   }, [user]);
 }
-
