@@ -1,4 +1,3 @@
-
 // src/app/actions.ts
 'use server';
 
@@ -223,7 +222,56 @@ export async function deleteRoadmapCardAction(cardId: string, columnId: string) 
 }
 
 export async function declareAssetWithFileAction(formData: FormData) {
-    return { success: true, message: 'Asset declared (file upload placeholder).' };
+    try {
+        const adminApp = initializeAdminApp();
+        const firestore = getFirestore(adminApp);
+
+        // This is a simplified version. In a real app, you'd handle file uploads to a service like GCS
+        // and get user information from a session.
+        const userId = formData.get('userId') as string;
+        const assetName = formData.get('name') as string;
+        const description = formData.get('description') as string;
+        const type = formData.get('type') as 'physical' | 'virtual' | 'ip';
+        const value = Number(formData.get('value'));
+        const communityId = formData.get('communityId') as string;
+
+        if (!userId || !assetName || !description || !type || isNaN(value)) {
+            throw new Error("Missing required form fields.");
+        }
+
+        const isCommunityAsset = communityId && communityId !== 'private';
+        const collectionPath = isCommunityAsset ? `communities/${communityId}/assets` : `users/${userId}/assets`;
+        const assetColRef = firestore.collection(collectionPath);
+        const newAssetRef = assetColRef.doc();
+
+        const assetData: any = {
+            id: newAssetRef.id,
+            ownerId: userId,
+            name: assetName,
+            description,
+            type,
+            value,
+            createdAt: serverTimestamp(),
+        };
+
+        if (isCommunityAsset) {
+            assetData.communityId = communityId;
+        }
+
+        // In a real implementation, you would handle the file here:
+        // const file = formData.get('file') as File;
+        // if (file) {
+        //   const fileUrl = await uploadFileToStorage(userId, newAssetRef.id, file);
+        //   assetData.fileUrl = fileUrl;
+        // }
+
+        await newAssetRef.set(assetData);
+
+        return { success: true, message: 'Asset declared successfully.' };
+    } catch (e) {
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        return { error: `Failed to declare asset: ${message}` };
+    }
 }
 
 export async function generateProfileAvatarsAction(values: any) {
