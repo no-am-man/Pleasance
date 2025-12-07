@@ -292,10 +292,7 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner
     const { toast } = useToast();
 
     const fetchArticles = useCallback(() => {
-        if (!firestore || !communityId) {
-            setIsLoading(false);
-            return;
-        };
+        if (!firestore || !communityId) return; // No-op if firestore/id not ready
         setIsLoading(true);
         const q = query(collection(firestore, `communities/${communityId}/wiki`), orderBy('title', 'asc'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -312,17 +309,16 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner
     useEffect(() => {
         const unsubscribe = fetchArticles();
         return () => {
-            if (unsubscribe) {
-                unsubscribe();
-            }
+            if (unsubscribe) unsubscribe();
         };
     }, [fetchArticles]);
-
+    
     useEffect(() => {
-        if (!selectedArticle && articles.length > 0) {
+        if (articles.length > 0 && !articles.some(a => a.id === selectedArticle?.id)) {
             setSelectedArticle(articles[0]);
         }
     }, [articles, selectedArticle]);
+    
 
     const handleDeleteArticle = async (articleId: string) => {
         if (!communityId || !firestore) return;
