@@ -1,4 +1,3 @@
-
 // src/app/page.tsx (formerly community/page.tsx)
 'use client';
 
@@ -296,9 +295,9 @@ export default function CommunityPage() {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
 
     useEffect(() => {
-        if (!firestore) {
-             setIsLoading(false);
-             return;
+        if (isUserLoading || !firestore) {
+            // Wait for authentication to be resolved
+            return;
         }
 
         const fetchCommunities = async () => {
@@ -310,7 +309,7 @@ export default function CommunityPage() {
         };
 
         fetchCommunities();
-    }, []);
+    }, [isUserLoading]);
 
     const filteredCommunities = useMemo(() => {
         return communities.filter(community => 
