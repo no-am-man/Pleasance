@@ -1,3 +1,4 @@
+
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -294,28 +295,34 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner
     const fetchArticles = useCallback(() => {
         if (!firestore || !communityId) {
             setIsLoading(false);
-            return;
+            return () => {};
         };
         setIsLoading(true);
         const q = query(collection(firestore, `communities/${communityId}/wiki`), orderBy('title', 'asc'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedArticles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WikiArticle));
             setArticles(fetchedArticles);
-            if (!selectedArticle || !fetchedArticles.find(a => a.id === selectedArticle.id)) {
-                setSelectedArticle(fetchedArticles[0] || null);
-            }
             setIsLoading(false);
         }, (err) => {
             setError(err);
             setIsLoading(false);
         });
         return unsubscribe;
-    }, [communityId, selectedArticle]);
+    }, [communityId]);
     
     useEffect(() => {
         const unsubscribe = fetchArticles();
-        return () => unsubscribe && unsubscribe();
+        return () => unsubscribe();
     }, [fetchArticles]);
+    
+    // This effect ensures that a default article is selected once data is loaded,
+    // but it doesn't re-trigger the data fetch itself.
+    useEffect(() => {
+        if (articles.length > 0 && !selectedArticle) {
+            setSelectedArticle(articles[0]);
+        }
+    }, [articles, selectedArticle]);
+
 
     const handleDeleteArticle = async (articleId: string) => {
         if (!communityId || !firestore) return;
