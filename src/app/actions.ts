@@ -31,9 +31,8 @@ import { analyzeStudiesAndBoostCommunityTool as analyzeStudiesAndBoostCommunityF
 
 import { z } from 'zod';
 import { initializeAdminApp } from '@/firebase/config-admin';
-import { getFirestore, FieldValue, arrayUnion, arrayRemove, updateDoc } from 'firebase-admin/firestore';
+import { getFirestore, FieldValue, arrayUnion, arrayRemove } from 'firebase-admin/firestore';
 import { v4 as uuidv4 } from 'uuid';
-import { addDocument } from '@/firebase/non-blocking-updates';
 import { collection, doc } from 'firebase/firestore';
 
 
@@ -242,24 +241,22 @@ export async function declareAssetWithFileAction(formData: FormData) {
 
         const isCommunityAsset = communityId && communityId !== 'private';
         const collectionPath = isCommunityAsset ? `communities/${communityId}/assets` : `users/${userId}/assets`;
-        const assetColRef = firestore.collection(collectionPath);
         
-        const assetData: any = {
+        const assetColRef = firestore.collection(collectionPath);
+        const newAssetRef = assetColRef.doc(); // Generate a new document reference with an ID
+        
+        const assetData = {
+            id: newAssetRef.id,
             ownerId: userId,
             name: assetName,
             description,
             type,
             value,
-            createdAt: serverTimestamp(),
+            createdAt: FieldValue.serverTimestamp(),
+            communityId: isCommunityAsset ? communityId : null,
         };
-        
-        if (isCommunityAsset) {
-            assetData.communityId = communityId;
-        }
 
-        const newAssetRef = await addDocument(assetColRef, assetData);
-        await updateDoc(newAssetRef, { id: newAssetRef.id });
-
+        await newAssetRef.set(assetData);
 
         return { success: true, message: 'Asset declared successfully.' };
     } catch (e) {
