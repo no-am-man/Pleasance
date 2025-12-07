@@ -22,11 +22,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <header className="fixed top-0 z-40 hidden h-16 w-full items-center border-b bg-background/80 backdrop-blur-sm sm:flex sm:w-[calc(100%-var(--sidebar-width))]">
           <div className="flex h-full w-full items-center">
             <Breadcrumbs />
-            <div className="ml-auto flex h-full items-center">
-              <PresenceBar />
-            </div>
           </div>
         </header>
+        {/* PresenceBar is moved outside the responsive header to ensure it's always rendered */}
+        <div className="fixed top-0 right-0 z-40 hidden h-16 items-center sm:flex">
+          <PresenceBar />
+        </div>
         <main className="flex-grow pt-16">
           <div className="pt-4">{children}</div>
         </main>
