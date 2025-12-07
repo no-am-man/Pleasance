@@ -5,10 +5,10 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, arrayRemove, updateDoc, getDoc, getDocs, setDoc, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, arrayRemove, updateDoc, getDoc, getDocs, setDoc, onSnapshot, Unsubscribe, addDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info, LogOut, Wrench, Banknote, UserX, CornerDownRight, BookOpen } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info, LogOut, Wrench, Banknote, UserX, CornerDownRight, BookOpen, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -29,7 +29,12 @@ import { useTranslation } from '@/hooks/use-translation';
 import { useDynamicTranslation } from '@/hooks/use-dynamic-translation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { Member, Community, Form, CommunityProfile } from '@/lib/types';
+import type { Member, Community, Form, CommunityProfile, WikiArticle } from '@/lib/types';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Textarea } from '@/components/ui/textarea';
+import { marked } from 'marked';
 
 
 function TextFormForm({ communityId, onFormSent }: { communityId: string, onFormSent: () => void }) {
@@ -216,6 +221,196 @@ function SphericalizingChatRoom({ communityId, isOwner, allMembers, allCommuniti
                 </div>
             </CardContent>
         </Card>
+    )
+}
+
+const WikiArticleSchema = z.object({
+    title: z.string().min(3, "Title must be at least 3 characters."),
+    content: z.string().min(20, "Content must be at least 20 characters."),
+});
+
+function WikiArticleForm({ communityId, onArticleAdded }: { communityId: string, onArticleAdded: () => void }) {
+    const { user } = useUser();
+    const { toast } = useToast();
+    const [isLoading, setIsLoading] = useState(false);
+    
+    const form = useForm<z.infer<typeof WikiArticleSchema>>({
+        resolver: zodResolver(WikiArticleSchema),
+        defaultValues: { title: '', content: '' },
+    });
+
+    async function onSubmit(data: z.infer<typeof WikiArticleSchema>) {
+        if (!user || !firestore) {
+            toast({ variant: 'destructive', title: 'You must be logged in.' });
+            return;
+        }
+        setIsLoading(true);
+
+        try {
+            const articlesColRef = collection(firestore, `communities/${communityId}/wiki`);
+            await addDoc(articlesColRef, {
+                ...data,
+                authorId: user.uid,
+                authorName: user.displayName || 'Anonymous',
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+            });
+            toast({ title: "Article Added", description: `"${data.title}" has been added to the wiki.` });
+            form.reset();
+            onArticleAdded();
+        } catch (e) {
+            const message = e instanceof Error ? e.message : 'An unexpected error occurred';
+            toast({ variant: 'destructive', title: 'Failed to add article', description: message });
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    return (
+        <Card className="shadow-lg">
+            <CardHeader>
+                <CardTitle>Create New Wiki Article</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <Input {...form.register('title')} placeholder="Article Title" />
+                    <Textarea {...form.register('content')} placeholder="Article content (Markdown supported)..." rows={8} />
+                    <Button type="submit" disabled={isLoading}>
+                        {isLoading ? <LoaderCircle className="mr-2 animate-spin" /> : <PlusCircle className="mr-2" />}
+                        Create Article
+                    </Button>
+                </form>
+            </CardContent>
+        </Card>
+    );
+}
+
+function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner: boolean }) {
+    const [articles, setArticles] = useState<WikiArticle[]>([]);
+    const [selectedArticle, setSelectedArticle] = useState<WikiArticle | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+    const { toast } = useToast();
+
+    const fetchArticles = useCallback(() => {
+        if (!firestore || !communityId) {
+            setIsLoading(false);
+            return;
+        };
+        setIsLoading(true);
+        const q = query(collection(firestore, `communities/${communityId}/wiki`), orderBy('title', 'asc'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const fetchedArticles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WikiArticle));
+            setArticles(fetchedArticles);
+            if (!selectedArticle || !fetchedArticles.find(a => a.id === selectedArticle.id)) {
+                setSelectedArticle(fetchedArticles[0] || null);
+            }
+            setIsLoading(false);
+        }, (err) => {
+            setError(err);
+            setIsLoading(false);
+        });
+        return unsubscribe;
+    }, [communityId, selectedArticle]);
+    
+    useEffect(() => {
+        const unsubscribe = fetchArticles();
+        return () => unsubscribe && unsubscribe();
+    }, [fetchArticles]);
+
+    const handleDeleteArticle = async (articleId: string) => {
+        if (!communityId || !firestore) return;
+        const docRef = doc(firestore, `communities/${communityId}/wiki/${articleId}`);
+        try {
+            await deleteDoc(docRef);
+            toast({ title: 'Article Deleted' });
+        } catch (e) {
+            const message = e instanceof Error ? e.message : 'An unknown error occurred';
+            toast({ variant: 'destructive', title: 'Failed to delete article', description: message });
+        }
+    };
+    
+    if (isLoading) {
+        return (
+            <div className="flex justify-center p-8">
+                <LoaderCircle className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+    
+    if (error) {
+        return <p className="text-destructive text-center">Error loading wiki: {error.message}</p>;
+    }
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="md:col-span-1">
+                <WikiArticleForm communityId={communityId} onArticleAdded={fetchArticles} />
+                <Card className="mt-8">
+                    <CardHeader>
+                        <CardTitle>Articles</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ul className="space-y-2">
+                            {articles.map(article => (
+                                <li key={article.id}>
+                                    <button
+                                        className={`w-full text-left p-2 rounded-md transition-colors ${selectedArticle?.id === article.id ? 'bg-primary/20' : 'hover:bg-accent/50'}`}
+                                        onClick={() => setSelectedArticle(article)}
+                                    >
+                                        {article.title}
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </CardContent>
+                </Card>
+            </div>
+            <div className="md:col-span-3">
+                <Card className="min-h-[60vh]">
+                    {selectedArticle ? (
+                        <>
+                        <CardHeader className="flex flex-row justify-between items-start">
+                            <div>
+                                <CardTitle className="text-2xl">{selectedArticle.title}</CardTitle>
+                                <CardDescription>
+                                    By {selectedArticle.authorName} on {selectedArticle.createdAt ? new Date(selectedArticle.createdAt.seconds * 1000).toLocaleDateString() : ''}
+                                </CardDescription>
+                            </div>
+                            {isOwner && (
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="text-destructive">
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                            <AlertDialogDescription>This will permanently delete "{selectedArticle.title}".</AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDeleteArticle(selectedArticle.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            )}
+                        </CardHeader>
+                        <CardContent>
+                            <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: marked(selectedArticle.content) }} />
+                        </CardContent>
+                        </>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-8 text-center">
+                            <BookOpen className="w-16 h-16 mb-4" />
+                            <h3 className="text-lg font-semibold">Welcome to the Wiki</h3>
+                            <p>Select an article to read or create a new one to get started.</p>
+                        </div>
+                    )}
+                </Card>
+            </div>
+        </div>
     )
 }
 
@@ -578,10 +773,11 @@ export default function CommunityProfilePage() {
       )}
 
         <Tabs defaultValue="feed" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 md:grid-cols-5">
+            <TabsList className="grid w-full grid-cols-4 md:grid-cols-6">
                 <TabsTrigger value="feed">{t('community_tab_feed')}</TabsTrigger>
                 <TabsTrigger value="members">{t('community_tab_members')}</TabsTrigger>
                 {isMember && <TabsTrigger value="tools">{t('community_tab_tools')}</TabsTrigger>}
+                {isMember && <TabsTrigger value="wiki">Wiki</TabsTrigger>}
                 <TabsTrigger value="about">{t('community_tab_about')}</TabsTrigger>
                 {isOwner && <TabsTrigger value="admin">{t('community_tab_admin')}</TabsTrigger>}
             </TabsList>
@@ -666,15 +862,11 @@ export default function CommunityProfilePage() {
                                 <div className="mt-2 text-xs text-center text-muted-foreground">{t('community_page_tool_treasury_desc')}</div>
                             </Link>
                         </Button>
-                        <Button asChild variant="outline" className="h-auto py-4">
-                            <Link href={`/community/${id}/wiki`} className="flex flex-col items-center gap-2">
-                                <BookOpen className="w-8 h-8 text-primary" />
-                                <span className="font-semibold">Wiki</span>
-                                <div className="mt-2 text-xs text-center text-muted-foreground">A shared knowledge base for members.</div>
-                            </Link>
-                        </Button>
                     </CardContent>
                 </Card>
+            </TabsContent>
+            <TabsContent value="wiki" className="mt-6">
+                <WikiTabContent communityId={id} isOwner={isOwner} />
             </TabsContent>
             <TabsContent value="about" className="mt-6">
                 <Card className="shadow-lg">
@@ -729,3 +921,4 @@ export default function CommunityProfilePage() {
     
 
     
+
