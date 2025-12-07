@@ -30,12 +30,17 @@ interface EventFormProps {
 export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFormProps) {
   const { toast } = useToast();
   const { t } = useTranslation();
+  
+  // Convert Firestore Timestamp to JS Date for the form default value
+  const defaultDate = eventToEdit?.date
+    ? (eventToEdit.date instanceof Timestamp ? eventToEdit.date.toDate() : new Date(eventToEdit.date))
+    : new Date();
+
   const form = useForm<z.infer<typeof EventSchema>>({
     resolver: zodResolver(EventSchema),
     defaultValues: eventToEdit ? {
       ...eventToEdit,
-      // Ensure date is a Date object for the form
-      date: eventToEdit.date instanceof Timestamp ? eventToEdit.date.toDate() : new Date(),
+      date: defaultDate,
     } : {
       title: '',
       description: '',
@@ -56,17 +61,16 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
     }
     
     try {
+        // Always convert the form's Date object back to a Firestore Timestamp before saving
         const eventData = { ...values, date: Timestamp.fromDate(values.date as Date) };
 
         if (eventToEdit) {
             const eventDocRef = doc(firestore, 'events', eventToEdit.id);
-            // Don't include ID in the data to be set
             const { id, ...dataToUpdate } = eventData;
             await setDoc(eventDocRef, dataToUpdate, { merge: true });
             toast({ title: t('toast_event_updated') });
         } else {
             const collectionRef = collection(firestore, 'events');
-            // Don't include ID for a new document
             const { id, ...dataToAdd } = eventData;
             await addDoc(collectionRef, dataToAdd);
             toast({ title: t('toast_event_created') });

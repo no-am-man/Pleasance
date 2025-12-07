@@ -54,7 +54,9 @@ export function EventCard({ event, currentUser, onEdit }: EventCardProps) {
     }
   };
   
-  const eventDate = event.date instanceof Timestamp ? event.date.toDate() : new Date(event.date);
+  const eventDate = event.date
+    ? (event.date instanceof Timestamp ? event.date.toDate() : new Date(event.date))
+    : null;
 
   return (
     <Card className="shadow-md hover:shadow-lg transition-shadow">
@@ -97,7 +99,7 @@ export function EventCard({ event, currentUser, onEdit }: EventCardProps) {
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-primary" />
-            <span>{format(eventDate, 'MMMM d, yyyy')}</span>
+            <span>{eventDate ? format(eventDate, 'MMMM d, yyyy') : 'Date not set'}</span>
           </div>
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4 text-primary" />
