@@ -1,3 +1,4 @@
+
 // src/ai/flows/update-community-roadmap-column.ts
 'use server';
 /**
@@ -31,6 +32,7 @@ export async function updateCommunityRoadmapCardColumn(communityId: string, card
         const sourceColRef = firestore.doc(`communities/${communityId}/roadmap/${sourceColumnId}`);
         const targetColRef = firestore.doc(`communities/${communityId}/roadmap/${targetColumnId}`);
 
+        // The entire transaction is now properly awaited.
         await firestore.runTransaction(async (transaction) => {
             const sourceDoc = await transaction.get(sourceColRef);
             const targetDoc = await transaction.get(targetColRef);
