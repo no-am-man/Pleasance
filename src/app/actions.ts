@@ -1,3 +1,4 @@
+
 // src/app/actions.ts
 'use server';
 
@@ -231,7 +232,7 @@ export async function declareAssetWithFileAction(formData: FormData) {
         const description = formData.get('description') as string;
         const type = formData.get('type') as 'physical' | 'virtual' | 'ip';
         const value = Number(formData.get('value'));
-        const communityId = formData.get('communityId') as string;
+        const communityId = formData.get('communityId') as string | null;
 
         if (!userId || !assetName || !description || !type || isNaN(value)) {
             throw new Error("Missing required form fields.");
@@ -274,3 +275,4 @@ export async function analyzeAcademicLevelAction(values: { studies: string }) {
 export async function analyzeStudiesAndBoostCommunityAction(values: any) {
     return await analyzeStudiesAndBoostCommunityFlow(values);
 }
+
