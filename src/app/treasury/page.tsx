@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { firestore } from '@/firebase/config';
-import { collection, query, where, serverTimestamp, doc, getDocs, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { collection, query, where, serverTimestamp, doc, getDocs, onSnapshot, Unsubscribe, updateDoc } from 'firebase/firestore';
 import { declareAssetWithFileAction } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -62,24 +62,21 @@ function AddAssetForm({ userCommunities, onAssetAdded }: { userCommunities: Comm
         }
         setIsLoading(true);
 
-        const isCommunityAsset = data.communityId !== 'private';
-        const collectionPath = isCommunityAsset ? `communities/${data.communityId}/assets` : `users/${user.uid}/assets`;
-        
-        const assetColRef = collection(firestore, collectionPath);
+        const formData = new FormData();
+        formData.append('userId', user.uid);
+        formData.append('name', data.name);
+        formData.append('description', data.description);
+        formData.append('type', data.type);
+        formData.append('value', String(data.value));
+        if (data.communityId) {
+            formData.append('communityId', data.communityId);
+        }
         
         try {
-            const newDocRef = await addDocument(assetColRef, {
-                ownerId: user.uid,
-                name: data.name,
-                description: data.description,
-                type: data.type,
-                value: data.value,
-                createdAt: serverTimestamp(),
-                ...(isCommunityAsset && { communityId: data.communityId }),
-            });
-
-            // Now that we have the ref, we can set the ID in the document itself.
-            await updateDoc(newDocRef, { id: newDocRef.id });
+            const result = await declareAssetWithFileAction(formData);
+            if (result.error) {
+              throw new Error(result.error);
+            }
 
             toast({
                 title: t('treasury_toast_asset_added_title'),

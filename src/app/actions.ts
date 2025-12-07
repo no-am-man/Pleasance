@@ -31,8 +31,11 @@ import { analyzeStudiesAndBoostCommunityTool as analyzeStudiesAndBoostCommunityF
 
 import { z } from 'zod';
 import { initializeAdminApp } from '@/firebase/config-admin';
-import { getFirestore, FieldValue, arrayUnion, arrayRemove } from 'firebase-admin/firestore';
+import { getFirestore, FieldValue, arrayUnion, arrayRemove, updateDoc } from 'firebase-admin/firestore';
 import { v4 as uuidv4 } from 'uuid';
+import { addDocument } from '@/firebase/non-blocking-updates';
+import { collection, doc } from 'firebase/firestore';
+
 
 // Each exported function is now an explicit async function wrapper.
 
@@ -226,8 +229,6 @@ export async function declareAssetWithFileAction(formData: FormData) {
         const adminApp = initializeAdminApp();
         const firestore = getFirestore(adminApp);
 
-        // This is a simplified version. In a real app, you'd handle file uploads to a service like GCS
-        // and get user information from a session.
         const userId = formData.get('userId') as string;
         const assetName = formData.get('name') as string;
         const description = formData.get('description') as string;
@@ -242,10 +243,8 @@ export async function declareAssetWithFileAction(formData: FormData) {
         const isCommunityAsset = communityId && communityId !== 'private';
         const collectionPath = isCommunityAsset ? `communities/${communityId}/assets` : `users/${userId}/assets`;
         const assetColRef = firestore.collection(collectionPath);
-        const newAssetRef = assetColRef.doc();
-
+        
         const assetData: any = {
-            id: newAssetRef.id,
             ownerId: userId,
             name: assetName,
             description,
@@ -253,19 +252,14 @@ export async function declareAssetWithFileAction(formData: FormData) {
             value,
             createdAt: serverTimestamp(),
         };
-
+        
         if (isCommunityAsset) {
             assetData.communityId = communityId;
         }
 
-        // In a real implementation, you would handle the file here:
-        // const file = formData.get('file') as File;
-        // if (file) {
-        //   const fileUrl = await uploadFileToStorage(userId, newAssetRef.id, file);
-        //   assetData.fileUrl = fileUrl;
-        // }
+        const newAssetRef = await addDocument(assetColRef, assetData);
+        await updateDoc(newAssetRef, { id: newAssetRef.id });
 
-        await newAssetRef.set(assetData);
 
         return { success: true, message: 'Asset declared successfully.' };
     } catch (e) {
