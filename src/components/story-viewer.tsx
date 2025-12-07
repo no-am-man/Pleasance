@@ -40,9 +40,8 @@ const KaraokeText = ({ text, totalDuration, currentTime, isMuted, language }: { 
     
     const progress = (currentTime / totalDuration) * 100;
     
-    const clipPathStyle = isRtlLanguage
-      ? `inset(0 0 0 ${100 - progress}%)`
-      : `inset(0 ${100 - progress}% 0 0)`;
+    // Animate from top to bottom by changing the bottom inset value.
+    const clipPathStyle = `inset(0 0 ${100 - progress}% 0)`;
 
 
     return (
