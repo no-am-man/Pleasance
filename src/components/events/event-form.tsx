@@ -22,7 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { User } from 'firebase/auth';
 import { useTranslation } from '@/hooks/use-translation';
 
-// Use a schema specifically for the form that accepts a JS Date object.
+// The form needs to work with a JS Date object.
 const EventFormSchema = BaseEventSchema.extend({
   date: z.date({
     required_error: "A date for the event is required.",
@@ -41,7 +41,7 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
   const { toast } = useToast();
   const { t } = useTranslation();
   
-  // Convert Firestore Timestamp to JS Date for the form's default value.
+  // Reliably convert Firestore Timestamp to JS Date for the form's default value.
   const defaultDate = eventToEdit?.date
     ? (eventToEdit.date instanceof Timestamp ? eventToEdit.date.toDate() : new Date(eventToEdit.date))
     : undefined;
@@ -49,16 +49,16 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
   const form = useForm<z.infer<typeof EventFormSchema>>({
     resolver: zodResolver(EventFormSchema),
     defaultValues: eventToEdit ? {
-      ...eventToEdit,
-      date: defaultDate,
+      ...eventToEdit, // Spread existing event data first
+      date: defaultDate, // Then override the date with the converted JS Date
     } : {
       title: '',
       description: '',
       location: '',
-      date: undefined, // Start with no date selected for new events
+      date: undefined,
       organizerId: user.uid,
       organizerName: user.displayName || 'Anonymous',
-      attendees: [],
+      attendees: [], // Only default to empty for new events
     },
   });
 
@@ -70,18 +70,17 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
         return;
     }
     
-    // This check is now redundant because of the schema, but good for safety.
     if (!values.date) {
         form.setError("date", { type: "manual", message: "A date for the event is required."});
         return;
     }
 
     try {
-        // Always convert the form's Date object back to a Firestore Timestamp before saving
         const eventData = { ...values, date: Timestamp.fromDate(values.date) };
 
         if (eventToEdit) {
             const eventDocRef = doc(firestore, 'events', eventToEdit.id);
+            // Ensure we don't try to write the 'id' field back into the document body
             const { id, ...dataToUpdate } = eventData;
             await setDoc(eventDocRef, dataToUpdate, { merge: true });
             toast({ title: t('toast_event_updated') });
