@@ -1,4 +1,3 @@
-
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -285,7 +284,7 @@ function WikiArticleForm({ communityId, onArticleAdded }: { communityId: string,
     );
 }
 
-function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner: boolean }) {
+function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner: boolean }) {
     const [articles, setArticles] = useState<WikiArticle[]>([]);
     const [selectedArticle, setSelectedArticle] = useState<WikiArticle | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -318,13 +317,12 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
             }
         };
     }, [fetchArticles]);
-    
+
     useEffect(() => {
         if (!selectedArticle && articles.length > 0) {
             setSelectedArticle(articles[0]);
         }
     }, [articles, selectedArticle]);
-
 
     const handleDeleteArticle = async (articleId: string) => {
         if (!communityId || !firestore) return;
