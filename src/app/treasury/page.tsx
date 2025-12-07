@@ -1,4 +1,3 @@
-
 // src/app/treasury/page.tsx
 'use client';
 
@@ -67,21 +66,20 @@ function AddAssetForm({ userCommunities, onAssetAdded }: { userCommunities: Comm
         const collectionPath = isCommunityAsset ? `communities/${data.communityId}/assets` : `users/${user.uid}/assets`;
         
         const assetColRef = collection(firestore, collectionPath);
-        const newAssetRef = doc(assetColRef);
         
-        const assetData = {
-            id: newAssetRef.id,
-            ownerId: user.uid,
-            name: data.name,
-            description: data.description,
-            type: data.type,
-            value: data.value,
-            createdAt: serverTimestamp(),
-            ...(isCommunityAsset && { communityId: data.communityId }),
-        };
-
         try {
-            await addDocument(assetColRef, assetData);
+            const newDocRef = await addDocument(assetColRef, {
+                ownerId: user.uid,
+                name: data.name,
+                description: data.description,
+                type: data.type,
+                value: data.value,
+                createdAt: serverTimestamp(),
+                ...(isCommunityAsset && { communityId: data.communityId }),
+            });
+
+            // Now that we have the ref, we can set the ID in the document itself.
+            await updateDoc(newDocRef, { id: newDocRef.id });
 
             toast({
                 title: t('treasury_toast_asset_added_title'),

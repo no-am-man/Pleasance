@@ -1,4 +1,4 @@
-
+// src/firebase/non-blocking-updates.tsx
 'use client';
     
 import {
