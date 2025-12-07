@@ -22,8 +22,6 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
     let isCancelled = false;
 
     const translate = async () => {
-      // Immediately set text based on language, using original for 'en'
-      // or falling back to original if no translation is cached yet.
       if (language === 'en') {
         if (!isCancelled) setTranslatedText(originalText);
         return;
@@ -35,7 +33,6 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
         return;
       }
 
-      // If not English and not in cache, start fetching.
       if (!isCancelled) setIsLoading(true);
 
       try {
@@ -52,7 +49,6 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
       } catch (error) {
         console.error("Translation failed:", error);
         if (!isCancelled) {
-          // On error, fall back to original text
           setTranslatedText(originalText);
         }
       } finally {
@@ -68,7 +64,7 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
     return () => {
       isCancelled = true;
     };
-  }, [originalText, language]); // Rerun effect if originalText or language changes
+  }, [originalText, language]);
 
   return { translatedText, isLoading };
 }
