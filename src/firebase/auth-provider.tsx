@@ -1,3 +1,4 @@
+
 // src/firebase/auth-provider.tsx
 'use client';
 
@@ -16,46 +17,38 @@ export const AuthContext = createContext<AuthContextState | undefined>(undefined
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isUserLoading, setIsUserLoading] = useState(true);
-  const [sessionSet, setSessionSet] = useState(false);
 
   useEffect(() => {
+    // This is the single source of truth for auth state changes.
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
-      setSessionSet(false); // Reset session status on auth change
-
-      if (firebaseUser) {
-        try {
+      let sessionOperationComplete = false;
+      try {
+        if (firebaseUser) {
           const idToken = await firebaseUser.getIdToken();
           await fetch('/api/auth/session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ idToken }),
           });
-        } catch (e) {
-          console.error("Failed to set session cookie:", e);
-        } finally {
-            setSessionSet(true);
-        }
-      } else {
-        try {
+        } else {
           await fetch('/api/auth/session', { method: 'DELETE' });
-        } catch (e) {
-          console.error("Failed to clear session cookie:", e);
-        } finally {
-            setSessionSet(true);
         }
+      } catch (e) {
+        console.error("Session cookie operation failed:", e);
+      } finally {
+        sessionOperationComplete = true;
+      }
+      
+      // Update user state and loading state together.
+      setUser(firebaseUser);
+      // We are only done loading when the user is determined AND the session is set.
+      if (sessionOperationComplete) {
+        setIsUserLoading(false);
       }
     });
 
     return () => unsubscribe();
   }, []);
-
-  useEffect(() => {
-    // Only set loading to false when the user object is determined AND the session operation is complete.
-    if (sessionSet) {
-        setIsUserLoading(false);
-    }
-  }, [user, sessionSet]);
 
 
   const contextValue = useMemo(() => ({
