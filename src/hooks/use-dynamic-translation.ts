@@ -14,22 +14,28 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
 
   useEffect(() => {
     if (!originalText) {
-      setTranslatedText('');
+      if (translatedText !== '') {
+        setTranslatedText('');
+      }
       return;
     }
 
-    // A flag to prevent state updates if the component unmounts
     let isCancelled = false;
 
     const translate = async () => {
       if (language === 'en') {
-        if (!isCancelled) setTranslatedText(originalText);
+        if (translatedText !== originalText && !isCancelled) {
+          setTranslatedText(originalText);
+        }
         return;
       }
 
       const cacheKey = `${language}:${originalText}`;
       if (cache.has(cacheKey)) {
-        if (!isCancelled) setTranslatedText(cache.get(cacheKey)!);
+        const cachedValue = cache.get(cacheKey)!;
+        if (translatedText !== cachedValue && !isCancelled) {
+          setTranslatedText(cachedValue);
+        }
         return;
       }
 
@@ -48,7 +54,7 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
         }
       } catch (error) {
         console.error("Translation failed:", error);
-        if (!isCancelled) {
+        if (!isCancelled && translatedText !== originalText) {
           setTranslatedText(originalText);
         }
       } finally {
@@ -60,11 +66,10 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
 
     translate();
 
-    // Cleanup function to prevent state updates on unmounted components
     return () => {
       isCancelled = true;
     };
-  }, [originalText, language]);
+  }, [originalText, language, translatedText]);
 
   return { translatedText, isLoading };
 }
