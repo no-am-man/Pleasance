@@ -1,4 +1,3 @@
-
 // src/app/actions.ts
 'use server';
 
@@ -160,17 +159,21 @@ export async function deleteRoadmapCardAction(cardId: string, columnId: string) 
         const adminApp = initializeAdminApp();
         const firestore = getFirestore(adminApp);
         const columnRef = firestore.collection('roadmap').doc(columnId);
+        
         const columnDoc = await columnRef.get();
         if (!columnDoc.exists) {
             throw new Error('Column not found');
         }
+        
         const columnData = columnDoc.data();
         const cardToRemove = columnData?.cards.find((c: any) => c.id === cardId);
+        
         if (cardToRemove) {
             await columnRef.update({
                 cards: arrayRemove(cardToRemove)
             });
         }
+        
         return { success: true };
     } catch (e) {
         return { error: e instanceof Error ? e.message : 'An unexpected error occurred.' };
