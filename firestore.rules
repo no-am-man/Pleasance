@@ -126,9 +126,10 @@ service cloud.firestore {
     match /events/{eventId} {
       allow read, list: if true;
       // Allow create/update/delete only by the organizer.
-      allow create, update, delete: if isSignedIn() && (request.resource.data.organizerId == request.auth.uid || (resource.data.organizerId == request.auth.uid));
+      allow create: if isSignedIn() && request.resource.data.organizerId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.organizerId == request.auth.uid;
       // Allow any signed-in user to modify ONLY the attendees list to RSVP.
-      allow update: if isSignedIn() && request.resource.data.keys().hasOnly(['attendees']);
+      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attendees']);
     }
 
     // Rule for Ambassador chat history.
