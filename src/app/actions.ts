@@ -2,77 +2,102 @@
 'use server';
 
 import { generateStoryAndSpeech as generateStoryAndSpeechFlow } from '@/ai/flows/generate-story-and-speech';
-import { generateCommunity } from '@/ai/flows/generate-community';
-import { refineCommunityPrompt as refineCommunityPromptAction } from '@/ai/flows/refine-community-prompt';
-import { generateCommunityFlag as generateCommunityFlagAction } from '@/ai/flows/generate-flag';
+import { generateCommunity as generateCommunityFlow } from '@/ai/flows/generate-community';
+import { refineCommunityPrompt as refineCommunityPromptFlow } from '@/ai/flows/refine-community-prompt';
+import { generateCommunityFlag as generateCommunityFlagFlow } from '@/ai/flows/generate-flag';
 import { generateSvg3d as generateSvg3dFlow } from '@/ai/flows/generate-svg3d';
 import { saveSvgAsset as saveSvgAssetFlow } from '@/ai/flows/save-svg-asset';
-import { welcomeNewMember as welcomeNewMemberAction } from '@/ai/flows/welcome-new-member';
-import { notifyOwnerOfJoinRequest as notifyOwnerOfJoinRequestAction } from '@/ai/flows/notify-owner-of-join-request';
-import { addBugReportTool as addBugReportAction } from '@/ai/tools/bug-reporter-tool';
-import { generateRoadmapIdea as generateRoadmapIdeaAction } from '@/ai/flows/generate-roadmap-idea';
+import { welcomeNewMember as welcomeNewMemberFlow } from '@/ai/flows/welcome-new-member';
+import { notifyOwnerOfJoinRequest as notifyOwnerOfJoinRequestFlow } from '@/ai/flows/notify-owner-of-join-request';
+import { addBugReportTool as addBugReportFlow } from '@/ai/tools/bug-reporter-tool';
+import { generateRoadmapIdea as generateRoadmapIdeaFlow } from '@/ai/flows/generate-roadmap-idea';
 import { conductSuperAgent as conductSuperAgentFlow } from '@/ai/flows/ambasedor';
 import { seedRoadmapData as seedRoadmapDataFlow } from '@/lib/seed-roadmap';
-import { syncAllMembers as syncAllMembersAction } from '@/ai/flows/sync-members';
-import { translateText as translateTextAction } from '@/ai/flows/translate-text';
-import { seedCommunityRoadmapData as seedCommunityRoadmapAction } from '@/lib/seed-roadmap';
-import { updateRoadmapCardOrder } from '@/ai/flows/update-card-order';
-import { refineRoadmapCard as refineRoadmapCardAction } from '@/ai/flows/refine-roadmap-card';
-import { updateCommunityRoadmapCardColumn as updateCommunityRoadmapCardColumnAction } from '@/ai/flows/update-community-roadmap-column';
-import { generateDualStory as generateDualStoryAction } from '@/ai/flows/generate-dual-story';
-import { updateCardAssignees as updateCardAssigneesAction } from '@/ai/flows/update-card-assignees';
-import { updateRoadmapCardColumn as updateRoadmapCardColumnAction } from '@/ai/flows/update-roadmap-card-column';
-import { generateProfileAvatars } from '@/ai/flows/generate-avatars';
+import { syncAllMembers as syncAllMembersFlow } from '@/ai/flows/sync-members';
+import { translateText as translateTextFlow } from '@/ai/flows/translate-text';
+import { seedCommunityRoadmapData as seedCommunityRoadmapFlow } from '@/lib/seed-roadmap';
+import { updateRoadmapCardOrder as updateRoadmapCardOrderFlow } from '@/ai/flows/update-card-order';
+import { refineRoadmapCard as refineRoadmapCardFlow } from '@/ai/flows/refine-roadmap-card';
+import { updateCommunityRoadmapCardColumn as updateCommunityRoadmapCardColumnFlow } from '@/ai/flows/update-community-roadmap-column';
+import { generateDualStory as generateDualStoryFlow } from '@/ai/flows/generate-dual-story';
+import { updateCardAssignees as updateCardAssigneesFlow } from '@/ai/flows/update-card-assignees';
+import { updateRoadmapCardColumn as updateRoadmapCardColumnFlow } from '@/ai/flows/update-roadmap-card-column';
+import { generateProfileAvatars as generateProfileAvatarsFlow } from '@/ai/flows/generate-avatars';
 import { analyzeAcademicLevel as analyzeAcademicLevelFlow } from '@/ai/flows/analyze-academic-level';
-import { generateStory as generateStoryAction } from '@/ai/flows/generate-story';
-import { translateStory as translateStoryAction } from '@/ai/flows/translate-story';
-import { generateSpeech as generateSpeechAction } from '@/ai/flows/generate-speech';
+import { generateStory as generateStoryFlow } from '@/ai/flows/generate-story';
+import { translateStory as translateStoryFlow } from '@/ai/flows/translate-story';
+import { generateSpeech as generateSpeechFlow } from '@/ai/flows/generate-speech';
 
 import { z } from 'zod';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { getFirestore, FieldValue, arrayUnion, arrayRemove } from 'firebase-admin/firestore';
 import { v4 as uuidv4 } from 'uuid';
 
+// Each exported function is now an explicit async function wrapper.
 
 export async function generateStoryAndSpeechAction(values: any) {
-    return generateStoryAndSpeechFlow(values);
+    return await generateStoryAndSpeechFlow(values);
 }
 
 export async function createCommunityDetailsAction(values: any) {
-    return generateCommunity(values);
+    return await generateCommunityFlow(values);
 }
 
-export { generateCommunityFlagAction };
-export { refineCommunityPromptAction };
+export async function generateCommunityFlagAction(values: any) {
+    return await generateCommunityFlagFlow(values);
+}
+
+export async function refineCommunityPromptAction(values: any) {
+    return await refineCommunityPromptFlow(values);
+}
 
 export async function generateSvg3dAction(values: any) {
-    return generateSvg3dFlow(values);
+    return await generateSvg3dFlow(values);
 }
 
 export async function saveSvgAssetAction(values: any) {
-    return saveSvgAssetFlow(values);
+    return await saveSvgAssetFlow(values);
 }
 
-export { welcomeNewMemberAction };
-export { notifyOwnerOfJoinRequestAction };
+export async function welcomeNewMemberAction(values: any) {
+    return await welcomeNewMemberFlow(values);
+}
+
+export async function notifyOwnerOfJoinRequestAction(values: any) {
+    return await notifyOwnerOfJoinRequestFlow(values);
+}
 
 export async function submitBugReportAction(values: any) {
-    return addBugReportAction(values);
+    return await addBugReportFlow(values);
 }
 
-export { generateRoadmapIdeaAction };
-export { updateRoadmapCardColumnAction };
-export { updateRoadmapCardOrder as updateRoadmapCardOrderAction };
-export { refineRoadmapCardAction };
-export { updateCardAssigneesAction };
+export async function generateRoadmapIdeaAction(values: any) {
+    return await generateRoadmapIdeaFlow(values);
+}
+
+export async function updateRoadmapCardColumnAction(cardId: string, sourceColumnId: string, targetColumnId: string) {
+    return await updateRoadmapCardColumnFlow(cardId, sourceColumnId, targetColumnId);
+}
+
+export async function updateRoadmapCardOrderAction(columnId: string, cards: any[]) {
+    return await updateRoadmapCardOrderFlow(columnId, cards);
+}
+
+export async function refineRoadmapCardAction(values: any) {
+    return await refineRoadmapCardFlow(values);
+}
+
+export async function updateCardAssigneesAction(values: any) {
+    return await updateCardAssigneesFlow(values);
+}
 
 export async function conductSuperAgentAction(values: { userId: string; prompt: string; }) {
-    return conductSuperAgentFlow(values);
+    return await conductSuperAgentFlow(values);
 }
 
 export async function runMemberSync() {
     try {
-        const result = await syncAllMembersAction();
+        const result = await syncAllMembersFlow();
         return { data: result };
     } catch (e) {
         return { error: e instanceof Error ? e.message : 'Unknown error' };
@@ -88,23 +113,38 @@ export async function seedRoadmapData() {
     }
 }
 
-export { translateTextAction };
-export { updateCommunityRoadmapCardColumnAction };
+export async function translateTextAction(values: any) {
+    return await translateTextFlow(values);
+}
+
+export async function updateCommunityRoadmapCardColumnAction(communityId: string, cardId: string, sourceColumnId: string, targetColumnId: string) {
+    return await updateCommunityRoadmapCardColumnFlow(communityId, cardId, sourceColumnId, targetColumnId);
+}
 
 export async function seedCommunityRoadmapData(values: { communityId: string }) {
      try {
-        const result = await seedCommunityRoadmapAction(values);
+        const result = await seedCommunityRoadmapFlow(values);
         return { message: result };
     } catch(e) {
         return { error: e instanceof Error ? e.message : 'Unknown error' };
     }
 }
 
-export { generateDualStoryAction };
-export { generateStoryAction };
-export { translateStoryAction };
-export { generateSpeechAction };
+export async function generateDualStoryAction(values: any) {
+    return await generateDualStoryFlow(values);
+}
 
+export async function generateStoryAction(values: any) {
+    return await generateStoryFlow(values);
+}
+
+export async function translateStoryAction(values: any) {
+    return await translateStoryFlow(values);
+}
+
+export async function generateSpeechAction(values: any) {
+    return await generateSpeechFlow(values);
+}
 
 export async function createHistorySnapshot(values: { userId: string }) {
     const { userId } = values;
@@ -181,14 +221,13 @@ export async function deleteRoadmapCardAction(cardId: string, columnId: string) 
 }
 
 export async function declareAssetWithFileAction(formData: FormData) {
-    // This is a placeholder for a server action that would handle file uploads.
-    // In a real app, this would involve a library like Multer for Express or similar for Next.js API routes.
-    // For now, we'll just return a success message.
     return { success: true, message: 'Asset declared (file upload placeholder).' };
 }
 
-export { generateProfileAvatars as generateProfileAvatarsAction };
+export async function generateProfileAvatarsAction(values: any) {
+    return await generateProfileAvatarsFlow(values);
+}
 
 export async function analyzeAcademicLevelAction(values: { studies: string }) {
-    return analyzeAcademicLevelFlow(values);
+    return await analyzeAcademicLevelFlow(values);
 }
