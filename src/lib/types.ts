@@ -81,17 +81,18 @@ export type Community = z.infer<typeof CommunitySchema>;
 
 // Schema for Events
 export const EventSchema = z.object({
-  id: z.string(),
+  id: z.string().optional(), // ID is not present on creation
   title: z.string().min(3, "Title must be at least 3 characters long."),
   description: z.string().min(10, "Description must be at least 10 characters long."),
-  date: z.date(),
+  date: z.any(), // Accepts Date or Timestamp
   location: z.string().min(2, "Location is required."),
   organizerId: z.string(),
   organizerName: z.string(),
   attendees: z.array(z.string()),
   communityId: z.string().optional(),
 });
-export type Event = z.infer<typeof EventSchema>;
+export type Event = z.infer<typeof EventSchema> & { id: string };
+
 
 // LinguaTune Story Schema
 export const DualLanguageStorySchema = z.object({

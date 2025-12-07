@@ -35,7 +35,7 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
     defaultValues: eventToEdit ? {
       ...eventToEdit,
       // Ensure date is a Date object for the form
-      date: eventToEdit.date instanceof Date ? eventToEdit.date : new Date(),
+      date: eventToEdit.date instanceof Timestamp ? eventToEdit.date.toDate() : new Date(),
     } : {
       title: '',
       description: '',

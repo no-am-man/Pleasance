@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useUser, firestore, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, LoaderCircle, CalendarHeart } from 'lucide-react';
 import { EventForm } from '@/components/events/event-form';
@@ -26,12 +26,10 @@ export default function EventsPage() {
     const unsubscribe = onSnapshot(eventsQuery, (snapshot) => {
       const eventsData = snapshot.docs.map(doc => {
         const data = doc.data();
-        // Check if date is a Firestore Timestamp and convert it
-        const date = data.date && typeof data.date.toDate === 'function' ? data.date.toDate() : new Date();
         return {
           id: doc.id,
           ...data,
-          date,
+          date: data.date, // Keep it as a Timestamp for now
         } as Event;
       });
       setEvents(eventsData);
