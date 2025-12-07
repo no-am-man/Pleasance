@@ -42,53 +42,50 @@ export function usePresence() {
         last_changed: dbServerTimestamp(),
     };
 
-    // Use '.info/connected' to monitor connection state
     const connectedRef = ref(database, '.info/connected');
     
-    const unsubscribe = onValue(connectedRef, async (snapshot) => {
+    const unsubscribe = onValue(connectedRef, (snapshot) => {
         const isConnected = snapshot.val() === true;
         if (!isConnected) {
             if (isOnlineRef.current) {
-                try {
-                    await setDoc(userStatusFirestoreRef, isOfflineForFirestore, { merge: true });
-                } catch (error) {
+                setDoc(userStatusFirestoreRef, isOfflineForFirestore, { merge: true }).catch(error => {
                     errorEmitter.emit('permission-error', new FirestorePermissionError({
                         path: userStatusFirestoreRef.path,
                         operation: 'update',
                         requestResourceData: isOfflineForFirestore
                     }));
-                }
+                });
                 isOnlineRef.current = false;
             }
             return;
         }
         
-        try {
-            await onDisconnect(userStatusDatabaseRef).set(isOfflineForDatabase);
-            await set(userStatusDatabaseRef, isOnlineForDatabase);
-            await setDoc(userStatusFirestoreRef, isOnlineForFirestore, { merge: true });
+        onDisconnect(userStatusDatabaseRef).set(isOfflineForDatabase).then(() => {
+            set(userStatusDatabaseRef, isOnlineForDatabase);
+            setDoc(userStatusFirestoreRef, isOnlineForFirestore, { merge: true }).catch(error => {
+                 errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: userStatusFirestoreRef.path,
+                    operation: 'write',
+                    requestResourceData: isOnlineForFirestore
+                }));
+            });
             isOnlineRef.current = true;
-        } catch (error) {
-             errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: userStatusFirestoreRef.path,
-                operation: 'write',
-                requestResourceData: isOnlineForFirestore
-            }));
-        }
+        });
     });
 
     return () => {
-        unsubscribe(); // Detach the listener
-        isOnlineRef.current = false;
-        // Clean up on unmount or user change
-        set(userStatusDatabaseRef, isOfflineForDatabase);
-        setDoc(userStatusFirestoreRef, isOfflineForFirestore, { merge: true }).catch(error => {
-             errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: userStatusFirestoreRef.path,
-                operation: 'update',
-                requestResourceData: isOfflineForFirestore
-            }));
-        });
+        unsubscribe();
+        if (isOnlineRef.current) {
+            set(userStatusDatabaseRef, isOfflineForDatabase);
+            setDoc(userStatusFirestoreRef, isOfflineForFirestore, { merge: true }).catch(error => {
+                 errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: userStatusFirestoreRef.path,
+                    operation: 'update',
+                    requestResourceData: isOfflineForFirestore
+                }));
+            });
+            isOnlineRef.current = false;
+        }
     };
   }, [user]);
 }
