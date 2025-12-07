@@ -93,3 +93,6 @@ export function deleteDocumentNonBlocking(docRef: DocumentReference) {
       )
     });
 }
+
+export const setDocNonBlocking = setDocumentNonBlocking;
+export const deleteDocNonBlocking = deleteDocumentNonBlocking;
