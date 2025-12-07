@@ -9,12 +9,12 @@ import { Toaster } from '@/components/ui/toaster';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 const inter = Inter({
-  subsets: ['latin'],
+  subsets: ['latin', 'hebrew'],
   variable: '--font-sans',
 });
 
 const lexend = Lexend({
-  subsets: ['latin'],
+  subsets: ['latin', 'hebrew'],
   variable: '--font-lexend',
 });
 
