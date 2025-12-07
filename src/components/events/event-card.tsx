@@ -56,7 +56,7 @@ export function EventCard({ event, currentUser, onEdit }: EventCardProps) {
   };
   
   const eventDate = event.date
-    ? (event.date instanceof Timestamp ? event.date.toDate() : (event.date instanceof Date ? event.date : null))
+    ? (event.date instanceof Timestamp ? event.date.toDate() : new Date(event.date))
     : null;
 
 
