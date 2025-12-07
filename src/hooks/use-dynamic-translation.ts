@@ -14,9 +14,7 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
 
   useEffect(() => {
     if (!originalText) {
-      if (translatedText !== '') {
-        setTranslatedText('');
-      }
+      if (translatedText !== '') setTranslatedText('');
       return;
     }
 
@@ -24,23 +22,19 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
 
     const translate = async () => {
       if (language === 'en') {
-        if (translatedText !== originalText) {
-          setTranslatedText(originalText);
-        }
+        if (translatedText !== originalText) setTranslatedText(originalText);
         return;
       }
 
       const cacheKey = `${language}:${originalText}`;
       if (cache.has(cacheKey)) {
         const cachedValue = cache.get(cacheKey)!;
-        if (translatedText !== cachedValue) {
-          setTranslatedText(cachedValue);
-        }
+        if (translatedText !== cachedValue) setTranslatedText(cachedValue);
         return;
       }
-
+      
       if (!isCancelled) setIsLoading(true);
-
+      
       try {
         const result = await translateTextAction({
           text: originalText,
@@ -50,9 +44,7 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
         if (!isCancelled) {
           const translation = result.translation || originalText;
           cache.set(cacheKey, translation);
-          if (translatedText !== translation) {
-            setTranslatedText(translation);
-          }
+          if (translatedText !== translation) setTranslatedText(translation);
         }
       } catch (error) {
         console.error("Translation failed:", error);
@@ -60,9 +52,7 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
           setTranslatedText(originalText);
         }
       } finally {
-        if (!isCancelled) {
-          setIsLoading(false);
-        }
+        if (!isCancelled) setIsLoading(false);
       }
     };
 
@@ -71,7 +61,7 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
     return () => {
       isCancelled = true;
     };
-  }, [originalText, language]); // translatedText removed from dependencies
+  }, [originalText, language]);
 
   return { translatedText, isLoading };
 }

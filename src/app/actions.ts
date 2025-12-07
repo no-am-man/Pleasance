@@ -33,8 +33,6 @@ import { z } from 'zod';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { getFirestore, FieldValue, arrayUnion, arrayRemove } from 'firebase-admin/firestore';
 import { v4 as uuidv4 } from 'uuid';
-import { collection, doc } from 'firebase/firestore';
-
 
 // Each exported function is now an explicit async function wrapper.
 
