@@ -1,7 +1,7 @@
 // src/app/events/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useUser, firestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { collection, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
@@ -16,11 +16,16 @@ export default function EventsPage() {
   const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(true);
+  const [errorEvents, setErrorEvents] = useState<Error | null>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
-  useEffect(() => {
-    if (!firestore) return;
+  const fetchEvents = useCallback(async () => {
+    if (!firestore) {
+      setIsLoadingEvents(false);
+      return;
+    }
+    setIsLoadingEvents(true);
 
     const eventsQuery = query(collection(firestore, 'events'), orderBy('date', 'desc'));
     const unsubscribe = onSnapshot(eventsQuery, (snapshot) => {
@@ -29,11 +34,11 @@ export default function EventsPage() {
         return {
           id: doc.id,
           ...data,
-          date: data.date, // Keep it as a Timestamp for now
+          date: data.date,
         } as Event;
       });
       setEvents(eventsData);
-      setIsLoading(false);
+      setIsLoadingEvents(false);
     }, (error) => {
         const permissionError = new FirestorePermissionError({
             path: 'events',
@@ -41,11 +46,19 @@ export default function EventsPage() {
         });
         errorEmitter.emit('permission-error', permissionError);
         console.error("Error fetching events:", error);
-        setIsLoading(false);
+        setErrorEvents(error);
+        setIsLoadingEvents(false);
     });
 
-    return () => unsubscribe();
+    return unsubscribe;
   }, []);
+
+  useEffect(() => {
+    const unsubscribePromise = fetchEvents();
+    return () => {
+        unsubscribePromise.then(unsubscribe => unsubscribe && unsubscribe());
+    };
+  }, [fetchEvents]);
   
   const handleEdit = (event: Event) => {
     setEditingEvent(event);
@@ -79,14 +92,16 @@ export default function EventsPage() {
         <div className="mb-8">
           <EventForm 
             user={user} 
-            onFormSubmit={handleFormClose} 
+            onFormSubmit={() => {
+                handleFormClose();
+            }} 
             onCancel={handleFormClose} 
             eventToEdit={editingEvent}
           />
         </div>
       )}
 
-      {isLoading ? (
+      {isLoadingEvents ? (
         <div className="flex justify-center items-center py-16">
           <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
         </div>
