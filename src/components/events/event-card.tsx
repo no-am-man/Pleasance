@@ -1,3 +1,4 @@
+
 // src/components/events/event-card.tsx
 'use client';
 
@@ -55,8 +56,9 @@ export function EventCard({ event, currentUser, onEdit }: EventCardProps) {
   };
   
   const eventDate = event.date
-    ? (event.date instanceof Timestamp ? event.date.toDate() : new Date(event.date))
+    ? (event.date instanceof Timestamp ? event.date.toDate() : (event.date instanceof Date ? event.date : null))
     : null;
+
 
   return (
     <Card className="shadow-md hover:shadow-lg transition-shadow">

@@ -86,7 +86,7 @@ export const EventSchema = z.object({
   id: z.string().optional(), // ID is not present on creation
   title: z.string().min(3, "Title must be at least 3 characters long."),
   description: z.string().min(10, "Description must be at least 10 characters long."),
-  date: z.any().refine(val => val instanceof Date || val instanceof Timestamp, {
+  date: z.any().refine(val => (val instanceof Date || val instanceof Timestamp), {
     message: "Date is required.",
   }),
   location: z.string().min(2, "Location is required."),

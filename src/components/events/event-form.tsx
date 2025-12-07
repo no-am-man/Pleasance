@@ -1,3 +1,4 @@
+
 // src/components/events/event-form.tsx
 'use client';
 
@@ -69,6 +70,12 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
         return;
     }
     
+    // This check is now redundant because of the schema, but good for safety.
+    if (!values.date) {
+        form.setError("date", { type: "manual", message: "A date for the event is required."});
+        return;
+    }
+
     try {
         // Always convert the form's Date object back to a Firestore Timestamp before saving
         const eventData = { ...values, date: Timestamp.fromDate(values.date) };
