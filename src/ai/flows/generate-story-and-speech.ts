@@ -20,6 +20,8 @@ const InputSchema = z.object({
   userId: z.string(),
   prompt: z.string(),
   targetLanguage: z.string(),
+  sourceLanguage: z.string(),
+  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']),
 });
 
 type InputType = z.infer<typeof InputSchema>;
@@ -31,10 +33,10 @@ export async function generateStoryAndSpeech(values: InputType) {
             return { error: 'Invalid input.' };
         }
         
-        const { userId, prompt, targetLanguage } = validatedFields.data;
+        const { userId, prompt, targetLanguage, sourceLanguage, difficultyLevel } = validatedFields.data;
 
         // Step 1: Generate the story in dual language format
-        const storyResult = await generateDualStory({ prompt, targetLanguage });
+        const storyResult = await generateDualStory({ prompt, targetLanguage, sourceLanguage, difficultyLevel });
         if ('error' in storyResult || !storyResult) {
             throw new Error(storyResult?.error || 'Failed to generate the initial story text.');
         }
@@ -50,8 +52,8 @@ export async function generateStoryAndSpeech(values: InputType) {
         // Step 3: Prepare the story data for Firestore
         const storyData: Omit<Story, 'id'> = {
             userId,
-            level: 'beginner', // Assuming a default level, or it can be passed in
-            sourceLanguage: 'English', // Assuming source is always English for now
+            level: difficultyLevel,
+            sourceLanguage,
             targetLanguage,
             nativeText: storyResult.contentTranslated,
             translatedText: storyResult.contentOriginal,

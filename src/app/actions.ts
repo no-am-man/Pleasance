@@ -25,6 +25,9 @@ import { updateCardAssignees as updateCardAssigneesAction } from '@/ai/flows/upd
 import { updateRoadmapCardColumn as updateRoadmapCardColumnAction } from '@/ai/flows/update-roadmap-card-column';
 import { generateProfileAvatars } from '@/ai/flows/generate-avatars';
 import { analyzeAcademicLevel as analyzeAcademicLevelFlow } from '@/ai/flows/analyze-academic-level';
+import { generateStory as generateStoryAction } from '@/ai/flows/generate-story';
+import { translateStory as translateStoryAction } from '@/ai/flows/translate-story';
+import { generateSpeech as generateSpeechAction } from '@/ai/flows/generate-speech';
 
 import { z } from 'zod';
 import { initializeAdminApp } from '@/firebase/config-admin';
@@ -99,6 +102,10 @@ export async function seedCommunityRoadmapData(values: { communityId: string }) 
 }
 
 export { generateDualStoryAction };
+export { generateStoryAction };
+export { translateStoryAction };
+export { generateSpeechAction };
+
 
 export async function createHistorySnapshot(values: { userId: string }) {
     const { userId } = values;

@@ -7,7 +7,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 
 const TranslateStoryInputSchema = z.object({
   storyText: z.string().describe('The story text in the source language.'),

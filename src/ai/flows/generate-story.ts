@@ -1,4 +1,3 @@
-
 // src/ai/flows/generate-story.ts
 'use server';
 /**
@@ -15,6 +14,7 @@ const GenerateStoryInputSchema = z.object({
     .enum(['beginner', 'intermediate', 'advanced'])
     .describe('The difficulty level of the story to generate.'),
   sourceLanguage: z.string().describe('The language the story should be written in.'),
+  prompt: z.string().optional().describe("An optional theme or prompt for the story.")
 });
 type GenerateStoryInput = z.infer<typeof GenerateStoryInputSchema>;
 
@@ -39,7 +39,11 @@ const generateStoryPrompt = ai.definePrompt({
         }
     ]
   },
-  prompt: `You are a creative story writer. Write a short story in {{sourceLanguage}} for a {{difficultyLevel}} level language learner. The story should be engaging and suitable for language learning purposes.`,
+  prompt: `You are a creative story writer. Write a short story in {{sourceLanguage}} for a {{difficultyLevel}} level language learner. The story should be engaging and suitable for language learning purposes.
+  {{#if prompt}}
+  The story should be about: "{{prompt}}".
+  {{/if}}
+  `,
 });
 
 const generateStoryFlow = ai.defineFlow(

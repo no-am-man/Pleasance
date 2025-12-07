@@ -14,6 +14,8 @@ import type { DualLanguageStory as StoryDataType } from '@/lib/types';
 const GenerateDualStoryInputSchema = z.object({
   prompt: z.string().describe("A simple prompt or theme for the story."),
   targetLanguage: z.string().describe("The primary language for the story (e.g., 'Spanish', 'French')."),
+  sourceLanguage: z.string().describe("The user's native language for translation (e.g., 'English')."),
+  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']).describe("The difficulty level of the story.")
 });
 
 export async function generateDualStory(
@@ -37,15 +39,15 @@ const dualStoryPrompt = ai.definePrompt({
         model: "googleai/gemini-1.5-flash-001",
     },
     prompt: `You are an expert storyteller and language teacher. Create a short, simple, and engaging story based on the user's prompt.
-    The story should be suitable for a beginner to intermediate language learner.
+    The story should be suitable for a {{difficultyLevel}} language learner.
 
     Your task is to generate a JSON object that strictly adheres to the provided schema.
 
     1.  **titleOriginal**: Write a creative title for the story in {{targetLanguage}}.
-    2.  **titleTranslated**: Translate that title into English.
+    2.  **titleTranslated**: Translate that title into {{sourceLanguage}}.
     3.  **contentOriginal**: Write the full story in {{targetLanguage}}. It should be 3-5 paragraphs long.
-    4.  **contentTranslated**: Provide a precise English translation of the story.
-    5.  **vocabulary**: Extract 5-7 key vocabulary words from the {{targetLanguage}} story. For each word, provide its English translation and the context sentence where it was used.
+    4.  **contentTranslated**: Provide a precise {{sourceLanguage}} translation of the story.
+    5.  **vocabulary**: Extract 5-7 key vocabulary words from the {{targetLanguage}} story. For each word, provide its translation into {{sourceLanguage}} and the context sentence where it was used.
 
     User Prompt: "{{prompt}}"
 

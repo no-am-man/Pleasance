@@ -32,11 +32,13 @@ import {
 } from '@/components/ui/dialog';
 import Leaderboard from '@/components/leaderboard';
 import { useTranslation } from '@/hooks/use-translation';
-import { StorySchema as StoryDataTypeSchema, type StorySchema as StoryDataType } from '@/lib/types';
+import { StorySchema as StoryDataTypeSchema, type Story as StoryDataType } from '@/lib/types';
 
 const StoryFormSchema = z.object({
   prompt: z.string().min(3, "Please enter a theme or idea for your story."),
   targetLanguage: z.string({ required_error: 'Please select a language to learn.' }),
+  sourceLanguage: z.string({ required_error: 'Please select your native language.' }),
+  difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced']),
 });
 
 type CommunityProfile = {
@@ -266,6 +268,7 @@ export default function StoryPage() {
     resolver: zodResolver(StoryFormSchema),
     defaultValues: {
       prompt: '',
+      difficultyLevel: 'beginner',
     },
   });
 
@@ -284,6 +287,8 @@ export default function StoryPage() {
             form.reset({
                 prompt: '',
                 targetLanguage: profileData.learningLanguage,
+                sourceLanguage: profileData.nativeLanguage,
+                difficultyLevel: 'beginner',
             });
         }
         setIsProfileLoading(false);
@@ -383,8 +388,7 @@ export default function StoryPage() {
                         <CardContent>
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <FormField
+                                <FormField
                                     control={form.control}
                                     name="prompt"
                                     render={({ field }) => (
@@ -396,6 +400,31 @@ export default function StoryPage() {
                                         <FormMessage className="text-red-400" />
                                         </FormItem>
                                     )}
+                                />
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                     <FormField
+                                        control={form.control}
+                                        name="sourceLanguage"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                            <FormLabel className="text-white font-headline">{t('story_form_your_language')}</FormLabel>
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <FormControl>
+                                                <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-body">
+                                                    <SelectValue placeholder={t('story_form_select_your_language')} />
+                                                </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent className="bg-slate-800 text-white border-slate-600 font-body">
+                                                {LANGUAGES.map((lang) => (
+                                                    <SelectItem key={lang.value} value={lang.value}>
+                                                    {lang.label}
+                                                    </SelectItem>
+                                                ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage className="text-red-400" />
+                                            </FormItem>
+                                        )}
                                     />
                                     <FormField
                                     control={form.control}
@@ -420,6 +449,28 @@ export default function StoryPage() {
                                         <FormMessage className="text-red-400" />
                                         </FormItem>
                                     )}
+                                    />
+                                     <FormField
+                                        control={form.control}
+                                        name="difficultyLevel"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                            <FormLabel className="text-white font-headline">{t('story_form_difficulty')}</FormLabel>
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <FormControl>
+                                                <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white font-body">
+                                                    <SelectValue placeholder={t('story_form_select_difficulty')} />
+                                                </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent className="bg-slate-800 text-white border-slate-600 font-body">
+                                                    <SelectItem value="beginner">{t('story_form_difficulty_beginner')}</SelectItem>
+                                                    <SelectItem value="intermediate">{t('story_form_difficulty_intermediate')}</SelectItem>
+                                                    <SelectItem value="advanced">{t('story_form_difficulty_advanced')}</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage className="text-red-400" />
+                                            </FormItem>
+                                        )}
                                     />
                                 </div>
                                 <Button type="submit" disabled={isGenerating} size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold font-body">
