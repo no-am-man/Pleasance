@@ -18,30 +18,26 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
       return;
     }
 
-    // Immediately set text based on language, using original for 'en'
-    // or falling back to original if no translation is cached yet.
-    if (language === 'en') {
-      setTranslatedText(originalText);
-      setIsLoading(false);
-      return;
-    }
-
-    const cacheKey = `${language}:${originalText}`;
-
-    if (cache.has(cacheKey)) {
-      setTranslatedText(cache.get(cacheKey)!);
-      setIsLoading(false);
-      return;
-    }
-
-    // If not English and not in cache, start fetching.
-    // Show original text while loading.
-    setTranslatedText(originalText);
-    setIsLoading(true);
-
+    // A flag to prevent state updates if the component unmounts
     let isCancelled = false;
 
     const translate = async () => {
+      // Immediately set text based on language, using original for 'en'
+      // or falling back to original if no translation is cached yet.
+      if (language === 'en') {
+        if (!isCancelled) setTranslatedText(originalText);
+        return;
+      }
+
+      const cacheKey = `${language}:${originalText}`;
+      if (cache.has(cacheKey)) {
+        if (!isCancelled) setTranslatedText(cache.get(cacheKey)!);
+        return;
+      }
+
+      // If not English and not in cache, start fetching.
+      if (!isCancelled) setIsLoading(true);
+
       try {
         const result = await translateTextAction({
           text: originalText,
