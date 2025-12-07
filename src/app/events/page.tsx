@@ -20,10 +20,10 @@ export default function EventsPage() {
   const [errorEvents, setErrorEvents] = useState<Error | null>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
-  const fetchEvents = useCallback(async () => {
+  const fetchEvents = useCallback(() => {
     if (!firestore) {
       setIsLoadingEvents(false);
-      return;
+      return () => {}; // Return a no-op function for cleanup
     }
     setIsLoadingEvents(true);
 
@@ -53,9 +53,11 @@ export default function EventsPage() {
   }, []);
 
   useEffect(() => {
-    const unsubscribePromise = fetchEvents();
+    const unsubscribe = fetchEvents();
     return () => {
-        unsubscribePromise.then(unsubscribe => unsubscribe && unsubscribe());
+        if (unsubscribe) {
+            unsubscribe();
+        }
     };
   }, [fetchEvents]);
   
