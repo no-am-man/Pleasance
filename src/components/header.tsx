@@ -1,3 +1,4 @@
+
 // src/components/header.tsx
 'use client';
 
@@ -111,7 +112,7 @@ export function Header() {
               { href: '/treasury', label: 'navTreasury', icon: Banknote },
               { href: '/roadmap', label: 'navRoadmap', icon: KanbanIcon },
               { href: '/bugs', label: 'navBugTracker', icon: Bug },
-              { href: '/ambasedor', label: 'navAmbasedor', icon: Bot },
+              { href: '/conductor', label: 'navConductor', icon: Bot },
           ]
       },
       {

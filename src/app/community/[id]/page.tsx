@@ -1,3 +1,4 @@
+
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -7,7 +8,7 @@ import { firestore } from '@/firebase/config';
 import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, arrayRemove, updateDoc, getDoc, getDocs, setDoc, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info, LogOut, Wrench, Banknote, UserX, CornerDownRight } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info, LogOut, Wrench, Banknote, UserX, CornerDownRight, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -665,6 +666,13 @@ export default function CommunityProfilePage() {
                                 <div className="mt-2 text-xs text-center text-muted-foreground">{t('community_page_tool_treasury_desc')}</div>
                             </Link>
                         </Button>
+                        <Button asChild variant="outline" className="h-auto py-4">
+                            <Link href={`/community/${id}/wiki`} className="flex flex-col items-center gap-2">
+                                <BookOpen className="w-8 h-8 text-primary" />
+                                <span className="font-semibold">Wiki</span>
+                                <div className="mt-2 text-xs text-center text-muted-foreground">A shared knowledge base for members.</div>
+                            </Link>
+                        </Button>
                     </CardContent>
                 </Card>
             </TabsContent>
@@ -721,3 +729,4 @@ export default function CommunityProfilePage() {
     
 
     
+

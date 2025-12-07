@@ -60,7 +60,7 @@ service cloud.firestore {
     
     // Rule for the main communities collection.
     match /communities/{communityId} {
-        allow get: if true; 
+        allow get: if true;
         allow list: if true;
         allow create: if isSignedIn();
         allow update, delete: if isCommunityOwner(communityId);
@@ -100,6 +100,11 @@ service cloud.firestore {
                 allow create: if isCommunityMember(communityId);
                 allow update, delete: if isOwner(resource.data.userId);
             }
+        }
+        
+        // Wiki Articles: Readable and writable only by community members.
+        match /wiki/{articleId} {
+            allow read, write: if isCommunityMember(communityId);
         }
     }
     

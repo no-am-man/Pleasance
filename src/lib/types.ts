@@ -1,3 +1,4 @@
+
 // src/lib/types.ts
 import { z } from 'zod';
 import { Timestamp } from 'firebase/firestore';
@@ -188,3 +189,14 @@ export const AssetSchema = z.object({
   communityId: z.string().optional(),
 });
 export type Asset = z.infer<typeof AssetSchema>;
+
+export const WikiArticleSchema = z.object({
+    id: z.string(),
+    title: z.string(),
+    content: z.string(),
+    authorId: z.string(),
+    authorName: z.string(),
+    createdAt: z.any(),
+    updatedAt: z.any(),
+});
+export type WikiArticle = z.infer<typeof WikiArticleSchema>;
