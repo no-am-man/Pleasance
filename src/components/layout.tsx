@@ -1,4 +1,3 @@
-
 // src/components/layout.tsx
 'use client';
 
@@ -8,14 +7,16 @@ import { Breadcrumbs } from './breadcrumbs';
 import { cn } from '@/lib/utils';
 import { useLanguage } from './language-provider';
 import { PresenceBar } from './presence-bar';
-import { usePresence } from '@/hooks/use-presence';
+import { PresenceManager } from './PresenceManager';
+import { useUser } from '@/firebase';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { direction } = useLanguage();
-  usePresence(); // This hook manages the user's online status
+  const { isUserLoading } = useUser();
 
   return (
     <div className={cn("flex min-h-screen w-full", direction === 'rtl' ? 'rtl' : 'ltr')}>
+      {!isUserLoading && <PresenceManager />}
       <Sidebar />
       <div className="flex flex-1 flex-col sm:ml-[var(--sidebar-margin-left)] sm:mr-[var(--sidebar-margin-right)]">
         <Header />
