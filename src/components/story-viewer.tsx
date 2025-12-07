@@ -64,7 +64,7 @@ const KaraokeText = ({ text, totalDuration, currentTime, isMuted, language }: { 
                     clipPath: clipPathStyle,
                 }}
             >
-                <p className={cn("whitespace-pre-wrap leading-relaxed text-primary", isRtlLanguage && "text-right")} dir={isRtlLanguage ? "rtl" : "ltr"}>{text}</p>
+                <p className={cn("whitespace-pre-wrap leading-relaxed bg-gradient-to-r from-fuchsia-500 to-yellow-500 bg-clip-text text-transparent", isRtlLanguage && "text-right")} dir={isRtlLanguage ? "rtl" : "ltr"}>{text}</p>
             </div>
         </div>
     );
