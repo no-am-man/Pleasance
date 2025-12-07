@@ -1,3 +1,4 @@
+
 // src/app/actions.ts
 'use server';
 
@@ -27,6 +28,7 @@ import { analyzeAcademicLevel as analyzeAcademicLevelFlow } from '@/ai/flows/ana
 import { generateStory as generateStoryFlow } from '@/ai/flows/generate-story';
 import { translateStory as translateStoryFlow } from '@/ai/flows/translate-story';
 import { generateSpeech as generateSpeechFlow } from '@/ai/flows/generate-speech';
+import { analyzeStudiesAndBoostCommunityTool as analyzeStudiesAndBoostCommunityFlow } from '@/ai/tools/academic-analyzer-tool';
 
 import { z } from 'zod';
 import { initializeAdminApp } from '@/firebase/config-admin';
@@ -230,4 +232,8 @@ export async function generateProfileAvatarsAction(values: any) {
 
 export async function analyzeAcademicLevelAction(values: { studies: string }) {
     return await analyzeAcademicLevelFlow(values);
+}
+
+export async function analyzeStudiesAndBoostCommunityAction(values: any) {
+    return await analyzeStudiesAndBoostCommunityFlow(values);
 }

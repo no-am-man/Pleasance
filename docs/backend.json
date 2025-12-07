@@ -207,6 +207,10 @@
           "type": "string",
           "description": "The data URI of the AI-generated community flag SVG.",
           "format": "uri"
+        },
+        "worth": {
+            "type": "number",
+            "description": "The total value of the community's treasury and intellectual capital in Satoshis."
         }
       },
       "required": ["id", "ownerId", "name", "description", "members"]

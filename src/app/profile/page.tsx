@@ -27,6 +27,7 @@ import { generateProfileAvatarsAction, analyzeAcademicLevelAction } from '../act
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { useTranslation } from '@/hooks/use-translation';
+import { analyzeStudiesAndBoostCommunityAction } from '../actions';
 
 const ProfileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -51,6 +52,7 @@ function AcademicAnalyzer({ onLevelAnalyzed }: { onLevelAnalyzed: (level: string
     const { t } = useTranslation();
     const { toast } = useToast();
     const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const { user } = useUser();
     
     const form = useForm<z.infer<typeof AcademicAnalysisSchema>>({
         resolver: zodResolver(AcademicAnalysisSchema),
@@ -58,14 +60,24 @@ function AcademicAnalyzer({ onLevelAnalyzed }: { onLevelAnalyzed: (level: string
     });
 
     async function onSubmit(data: z.infer<typeof AcademicAnalysisSchema>) {
+        if (!user) {
+            toast({ variant: 'destructive', title: "Authentication Error", description: "You must be logged in to use this feature." });
+            return;
+        }
         setIsAnalyzing(true);
         try {
-            const result = await analyzeAcademicLevelAction({ studies: data.studies });
+            // This now calls the tool via the Ambassador
+            const result = await analyzeStudiesAndBoostCommunityAction({ 
+                userId: user.uid,
+                communityId: 'pleasance-founding-community', // Example community ID
+                studies: data.studies 
+            });
+
             if (result.error) {
                 throw new Error(result.error);
             }
             onLevelAnalyzed(result.academicLevel);
-            toast({ title: "Analysis Complete", description: "Your academic level has been updated." });
+            toast({ title: "Analysis Complete", description: result.message });
         } catch(e) {
             const message = e instanceof Error ? e.message : "An unknown error occurred.";
             toast({ variant: 'destructive', title: "Analysis Failed", description: message });
@@ -86,7 +98,7 @@ function AcademicAnalyzer({ onLevelAnalyzed }: { onLevelAnalyzed: (level: string
                 <DialogHeader>
                     <DialogTitle>Academic Level AI Analyzer</DialogTitle>
                     <DialogDescription>
-                        Describe your academic background, formal or self-taught. The AI will analyze it to determine an equivalent academic standing.
+                        Describe your academic background, formal or self-taught. The AI will analyze it to determine an equivalent academic standing and contribute value to the community.
                     </DialogDescription>
                 </DialogHeader>
                  <Form {...form}>
@@ -107,7 +119,7 @@ function AcademicAnalyzer({ onLevelAnalyzed }: { onLevelAnalyzed: (level: string
                         <DialogFooter>
                             <Button type="submit" disabled={isAnalyzing}>
                                 {isAnalyzing ? <LoaderCircle className="mr-2 animate-spin" /> : <GraduationCap className="mr-2" />}
-                                Analyze
+                                Analyze & Contribute
                             </Button>
                         </DialogFooter>
                     </form>
