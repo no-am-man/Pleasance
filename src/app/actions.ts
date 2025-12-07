@@ -33,6 +33,7 @@ import { analyzeStudiesAndBoostCommunityTool as analyzeStudiesAndBoostCommunityF
 import { z } from 'zod';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { getFirestore, FieldValue, arrayUnion, arrayRemove } from 'firebase-admin/firestore';
+import admin from 'firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 
 // Each exported function is now an explicit async function wrapper.
@@ -251,7 +252,7 @@ export async function declareAssetWithFileAction(formData: FormData) {
             description,
             type,
             value,
-            createdAt: FieldValue.serverTimestamp(),
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
             communityId: isCommunityAsset ? communityId : null,
         };
 
@@ -275,4 +276,3 @@ export async function analyzeAcademicLevelAction(values: { studies: string }) {
 export async function analyzeStudiesAndBoostCommunityAction(values: any) {
     return await analyzeStudiesAndBoostCommunityFlow(values);
 }
-
