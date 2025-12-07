@@ -1,4 +1,3 @@
-
 'use client';
     
 import {
@@ -58,11 +57,12 @@ export async function addDocument(colRef: CollectionReference, data: any): Promi
 
 /**
  * Initiates an updateDoc operation for a document reference.
- * Does NOT await the write operation internally.
+ * It now awaits the operation.
  */
-export function updateDocumentNonBlocking(docRef: DocumentReference, data: any) {
-  updateDoc(docRef, data)
-    .catch(error => {
+export async function updateDocument(docRef: DocumentReference, data: any) {
+  try {
+    await updateDoc(docRef, data);
+  } catch (error) {
       errorEmitter.emit(
         'permission-error',
         new FirestorePermissionError({
@@ -71,7 +71,8 @@ export function updateDocumentNonBlocking(docRef: DocumentReference, data: any) 
           requestResourceData: data,
         })
       )
-    });
+      throw error; // Re-throw to let the caller know it failed
+    };
 }
 
 
@@ -91,4 +92,3 @@ export function deleteDocumentNonBlocking(docRef: DocumentReference) {
       )
     });
 }
-
