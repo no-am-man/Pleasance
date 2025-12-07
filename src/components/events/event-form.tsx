@@ -43,8 +43,8 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
     ? (eventToEdit.date instanceof Timestamp ? eventToEdit.date.toDate() : new Date(eventToEdit.date))
     : undefined;
 
-  const form = useForm<z.infer<typeof EventSchema>>({
-    resolver: zodResolver(EventSchema),
+  const form = useForm<z.infer<typeof BaseEventSchema>>({
+    resolver: zodResolver(BaseEventSchema),
     defaultValues: eventToEdit ? {
       ...eventToEdit,
       date: defaultDate,
@@ -61,7 +61,7 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
 
   const { formState: { isSubmitting } } = form;
 
-  const onSubmit = async (values: z.infer<typeof EventSchema>) => {
+  const onSubmit = async (values: z.infer<typeof BaseEventSchema>) => {
     if (!firestore) {
         toast({ variant: "destructive", title: t('toast_db_error') });
         return;
