@@ -34,7 +34,6 @@ export default function EventsPage() {
         return {
           id: doc.id,
           ...data,
-          date: data.date,
         } as Event;
       });
       setEvents(eventsData);

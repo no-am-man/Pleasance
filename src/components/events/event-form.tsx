@@ -3,7 +3,8 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { EventSchema, type Event } from '@/lib/types';
+import * as z from 'zod';
+import { EventSchema as BaseEventSchema, type Event } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -20,6 +21,12 @@ import { useToast } from '@/hooks/use-toast';
 import type { User } from 'firebase/auth';
 import { useTranslation } from '@/hooks/use-translation';
 
+// Loosen the date validation for the form, as it can be a Date object or a Timestamp initially.
+const EventFormSchema = BaseEventSchema.extend({
+  date: z.any().optional(),
+});
+
+
 interface EventFormProps {
     user: User;
     onFormSubmit: () => void;
@@ -34,7 +41,7 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
   // Convert Firestore Timestamp to JS Date for the form default value
   const defaultDate = eventToEdit?.date
     ? (eventToEdit.date instanceof Timestamp ? eventToEdit.date.toDate() : new Date(eventToEdit.date))
-    : new Date();
+    : undefined;
 
   const form = useForm<z.infer<typeof EventSchema>>({
     resolver: zodResolver(EventSchema),
@@ -45,7 +52,7 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
       title: '',
       description: '',
       location: '',
-      date: new Date(),
+      date: undefined, // Start with no date selected for new events
       organizerId: user.uid,
       organizerName: user.displayName || 'Anonymous',
       attendees: [],
@@ -57,6 +64,10 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
   const onSubmit = async (values: z.infer<typeof EventSchema>) => {
     if (!firestore) {
         toast({ variant: "destructive", title: t('toast_db_error') });
+        return;
+    }
+    if (!values.date) {
+        form.setError('date', { type: 'manual', message: 'Please select a date for the event.' });
         return;
     }
     
@@ -71,8 +82,7 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
             toast({ title: t('toast_event_updated') });
         } else {
             const collectionRef = collection(firestore, 'events');
-            const { id, ...dataToAdd } = eventData;
-            await addDoc(collectionRef, dataToAdd);
+            await addDoc(collectionRef, eventData);
             toast({ title: t('toast_event_created') });
         }
         onFormSubmit();
@@ -152,7 +162,7 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
                             )}
                           >
                             {field.value ? (
-                              format(field.value as Date, "PPP")
+                              format(field.value, "PPP")
                             ) : (
                               <span>{t('event_form_date_placeholder')}</span>
                             )}
@@ -163,9 +173,9 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           mode="single"
-                          selected={field.value as Date}
+                          selected={field.value}
                           onSelect={field.onChange}
-                          disabled={(date) => date < new Date()}
+                          disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
                           initialFocus
                         />
                       </PopoverContent>
