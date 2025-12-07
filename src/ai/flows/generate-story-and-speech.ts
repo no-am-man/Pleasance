@@ -67,7 +67,7 @@ export async function generateStoryAndSpeech(values: InputType) {
             vocabulary: storyResult.vocabulary,
         };
 
-        // Step 4: Save the story to Firestore (non-blocking)
+        // Step 4: Save the story to Firestore (now awaiting completion)
         const storiesColRef = collection(firestore, `users/${userId}/stories`);
         const newDocRef = await addDocument(storiesColRef, storyData);
         
