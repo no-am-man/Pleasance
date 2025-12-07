@@ -65,7 +65,7 @@ const KaraokeText = ({ text, totalDuration, currentTime, isMuted, language }: { 
                     clipPath: clipPathStyle,
                 }}
             >
-                <p className={cn("whitespace-pre-wrap leading-relaxed bg-gradient-to-r from-fuchsia-500 to-yellow-500 bg-clip-text text-transparent", isRtlLanguage && "text-right")} dir={isRtlLanguage ? "rtl" : "ltr"}>{text}</p>
+                <p className={cn("whitespace-pre-wrap leading-relaxed text-primary", isRtlLanguage && "text-right")} dir={isRtlLanguage ? "rtl" : "ltr"}>{text}</p>
             </div>
         </div>
     );
@@ -155,7 +155,7 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
                     <CardHeader className="flex flex-row justify-between items-start">
                         <CardTitle>Original Story ({story.sourceLanguage})</CardTitle>
                         <Button variant="ghost" size="icon" onClick={() => handleCopy(story.nativeText, 'original')}>
-                            <Copy className="w-4 h-4" />
+                            <Copy className="w-4 w-4" />
                         </Button>
                     </CardHeader>
                     <CardContent>
@@ -189,7 +189,7 @@ export default function StoryViewer({ story, autoplay = false }: StoryViewerProp
                 <CardHeader className="flex flex-row justify-between items-start">
                     <CardTitle>Translated Story ({story.targetLanguage})</CardTitle>
                     <Button variant="ghost" size="icon" onClick={() => handleCopy(story.translatedText, 'translated')}>
-                        <Copy className="w-4 h-4" />
+                        <Copy className="w-4 w-4" />
                     </Button>
                 </CardHeader>
                 <CardContent>
