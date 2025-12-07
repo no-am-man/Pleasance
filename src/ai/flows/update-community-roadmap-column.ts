@@ -31,7 +31,7 @@ export async function updateCommunityRoadmapCardColumn(communityId: string, card
         const sourceColRef = firestore.doc(`communities/${communityId}/roadmap/${sourceColumnId}`);
         const targetColRef = firestore.doc(`communities/${communityId}/roadmap/${targetColumnId}`);
 
-        return await firestore.runTransaction(async (transaction) => {
+        await firestore.runTransaction(async (transaction) => {
             const sourceDoc = await transaction.get(sourceColRef);
             const targetDoc = await transaction.get(targetColRef);
 
@@ -48,15 +48,15 @@ export async function updateCommunityRoadmapCardColumn(communityId: string, card
 
             if (!cardToMove) {
                 console.warn(`Card with ID ${cardId} not found in source column ${sourceColumnId}. It may have already been moved.`);
-                return { success: true, message: 'Card already moved.' };
+                return; // Exit transaction gracefully if card is already moved.
             }
 
             // Atomically remove from source and add to target
             transaction.update(sourceColRef, { cards: FieldValue.arrayRemove(cardToMove) });
             transaction.update(targetColRef, { cards: FieldValue.arrayUnion(cardToMove) });
-
-            return { success: true };
         });
+        
+        return { success: true };
 
     } catch (e) {
         const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
