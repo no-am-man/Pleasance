@@ -24,7 +24,7 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
 
     const translate = async () => {
       if (language === 'en') {
-        if (translatedText !== originalText && !isCancelled) {
+        if (translatedText !== originalText) {
           setTranslatedText(originalText);
         }
         return;
@@ -33,7 +33,7 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
       const cacheKey = `${language}:${originalText}`;
       if (cache.has(cacheKey)) {
         const cachedValue = cache.get(cacheKey)!;
-        if (translatedText !== cachedValue && !isCancelled) {
+        if (translatedText !== cachedValue) {
           setTranslatedText(cachedValue);
         }
         return;
@@ -50,7 +50,9 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
         if (!isCancelled) {
           const translation = result.translation || originalText;
           cache.set(cacheKey, translation);
-          setTranslatedText(translation);
+          if (translatedText !== translation) {
+            setTranslatedText(translation);
+          }
         }
       } catch (error) {
         console.error("Translation failed:", error);
@@ -69,7 +71,7 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
     return () => {
       isCancelled = true;
     };
-  }, [originalText, language, translatedText]);
+  }, [originalText, language]); // translatedText removed from dependencies
 
   return { translatedText, isLoading };
 }
