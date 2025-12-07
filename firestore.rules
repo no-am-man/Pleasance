@@ -30,7 +30,11 @@ service cloud.firestore {
     }
 
     function isCommunityMember(communityId) {
-      return isSignedIn() && get(/databases/$(database)/documents/communities/$(communityId)).data.members.hasAny([request.auth.uid]);
+      // This is a simplified check. A more robust solution would be a members subcollection or checking an array of UIDs.
+      // For now, we assume public read access to members array is acceptable for this helper.
+      return isSignedIn() && exists(/databases/$(database)/documents/communities/$(communityId)) && (
+        request.auth.uid in get(/databases/$(database)/documents/communities/$(communityId)).data.members
+      );
     }
     
     //================================================================================
@@ -49,66 +53,93 @@ service cloud.firestore {
 
     // Rule for publicly readable, but privately writable, user profiles.
     match /community-profiles/{userId} {
-        allow get: if true; // Everyone can read a profile
-        allow list: if isSignedIn(); // Logged-in users can list profiles
+        allow get: if true; 
+        allow list: if isSignedIn();
         allow create, update, delete: if isOwner(userId);
     }
     
     // Rule for the main communities collection.
     match /communities/{communityId} {
-        allow get, list: if true; // All communities are publicly visible
-        allow create: if isSignedIn(); // Any signed-in user can create a community
-        allow update, delete: if isCommunityOwner(communityId); // Only the owner can modify or delete
+        allow get: if true; 
+        allow list: if true;
+        allow create: if isSignedIn();
+        allow update, delete: if isCommunityOwner(communityId);
 
         // Community Assets: Readable by members, writable by the community owner
         match /assets/{assetId} {
-          allow read: if isCommunityMember(communityId);
-          allow write: if isCommunityOwner(communityId);
+          allow read, write: if isCommunityOwner(communityId);
         }
 
-        // Rules for subcollections within a community
-        match /{subcollection}/{document=**} {
-          // By default, only signed-in users can interact with subcollections
-          allow read, write: if isSignedIn();
+        // Community Creations: Readable by all, writable by members
+        match /creations/{creationId} {
+            allow read: if true;
+            allow write: if isCommunityMember(communityId);
+        }
+        
+        // Community Roadmap: Readable by all, writable by owner
+        match /roadmap/{columnId} {
+            allow read: if true;
+            allow write: if isCommunityOwner(communityId);
+        }
+        
+        // Join Requests: Readable by owner, writable by the requesting user
+        match /joinRequests/{userId} {
+            allow read: if isCommunityOwner(communityId);
+            allow create, update: if isOwner(userId);
+        }
+        
+        // Forms (Messages): Readable by all, writable by members
+        match /forms/{formId} {
+            allow read: if true;
+            allow create: if isCommunityMember(communityId);
+            allow update, delete: if isOwner(resource.data.userId);
+            
+            // Comments: Readable by all, writable by members
+            match /comments/{commentId} {
+                allow read: if true;
+                allow create: if isCommunityMember(communityId);
+                allow update, delete: if isOwner(resource.data.userId);
+            }
         }
     }
     
     // Rule for bug reports.
     match /bugs/{bugId} {
-      allow read, list: if true; // Bug reports are public
-      allow create: if isSignedIn(); // Any signed-in user can create a bug report
-      allow update, delete: if isFounder(); // Only founder can modify
+      allow read, list: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isFounder();
     }
     
     // Rule for public roadmap.
     match /roadmap/{columnId} {
         allow read, list: if true;
-        allow write: if isFounder(); // Only founder can write to the public roadmap
+        allow write: if isFounder();
     }
 
     // Rule for user presence.
     match /presence/{userId} {
-        allow read: if true; // Anyone can see who is online
-        allow write: if isOwner(userId); // User can write to their own presence doc
+        allow read: if true;
+        allow write: if isOwner(userId);
     }
     
     // Rule for events.
     match /events/{eventId} {
       allow read, list: if true;
-      allow create, update, delete: if isSignedIn() && (request.resource.data.organizerId == request.auth.uid || resource.data.organizerId == request.auth.uid);
-      
-      // Allow any signed-in user to add/remove themselves from attendees
-      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attendees']);
+      // Allow create/update/delete only by the organizer.
+      allow create, update, delete: if isSignedIn() && (request.resource.data.organizerId == request.auth.uid || (resource.data.organizerId == request.auth.uid));
+      // Allow any signed-in user to modify ONLY the attendees list to RSVP.
+      allow update: if isSignedIn() && request.resource.data.keys().hasOnly(['attendees']);
     }
 
-    // Rule for Ambasedor chat history.
+    // Rule for Ambassador chat history.
     match /ambasedor/{userId} {
         allow read, write: if isOwner(userId); // Strictly private
     }
-
-    // Catch-all to deny any access not explicitly granted above.
-    match /{document=**} {
-      allow read, write: if false;
+    
+    // Rule for the leaderboard
+    match /leaderboard/{userId} {
+        allow read: if true;
+        allow write: if false; // Only server-side writes
     }
   }
 }
