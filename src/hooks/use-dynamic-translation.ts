@@ -61,7 +61,7 @@ export function useDynamicTranslation(originalText: string | undefined | null) {
     return () => {
       isCancelled = true;
     };
-  }, [originalText, language]);
+  }, [originalText, language, translatedText]);
 
   return { translatedText, isLoading };
 }
