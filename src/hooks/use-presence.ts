@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { getFirebase } from '@/firebase/config';
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { ref, onValue, onDisconnect, set, serverTimestamp as dbServerTimestamp } from 'firebase/database';
+import { ref, onValue, onDisconnect, set, serverTimestamp as dbServerTimestamp, goOffline, goOnline } from 'firebase/database';
 
 export function usePresence() {
   const { user } = useUser();
@@ -15,6 +15,7 @@ export function usePresence() {
       return;
     }
     const { firestore, database } = getFirebase();
+    goOnline(database); // Ensure connection is active
 
     const uid = user.uid;
     const userStatusDatabaseRef = ref(database, `/status/${uid}`);
@@ -56,11 +57,11 @@ export function usePresence() {
         }
     });
 
-    // The cleanup function now ONLY unsubscribes from the RTDB listener.
-    // The onDisconnect handler is responsible for setting the offline status.
     return () => {
       unsubscribe();
+      // On cleanup, disconnect from the Realtime Database to prevent leaks.
+      // The onDisconnect handler will take care of updating the status.
+      goOffline(database);
     };
-  // Stabilize dependencies to only re-run when specific user properties change.
   }, [user?.uid, user?.displayName, user?.photoURL]);
 }
