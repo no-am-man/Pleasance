@@ -295,7 +295,7 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner
     const fetchArticles = useCallback(() => {
         if (!firestore || !communityId) {
             setIsLoading(false);
-            return;
+            return () => {};
         }
         setIsLoading(true);
         const q = query(collection(firestore, `communities/${communityId}/wiki`), orderBy('title', 'asc'));
