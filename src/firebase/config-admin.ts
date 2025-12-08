@@ -32,7 +32,8 @@ export function initializeAdminApp() {
     return admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
       storageBucket: firebaseConfig.storageBucket,
-      databaseURL: "https://pleasance-db.firebaseio.com",
+      // Use the project ID from the environment variable
+      projectId: process.env.GCLOUD_PROJECT,
     }, appName);
 
   } catch (e: any) {
