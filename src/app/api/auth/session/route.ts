@@ -1,4 +1,3 @@
-
 // src/app/api/auth/session/route.ts
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { cookies } from 'next/headers';

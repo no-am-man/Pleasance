@@ -17,11 +17,10 @@ import { LoaderCircle, User, Users, PlusCircle, LogIn, Search, Sparkles, Shield,
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { createCommunityDetailsAction } from '@/app/actions';
+import { createCommunityDetailsAction, refineCommunityPromptAction } from '@/app/actions';
 import { addDocument } from '@/firebase/db-updates';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
-import { refineCommunityPromptAction } from './actions';
 import { useTranslation } from '@/hooks/use-translation';
 import { Textarea } from '@/components/ui/textarea';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
