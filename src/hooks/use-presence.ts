@@ -1,4 +1,3 @@
-
 // src/hooks/use-presence.ts
 'use client';
 
@@ -22,18 +21,6 @@ export function usePresence() {
     const userStatusDatabaseRef = ref(database, `/status/${uid}`);
     const userStatusFirestoreRef = doc(firestore, `/presence/${uid}`);
 
-    const firestoreTimestamp = serverTimestamp();
-
-    const isOfflineForFirestore = {
-        lastSeen: firestoreTimestamp,
-    };
-    const isOnlineForFirestore = {
-        userName: user.displayName || 'Anonymous',
-        avatarUrl: user.photoURL || '',
-        userId: user.uid,
-        lastSeen: firestoreTimestamp,
-    };
-
     const isOfflineForDatabase = {
         state: 'offline',
         last_changed: dbServerTimestamp(),
@@ -55,6 +42,14 @@ export function usePresence() {
         if (isConnected) {
             onDisconnect(userStatusDatabaseRef).set(isOfflineForDatabase).then(() => {
                 set(userStatusDatabaseRef, isOnlineForDatabase);
+                
+                const isOnlineForFirestore = {
+                    userName: user.displayName || 'Anonymous',
+                    avatarUrl: user.photoURL || '',
+                    userId: user.uid,
+                    lastSeen: serverTimestamp(),
+                };
+
                 setDoc(userStatusFirestoreRef, isOnlineForFirestore, { merge: true }).catch(error => {
                      errorEmitter.emit('permission-error', new FirestorePermissionError({
                         path: userStatusFirestoreRef.path,
@@ -73,5 +68,5 @@ export function usePresence() {
       // Do not perform additional async database writes in this cleanup function,
       // as they are not guaranteed to complete and can cause resource leaks in test environments.
     };
-  }, [user?.uid, user?.displayName, user?.photoURL]); // Dependency array is now stable
+  }, [user?.uid, user?.displayName, user?.photoURL]); // Dependency array is now stable and correct
 }
