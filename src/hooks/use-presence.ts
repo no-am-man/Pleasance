@@ -63,7 +63,9 @@ export function usePresence() {
     });
 
     return () => {
+      // The onDisconnect handler set above will take care of updating the status when the client disconnects.
+      // We only need to unsubscribe from the listener here to prevent memory leaks on the client.
       unsubscribe();
     };
-  }, [user?.uid, user?.displayName, user?.photoURL]);
+  }, [user?.uid, user?.displayName, user?.photoURL]); // Depend on specific primitive values from the user object
 }
