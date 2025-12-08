@@ -4,7 +4,7 @@
 import { useEffect, useRef } from 'react';
 import { useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { getFirebase } from '@/firebase/config';
-import { doc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { ref, onValue, onDisconnect, set, serverTimestamp as dbServerTimestamp } from 'firebase/database';
 
 export function usePresence() {
@@ -48,26 +48,26 @@ export function usePresence() {
     
     const unsubscribe = onValue(connectedRef, (snapshot) => {
         const isConnected = snapshot.val() === true;
-        if (!isConnected) {
-            // This is a fallback. The primary offline mechanism is onDisconnect.
-            // No need for a write here as onDisconnect should handle it.
-            if (isOnlineRef.current) {
-                isOnlineRef.current = false;
-            }
+        if (!isConnected && isOnlineRef.current) {
+            // Fallback for abrupt disconnection.
+            // No write operations here, onDisconnect handles it.
+            isOnlineRef.current = false;
             return;
         }
-        
-        onDisconnect(userStatusDatabaseRef).set(isOfflineForDatabase).then(() => {
-            set(userStatusDatabaseRef, isOnlineForDatabase);
-            setDoc(userStatusFirestoreRef, isOnlineForFirestore, { merge: true }).catch(error => {
-                 errorEmitter.emit('permission-error', new FirestorePermissionError({
-                    path: userStatusFirestoreRef.path,
-                    operation: 'write',
-                    requestResourceData: isOnlineForFirestore
-                }));
+
+        if (isConnected) {
+            onDisconnect(userStatusDatabaseRef).set(isOfflineForDatabase).then(() => {
+                set(userStatusDatabaseRef, isOnlineForDatabase);
+                setDoc(userStatusFirestoreRef, isOnlineForFirestore, { merge: true }).catch(error => {
+                     errorEmitter.emit('permission-error', new FirestorePermissionError({
+                        path: userStatusFirestoreRef.path,
+                        operation: 'write',
+                        requestResourceData: isOnlineForFirestore
+                    }));
+                });
+                isOnlineRef.current = true;
             });
-            isOnlineRef.current = true;
-        });
+        }
     });
 
     return () => {
