@@ -49,14 +49,9 @@ export function usePresence() {
     const unsubscribe = onValue(connectedRef, (snapshot) => {
         const isConnected = snapshot.val() === true;
         if (!isConnected) {
+            // This is a fallback. The primary offline mechanism is onDisconnect.
+            // No need for a write here as onDisconnect should handle it.
             if (isOnlineRef.current) {
-                updateDoc(userStatusFirestoreRef, isOfflineForFirestore).catch(error => {
-                    errorEmitter.emit('permission-error', new FirestorePermissionError({
-                        path: userStatusFirestoreRef.path,
-                        operation: 'update',
-                        requestResourceData: isOfflineForFirestore
-                    }));
-                });
                 isOnlineRef.current = false;
             }
             return;
