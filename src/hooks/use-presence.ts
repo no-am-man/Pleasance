@@ -1,4 +1,3 @@
-
 // src/hooks/use-presence.ts
 'use client';
 
@@ -92,5 +91,3 @@ export function usePresence() {
     };
   }, [user]);
 }
-
-
