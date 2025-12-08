@@ -1,7 +1,7 @@
 // src/hooks/use-presence.ts
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { getFirebase } from '@/firebase/config';
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
@@ -56,9 +56,9 @@ export function usePresence() {
         }
     });
 
+    // The cleanup function now ONLY unsubscribes from the RTDB listener.
+    // The onDisconnect handler is responsible for setting the offline status.
     return () => {
-      // CORRECT CLEANUP: Only detach the listener.
-      // The onDisconnect handler is responsible for setting the user to offline when they truly disconnect.
       unsubscribe();
     };
   // Stabilize dependencies to only re-run when specific user properties change.
