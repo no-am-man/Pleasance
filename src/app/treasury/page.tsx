@@ -22,7 +22,7 @@ import { useSearchParams } from 'next/navigation';
 import { SatoshiIcon } from '@/components/icons/satoshi-icon';
 import { useTranslation } from '@/hooks/use-translation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { addDocument } from '@/firebase/non-blocking-updates';
+import { addDocument } from '@/firebase/db-updates';
 import type { Community } from '@/lib/types';
 
 

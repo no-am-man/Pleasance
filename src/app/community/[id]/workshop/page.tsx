@@ -1,4 +1,3 @@
-
 // src/app/community/[id]/workshop/page.tsx
 'use client';
 
@@ -26,7 +25,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { GenerateSvg3dInputSchema, type ColorPixel } from '@/lib/types';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { SatoshiIcon } from '@/components/icons/satoshi-icon';
-import { addDocument } from '@/firebase/non-blocking-updates';
+import { addDocument } from '@/firebase/db-updates';
 import { SaveToTreasuryForm } from '@/components/community/SaveToTreasuryForm';
 
 type Member = {
