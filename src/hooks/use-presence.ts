@@ -14,6 +14,7 @@ export function usePresence() {
     if (!user?.uid) {
       return;
     }
+    
     const { firestore, database } = getFirebase();
     goOnline(database); // Ensure connection is active
 
