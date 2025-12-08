@@ -1,4 +1,3 @@
-
 // src/firebase/config-admin.ts
 import admin from 'firebase-admin';
 import { firebaseConfig } from './config';
