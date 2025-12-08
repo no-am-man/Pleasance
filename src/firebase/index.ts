@@ -1,4 +1,3 @@
-
 // src/firebase/index.ts
 'use client';
 import { useMemo, type DependencyList } from 'react';

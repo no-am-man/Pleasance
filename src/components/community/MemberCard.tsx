@@ -122,4 +122,3 @@ export function MemberCard({ member, communityId, isOwner, onRemove }: { member:
       </div>
     );
 }
-    

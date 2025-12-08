@@ -92,4 +92,3 @@ export function PresentationHall({ communityId }: { communityId: string }) {
         </div>
     )
 }
-    

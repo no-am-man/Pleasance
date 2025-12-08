@@ -1,4 +1,3 @@
-
 // src/components/community/SaveToTreasuryForm.tsx
 'use client';
 import { useState, useEffect } from 'react';

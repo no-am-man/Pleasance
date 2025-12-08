@@ -247,7 +247,7 @@ function WikiArticleForm({ communityId, onArticleAdded }: { communityId: string,
 
         try {
             const articlesColRef = collection(firestore, `communities/${communityId}/wiki`);
-            await addDoc(articlesColRef, {
+            await addDocument(articlesColRef, {
                 ...data,
                 authorId: user.uid,
                 authorName: user.displayName || 'Anonymous',
@@ -936,13 +936,3 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
-    
-
-    
-
-
-
-    
-
-    
-

@@ -1,4 +1,3 @@
-
 // src/components/community/JoinRequests.tsx
 'use client';
 
@@ -111,4 +110,3 @@ export function JoinRequests({ communityId, communityName }: { communityId: stri
         </div>
     );
 }
-    

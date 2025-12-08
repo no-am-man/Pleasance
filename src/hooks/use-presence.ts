@@ -2,9 +2,9 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useUser } from '@/firebase';
+import { useUser, setDocumentNonBlocking } from '@/firebase';
 import { getFirebase } from '@/firebase/config';
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { doc, serverTimestamp } from 'firebase/firestore';
 import { ref, onValue, onDisconnect, set, serverTimestamp as dbServerTimestamp, goOnline, goOffline } from 'firebase/database';
 
 export function usePresence() {
@@ -47,9 +47,8 @@ export function usePresence() {
                     lastSeen: serverTimestamp(),
                 };
 
-                // This is a fire-and-forget operation, not awaited.
-                // It will be handled by the global error handler if it fails.
-                setDoc(userStatusFirestoreRef, isOnlineForFirestore, { merge: true });
+                // Use the non-blocking update function
+                setDocumentNonBlocking(userStatusFirestoreRef, isOnlineForFirestore, { merge: true });
             });
         }
     });
