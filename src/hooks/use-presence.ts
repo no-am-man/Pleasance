@@ -1,4 +1,3 @@
-
 // src/hooks/use-presence.ts
 'use client';
 
@@ -65,9 +64,6 @@ export function usePresence() {
 
     return () => {
       unsubscribe();
-      // The onDisconnect handler set above is the correct way to manage offline status.
-      // Do not perform additional async database writes in this cleanup function,
-      // as they are not guaranteed to complete and can cause resource leaks in test environments.
     };
-  }, [user?.uid, user?.displayName, user?.photoURL]); // Dependency array is now stable and correct
+  }, [user?.uid, user?.displayName, user?.photoURL]);
 }
