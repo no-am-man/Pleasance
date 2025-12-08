@@ -1,3 +1,4 @@
+
 // src/components/header.tsx
 'use client';
 
@@ -95,7 +96,7 @@ export function Header() {
       {
           title: t('navFederation'),
           links: [
-              { href: '/', label: 'navCommunity', icon: Users },
+              { href: '/community', label: 'navCommunity', icon: Users },
               { href: '/museum', label: 'navMuseum', icon: Landmark },
               { href: '/events', label: 'navEvents', icon: CalendarHeart },
           ]

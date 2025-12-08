@@ -4,7 +4,7 @@
     "status": {
       ".read": "auth != null",
       "$uid": {
-        ".write": "auth != null && auth.uid === $uid || root.child('status').child($uid).child('state').val() === 'offline'"
+        ".write": "(auth != null && auth.uid === $uid) || (newData.child('state').val() === 'offline')"
       }
     }
   }

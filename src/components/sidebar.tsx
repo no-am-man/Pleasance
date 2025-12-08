@@ -1,3 +1,4 @@
+
 // src/components/sidebar.tsx
 'use client';
 
@@ -184,7 +185,7 @@ export function Sidebar() {
         {
             title: t('navFederation'),
             links: [
-                { href: '/', label: 'navCommunity', icon: Users },
+                { href: '/community', label: 'navCommunity', icon: Users },
                 { href: '/museum', label: 'navMuseum', icon: Landmark },
                 { href: '/events', label: 'navEvents', icon: CalendarHeart },
             ]
