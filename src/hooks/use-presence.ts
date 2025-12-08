@@ -9,7 +9,6 @@ import { ref, onValue, onDisconnect, set, serverTimestamp as dbServerTimestamp }
 
 export function usePresence() {
   const { user } = useUser();
-  const isOnlineRef = useRef(false);
 
   useEffect(() => {
     if (!user?.uid) {
@@ -58,10 +57,11 @@ export function usePresence() {
     });
 
     return () => {
+      // Correct Cleanup: ONLY detach the listener.
+      // The onDisconnect handler is responsible for setting the user to offline when they truly disconnect.
+      // Attempting to write here during component unmount causes race conditions and test failures.
       unsubscribe();
-      // We only need to detach the listener. 
-      // The onDisconnect handler will take care of updating the status when the client is truly gone.
-      // Trying to write during cleanup can lead to orphaned operations in a test environment.
     };
+  // Stabilize dependencies to only re-run when specific user properties change.
   }, [user?.uid, user?.displayName, user?.photoURL]);
 }
