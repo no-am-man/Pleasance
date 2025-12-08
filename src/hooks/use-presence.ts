@@ -50,7 +50,7 @@ export function usePresence() {
         const isConnected = snapshot.val() === true;
         if (!isConnected) {
             if (isOnlineRef.current) {
-                setDoc(userStatusFirestoreRef, isOfflineForFirestore, { merge: true }).catch(error => {
+                updateDoc(userStatusFirestoreRef, isOfflineForFirestore).catch(error => {
                     errorEmitter.emit('permission-error', new FirestorePermissionError({
                         path: userStatusFirestoreRef.path,
                         operation: 'update',
@@ -76,20 +76,9 @@ export function usePresence() {
     });
 
     return () => {
-        unsubscribe();
-        if (isOnlineRef.current) {
-            // Use set without merge: true to just update the offline status
-            set(userStatusDatabaseRef, isOfflineForDatabase);
-            // Update only lastSeen on disconnect to preserve user info
-            updateDoc(userStatusFirestoreRef, { lastSeen: firestoreTimestamp }).catch(error => {
-                 errorEmitter.emit('permission-error', new FirestorePermissionError({
-                    path: userStatusFirestoreRef.path,
-                    operation: 'update',
-                    requestResourceData: { lastSeen: 'SERVER_TIMESTAMP' }
-                }));
-            });
-            isOnlineRef.current = false;
-        }
+      // ONLY unsubscribe the listener. Do not perform async writes in cleanup.
+      // The onDisconnect handler is sufficient for managing offline state.
+      unsubscribe();
     };
   }, [user]);
 }
