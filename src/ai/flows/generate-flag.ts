@@ -59,7 +59,7 @@ const generateFlagFlow = ai.defineFlow(
     // Failure to grant this role will result in a PERMISSION_DENIED gRPC error.
     const { output } = await ai.generate({
         prompt: PROMPT_TEMPLATE,
-        model: 'googleai/gemini-1.5-flash-001',
+        model: 'googleai/gemini-1.5-pro-preview-0514',
         input,
         output: { schema: GenerateFlagOutputSchema },
     });
