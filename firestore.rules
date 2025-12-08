@@ -88,10 +88,10 @@ service cloud.firestore {
             allow create, update: if isOwner(userId);
         }
         
-        // Forms (Messages): Readable by all, writable by members
+        // Forms (Messages): Readable by all, writable by members or founder (for system messages)
         match /forms/{formId} {
             allow read: if true;
-            allow create: if isCommunityMember(communityId);
+            allow create: if isCommunityMember(communityId) || isFounder();
             allow update, delete: if isOwner(resource.data.userId);
             
             // Comments: Readable by all, writable by members
