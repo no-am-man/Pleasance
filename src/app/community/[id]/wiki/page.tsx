@@ -292,7 +292,7 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
     const [error, setError] = useState<Error | null>(null);
     const { toast } = useToast();
     
-    // Unified useEffect for fetching data and managing state
+    // Unified useEffect for fetching data
     useEffect(() => {
         if (!firestore || !communityId) {
             setIsLoading(false);
@@ -305,13 +305,6 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedArticles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WikiArticle));
             setArticles(fetchedArticles);
-            
-            // If there's no selected article, or the current one is gone, select the first available.
-            const currentSelectedExists = selectedArticle ? fetchedArticles.some(a => a.id === selectedArticle.id) : false;
-            if (!currentSelectedExists) {
-                setSelectedArticle(fetchedArticles[0] || null);
-            }
-            
             setIsLoading(false);
         }, (err) => {
             setError(err);
@@ -319,8 +312,20 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
         });
 
         return () => unsubscribe();
-    }, [communityId]); // Only re-run when the communityId changes
+    }, [communityId]);
     
+    // Effect to select the first article once data is loaded or changed
+    useEffect(() => {
+        if (!isLoading && articles.length > 0) {
+            const currentSelectedExists = selectedArticle ? articles.some(a => a.id === selectedArticle.id) : false;
+            if (!currentSelectedExists) {
+                setSelectedArticle(articles[0]);
+            }
+        } else if (!isLoading && articles.length === 0) {
+            setSelectedArticle(null);
+        }
+    }, [articles, isLoading, selectedArticle]);
+
 
     const handleDeleteArticle = async (articleId: string) => {
         if (!communityId || !firestore) return;
