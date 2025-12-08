@@ -58,12 +58,14 @@ export function usePresence() {
         }
     });
 
-    // The cleanup function now only unsubscribes the listener and goes offline.
+    // On cleanup, unsubscribe the listener and explicitly go offline.
     return () => {
       unsubscribe();
-      // On cleanup, disconnect from the Realtime Database to prevent leaks.
-      // The onDisconnect handler will take care of updating the status when the client is truly gone.
+      // This is the crucial part. When the component unmounts (e.g., at the end of a test),
+      // we immediately disconnect from the Realtime Database. The onDisconnect handler 
+      // configured above will then execute on the Firebase server, setting the user's
+      // status to 'offline' correctly and reliably without leaving pending async operations.
       goOffline(database);
     };
-  }, [user?.uid, user?.displayName, user?.photoURL]); // Use specific dependencies
+  }, [user?.uid, user?.displayName, user?.photoURL]);
 }
