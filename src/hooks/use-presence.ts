@@ -34,15 +34,19 @@ export function usePresence() {
     
     const unsubscribe = onValue(connectedRef, (snapshot) => {
         const isConnected = snapshot.val() === true;
-        if (!isConnected && isOnlineRef.current) {
-            isOnlineRef.current = false;
+        
+        // This check prevents redundant writes if the connection status hasn't actually changed.
+        if (isConnected === isOnlineRef.current) {
             return;
         }
 
         if (isConnected) {
+            // Set the onDisconnect handler *before* setting the online status.
             onDisconnect(userStatusDatabaseRef).set(isOfflineForDatabase).then(() => {
+                // Once the disconnect is guaranteed, set the current status to online.
                 set(userStatusDatabaseRef, isOnlineForDatabase);
                 
+                // Also update Firestore to show this user is online.
                 const isOnlineForFirestore = {
                     userName: user.displayName || 'Anonymous',
                     avatarUrl: user.photoURL || '',
@@ -50,6 +54,7 @@ export function usePresence() {
                     lastSeen: serverTimestamp(),
                 };
 
+                // Asynchronously update Firestore without blocking.
                 setDoc(userStatusFirestoreRef, isOnlineForFirestore, { merge: true }).catch(error => {
                      errorEmitter.emit('permission-error', new FirestorePermissionError({
                         path: userStatusFirestoreRef.path,
@@ -57,14 +62,17 @@ export function usePresence() {
                         requestResourceData: isOnlineForFirestore
                     }));
                 });
-                isOnlineRef.current = true;
             });
+            isOnlineRef.current = true;
+        } else {
+            // The onDisconnect handler will manage the offline status.
+            isOnlineRef.current = false;
         }
     });
 
+    // The cleanup function should only detach the listener.
+    // The onDisconnect handler will take care of the database updates when the user disconnects.
     return () => {
-      // The onDisconnect handler set above will take care of updating the status when the client disconnects.
-      // We only need to unsubscribe from the listener here to prevent memory leaks on the client.
       unsubscribe();
     };
   }, [user?.uid, user?.displayName, user?.photoURL]); // Depend on specific primitive values from the user object
