@@ -1,4 +1,3 @@
-
 // src/app/community/[id]/wiki/page.tsx
 'use client';
 
@@ -292,7 +291,7 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
     const [error, setError] = useState<Error | null>(null);
     const { toast } = useToast();
 
-    // Fetch articles
+    // Unified useEffect for fetching articles and setting the initial one.
     useEffect(() => {
         if (!firestore || !communityId) {
             setIsLoading(false);
@@ -305,6 +304,17 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedArticles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WikiArticle));
             setArticles(fetchedArticles);
+            
+            // This is the crucial change:
+            // Only set the selected article if one isn't already selected.
+            // This prevents the infinite loop.
+            setSelectedArticle(prevSelected => {
+                if (prevSelected && fetchedArticles.some(a => a.id === prevSelected.id)) {
+                    return prevSelected;
+                }
+                return fetchedArticles[0] || null;
+            });
+            
             setIsLoading(false);
         }, (err) => {
             setError(err);
@@ -313,19 +323,6 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
 
         return () => unsubscribe();
     }, [communityId]);
-    
-    // Effect to select the first article once data is loaded or changed
-    useEffect(() => {
-        if (!isLoading && articles.length > 0) {
-            // Only update selected article if it's null or the currently selected one was deleted
-            const currentSelectedExists = selectedArticle ? articles.some(a => a.id === selectedArticle.id) : false;
-            if (!currentSelectedExists) {
-                setSelectedArticle(articles[0]);
-            }
-        } else if (!isLoading && articles.length === 0) {
-            setSelectedArticle(null);
-        }
-    }, [articles, isLoading]);
 
 
     const handleDeleteArticle = async (articleId: string) => {
@@ -698,7 +695,7 @@ export default function CommunityProfilePage() {
         <Card className="w-full max-w-lg text-center">
           <CardHeader>
             <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
-            <CardTitle className="mt-4">{t('community_page_error_title')}</CardTitle>
+            <CardTitle className="mt-4">{t('community_page_error_title')}</CardHeader>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-4">
@@ -955,5 +952,6 @@ export default function CommunityProfilePage() {
     
 
     
+
 
 
