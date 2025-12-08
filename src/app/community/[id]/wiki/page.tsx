@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import Image from 'next/image';
 import { generateCommunityFlagAction, welcomeNewMemberAction, notifyOwnerOfJoinRequestAction } from '@/app/actions';
-import { addDocument } from '@/firebase/non-blocking-updates';
+import { addDocument } from '@/firebase/db-updates';
 import { PresentationHall } from '@/components/community/PresentationHall';
 import { JoinRequests } from '@/components/community/JoinRequests';
 import { MemberCard } from '@/components/community/MemberCard';
@@ -284,47 +284,42 @@ function WikiArticleForm({ communityId, onArticleAdded }: { communityId: string,
     );
 }
 
-function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner: boolean }) {
+function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner: boolean }) {
     const [articles, setArticles] = useState<WikiArticle[]>([]);
     const [selectedArticle, setSelectedArticle] = useState<WikiArticle | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
     const { toast } = useToast();
 
-    // Effect for fetching articles
     useEffect(() => {
         if (!firestore || !communityId) {
             setIsLoading(false);
             return;
         }
-
+        
         setIsLoading(true);
         const q = query(collection(firestore, `communities/${communityId}/wiki`), orderBy('title', 'asc'));
         
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedArticles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WikiArticle));
             setArticles(fetchedArticles);
+            
+            // Logic to select an article
+            if (!selectedArticle && fetchedArticles.length > 0) {
+                setSelectedArticle(fetchedArticles[0]);
+            } else if (selectedArticle && !fetchedArticles.find(a => a.id === selectedArticle.id)) {
+                // If the selected article was deleted, select the first one again
+                setSelectedArticle(fetchedArticles[0] || null);
+            }
+            
             setIsLoading(false);
         }, (err) => {
             setError(err);
             setIsLoading(false);
         });
 
-        // Cleanup function for the listener
         return () => unsubscribe();
-    }, [communityId]);
-    
-    // Effect to select the first article when the list loads or changes
-    useEffect(() => {
-        if (!isLoading && articles.length > 0) {
-            // If there's no selection, or the selected one is no longer in the list, select the first one.
-            if (!selectedArticle || !articles.find(a => a.id === selectedArticle.id)) {
-                setSelectedArticle(articles[0]);
-            }
-        } else if (!isLoading && articles.length === 0) {
-            setSelectedArticle(null); // Clear selection if there are no articles
-        }
-    }, [articles, isLoading, selectedArticle]);
+    }, [communityId, selectedArticle]);
     
 
     const handleDeleteArticle = async (articleId: string) => {
@@ -333,7 +328,8 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner
         try {
             await deleteDoc(docRef);
             toast({ title: 'Article Deleted' });
-            // The onSnapshot listener will automatically update the UI.
+            // The onSnapshot listener will handle the UI update.
+            // If the deleted article was the selected one, the useEffect above will select a new one.
         } catch (e) {
             const message = e instanceof Error ? e.message : 'An unknown error occurred';
             toast({ variant: 'destructive', title: 'Failed to delete article', description: message });
@@ -935,5 +931,6 @@ export default function CommunityProfilePage() {
 
 
     
+
 
 
