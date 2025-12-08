@@ -292,13 +292,17 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner
     const [error, setError] = useState<Error | null>(null);
     const { toast } = useToast();
 
-    const fetchArticles = useCallback(() => {
+    // Simplified useEffect for fetching articles
+    useEffect(() => {
         if (!firestore || !communityId) {
             setIsLoading(false);
-            return () => {};
+            return;
         }
+
         setIsLoading(true);
         const q = query(collection(firestore, `communities/${communityId}/wiki`), orderBy('title', 'asc'));
+        
+        // onSnapshot returns its own cleanup function.
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedArticles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WikiArticle));
             setArticles(fetchedArticles);
@@ -307,23 +311,22 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner
             setError(err);
             setIsLoading(false);
         });
-        return unsubscribe;
+
+        // The cleanup function returned by useEffect will be this unsubscribe function.
+        return () => unsubscribe();
     }, [communityId]);
     
+    // Effect to select the first article when the list loads or changes
     useEffect(() => {
-        const unsubscribe = fetchArticles();
-        return () => {
-            if (unsubscribe) {
-                unsubscribe();
+        if (!isLoading && articles.length > 0) {
+            // If there's no selection, or the selected one is no longer in the list, select the first one.
+            if (!selectedArticle || !articles.find(a => a.id === selectedArticle.id)) {
+                setSelectedArticle(articles[0]);
             }
-        };
-    }, [fetchArticles]);
-    
-    useEffect(() => {
-        if (articles.length > 0 && !articles.some(a => a.id === selectedArticle?.id)) {
-            setSelectedArticle(articles[0]);
+        } else if (!isLoading && articles.length === 0) {
+            setSelectedArticle(null); // Clear selection if there are no articles
         }
-    }, [articles, selectedArticle]);
+    }, [articles, isLoading, selectedArticle]);
     
 
     const handleDeleteArticle = async (articleId: string) => {
@@ -332,6 +335,7 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner
         try {
             await deleteDoc(docRef);
             toast({ title: 'Article Deleted' });
+            // The onSnapshot listener will automatically update the UI.
         } catch (e) {
             const message = e instanceof Error ? e.message : 'An unknown error occurred';
             toast({ variant: 'destructive', title: 'Failed to delete article', description: message });
@@ -353,7 +357,7 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner
     return (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="md:col-span-1">
-                <WikiArticleForm communityId={communityId} onArticleAdded={fetchArticles} />
+                <WikiArticleForm communityId={communityId} onArticleAdded={() => {}} />
                 <Card className="mt-8">
                     <CardHeader>
                         <CardTitle>Articles</CardTitle>
@@ -933,3 +937,4 @@ export default function CommunityProfilePage() {
 
 
     
+
