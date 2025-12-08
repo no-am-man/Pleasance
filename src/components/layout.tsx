@@ -6,7 +6,6 @@ import { Sidebar } from '@/components/sidebar';
 import { Breadcrumbs } from './breadcrumbs';
 import { cn } from '@/lib/utils';
 import { useLanguage } from './language-provider';
-import { PresenceBar } from './presence-bar';
 import { PresenceManager } from './PresenceManager';
 import { useUser } from '@/firebase';
 
@@ -25,10 +24,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <Breadcrumbs />
           </div>
         </header>
-        {/* PresenceBar is moved outside the responsive header to ensure it's always rendered */}
-        <div className="fixed top-0 right-0 z-40 hidden h-16 items-center sm:flex">
-          <PresenceBar />
-        </div>
         <main className="flex-grow pt-16">
           <div className="pt-4">{children}</div>
         </main>
