@@ -1,3 +1,4 @@
+
 // src/hooks/use-presence.ts
 'use client';
 
@@ -57,11 +58,12 @@ export function usePresence() {
         }
     });
 
+    // The cleanup function now only unsubscribes the listener and goes offline.
     return () => {
       unsubscribe();
       // On cleanup, disconnect from the Realtime Database to prevent leaks.
-      // The onDisconnect handler will take care of updating the status.
+      // The onDisconnect handler will take care of updating the status when the client is truly gone.
       goOffline(database);
     };
-  }, [user?.uid, user?.displayName, user?.photoURL]);
+  }, [user?.uid, user?.displayName, user?.photoURL]); // Use specific dependencies
 }
