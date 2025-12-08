@@ -32,6 +32,7 @@ export function initializeAdminApp() {
     return admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
       storageBucket: firebaseConfig.storageBucket,
+      databaseURL: "https://pleasance-db.firebaseio.com",
     }, appName);
 
   } catch (e: any) {

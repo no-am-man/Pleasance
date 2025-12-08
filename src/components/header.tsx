@@ -115,7 +115,7 @@ export function Header() {
               { href: '/treasury', label: 'navTreasury', icon: Banknote },
               { href: '/roadmap', label: 'navRoadmap', icon: KanbanIcon },
               { href: '/bugs', label: 'navBugTracker', icon: Bug },
-              { href: '/conductor', label: 'navConductor', icon: Bot },
+              { href: '/conductor', label: 'navAmbasedor', icon: Bot },
           ]
       },
       {
