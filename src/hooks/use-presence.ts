@@ -71,8 +71,6 @@ export function usePresence() {
     });
 
     return () => {
-      // ONLY unsubscribe the listener. Do not perform async writes in cleanup.
-      // The onDisconnect handler is sufficient for managing offline state.
       unsubscribe();
     };
   }, [user]);
