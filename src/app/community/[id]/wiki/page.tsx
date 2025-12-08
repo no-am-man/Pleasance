@@ -1,5 +1,4 @@
-
-// src/app/community/[id]/page.tsx
+// src/app/community/[id]/wiki/page.tsx
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
@@ -292,7 +291,7 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner
     const [error, setError] = useState<Error | null>(null);
     const { toast } = useToast();
 
-    // Simplified useEffect for fetching articles
+    // Effect for fetching articles
     useEffect(() => {
         if (!firestore || !communityId) {
             setIsLoading(false);
@@ -302,7 +301,6 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner
         setIsLoading(true);
         const q = query(collection(firestore, `communities/${communityId}/wiki`), orderBy('title', 'asc'));
         
-        // onSnapshot returns its own cleanup function.
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedArticles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WikiArticle));
             setArticles(fetchedArticles);
@@ -312,7 +310,7 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner
             setIsLoading(false);
         });
 
-        // The cleanup function returned by useEffect will be this unsubscribe function.
+        // Cleanup function for the listener
         return () => unsubscribe();
     }, [communityId]);
     
@@ -937,4 +935,5 @@ export default function CommunityProfilePage() {
 
 
     
+
 
