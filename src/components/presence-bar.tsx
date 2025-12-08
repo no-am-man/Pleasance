@@ -1,3 +1,4 @@
+
 // src/components/presence-bar.tsx
 'use client';
 

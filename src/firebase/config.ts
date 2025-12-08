@@ -1,3 +1,4 @@
+
 // src/firebase/config.ts
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
