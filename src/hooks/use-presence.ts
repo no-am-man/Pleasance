@@ -2,7 +2,8 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useUser, errorEmitter, FirestorePermissionError, getFirebase } from '@/firebase';
+import { useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { getFirebase } from '@/firebase/config';
 import { doc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { ref, onValue, onDisconnect, set, serverTimestamp as dbServerTimestamp } from 'firebase/database';
 

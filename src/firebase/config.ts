@@ -16,7 +16,7 @@ export const firebaseConfig = {
 };
 
 type FirebaseServices = {
-    firebaseApp: FirebaseApp;
+    app: FirebaseApp;
     auth: Auth;
     firestore: Firestore;
     storage: FirebaseStorage;
@@ -25,21 +25,26 @@ type FirebaseServices = {
 
 let firebaseServices: FirebaseServices | null = null;
 
-// Idempotent function to get Firebase services
+// This function is the single source of truth for getting Firebase services.
+// It ensures that Firebase is initialized only once.
 export function getFirebase(): FirebaseServices {
     if (firebaseServices) {
         return firebaseServices;
     }
 
     const apps = getApps();
-    const firebaseApp = !apps.length ? initializeApp(firebaseConfig) : apps[0];
+    const app = !apps.length ? initializeApp(firebaseConfig) : apps[0];
     
-    const auth = getAuth(firebaseApp);
-    const firestore = getFirestore(firebaseApp);
-    const storage = getStorage(firebaseApp);
-    const database = getDatabase(firebaseApp);
+    const auth = getAuth(app);
+    const firestore = getFirestore(app);
+    const storage = getStorage(app);
+    const database = getDatabase(app);
 
-    firebaseServices = { firebaseApp, auth, firestore, storage, database };
+    firebaseServices = { app, auth, firestore, storage, database };
 
     return firebaseServices;
 }
+
+// For convenience, we can also export the individual services from the getter.
+// This maintains a similar import pattern for consumers but uses the managed instance.
+export const { firestore, auth, storage, database } = getFirebase();

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Check, Palette } from 'lucide-react';

@@ -1,4 +1,3 @@
-
 // src/components/sidebar.tsx
 'use client';
 
@@ -88,6 +87,7 @@ function UserNav() {
   const handleSignOut = async () => {
     const { auth } = getFirebase();
     await signOut(auth);
+    await fetch('/api/auth/session', { method: 'DELETE' });
   };
 
   if (!user) {
