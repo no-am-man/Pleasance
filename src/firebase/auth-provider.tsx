@@ -55,13 +55,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isUserLoading,
   }), [user, isUserLoading]);
 
-  if (isUserLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
-      </div>
-    );
-  }
+  // We no longer show a global loader here. The `isUserLoading` flag is passed down
+  // so that individual pages can decide how to handle the loading state. This avoids
+  // re-rendering the entire app and potentially causing race conditions.
 
   return (
     <AuthContext.Provider value={contextValue}>
