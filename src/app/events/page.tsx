@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useUser, firestore, errorEmitter, FirestorePermissionError, getFirebase } from '@/firebase';
+import { useUser, errorEmitter, FirestorePermissionError, getFirebase } from '@/firebase';
 import { collection, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, LoaderCircle, CalendarHeart } from 'lucide-react';
@@ -20,11 +20,11 @@ export default function EventsPage() {
   const [errorEvents, setErrorEvents] = useState<Error | null>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
-  const fetchEvents = useCallback(() => {
+  useEffect(() => {
     const { firestore } = getFirebase();
     if (!firestore) {
       setIsLoadingEvents(false);
-      return () => {}; // Return a no-op function for cleanup
+      return; 
     }
     setIsLoadingEvents(true);
 
@@ -50,17 +50,8 @@ export default function EventsPage() {
         setIsLoadingEvents(false);
     });
 
-    return unsubscribe;
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = fetchEvents();
-    return () => {
-        if (unsubscribe) {
-            unsubscribe();
-        }
-    };
-  }, [fetchEvents]);
+    return () => unsubscribe();
+  }, [user]); // Add user as a dependency to re-fetch on auth state change
   
   const handleEdit = (event: Event) => {
     setEditingEvent(event);

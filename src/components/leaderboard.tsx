@@ -45,9 +45,9 @@ export default function Leaderboard() {
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
-        const { firestore } = getFirebase();
-        if (!firestore) return;
         const fetchLeaderboard = async () => {
+            const { firestore } = getFirebase();
+            if (!firestore) return;
             try {
                 const leaderboardQuery = query(collection(firestore, 'leaderboard'), orderBy('score', 'desc'), limit(10));
                 const snapshot = await getDocs(leaderboardQuery);

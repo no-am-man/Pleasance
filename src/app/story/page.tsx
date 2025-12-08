@@ -15,8 +15,7 @@ import { LANGUAGES } from '@/config/languages';
 import { generateDualStoryAction, createHistorySnapshot } from '@/app/actions';
 import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useUser } from '@/firebase';
-import { firestore } from '@/firebase/config';
+import { useUser, getFirebase } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, getDocs, getDoc } from 'firebase/firestore';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
@@ -56,13 +55,14 @@ function StoryHistory({ onSelectStory, onClearStory }: { onSelectStory: (story: 
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
-        if (!user || !firestore) {
+        if (!user) {
             setIsLoading(false);
             return;
         }
 
         const fetchStories = async () => {
             try {
+                const { firestore } = getFirebase();
                 const storiesQuery = query(collection(firestore, 'users', user.uid, 'stories'), orderBy('createdAt', 'desc'));
                 const snapshot = await getDocs(storiesQuery);
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as StoryDataType));
@@ -171,13 +171,14 @@ function TimeMachine() {
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
-        if (!user || !firestore) {
+        if (!user) {
             setIsLoading(false);
             return;
         }
 
         const fetchSnapshots = async () => {
             try {
+                const { firestore } = getFirebase();
                 const snapshotsQuery = query(collection(firestore, 'users', user.uid, 'historySnapshots'), orderBy('createdAt', 'desc'));
                 const snapshot = await getDocs(snapshotsQuery);
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as HistorySnapshot));
@@ -205,7 +206,8 @@ function TimeMachine() {
     };
     
     const handleDeleteSnapshot = async (snapshotId: string) => {
-        if (!user || !firestore) return;
+        if (!user) return;
+        const { firestore } = getFirebase();
         const docRef = doc(firestore, `users/${user.uid}/historySnapshots/${snapshotId}`);
         await deleteDoc(docRef);
         toast({ title: t('toast_snapshot_deleted_title') });
@@ -273,14 +275,16 @@ export default function StoryPage() {
   });
 
   useEffect(() => {
-    if (!user || isUserLoading) {
-      setIsProfileLoading(false);
-      return;
-    }
-    const fetchProfile = async () => {
+      const fetchProfile = async () => {
+        if (!user) {
+            setIsProfileLoading(false);
+            return;
+        }
         setIsProfileLoading(true);
+        const { firestore } = getFirebase();
         const profileDocRef = doc(firestore, 'community-profiles', user.uid);
         const docSnap = await getDoc(profileDocRef);
+        
         if (docSnap.exists()) {
             const profileData = docSnap.data() as CommunityProfile;
             setProfile(profileData);
@@ -292,9 +296,9 @@ export default function StoryPage() {
             });
         }
         setIsProfileLoading(false);
-    };
-    fetchProfile();
-  }, [user, isUserLoading, form]);
+      }
+      fetchProfile();
+  }, [user, form]);
 
 
   async function onSubmit(data: z.infer<typeof StoryFormSchema>) {

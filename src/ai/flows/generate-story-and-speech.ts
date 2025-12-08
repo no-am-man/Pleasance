@@ -11,7 +11,7 @@ import { generateDualStory } from './generate-dual-story';
 import { generateSpeech } from './generate-speech';
 import { firestore } from '@/firebase/config';
 import { collection, serverTimestamp } from 'firebase/firestore';
-import { addDocument } from '@/firebase/non-blocking-updates';
+import { addDocument } from '@/firebase/db-updates';
 import { z } from 'zod';
 import type { Story } from '@/lib/types';
 import { DualLanguageStorySchema } from '@/lib/types';

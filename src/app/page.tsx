@@ -18,7 +18,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { createCommunityDetailsAction } from '@/app/actions';
-import { addDocument } from '@/firebase/non-blocking-updates';
+import { addDocument } from '@/firebase/db-updates';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
 import { refineCommunityPromptAction } from './actions';

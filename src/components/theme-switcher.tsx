@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useUser, getFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { setDocument } from '@/firebase/db-updates';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/use-translation';
 import { useLanguage } from './language-provider';
@@ -27,12 +27,12 @@ export function ThemeSwitcher() {
     { name: 'Dark', value: 'dark' },
   ];
 
-  const handleThemeChange = (newTheme: string) => {
+  const handleThemeChange = async (newTheme: string) => {
     setTheme(newTheme);
     if (user) {
       const { firestore } = getFirebase();
       const profileRef = doc(firestore, 'community-profiles', user.uid);
-      setDocumentNonBlocking(profileRef, { theme: newTheme }, { merge: true });
+      await setDocument(profileRef, { theme: newTheme }, { merge: true });
     }
   };
 

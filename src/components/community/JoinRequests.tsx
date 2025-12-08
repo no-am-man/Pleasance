@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { firestore } from '@/firebase/config';
+import { getFirebase } from '@/firebase';
 import { doc, collection, query, where, arrayUnion, updateDoc, getDocs, setDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, Check, X } from 'lucide-react';
@@ -22,6 +22,7 @@ export function JoinRequests({ communityId, communityName }: { communityId: stri
     const [isLoading, setIsLoading] = useState(true);
 
     const fetchRequests = useCallback(async () => {
+        const { firestore } = getFirebase();
         if (!firestore || !communityId) return;
         setIsLoading(true);
         try {
@@ -41,6 +42,7 @@ export function JoinRequests({ communityId, communityName }: { communityId: stri
     }, [fetchRequests]);
 
     const handleRequest = async (request: JoinRequest, newStatus: 'approved' | 'rejected') => {
+        const { firestore } = getFirebase();
         if (!firestore) {
             toast({ variant: 'destructive', title: t('community_page_firestore_not_available') });
             return;
@@ -50,6 +52,7 @@ export function JoinRequests({ communityId, communityName }: { communityId: stri
         
         try {
             if (newStatus === 'approved') {
+                const { firestore } = getFirebase();
                 const profileRef = doc(firestore, 'community-profiles', request.userId);
                 const profileSnap = await getDocs(query(collection(firestore, 'community-profiles'), where('userId', '==', request.userId)));
                 const profileData = !profileSnap.empty ? profileSnap.docs[0].data() as CommunityProfile : null;
