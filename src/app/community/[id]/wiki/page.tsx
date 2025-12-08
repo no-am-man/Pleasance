@@ -1,3 +1,4 @@
+
 // src/app/community/[id]/wiki/page.tsx
 'use client';
 
@@ -290,8 +291,8 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
     const { toast } = useToast();
-    
-    // Unified useEffect for fetching data
+
+    // Fetch articles
     useEffect(() => {
         if (!firestore || !communityId) {
             setIsLoading(false);
@@ -316,6 +317,7 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
     // Effect to select the first article once data is loaded or changed
     useEffect(() => {
         if (!isLoading && articles.length > 0) {
+            // Only update selected article if it's null or the currently selected one was deleted
             const currentSelectedExists = selectedArticle ? articles.some(a => a.id === selectedArticle.id) : false;
             if (!currentSelectedExists) {
                 setSelectedArticle(articles[0]);
@@ -323,7 +325,7 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
         } else if (!isLoading && articles.length === 0) {
             setSelectedArticle(null);
         }
-    }, [articles, isLoading, selectedArticle]);
+    }, [articles, isLoading]);
 
 
     const handleDeleteArticle = async (articleId: string) => {
@@ -447,14 +449,40 @@ export default function CommunityProfilePage() {
   const [allCommunities, setAllCommunities] = useState<Community[]>([]);
   const [isLoadingAncillary, setIsLoadingAncillary] = useState(true);
 
+  // Effect for fetching ancillary data (runs once)
   useEffect(() => {
-    if (!id || !firestore || isUserLoading) {
-        if (!isUserLoading) setIsLoading(false);
+    const fetchAncillaryData = async () => {
+        if (!firestore) {
+            setIsLoadingAncillary(false);
+            return;
+        };
+        setIsLoadingAncillary(true);
+        try {
+            const [communitiesSnapshot, profilesSnapshot] = await Promise.all([
+                getDocs(query(collection(firestore, 'communities'))),
+                getDocs(query(collection(firestore, 'community-profiles')))
+            ]);
+            setAllCommunities(communitiesSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as Community)));
+            setAllProfiles(profilesSnapshot.docs.map(d => d.data() as CommunityProfile));
+        } catch (e) {
+            console.error("Error fetching ancillary data:", e);
+        } finally {
+            setIsLoadingAncillary(false);
+        }
+    };
+    fetchAncillaryData();
+  }, []);
+
+  // Effect for the main community document (real-time)
+  useEffect(() => {
+    if (!id || !firestore) {
+        setIsLoading(false);
         return;
     };
     
+    setIsLoading(true);
     const communityDocRef = doc(firestore, 'communities', id);
-    const unsubscribe = onSnapshot(communityDocRef, (doc) => {
+    const unsubscribeCommunity = onSnapshot(communityDocRef, (doc) => {
         setCommunity(doc.exists() ? { id: doc.id, ...doc.data() } as Community : null);
         setIsLoading(false);
     }, (err) => {
@@ -464,55 +492,46 @@ export default function CommunityProfilePage() {
         setIsLoading(false);
     });
 
-    // Fetch all communities and profiles for context (e.g., origin community flags/names)
-    const fetchAncillaryData = async () => {
-      setIsLoadingAncillary(true);
-      try {
-        const [communitiesSnapshot, profilesSnapshot] = await Promise.all([
-          getDocs(query(collection(firestore, 'communities'))),
-          getDocs(query(collection(firestore, 'community-profiles')))
-        ]);
-        setAllCommunities(communitiesSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as Community)));
-        setAllProfiles(profilesSnapshot.docs.map(d => d.data() as CommunityProfile));
-      } catch (e) {
-        console.error("Error fetching ancillary data:", e);
-      } finally {
-        setIsLoadingAncillary(false);
-      }
-    };
-    fetchAncillaryData();
+    return () => unsubscribeCommunity();
+  }, [id]);
 
-
-    return () => unsubscribe();
-  }, [id, isUserLoading]);
-
+  // Effect for user-specific data (profile and join request)
   useEffect(() => {
-    if (user && firestore) {
-        const fetchUserProfile = async () => {
-            const profileDocRef = doc(firestore, 'community-profiles', user.uid);
-            const docSnap = await getDoc(profileDocRef);
-            setUserProfile(docSnap.exists() ? docSnap.data() as CommunityProfile : null);
-        };
-        fetchUserProfile();
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (user && id && firestore) {
-        setIsRequestLoading(true);
-        const requestDocRef = doc(firestore, `communities/${id}/joinRequests/${user.uid}`);
-        const unsubscribe = onSnapshot(requestDocRef, (docSnap) => {
-            setUserJoinRequest(docSnap.exists() ? docSnap.data() as any : null);
-            setIsRequestLoading(false);
-        }, (error) => {
-            console.error("Error fetching join request:", error);
-            setIsRequestLoading(false);
-        });
-        return () => unsubscribe();
-    } else {
+    if (isUserLoading || !user || !firestore) {
+      if (!isUserLoading) {
         setIsRequestLoading(false);
+      }
+      return;
     }
-  }, [user, id]);
+
+    let unsubscribeProfile: Unsubscribe;
+    let unsubscribeJoinRequest: Unsubscribe;
+    
+    const profileDocRef = doc(firestore, 'community-profiles', user.uid);
+    unsubscribeProfile = onSnapshot(profileDocRef, (docSnap) => {
+        setUserProfile(docSnap.exists() ? docSnap.data() as CommunityProfile : null);
+    });
+
+    if (id) {
+      setIsRequestLoading(true);
+      const requestDocRef = doc(firestore, `communities/${id}/joinRequests/${user.uid}`);
+      unsubscribeJoinRequest = onSnapshot(requestDocRef, (docSnap) => {
+          setUserJoinRequest(docSnap.exists() ? docSnap.data() as any : null);
+          setIsRequestLoading(false);
+      }, (error) => {
+          console.error("Error fetching join request:", error);
+          setIsRequestLoading(false);
+      });
+    } else {
+      setIsRequestLoading(false);
+    }
+    
+    return () => {
+      if (unsubscribeProfile) unsubscribeProfile();
+      if (unsubscribeJoinRequest) unsubscribeJoinRequest();
+    };
+  }, [id, user, isUserLoading]);
+
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -936,4 +955,5 @@ export default function CommunityProfilePage() {
     
 
     
+
 
