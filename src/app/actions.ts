@@ -1,7 +1,6 @@
 // src/app/actions.ts
 'use server';
 
-import { generateStoryAndSpeech as generateStoryAndSpeechFlow } from '@/ai/flows/generate-story-and-speech';
 import { generateCommunity as generateCommunityFlow } from '@/ai/flows/generate-community';
 import { refineCommunityPrompt as refineCommunityPromptFlow } from '@/ai/flows/refine-community-prompt';
 import { generateCommunityFlag as generateCommunityFlagFlow } from '@/ai/flows/generate-flag';
@@ -28,7 +27,6 @@ import { generateStory as generateStoryFlow } from '@/ai/flows/generate-story';
 import { translateStory as translateStoryFlow } from '@/ai/flows/translate-story';
 import { generateSpeech as generateSpeechFlow } from '@/ai/flows/generate-speech';
 import { analyzeStudiesAndBoostCommunityTool as analyzeStudiesAndBoostCommunityFlow } from '@/ai/tools/academic-analyzer-tool';
-import { addDocument } from '@/firebase/db-updates';
 
 import { z } from 'zod';
 import { initializeAdminApp } from '@/firebase/config-admin';
@@ -37,10 +35,6 @@ import admin from 'firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 
 // Each exported function is now an explicit async function wrapper.
-
-export async function generateStoryAndSpeechAction(values: any) {
-    return await generateStoryAndSpeechFlow(values);
-}
 
 export async function createCommunityDetailsAction(values: any) {
     return await generateCommunityFlow(values);

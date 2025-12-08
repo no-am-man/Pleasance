@@ -20,8 +20,14 @@ const GenerateSpeechOutputSchema = z.object({
   audioUrl: z.string().describe('A data URI of the generated WAV audio.'),
 });
 
-export async function generateSpeech(input: GenerateSpeechInput): Promise<z.infer<typeof GenerateSpeechOutputSchema>> {
-  return generateSpeechFlow(input);
+export async function generateSpeech(input: GenerateSpeechInput): Promise<{error?: string, audioUrl?: string}> {
+  try {
+    const result = await generateSpeechFlow(input);
+    return { audioUrl: result.audioUrl };
+  } catch(e) {
+      const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+      return { error: message };
+  }
 }
 
 // Helper function to convert raw PCM audio data to a WAV file data URI
