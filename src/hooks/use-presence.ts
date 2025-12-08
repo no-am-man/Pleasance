@@ -57,9 +57,8 @@ export function usePresence() {
     });
 
     return () => {
-      // Correct Cleanup: ONLY detach the listener.
+      // CORRECT CLEANUP: Only detach the listener.
       // The onDisconnect handler is responsible for setting the user to offline when they truly disconnect.
-      // Attempting to write here during component unmount causes race conditions and test failures.
       unsubscribe();
     };
   // Stabilize dependencies to only re-run when specific user properties change.
