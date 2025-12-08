@@ -284,24 +284,28 @@ function WikiArticleForm({ communityId, onArticleAdded }: { communityId: string,
     );
 }
 
-function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner: boolean }) {
+function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner: boolean }) {
     const [articles, setArticles] = useState<WikiArticle[]>([]);
     const [selectedArticle, setSelectedArticle] = useState<WikiArticle | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
     const { toast } = useToast();
 
-    const fetchArticles = useCallback(() => {
+    // Unified useEffect for fetching articles
+    useEffect(() => {
         if (!firestore || !communityId) {
             setIsLoading(false);
             return;
-        };
+        }
+        
         setIsLoading(true);
         const q = query(collection(firestore, `communities/${communityId}/wiki`), orderBy('title', 'asc'));
+        
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedArticles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WikiArticle));
             setArticles(fetchedArticles);
-            if (!selectedArticle || !fetchedArticles.find(a => a.id === selectedArticle.id)) {
+            // Select the first article only if one isn't already selected or the selected one was deleted
+            if (!selectedArticle || !fetchedArticles.some(a => a.id === selectedArticle.id)) {
                 setSelectedArticle(fetchedArticles[0] || null);
             }
             setIsLoading(false);
@@ -309,13 +313,10 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner
             setError(err);
             setIsLoading(false);
         });
-        return unsubscribe;
-    }, [communityId, selectedArticle]);
-    
-    useEffect(() => {
-        const unsubscribe = fetchArticles();
-        return () => unsubscribe && unsubscribe();
-    }, [fetchArticles]);
+
+        return () => unsubscribe();
+    }, [communityId]);
+
 
     const handleDeleteArticle = async (articleId: string) => {
         if (!communityId || !firestore) return;
@@ -323,6 +324,7 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner
         try {
             await deleteDoc(docRef);
             toast({ title: 'Article Deleted' });
+            // The onSnapshot listener will handle the UI update.
         } catch (e) {
             const message = e instanceof Error ? e.message : 'An unknown error occurred';
             toast({ variant: 'destructive', title: 'Failed to delete article', description: message });
@@ -344,7 +346,7 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner
     return (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="md:col-span-1">
-                <WikiArticleForm communityId={communityId} onArticleAdded={fetchArticles} />
+                <WikiArticleForm communityId={communityId} onArticleAdded={() => {}} />
                 <Card className="mt-8">
                     <CardHeader>
                         <CardTitle>Articles</CardTitle>
@@ -443,8 +445,9 @@ export default function CommunityProfilePage() {
         return;
     };
     
+    // Primary community listener
     const communityDocRef = doc(firestore, 'communities', id);
-    const unsubscribe = onSnapshot(communityDocRef, (doc) => {
+    const unsubscribeCommunity = onSnapshot(communityDocRef, (doc) => {
         setCommunity(doc.exists() ? { id: doc.id, ...doc.data() } as Community : null);
         setIsLoading(false);
     }, (err) => {
@@ -454,7 +457,7 @@ export default function CommunityProfilePage() {
         setIsLoading(false);
     });
 
-    // Fetch all communities and profiles for context (e.g., origin community flags/names)
+    // Ancillary data fetching
     const fetchAncillaryData = async () => {
       setIsLoadingAncillary(true);
       try {
@@ -470,39 +473,41 @@ export default function CommunityProfilePage() {
         setIsLoadingAncillary(false);
       }
     };
+    
     fetchAncillaryData();
 
-
-    return () => unsubscribe();
-  }, [id, isUserLoading]);
-
-  useEffect(() => {
-    if (user && firestore) {
-        const fetchUserProfile = async () => {
-            const profileDocRef = doc(firestore, 'community-profiles', user.uid);
-            const docSnap = await getDoc(profileDocRef);
+    // User profile listener
+    let unsubscribeProfile: Unsubscribe | undefined;
+    if (user) {
+        const profileDocRef = doc(firestore, 'community-profiles', user.uid);
+        unsubscribeProfile = onSnapshot(profileDocRef, (docSnap) => {
             setUserProfile(docSnap.exists() ? docSnap.data() as CommunityProfile : null);
-        };
-        fetchUserProfile();
+        });
     }
-  }, [user]);
 
-  useEffect(() => {
-    if (user && id && firestore) {
+    // Join request listener
+    let unsubscribeJoinRequest: Unsubscribe | undefined;
+    if (user && id) {
         setIsRequestLoading(true);
         const requestDocRef = doc(firestore, `communities/${id}/joinRequests/${user.uid}`);
-        const unsubscribe = onSnapshot(requestDocRef, (docSnap) => {
+        unsubscribeJoinRequest = onSnapshot(requestDocRef, (docSnap) => {
             setUserJoinRequest(docSnap.exists() ? docSnap.data() as any : null);
             setIsRequestLoading(false);
         }, (error) => {
             console.error("Error fetching join request:", error);
             setIsRequestLoading(false);
         });
-        return () => unsubscribe();
     } else {
         setIsRequestLoading(false);
     }
-  }, [user, id]);
+
+    return () => {
+        unsubscribeCommunity();
+        if (unsubscribeProfile) unsubscribeProfile();
+        if (unsubscribeJoinRequest) unsubscribeJoinRequest();
+    };
+  }, [id, isUserLoading, user]);
+
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -922,6 +927,8 @@ export default function CommunityProfilePage() {
     
 
 
+
+    
 
     
 
