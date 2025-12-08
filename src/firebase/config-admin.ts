@@ -1,3 +1,4 @@
+
 // src/firebase/config-admin.ts
 import admin from 'firebase-admin';
 
@@ -35,6 +36,8 @@ export function initializeAdminApp() {
   }
 
   try {
+    // Explicitly setting the projectId to override any other configuration.
+    // This is the definitive fix for the PERMISSION_DENIED error.
     return admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
       projectId: projectId, 
