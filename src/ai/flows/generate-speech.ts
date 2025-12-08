@@ -21,13 +21,14 @@ const GenerateSpeechOutputSchema = z.object({
 });
 
 export async function generateSpeech(input: GenerateSpeechInput): Promise<{error?: string, audioUrl?: string}> {
-  try {
-    const result = await generateSpeechFlow(input);
-    return { audioUrl: result.audioUrl };
-  } catch(e) {
-      const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
-      return { error: message };
-  }
+    try {
+        const result = await generateSpeechFlow(input);
+        return { audioUrl: result.audioUrl };
+    } catch(e) {
+        const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
+        // This will be caught by the server action's try/catch block
+        throw new Error(message);
+    }
 }
 
 // Helper function to convert raw PCM audio data to a WAV file data URI

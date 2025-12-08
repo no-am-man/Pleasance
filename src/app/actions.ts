@@ -139,8 +139,24 @@ export async function translateStoryAction(values: any) {
     return await translateStoryFlow(values);
 }
 
-export async function generateSpeechAction(values: any) {
-    return await generateSpeechFlow(values);
+export async function generateSpeechAction(values: { text: string; }) {
+    try {
+        const result = await generateSpeechFlow(values);
+        if (result.error) {
+            throw new Error(result.error);
+        }
+        return { audioUrl: result.audioUrl };
+    } catch (e) {
+        const message = e instanceof Error ? e.message : 'An unknown error occurred while generating speech.';
+        console.error("generateSpeechAction failed:", message);
+        
+        let userFriendlyError = `AI speech generation failed: ${message}`;
+        if (message.includes('PERMISSION_DENIED')) {
+            userFriendlyError = `AI speech generation failed due to a permissions error. Please ensure the 'Vertex AI API' is enabled in your Google Cloud project and that your server environment has the correct Application Default Credentials.`;
+        }
+
+        return { error: userFriendlyError };
+    }
 }
 
 export async function createHistorySnapshot(values: { userId: string }) {
