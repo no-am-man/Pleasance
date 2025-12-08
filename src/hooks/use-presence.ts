@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { useUser } from '@/firebase';
 import { getFirebase } from '@/firebase/config';
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { ref, onValue, onDisconnect, set, serverTimestamp as dbServerTimestamp, goOnline, goOffline } from 'firebase/database';
@@ -16,7 +16,7 @@ export function usePresence() {
     }
     
     const { firestore, database } = getFirebase();
-    goOnline(database); // Ensure connection is active
+    goOnline(database);
 
     const uid = user.uid;
     const userStatusDatabaseRef = ref(database, `/status/${uid}`);
@@ -47,13 +47,9 @@ export function usePresence() {
                     lastSeen: serverTimestamp(),
                 };
 
-                setDoc(userStatusFirestoreRef, isOnlineForFirestore, { merge: true }).catch(error => {
-                     errorEmitter.emit('permission-error', new FirestorePermissionError({
-                        path: userStatusFirestoreRef.path,
-                        operation: 'write',
-                        requestResourceData: isOnlineForFirestore
-                    }));
-                });
+                // This is a fire-and-forget operation, not awaited.
+                // It will be handled by the global error handler if it fails.
+                setDoc(userStatusFirestoreRef, isOnlineForFirestore, { merge: true });
             });
         }
     });
