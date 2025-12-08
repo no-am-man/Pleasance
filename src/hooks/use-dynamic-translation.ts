@@ -1,3 +1,4 @@
+// src/hooks/use-dynamic-translation.ts
 'use client';
 
 import { useState, useEffect } from 'react';
