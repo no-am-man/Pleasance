@@ -2,7 +2,7 @@
 import { useMemo, type DependencyList } from 'react';
 
 // Export config and services directly for use in hooks and components
-export { auth, firestore, storage, database } from './config';
+export { getFirebase } from './config';
 
 // Export non-blocking update helpers
 export * from './non-blocking-updates';

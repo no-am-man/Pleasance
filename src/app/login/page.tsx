@@ -5,13 +5,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth';
-import { useUser } from '@/firebase';
-import { auth, firestore } from '@/firebase/config';
+import { useUser, getFirebase } from '@/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoaderCircle, LogIn, LogOut, MailPlus } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { doc, getDoc } from 'firebase/firestore';
 import Link from 'next/link';
 
 const GoogleIcon = () => (
@@ -48,6 +47,7 @@ export default function LoginPage() {
     const processRedirectResult = async () => {
         setIsSigningIn(true);
         try {
+            const { auth } = getFirebase();
             await getRedirectResult(auth);
             // The onAuthStateChanged listener will handle the user state update.
         } catch (err: any) {
@@ -70,6 +70,7 @@ export default function LoginPage() {
     }
 
     const checkProfile = async () => {
+        const { firestore } = getFirebase();
         setIsProfileLoading(true);
         const profileRef = doc(firestore, 'community-profiles', user.uid);
         const docSnap = await getDoc(profileRef);
@@ -85,11 +86,13 @@ export default function LoginPage() {
     setError(null);
     const provider = new GoogleAuthProvider();
     try {
+      const { auth } = getFirebase();
       await signInWithPopup(auth, provider);
       // Successful popup sign-in, onAuthStateChanged will handle the rest
     } catch (err: any) {
       if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
         // Fallback to redirect if popup is blocked
+        const { auth } = getFirebase();
         await signInWithRedirect(auth, provider);
       } else {
         console.error("Google sign-in error:", err);
@@ -100,6 +103,7 @@ export default function LoginPage() {
   };
   
   const handleSignOut = async () => {
+    const { auth } = getFirebase();
     await signOut(auth);
   }
 

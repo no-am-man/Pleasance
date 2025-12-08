@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useUser, firestore, database, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { useUser, errorEmitter, FirestorePermissionError, getFirebase } from '@/firebase';
 import { doc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { ref, onValue, onDisconnect, set, serverTimestamp as dbServerTimestamp } from 'firebase/database';
 
@@ -11,9 +11,10 @@ export function usePresence() {
   const isOnlineRef = useRef(false);
 
   useEffect(() => {
-    if (!user || !firestore || !database) {
+    if (!user) {
       return;
     }
+    const { firestore, database } = getFirebase();
 
     const uid = user.uid;
     const userStatusDatabaseRef = ref(database, `/status/${uid}`);

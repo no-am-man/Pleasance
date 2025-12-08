@@ -3,7 +3,7 @@
 
 import React, { createContext, useState, useEffect, useMemo, type ReactNode } from 'react';
 import { type User, onAuthStateChanged } from 'firebase/auth';
-import { auth } from './config'; // Import the stable auth instance
+import { getFirebase } from './config';
 import { LoaderCircle } from 'lucide-react';
 
 export interface AuthContextState {
@@ -18,6 +18,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isUserLoading, setIsUserLoading] = useState(true);
 
   useEffect(() => {
+    const { auth } = getFirebase();
     // This is the single source of truth for auth state changes.
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setIsUserLoading(true); // Set loading to true at the start of any auth change

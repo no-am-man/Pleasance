@@ -10,8 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useUser } from '@/firebase';
-import { firestore } from '@/firebase/config';
+import { useUser, getFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { cn } from '@/lib/utils';
@@ -31,7 +30,8 @@ export function ThemeSwitcher() {
 
   const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme);
-    if (user && firestore) {
+    if (user) {
+      const { firestore } = getFirebase();
       const profileRef = doc(firestore, 'community-profiles', user.uid);
       setDocumentNonBlocking(profileRef, { theme: newTheme }, { merge: true });
     }

@@ -34,7 +34,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useUser } from '@/firebase/use-user';
-import { auth } from '@/firebase/config';
+import { getFirebase } from '@/firebase/config';
 import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -86,6 +86,7 @@ function UserNav() {
   const isFounder = user?.email === FOUNDER_EMAIL;
 
   const handleSignOut = async () => {
+    const { auth } = getFirebase();
     await signOut(auth);
   };
 

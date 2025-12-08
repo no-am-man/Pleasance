@@ -33,7 +33,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useUser } from '@/firebase/use-user';
-import { auth } from '@/firebase/config';
+import { getFirebase } from '@/firebase/config';
 import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { KanbanIcon } from '@/components/icons/kanban-icon';
@@ -44,6 +44,7 @@ import { Separator } from './ui/separator';
 import { LanguageToggle } from './language-toggle';
 import { useTranslation } from '@/hooks/use-translation';
 import { useLanguage } from './language-provider';
+
 
 const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com';
 
@@ -86,6 +87,7 @@ export function Header() {
   const isFounder = user?.email === FOUNDER_EMAIL;
 
   const handleSignOut = async () => {
+    const { auth } = getFirebase();
     await signOut(auth);
   };
 
