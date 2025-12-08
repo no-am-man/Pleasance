@@ -133,7 +133,7 @@ function FormBubble({ form, allCommunities, onClick }: { form: Form; allCommunit
 }
 
 
-function SphericalizingChatRoom({ communityId, isOwner, allMembers, allCommunities }: { communityId: string; isOwner: boolean, allMembers: Member[], allCommunities: Community[] }) {
+function SphericalizingChatRoom({ communityId, isOwner, allCommunities }: { communityId: string; isOwner: boolean, allCommunities: Community[] }) {
     const { user } = useUser();
     const { t } = useTranslation();
     
@@ -141,6 +141,22 @@ function SphericalizingChatRoom({ communityId, isOwner, allMembers, allCommuniti
     const [visibleForms, setVisibleForms] = useState<Form[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
+
+    const [allMembers, setAllMembers] = useState<Member[]>([]);
+
+    // Fetch members of the current community
+    useEffect(() => {
+        if (!firestore || !communityId) return;
+        const membersRef = collection(firestore, `communities/${communityId}/members`);
+        const unsubscribe = onSnapshot(membersRef, (snapshot) => {
+            const membersData = snapshot.docs.map(doc => doc.data() as Member);
+            setAllMembers(membersData);
+        }, (err) => {
+            console.error("Error fetching community members:", err);
+        });
+        return unsubscribe;
+    }, [communityId]);
+
 
     useEffect(() => {
         if (!firestore || !communityId) {
@@ -247,7 +263,7 @@ function WikiArticleForm({ communityId, onArticleAdded }: { communityId: string,
 
         try {
             const articlesColRef = collection(firestore, `communities/${communityId}/wiki`);
-            await addDocument(articlesColRef, {
+            await addDoc(articlesColRef, {
                 ...data,
                 authorId: user.uid,
                 authorName: user.displayName || 'Anonymous',
@@ -437,7 +453,9 @@ export default function CommunityProfilePage() {
   
   const [allProfiles, setAllProfiles] = useState<CommunityProfile[]>([]);
   const [allCommunities, setAllCommunities] = useState<Community[]>([]);
+  const [allMembers, setAllMembers] = useState<Member[]>([]);
   const [isLoadingAncillary, setIsLoadingAncillary] = useState(true);
+
 
   // Effect for fetching ancillary data (runs once)
   useEffect(() => {
@@ -482,7 +500,16 @@ export default function CommunityProfilePage() {
         setIsLoading(false);
     });
 
-    return () => unsubscribeCommunity();
+    const membersColRef = collection(firestore, `communities/${id}/members`);
+    const unsubscribeMembers = onSnapshot(membersColRef, (snapshot) => {
+        const membersData = snapshot.docs.map(doc => doc.data() as Member);
+        setAllMembers(membersData);
+    });
+
+    return () => {
+        unsubscribeCommunity();
+        unsubscribeMembers();
+    };
   }, [id]);
 
   // Effect for user-specific data (profile and join request)
@@ -527,20 +554,19 @@ export default function CommunityProfilePage() {
 
   const isOwner = useMemo(() => user?.uid === community?.ownerId, [user, community]);
   
-  const allMembers = useMemo(() => {
-    if (!community?.members) return [];
-    return [...community.members].sort((a, b) => {
+  const sortedMembers = useMemo(() => {
+    if (!allMembers) return [];
+    return [...allMembers].sort((a, b) => {
       if (a.type === 'human' && b.type !== 'human') return -1;
       if (a.type !== 'human' && b.type === 'human') return 1;
       return 0;
     });
-  }, [community]);
-
+  }, [allMembers]);
+  
   const isMember = useMemo(() => {
     if (!user || !community) return false;
-    if (user.uid === community.ownerId) return true;
-    return community.members.some(member => member.type === 'human' && member.userId === user.uid);
-}, [user, community]);
+    return community.members.includes(user.uid);
+  }, [user, community]);
 
 
   const handleRequestToJoin = async () => {
@@ -586,9 +612,12 @@ export default function CommunityProfilePage() {
         avatarUrl: profile.avatarUrl || '',
     };
     const communityDocRef = doc(firestore, 'communities', community.id);
+    const memberDocRef = doc(firestore, `communities/${community.id}/members`, profile.userId);
+    
     await updateDoc(communityDocRef, {
-        members: arrayUnion(newMember)
+        members: arrayUnion(profile.userId)
     });
+    await setDoc(memberDocRef, newMember);
 
     await welcomeNewMemberAction({ communityId: community.id, communityName: community.name, newMemberName: newMember.name });
 
@@ -599,7 +628,7 @@ export default function CommunityProfilePage() {
   };
 
   const handleRemoveMember = async (memberToRemove: Member) => {
-    if (!community || !firestore) {
+    if (!community || !firestore || !memberToRemove.userId) {
       toast({ variant: "destructive", title: t('community_page_community_not_found') });
       return;
     }
@@ -611,12 +640,15 @@ export default function CommunityProfilePage() {
     }
     
     const communityDocRef = doc(firestore, 'communities', community.id);
+    const memberDocRef = doc(firestore, `communities/${community.id}/members`, memberToRemove.userId);
+
     try {
       await updateDoc(communityDocRef, {
-        members: arrayRemove(memberToRemove)
+        members: arrayRemove(memberToRemove.userId)
       });
+      await deleteDoc(memberDocRef);
+
       toast({ title: t('community_page_member_removed_title'), description: t('community_page_member_removed_desc', { name: memberToRemove.name }) });
-      // UI will update via onSnapshot
     } catch (e) {
       const message = e instanceof Error ? e.message : t('community_page_unexpected_error');
       toast({ variant: "destructive", title: t('community_page_remove_member_fail_title'), description: message });
@@ -800,7 +832,7 @@ export default function CommunityProfilePage() {
                 {isOwner && <TabsTrigger value="admin">{t('community_tab_admin')}</TabsTrigger>}
             </TabsList>
             <TabsContent value="feed" className="mt-6">
-                <SphericalizingChatRoom communityId={community.id} isOwner={isOwner} allMembers={allMembers} allCommunities={allCommunities} />
+                <SphericalizingChatRoom communityId={community.id} isOwner={isOwner} allCommunities={allCommunities} />
             </TabsContent>
             <TabsContent value="members" className="mt-6">
                 <Card>
@@ -809,7 +841,7 @@ export default function CommunityProfilePage() {
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 gap-6">
-                            {allMembers.map((member) => (
+                            {sortedMembers.map((member) => (
                                 <MemberCard key={member.userId || member.name} member={member} communityId={community.id} isOwner={isOwner} onRemove={handleRemoveMember} />
                             ))}
                         </div>
@@ -827,7 +859,7 @@ export default function CommunityProfilePage() {
                                     <LoaderCircle className="animate-spin mx-auto" />
                                 ) : allProfiles.length > 0 ? (
                                     <div className="space-y-4">
-                                        {allProfiles.filter(p => p.userId !== user?.uid && !allMembers.some(m => m.userId === p.userId)).map(profile => (
+                                        {allProfiles.filter(p => p.userId !== user?.uid && !community.members.includes(p.userId)).map(profile => (
                                             <Card key={profile.id} className="flex items-center p-4">
                                                 <Avatar className="w-12 h-12 mr-4">
                                                     <AvatarImage src={profile.avatarUrl || `https://i.pravatar.cc/150?u=${profile.name}`} alt={profile.name} />

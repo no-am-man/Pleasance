@@ -29,10 +29,10 @@ service cloud.firestore {
         return isSignedIn() && get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId == request.auth.uid;
     }
     
-    // CORRECTED: Checks if a userId is in the 'members' array of objects.
+    // CORRECTED: Checks if a userId is in the 'members' array of strings.
     function isHumanMember(communityId) {
         let members = get(/databases/$(database)/documents/communities/$(communityId)).data.members;
-        return isSignedIn() && members.exists(m, m.type == 'human' && m.userId == request.auth.uid);
+        return isSignedIn() && request.auth.uid in members;
     }
     
     //================================================================================

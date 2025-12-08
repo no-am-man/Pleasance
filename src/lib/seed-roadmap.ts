@@ -42,12 +42,12 @@ const CONCIERGE_MEMBER: Member = {
 
 // --- COMMUNITY DATA ---
 const FOUNDING_COMMUNITY_ID = 'pleasance-founding-community';
-const FOUNDING_COMMUNITY: Omit<Community, 'id'> = {
+const FOUNDING_COMMUNITY: Omit<Community, 'id' | 'members'> & { members: (string | Member)[] } = {
     name: 'Pleasance',
     description: 'The founding community of the federation. A place for meta-discussion, governance, and dreaming of what\'s next.',
     welcomeMessage: 'Welcome, citizen, to the heart of the federation. Here, we discuss the nature of our republic, shape its future, and welcome new souls into the fold.',
     ownerId: FOUNDER_UID,
-    members: [FOUNDER_MEMBER, CONCIERGE_MEMBER],
+    members: [FOUNDER_UID, CONCIERGE_MEMBER],
     flagUrl: `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjYwIiB2aWV3Qm94PSIwIDAgMTAwIDYwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjMjUyQjMyIi8+CjxwYXRoIGQ9Ik0zMCAxNUwzNSA1MEw0MCAxNUw0NSAyNUw1MCAxNUw1NSAyNUw2MCAxNUw2NSAyNUw3MCAxNSIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8Y2lyY2xlIGN4PSI1MCIgY3k9IjMwIiByPSIxMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjIiLz4KPC9zdmc+Cg==`,
 };
 
@@ -99,6 +99,11 @@ export async function seedPlatformData() {
         // 2. Seed Founding Community
         const communityRef = firestore.collection('communities').doc(FOUNDING_COMMUNITY_ID);
         batch.set(communityRef, { ...FOUNDING_COMMUNITY, id: FOUNDING_COMMUNITY_ID });
+        
+        // 2b. Seed the members into a subcollection for querying
+        const membersRef = communityRef.collection('members');
+        batch.set(membersRef.doc(FOUNDER_MEMBER.userId!), FOUNDER_MEMBER);
+        batch.set(membersRef.doc(CONCIERGE_MEMBER.name), CONCIERGE_MEMBER);
 
         // 3. Seed Community-specific Roadmap
         communityRoadmapColumns.forEach(column => {
