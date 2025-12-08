@@ -2,9 +2,9 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useUser, setDocumentNonBlocking } from '@/firebase';
+import { useUser } from '@/firebase';
 import { getFirebase } from '@/firebase/config';
-import { doc, serverTimestamp } from 'firebase/firestore';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { ref, onValue, onDisconnect, set, serverTimestamp as dbServerTimestamp, goOnline, goOffline } from 'firebase/database';
 
 export function usePresence() {
@@ -47,8 +47,8 @@ export function usePresence() {
                     lastSeen: serverTimestamp(),
                 };
 
-                // Use the non-blocking update function
-                setDocumentNonBlocking(userStatusFirestoreRef, isOnlineForFirestore, { merge: true });
+                // Use the client-side SDK's setDoc directly. This was the source of the error.
+                setDoc(userStatusFirestoreRef, isOnlineForFirestore, { merge: true });
             });
         }
     });
