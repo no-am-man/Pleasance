@@ -110,17 +110,16 @@ export const DualLanguageStorySchema = z.object({
     context: z.string().describe("How this word was used in the story")
   })).describe("5-7 key vocabulary words from the story")
 });
-export type DualLanguageStory = z.infer<typeof DualLanguageStorySchema>;
+
 
 // This is the Firestore representation of the story.
 export const StorySchema = z.object({
     id: z.string(),
     userId: z.string(),
-    level: z.string(),
-    sourceLanguage: z.string(),
-    targetLanguage: z.string(),
     nativeText: z.string(),
     translatedText: z.string(),
+    sourceLanguage: z.string(),
+    targetLanguage: z.string(),
     audioUrl: z.string(),
     createdAt: z.any(),
     status: z.enum(['processing', 'complete', 'failed']),

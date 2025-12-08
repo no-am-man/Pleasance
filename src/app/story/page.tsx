@@ -1,3 +1,4 @@
+
 // src/app/story/page.tsx
 'use client';
 
@@ -16,7 +17,7 @@ import { generateDualStoryAction, createHistorySnapshot, generateSpeechAction } 
 import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useUser, getFirebase } from '@/firebase';
-import { collection, query, orderBy, doc, deleteDoc, getDocs, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, deleteDoc, getDocs, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
@@ -310,75 +311,79 @@ export default function StoryPage() {
     setIsGenerating(true);
     setError(null);
     setActiveStory(null);
+
+    const { firestore } = getFirebase();
+    const storyRef = doc(collection(firestore, `users/${user.uid}/stories`));
     
-    let storyData: Omit<StoryDataType, 'id' | 'createdAt'> | null = null;
-    let finalStoryData: StoryDataType | null = null;
+    // Step 1: Create a placeholder document to show loading state immediately
+    const initialData = {
+        ...data,
+        userId: user.uid,
+        nativeText: '...',
+        translatedText: '...',
+        audioUrl: '',
+        status: 'processing' as const,
+        titleOriginal: 'Generating story...',
+        titleTranslated: 'Generating...',
+        contentOriginal: 'The AI is currently writing your story. This should only take a moment...',
+        contentTranslated: 'The AI is currently writing your story. This should only take a moment...',
+        vocabulary: [],
+    };
+    await setDoc(storyRef, { ...initialData, createdAt: serverTimestamp() });
+    setActiveStory({ ...initialData, id: storyRef.id, createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } });
 
     try {
-        // Step 1: Create a placeholder document
-        const { firestore } = getFirebase();
-        const storyRef = doc(collection(firestore, `users/${user.uid}/stories`));
-        
-        const initialData = {
-            ...data,
-            userId: user.uid,
-            nativeText: '...',
-            translatedText: '...',
-            audioUrl: '',
-            status: 'processing' as const,
-            titleOriginal: 'Generating...',
-            titleTranslated: 'Generating...',
-            contentOriginal: '...',
-            contentTranslated: '...',
-            vocabulary: [],
-        };
-        await setDoc(storyRef, {...initialData, createdAt: serverTimestamp()});
-
-        // Set the active story to the processing state to show the loader
-        setActiveStory({ ...initialData, id: storyRef.id, createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } });
-
         // Step 2: Generate story content
         const storyResult = await generateDualStoryAction(data);
         if (storyResult.error || !storyResult.data) {
             throw new Error(storyResult.error || 'Failed to generate story text.');
         }
 
-        // We have the text, update the story in UI
-        storyData = {
-            ...initialData,
-            ...storyResult.data
-        };
+        // We have the text, update the story in UI and Firestore
+        const storyData = { ...initialData, ...storyResult.data };
         setActiveStory({ ...storyData, id: storyRef.id, createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } });
         await updateDoc(storyRef, storyResult.data);
 
-        // Step 3: Generate speech
-        const speechResult = await generateSpeechAction({ text: storyResult.data.contentOriginal });
-        if (speechResult.error || !speechResult.audioUrl) {
-            throw new Error(speechResult.error || 'Failed to generate speech audio.');
+        // Step 3: Generate speech (this is the part that might fail due to permissions)
+        try {
+            const speechResult = await generateSpeechAction({ text: storyResult.data.contentOriginal });
+            if (speechResult.error || !speechResult.audioUrl) {
+                throw new Error(speechResult.error || 'Failed to generate speech audio.');
+            }
+
+            // Final update with audio URL and set status to complete
+            const finalStoryData = {
+                ...storyData,
+                id: storyRef.id,
+                audioUrl: speechResult.audioUrl,
+                status: 'complete' as const,
+                createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } // a bit of a hack
+            };
+            await updateDoc(storyRef, { audioUrl: speechResult.audioUrl, status: 'complete' });
+            setActiveStory(finalStoryData);
+            toast({ title: t('toast_story_generated_title'), description: t('toast_story_generated_desc') });
+
+        } catch (speechError: any) {
+            // Handle speech generation failure specifically
+            console.error("Speech generation failed:", speechError);
+            toast({
+                variant: 'destructive',
+                title: 'Audio Generation Failed',
+                description: `The story was created, but audio could not be generated. Please ensure the Vertex AI API is enabled in your Google Cloud project. Error: ${speechError.message}`
+            });
+            // Update the story status to 'failed'
+            await updateDoc(storyRef, { status: 'failed' });
+            setActiveStory(prev => prev ? { ...prev, status: 'failed' } : null);
         }
-
-        // Final update with audio URL and set status to complete
-        finalStoryData = {
-            ...storyData,
-            id: storyRef.id,
-            audioUrl: speechResult.audioUrl,
-            status: 'complete',
-            createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } // a bit of a hack
-        };
-        await updateDoc(storyRef, { audioUrl: speechResult.audioUrl, status: 'complete' });
-        setActiveStory(finalStoryData);
-
-        toast({ title: t('toast_story_generated_title'), description: t('toast_story_generated_desc') });
 
     } catch (e: any) {
         setError(e.message);
-        if (storyData) { // If it failed after text generation
-            setActiveStory({ ...storyData, id: activeStory?.id || 'error', status: 'failed', createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } });
-        }
+        await deleteDoc(storyRef); // Clean up the placeholder document
+        setActiveStory(null);
     } finally {
         setIsGenerating(false);
     }
-  }
+}
 
   const handleSelectStoryFromHistory = (story: StoryDataType) => {
     setActiveStory(story);
@@ -542,7 +547,7 @@ export default function StoryPage() {
                     </Card>
                 )}
                 
-                {isGenerating && (
+                {isGenerating && !activeStory && (
                     <div className="flex flex-col items-center justify-center p-8 border rounded-lg bg-muted min-h-[300px]">
                         <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
                         <p className="ml-4 mt-4 text-muted-foreground self-center">{t('story_generating_message')}</p>

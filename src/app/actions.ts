@@ -1,3 +1,4 @@
+
 // src/app/actions.ts
 'use server';
 
@@ -150,10 +151,13 @@ export async function generateSpeechAction(values: { text: string; }) {
         const message = e instanceof Error ? e.message : 'An unknown error occurred while generating speech.';
         console.error("generateSpeechAction failed:", message);
         
-        let userFriendlyError = `AI speech generation failed: ${message}`;
+        let userFriendlyError = `AI speech generation failed. This might be due to a permissions issue on the server.`;
         if (message.includes('PERMISSION_DENIED')) {
             userFriendlyError = `AI speech generation failed due to a permissions error. Please ensure the 'Vertex AI API' is enabled in your Google Cloud project and that your server environment has the correct Application Default Credentials.`;
+        } else if (message.includes('Text-to-Speech')) {
+             userFriendlyError = `The AI speech service returned an error. This may be a temporary issue. Error: ${message}`;
         }
+
 
         return { error: userFriendlyError };
     }
