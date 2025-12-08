@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { getFirebase } from '@/firebase/config';
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { ref, onValue, onDisconnect, set, serverTimestamp as dbServerTimestamp, goOffline, goOnline } from 'firebase/database';
+import { ref, onValue, onDisconnect, set, serverTimestamp as dbServerTimestamp, goOnline, goOffline } from 'firebase/database';
 
 export function usePresence() {
   const { user } = useUser();
@@ -60,6 +60,9 @@ export function usePresence() {
 
     return () => {
       unsubscribe();
+      // When the hook unmounts (e.g., user logs out, component unmounts),
+      // we disconnect from the Realtime Database.
+      // The `onDisconnect` handler will then take care of setting the status to offline.
       goOffline(database);
     };
   }, [user?.uid, user?.displayName, user?.photoURL]);

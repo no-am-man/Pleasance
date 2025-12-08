@@ -15,7 +15,6 @@ import { FirestorePermissionError } from '@/firebase/errors';
 
 /**
  * Asynchronously sets data for a document reference, handling permission errors.
- * This operation is now awaited.
  */
 export async function setDocument(docRef: DocumentReference, data: any, options?: SetOptions): Promise<void> {
   try {
@@ -30,13 +29,12 @@ export async function setDocument(docRef: DocumentReference, data: any, options?
         requestResourceData: data,
       })
     );
-    throw error; // Re-throw to allow caller to handle failure
+    throw error;
   }
 }
 
 /**
  * Asynchronously adds a document to a collection, handling permission errors.
- * This operation is now awaited.
  */
 export async function addDocument(colRef: CollectionReference, data: any): Promise<DocumentReference> {
   try {
@@ -51,13 +49,12 @@ export async function addDocument(colRef: CollectionReference, data: any): Promi
         requestResourceData: data,
       })
     );
-    throw error; // Re-throw to allow caller to handle failure
+    throw error;
   }
 }
 
 /**
  * Asynchronously updates a document, handling permission errors.
- * This operation is now awaited.
  */
 export async function updateDocument(docRef: DocumentReference, data: any): Promise<void> {
   try {
@@ -71,13 +68,12 @@ export async function updateDocument(docRef: DocumentReference, data: any): Prom
         requestResourceData: data,
       })
     );
-    throw error; // Re-throw to allow caller to handle failure
+    throw error;
   }
 }
 
 /**
  * Asynchronously deletes a document, handling permission errors.
- * This operation is now awaited.
  */
 export async function deleteDocument(docRef: DocumentReference): Promise<void> {
   try {
@@ -90,6 +86,6 @@ export async function deleteDocument(docRef: DocumentReference): Promise<void> {
         operation: 'delete',
       })
     );
-    throw error; // Re-throw to allow caller to handle failure
+    throw error;
   }
 }

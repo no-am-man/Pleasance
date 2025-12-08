@@ -1,7 +1,7 @@
 
 'use client';
 
-import { AuthProvider } from '@/firebase/auth-provider';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { ThemeProvider } from "@/components/theme-provider"
 import { LanguageProvider } from '@/components/language-provider';
 
@@ -13,11 +13,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
       enableSystem
       disableTransitionOnChange
     >
-      <AuthProvider>
+      <FirebaseClientProvider>
         <LanguageProvider>
           {children}
         </LanguageProvider>
-      </AuthProvider>
+      </FirebaseClientProvider>
     </ThemeProvider>
   );
 }

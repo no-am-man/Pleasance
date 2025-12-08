@@ -4,6 +4,7 @@ import { useMemo, type DependencyList } from 'react';
 
 // Export config and services directly for use in hooks and components
 export { getFirebase } from './config';
+export { FirebaseClientProvider } from './client-provider';
 
 // Export database update helpers
 export * from './db-updates';
