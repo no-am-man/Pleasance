@@ -1,4 +1,4 @@
-
+// src/ai/flows/generate-speech.ts
 'use server';
 /**
  * @fileOverview Generates speech from text using a specified voice.
@@ -6,9 +6,9 @@
  * - generateSpeech - A function that generates speech from text.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-import {googleAI} from '@genkit-ai/google-genai';
+import { ai } from '@/ai/genkit';
+import { z } from 'zod';
+import { googleAI } from '@genkit-ai/google-genai';
 import { WaveFile } from 'wavefile';
 
 const GenerateSpeechInputSchema = z.object({
@@ -23,6 +23,23 @@ const GenerateSpeechOutputSchema = z.object({
 export async function generateSpeech(input: GenerateSpeechInput): Promise<z.infer<typeof GenerateSpeechOutputSchema>> {
   return generateSpeechFlow(input);
 }
+
+// Helper function to convert raw PCM audio data to a WAV file data URI
+async function toWav(pcmData: Buffer): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const wav = new WaveFile();
+        // The Gemini TTS model returns audio in 16-bit PCM format at a 24000Hz sample rate.
+        wav.fromScratch(1, 24000, '16', pcmData);
+        
+        // getBuffer() returns the byte array of the WAV file.
+        const wavBuffer = wav.toBuffer();
+        
+        // Convert the buffer to a Base64 string to create the data URI.
+        const base64Data = wavBuffer.toString('base64');
+        resolve(`data:audio/wav;base64,${base64Data}`);
+    });
+}
+
 
 const generateSpeechFlow = ai.defineFlow(
   {
@@ -51,14 +68,8 @@ const generateSpeechFlow = ai.defineFlow(
     const pcmBase64 = media.url.substring(media.url.indexOf(',') + 1);
     const pcmBuffer = Buffer.from(pcmBase64, 'base64');
     
-    // Use wavefile to create a proper WAV file from raw PCM data
-    const wav = new WaveFile();
-    wav.fromScratch(1, 24000, '16', pcmBuffer);
-    const wavBuffer = wav.toBuffer();
-    const wavData = wavBuffer.toString('base64');
+    const audioUrl = await toWav(pcmBuffer);
 
-    return {
-      audioUrl: `data:audio/wav;base64,${wavData}`,
-    };
+    return { audioUrl };
   }
 );

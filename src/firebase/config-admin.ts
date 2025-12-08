@@ -1,4 +1,3 @@
-
 // src/firebase/config-admin.ts
 import admin from 'firebase-admin';
 import { firebaseConfig } from './config';
@@ -24,7 +23,7 @@ export function initializeAdminApp() {
     const serviceAccountJson = Buffer.from(serviceAccountBase64, 'base64').toString('utf8');
     const serviceAccount = JSON.parse(serviceAccountJson);
 
-    // The private_key in the JSON often has literal '\n' which need to be replaced with actual newlines.
+    // The private_key in the JSON often has literal '\\n' which need to be replaced with actual newlines.
     if (serviceAccount.private_key) {
         serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
     }
@@ -40,7 +39,3 @@ export function initializeAdminApp() {
     throw new Error(`Server configuration error: Failed to parse or initialize the service account key. Please ensure it is a valid, non-malformed Base64 string. Original error: ${e.message}`);
   }
 }
-
-    
-
-    

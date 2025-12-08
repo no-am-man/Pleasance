@@ -1,8 +1,9 @@
-
 // src/ai/flows/generate-story-and-speech.ts
 'use server';
 /**
  * @fileOverview Orchestrates the generation of a story, its translation, and speech synthesis.
+ * This flow is now DEPRECATED in favor of calling individual actions from the client.
+ * It is kept for historical purposes but should not be used.
  *
  * - generateStoryAndSpeech - The main server action for this process.
  */
