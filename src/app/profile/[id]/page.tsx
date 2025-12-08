@@ -1,10 +1,8 @@
-
 // src/app/profile/[id]/page.tsx
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
-import { firestore } from '@/firebase/config';
+import { useUser, getFirebase } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -37,6 +35,7 @@ export default function UserProfilePage() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    const { firestore } = getFirebase();
     if (!id || !firestore || isUserLoading) {
         if (!isUserLoading) setIsLoading(false);
         return;

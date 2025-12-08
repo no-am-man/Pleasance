@@ -5,8 +5,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useUser } from '@/firebase';
-import { firestore } from '@/firebase/config';
+import { useUser, getFirebase } from '@/firebase';
 import { collection, query, where, orderBy, getDocs, doc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -144,13 +143,15 @@ function CreateCommunityForm() {
     }
 
     async function onSubmit(values: z.infer<typeof CreateCommunitySchema>) {
-        if (!user || !firestore) {
+        if (!user) {
             toast({
                 variant: 'destructive',
                 title: t('community_must_be_logged_in'),
             });
             return;
         }
+        const { firestore } = getFirebase();
+        if (!firestore) return;
         setIsSubmitting(true);
         try {
             const communityDetails = await createCommunityDetailsAction(values);
@@ -295,10 +296,12 @@ export default function CommunityPage() {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
 
     useEffect(() => {
-        if (isUserLoading || !firestore) {
+        if (isUserLoading) {
             // Wait for authentication to be resolved
             return;
         }
+        const { firestore } = getFirebase();
+        if (!firestore) return;
 
         const fetchCommunities = async () => {
             setIsLoading(true);

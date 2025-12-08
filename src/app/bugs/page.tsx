@@ -5,8 +5,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useUser, useMemoFirebase } from '@/firebase';
-import { firestore } from '@/firebase/config';
+import { useUser, useMemoFirebase, getFirebase } from '@/firebase';
 import { collection, query, orderBy, serverTimestamp, doc, setDoc, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,6 +38,7 @@ type Bug = {
 }
 
 async function submitBugReport(values: z.infer<typeof BugSchema>, user: { uid: string, displayName: string | null }) {
+    const { firestore } = getFirebase();
     if (!firestore) {
         throw new Error("Firestore is not initialized");
     }
@@ -231,7 +231,9 @@ export default function BugsPage() {
   const { t } = useTranslation();
 
   const fetchBugs = useCallback(async () => {
-    if (isUserLoading || !firestore) return;
+    if (isUserLoading) return;
+    const { firestore } = getFirebase();
+    if (!firestore) return;
     setIsLoadingBugs(true);
     try {
         const bugsQuery = query(collection(firestore, 'bugs'), orderBy('createdAt', 'desc'));

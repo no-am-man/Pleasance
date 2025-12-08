@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { firestore } from '@/firebase';
+import { getFirebase } from '@/firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -18,6 +18,7 @@ export function PresenceBar() {
     const [activeUsers, setActiveUsers] = useState<Presence[]>([]);
 
     useEffect(() => {
+        const { firestore } = getFirebase();
         if (!firestore) return;
         
         // Query for users seen in the last 5 minutes

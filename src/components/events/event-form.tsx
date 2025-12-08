@@ -1,4 +1,3 @@
-
 // src/components/events/event-form.tsx
 'use client';
 
@@ -17,7 +16,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { addDoc, collection, doc, serverTimestamp, setDoc, Timestamp } from 'firebase/firestore';
-import { firestore } from '@/firebase';
+import { getFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import type { User } from 'firebase/auth';
 import { useTranslation } from '@/hooks/use-translation';
@@ -65,6 +64,7 @@ export function EventForm({ user, onFormSubmit, onCancel, eventToEdit }: EventFo
   const { formState: { isSubmitting } } = form;
 
   const onSubmit = async (values: z.infer<typeof EventFormSchema>) => {
+    const { firestore } = getFirebase();
     if (!firestore) {
         toast({ variant: "destructive", title: t('toast_db_error') });
         return;

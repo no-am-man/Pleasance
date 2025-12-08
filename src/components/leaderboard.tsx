@@ -1,8 +1,8 @@
-
+// src/components/leaderboard.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
-import { firestore } from '@/firebase';
+import { getFirebase } from '@/firebase';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -45,6 +45,7 @@ export default function Leaderboard() {
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
+        const { firestore } = getFirebase();
         if (!firestore) return;
         const fetchLeaderboard = async () => {
             try {

@@ -1,4 +1,3 @@
-
 // src/app/profile/page.tsx
 'use client';
 
@@ -6,8 +5,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useUser } from '@/firebase';
-import { firestore } from '@/firebase/config';
+import { useUser, getFirebase } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Button } from '@/components/ui/button';
@@ -249,6 +247,7 @@ export default function ProfilePage() {
             return;
         }
         setIsProfileLoading(true);
+        const { firestore } = getFirebase();
         const profileDocRef = doc(firestore, 'community-profiles', user.uid);
         const docSnap = await getDoc(profileDocRef);
         
@@ -278,6 +277,7 @@ export default function ProfilePage() {
     }
     setIsLoading(true);
     setError(null);
+    const { firestore } = getFirebase();
     const profileDocRef = doc(firestore, 'community-profiles', user.uid);
 
     const profileData: CommunityProfile = {

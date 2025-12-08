@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useUser, firestore, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { useUser, firestore, errorEmitter, FirestorePermissionError, getFirebase } from '@/firebase';
 import { collection, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, LoaderCircle, CalendarHeart } from 'lucide-react';
@@ -21,6 +21,7 @@ export default function EventsPage() {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
   const fetchEvents = useCallback(() => {
+    const { firestore } = getFirebase();
     if (!firestore) {
       setIsLoadingEvents(false);
       return () => {}; // Return a no-op function for cleanup

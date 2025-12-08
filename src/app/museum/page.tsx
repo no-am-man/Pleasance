@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { firestore } from '@/firebase';
+import { getFirebase } from '@/firebase';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ function CommunityHall({ community }: { community: Community }) {
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
+        const { firestore } = getFirebase();
         if (!firestore) return;
         
         const fetchCreations = async () => {
@@ -126,6 +127,7 @@ export default function MuseumPage() {
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
+        const { firestore } = getFirebase();
         if (!firestore) return;
 
         const fetchCommunities = async () => {

@@ -1,4 +1,3 @@
-
 // src/components/events/event-card.tsx
 'use client';
 
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Users, Edit, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { arrayRemove, arrayUnion, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
-import { firestore } from '@/firebase';
+import { getFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import type { User } from 'firebase/auth';
 import type { Event } from '@/lib/types';
@@ -27,6 +26,7 @@ export function EventCard({ event, currentUser, onEdit }: EventCardProps) {
   const isAttending = event.attendees.includes(currentUser?.uid || '');
 
   const handleRsvp = async () => {
+    const { firestore } = getFirebase();
     if (!currentUser || !firestore) {
         toast({ variant: "destructive", title: t('toast_rsvp_login_required')});
         return;
@@ -44,6 +44,7 @@ export function EventCard({ event, currentUser, onEdit }: EventCardProps) {
   };
   
   const handleDelete = async () => {
+    const { firestore } = getFirebase();
     if (!firestore) return;
     const eventDocRef = doc(firestore, 'events', event.id);
     try {

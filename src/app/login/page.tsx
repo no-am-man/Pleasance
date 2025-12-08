@@ -1,4 +1,3 @@
-
 // src/app/login/page.tsx
 'use client';
 
@@ -71,6 +70,7 @@ export default function LoginPage() {
 
     const checkProfile = async () => {
         const { firestore } = getFirebase();
+        if (!firestore) return;
         setIsProfileLoading(true);
         const profileRef = doc(firestore, 'community-profiles', user.uid);
         const docSnap = await getDoc(profileRef);

@@ -5,8 +5,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { firestore } from '@/firebase/config';
+import { useUser, errorEmitter, FirestorePermissionError, getFirebase } from '@/firebase';
 import { collection, query, where, serverTimestamp, doc, getDocs, onSnapshot, Unsubscribe, updateDoc } from 'firebase/firestore';
 import { declareAssetWithFileAction } from '../actions';
 import { useToast } from '@/hooks/use-toast';
@@ -229,6 +228,7 @@ export default function TreasuryPage() {
   const [error, setError] = useState<Error | null>(null);
 
   const fetchAllData = useCallback(async () => {
+    const { firestore } = getFirebase();
     if (!user || !firestore) {
         setIsLoading(false);
         return;
