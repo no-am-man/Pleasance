@@ -19,13 +19,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const { auth } = getFirebase();
-    // This is the single source of truth for auth state changes.
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setIsUserLoading(true);
       if (firebaseUser) {
         try {
           const idToken = await firebaseUser.getIdToken();
-          // Wait for the session cookie to be set before updating the state
           await fetch('/api/auth/session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -34,15 +32,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(firebaseUser);
         } catch (e) {
           console.error("Session cookie creation failed:", e);
-          // If session fails, sign out the user on the client and server
-          await fetch('/api/auth/session', { method: 'DELETE' });
           setUser(null);
-          unsubscribe(); // Unsubscribe on critical error
         } finally {
             setIsUserLoading(false);
         }
       } else {
-        // Wait for the session cookie to be cleared before updating the state
         await fetch('/api/auth/session', { method: 'DELETE' });
         setUser(null);
         setIsUserLoading(false);
@@ -57,10 +51,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     isUserLoading,
   }), [user, isUserLoading]);
-
-  // We no longer show a global loader here. The `isUserLoading` flag is passed down
-  // so that individual pages can decide how to handle the loading state. This avoids
-  // re-rendering the entire app and potentially causing race conditions.
 
   return (
     <AuthContext.Provider value={contextValue}>

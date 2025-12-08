@@ -47,9 +47,6 @@ export function usePresence() {
                     lastSeen: serverTimestamp(),
                 };
 
-                // This is a fire-and-forget update to Firestore.
-                // We don't await it to avoid blocking the main thread.
-                // Errors are handled via the emitted event.
                 setDoc(userStatusFirestoreRef, isOnlineForFirestore, { merge: true }).catch(error => {
                      errorEmitter.emit('permission-error', new FirestorePermissionError({
                         path: userStatusFirestoreRef.path,
@@ -61,14 +58,9 @@ export function usePresence() {
         }
     });
 
-    // On cleanup, unsubscribe the listener and explicitly go offline.
     return () => {
       unsubscribe();
-      // This is the crucial part. When the component unmounts (e.g., at the end of a test),
-      // we immediately disconnect from the Realtime Database. The onDisconnect handler 
-      // configured above will then execute on the Firebase server, setting the user's
-      // status to 'offline' correctly and reliably without leaving pending async operations.
       goOffline(database);
     };
-  }, [user?.uid, user?.displayName, user?.photoURL]); // Use specific dependencies instead of the whole user object
+  }, [user?.uid, user?.displayName, user?.photoURL]);
 }
