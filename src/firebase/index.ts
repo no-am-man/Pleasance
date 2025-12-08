@@ -1,3 +1,4 @@
+
 // src/firebase/index.ts
 'use client';
 import { useMemo, type DependencyList } from 'react';
@@ -8,6 +9,7 @@ export { FirebaseClientProvider } from './client-provider';
 
 // Export database update helpers
 export * from './db-updates';
+export * from './non-blocking-updates';
 
 // Export error handling utilities
 export * from './errors';
@@ -15,6 +17,8 @@ export * from './error-emitter';
 
 // Explicitly export the user hook
 export { useUser } from './use-user';
+export { useCollection } from './firestore/use-collection';
+export { useDoc } from './firestore/use-doc';
 
 
 // A hook to memoize Firebase queries.

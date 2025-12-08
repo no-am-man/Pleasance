@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect } from 'react';
@@ -11,12 +12,17 @@ export function FirebaseErrorListener() {
 
   useEffect(() => {
     const handlePermissionError = (error: FirestorePermissionError) => {
+      // Throw the error in development to make it visible in the Next.js overlay
+      if (process.env.NODE_ENV === 'development') {
+        throw error;
+      }
+
+      // In production, you might want to show a toast or log to a monitoring service
       console.error("Caught permission error:", error.message);
       
-      // We use a toast to display the error to the user in the UI.
       toast({
         variant: 'destructive',
-        duration: 20000, // Keep the toast open for 20 seconds
+        duration: 20000, 
         title: (
             <div className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5" />
@@ -24,21 +30,19 @@ export function FirebaseErrorListener() {
             </div>
         ),
         description: (
-          <pre className="mt-2 w-full rounded-md bg-slate-950 p-4">
-            <code className="text-white text-xs whitespace-pre-wrap">{error.message}</code>
-          </pre>
+          <div className="mt-2 w-full rounded-md bg-slate-950 p-4">
+            <p className="text-white text-xs whitespace-pre-wrap">A database operation was blocked by your security rules.</p>
+          </div>
         ),
       });
     };
 
-    // Subscribe to the 'permission-error' event
     errorEmitter.on('permission-error', handlePermissionError);
 
-    // Clean up the subscription when the component unmounts
     return () => {
       errorEmitter.off('permission-error', handlePermissionError);
     };
   }, [toast]);
 
-  return null; // This component does not render anything itself
+  return null;
 }
