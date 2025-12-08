@@ -4,7 +4,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useUser, firestore, database, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { doc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { ref, onValue, onDisconnect, set, serverTimestamp as dbServerTimestamp } from 'firebase/database';
 
 export function usePresence() {
@@ -92,4 +92,5 @@ export function usePresence() {
     };
   }, [user]);
 }
+
 
