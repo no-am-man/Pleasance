@@ -1,4 +1,3 @@
-
 // src/hooks/use-presence.ts
 'use client';
 
@@ -36,10 +35,6 @@ export function usePresence() {
     const unsubscribe = onValue(connectedRef, (snapshot) => {
         const isConnected = snapshot.val() === true;
         
-        if (isConnected === isOnlineRef.current) {
-            return;
-        }
-
         if (isConnected) {
             onDisconnect(userStatusDatabaseRef).set(isOfflineForDatabase).then(() => {
                 set(userStatusDatabaseRef, isOnlineForDatabase);
@@ -59,14 +54,14 @@ export function usePresence() {
                     }));
                 });
             });
-            isOnlineRef.current = true;
-        } else {
-            isOnlineRef.current = false;
         }
     });
 
     return () => {
       unsubscribe();
+      // We only need to detach the listener. 
+      // The onDisconnect handler will take care of updating the status when the client is truly gone.
+      // Trying to write during cleanup can lead to orphaned operations in a test environment.
     };
-  }, [user?.uid, user?.displayName, user?.photoURL]); // Depend on specific primitive values
+  }, [user?.uid, user?.displayName, user?.photoURL]);
 }
