@@ -1,4 +1,3 @@
-
 // src/firebase/auth-provider.tsx
 'use client';
 
@@ -22,9 +21,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { auth } = getFirebase();
     // This is the single source of truth for auth state changes.
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setIsUserLoading(true); // Set loading to true at the start of any auth change
-      try {
-        if (firebaseUser) {
+      if (firebaseUser) {
+        try {
           const idToken = await firebaseUser.getIdToken();
           // Wait for the session cookie to be set before updating the state
           await fetch('/api/auth/session', {
@@ -33,17 +31,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             body: JSON.stringify({ idToken }),
           });
           setUser(firebaseUser);
-        } else {
-          // Wait for the session cookie to be cleared before updating the state
+          setIsUserLoading(false);
+        } catch (e) {
+          console.error("Session cookie creation failed:", e);
+          // If session fails, sign out the user on the client and server
           await fetch('/api/auth/session', { method: 'DELETE' });
           setUser(null);
+          setIsUserLoading(false);
+          unsubscribe(); // Unsubscribe on critical error
         }
-      } catch (e) {
-        console.error("Session cookie operation failed:", e);
-        // If session fails, still update user state to prevent being stuck in loading
-        setUser(firebaseUser); 
-      } finally {
-        // Only set loading to false after all async operations for the auth change are complete
+      } else {
+        // Wait for the session cookie to be cleared before updating the state
+        await fetch('/api/auth/session', { method: 'DELETE' });
+        setUser(null);
         setIsUserLoading(false);
       }
     });
