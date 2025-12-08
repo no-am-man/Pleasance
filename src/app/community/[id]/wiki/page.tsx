@@ -1,3 +1,4 @@
+
 // src/app/community/[id]/wiki/page.tsx
 'use client';
 
@@ -290,7 +291,8 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
     const { toast } = useToast();
-
+    
+    // Unified useEffect for fetching data and managing state
     useEffect(() => {
         if (!firestore || !communityId) {
             setIsLoading(false);
@@ -304,11 +306,9 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
             const fetchedArticles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WikiArticle));
             setArticles(fetchedArticles);
             
-            // Logic to select an article
-            if (!selectedArticle && fetchedArticles.length > 0) {
-                setSelectedArticle(fetchedArticles[0]);
-            } else if (selectedArticle && !fetchedArticles.find(a => a.id === selectedArticle.id)) {
-                // If the selected article was deleted, select the first one again
+            // If there's no selected article, or the current one is gone, select the first available.
+            const currentSelectedExists = selectedArticle ? fetchedArticles.some(a => a.id === selectedArticle.id) : false;
+            if (!currentSelectedExists) {
                 setSelectedArticle(fetchedArticles[0] || null);
             }
             
@@ -319,7 +319,7 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
         });
 
         return () => unsubscribe();
-    }, [communityId, selectedArticle]);
+    }, [communityId]); // Only re-run when the communityId changes
     
 
     const handleDeleteArticle = async (articleId: string) => {
@@ -329,7 +329,6 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
             await deleteDoc(docRef);
             toast({ title: 'Article Deleted' });
             // The onSnapshot listener will handle the UI update.
-            // If the deleted article was the selected one, the useEffect above will select a new one.
         } catch (e) {
             const message = e instanceof Error ? e.message : 'An unknown error occurred';
             toast({ variant: 'destructive', title: 'Failed to delete article', description: message });
@@ -932,5 +931,4 @@ export default function CommunityProfilePage() {
 
     
 
-
-
+    
