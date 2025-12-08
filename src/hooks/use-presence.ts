@@ -77,12 +77,14 @@ export function usePresence() {
     return () => {
         unsubscribe();
         if (isOnlineRef.current) {
+            // Use set without merge: true to just update the offline status
             set(userStatusDatabaseRef, isOfflineForDatabase);
-            setDoc(userStatusFirestoreRef, isOfflineForFirestore, { merge: true }).catch(error => {
+            // Update only lastSeen on disconnect to preserve user info
+            updateDoc(userStatusFirestoreRef, { lastSeen: firestoreTimestamp }).catch(error => {
                  errorEmitter.emit('permission-error', new FirestorePermissionError({
                     path: userStatusFirestoreRef.path,
                     operation: 'update',
-                    requestResourceData: isOfflineForFirestore
+                    requestResourceData: { lastSeen: 'SERVER_TIMESTAMP' }
                 }));
             });
             isOnlineRef.current = false;
@@ -90,3 +92,4 @@ export function usePresence() {
     };
   }, [user]);
 }
+
