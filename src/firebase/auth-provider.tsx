@@ -21,6 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { auth } = getFirebase();
     // This is the single source of truth for auth state changes.
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setIsUserLoading(true);
       if (firebaseUser) {
         try {
           const idToken = await firebaseUser.getIdToken();
@@ -31,14 +32,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             body: JSON.stringify({ idToken }),
           });
           setUser(firebaseUser);
-          setIsUserLoading(false);
         } catch (e) {
           console.error("Session cookie creation failed:", e);
           // If session fails, sign out the user on the client and server
           await fetch('/api/auth/session', { method: 'DELETE' });
           setUser(null);
-          setIsUserLoading(false);
           unsubscribe(); // Unsubscribe on critical error
+        } finally {
+            setIsUserLoading(false);
         }
       } else {
         // Wait for the session cookie to be cleared before updating the state
