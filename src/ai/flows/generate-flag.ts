@@ -1,4 +1,5 @@
 
+// src/ai/flows/generate-flag.ts
 'use server';
 /**
  * @fileOverview A flow to generate a community flag SVG.
@@ -52,6 +53,10 @@ const generateFlagFlow = ai.defineFlow(
     outputSchema: GenerateFlagOutputSchema,
   },
   async (input) => {
+    // IMPORTANT: This flow calls the Imagen model via Genkit. 
+    // The service account running this code (or the user's ADC for local dev) 
+    // MUST have the "Vertex AI User" IAM role in the Google Cloud project.
+    // Failure to grant this role will result in a PERMISSION_DENIED gRPC error.
     const { output } = await ai.generate({
         prompt: PROMPT_TEMPLATE,
         model: 'googleai/gemini-1.5-flash-001',

@@ -37,11 +37,13 @@ service firebase.storage {
     }
 
     //====================================================================
-    // Community Flags: Allow public write access to unblock uploads.
-    // This is a temporary, broader rule to fix a persistent permission error.
+    // Community Flags: Allow an authenticated community owner to write the flag.
+    // The community ID in the path must match the community document where the user is the owner.
     //====================================================================
     match /communities/{communityId}/flag.png {
-      allow write: if true;
+      allow write: if request.auth != null &&
+                   exists(/databases/$(database)/documents/communities/$(communityId)) &&
+                   get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId == request.auth.uid;
     }
     
   }
