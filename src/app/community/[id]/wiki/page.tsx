@@ -291,11 +291,11 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner
     const [error, setError] = useState<Error | null>(null);
     const { toast } = useToast();
 
-    const fetchArticles = useCallback(() => {
+    useEffect(() => {
         if (!firestore || !communityId) {
             setIsLoading(false);
             return;
-        };
+        }
         setIsLoading(true);
         const q = query(collection(firestore, `communities/${communityId}/wiki`), orderBy('title', 'asc'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -306,15 +306,9 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner
             setError(err);
             setIsLoading(false);
         });
-        return unsubscribe;
+        
+        return () => unsubscribe();
     }, [communityId]);
-    
-    useEffect(() => {
-        const unsubscribe = fetchArticles();
-        return () => {
-            if (unsubscribe) unsubscribe();
-        };
-    }, [fetchArticles]);
     
     useEffect(() => {
         if (articles.length > 0 && !articles.some(a => a.id === selectedArticle?.id)) {
@@ -350,7 +344,7 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string, isOwner
     return (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="md:col-span-1">
-                <WikiArticleForm communityId={communityId} onArticleAdded={fetchArticles} />
+                <WikiArticleForm communityId={communityId} onArticleAdded={() => {}} />
                 <Card className="mt-8">
                     <CardHeader>
                         <CardTitle>Articles</CardTitle>
@@ -926,5 +920,6 @@ export default function CommunityProfilePage() {
     
 
     
+
 
 
