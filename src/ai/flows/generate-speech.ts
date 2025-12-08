@@ -9,7 +9,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { googleAI } from '@genkit-ai/google-genai';
-import { WaveFile } from 'wavefile';
+import wav from 'wav';
 
 const GenerateSpeechInputSchema = z.object({
   text: z.string().describe('The text to convert to speech.'),
@@ -27,16 +27,23 @@ export async function generateSpeech(input: GenerateSpeechInput): Promise<z.infe
 // Helper function to convert raw PCM audio data to a WAV file data URI
 async function toWav(pcmData: Buffer): Promise<string> {
     return new Promise((resolve, reject) => {
-        const wav = new WaveFile();
-        // The Gemini TTS model returns audio in 16-bit PCM format at a 24000Hz sample rate.
-        wav.fromScratch(1, 24000, '16', pcmData);
-        
-        // getBuffer() returns the byte array of the WAV file.
-        const wavBuffer = wav.toBuffer();
-        
-        // Convert the buffer to a Base64 string to create the data URI.
-        const base64Data = wavBuffer.toString('base64');
-        resolve(`data:audio/wav;base64,${base64Data}`);
+        const writer = new wav.Writer({
+            channels: 1, // The Gemini TTS model returns mono audio
+            sampleRate: 24000, // The Gemini TTS model returns audio at a 24000Hz sample rate.
+            bitDepth: 16 // The Gemini TTS model returns 16-bit PCM audio.
+        });
+
+        const bufs: any[] = [];
+        writer.on('error', reject);
+        writer.on('data', (d) => bufs.push(d));
+        writer.on('end', () => {
+            const wavBuffer = Buffer.concat(bufs);
+            const base64Data = wavBuffer.toString('base64');
+            resolve(`data:audio/wav;base64,${base64Data}`);
+        });
+
+        writer.write(pcmData);
+        writer.end();
     });
 }
 
