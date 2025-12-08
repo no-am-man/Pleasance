@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, ShieldCheck, AlertTriangle, CheckCircle, Bone, Database, Info } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { runMemberSync, seedRoadmapData } from '../actions';
+import { runMemberSync, seedPlatformData } from '../actions';
 import { useTranslation } from '@/hooks/use-translation';
 
 // This is a simple check. In a real-world app, this should be a secure custom claim.
@@ -55,7 +55,7 @@ function AdminDashboard() {
         setSeedResult(null);
 
         try {
-            const seedResult = await seedRoadmapData();
+            const seedResult = await seedPlatformData();
             if (seedResult.error) {
                 setSeedError(seedResult.error);
             } else if (seedResult.message) {
@@ -119,10 +119,10 @@ function AdminDashboard() {
                 <Card className="bg-muted/50">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                           <Database /> Seed Roadmap Data
+                           <Database /> Seed Platform Data
                         </CardTitle>
                         <CardDescription>
-                            This action will populate the Firestore database with the initial set of cards for the Kanban roadmap. Run this once to get the roadmap to display its data.
+                            This action will populate the Firestore database with initial data for the entire platform, including the public roadmap, a founding community, and the founder's profile. Run this once on a new database.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -132,7 +132,7 @@ function AdminDashboard() {
                             ) : (
                                 <Database className="mr-2 h-4 w-4" />
                             )}
-                            Seed Roadmap
+                            Seed Platform
                         </Button>
                          {seedError && (
                             <Alert variant="destructive" className="mt-4">

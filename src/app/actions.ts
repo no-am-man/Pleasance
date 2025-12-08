@@ -11,10 +11,9 @@ import { notifyOwnerOfJoinRequest as notifyOwnerOfJoinRequestFlow } from '@/ai/f
 import { addBugReportTool as addBugReportFlow } from '@/ai/tools/bug-reporter-tool';
 import { generateRoadmapIdea as generateRoadmapIdeaFlow } from '@/ai/flows/generate-roadmap-idea';
 import { conductSuperAgent as conductSuperAgentFlow } from '@/ai/flows/ambasedor';
-import { seedRoadmapData as seedRoadmapDataFlow } from '@/lib/seed-roadmap';
+import { seedPlatformData as seedPlatformDataFlow } from '@/lib/seed-roadmap';
 import { syncAllMembers as syncAllMembersFlow } from '@/ai/flows/sync-members';
 import { translateText as translateTextFlow } from '@/ai/flows/translate-text';
-import { seedCommunityRoadmapData as seedCommunityRoadmapFlow } from '@/lib/seed-roadmap';
 import { updateRoadmapCardOrder as updateRoadmapCardOrderFlow } from '@/ai/flows/update-card-order';
 import { refineRoadmapCard as refineRoadmapCardFlow } from '@/ai/flows/refine-roadmap-card';
 import { updateCommunityRoadmapCardColumn as updateCommunityRoadmapCardColumnFlow } from '@/ai/flows/update-community-roadmap-column';
@@ -101,9 +100,9 @@ export async function runMemberSync() {
     }
 }
 
-export async function seedRoadmapData() {
+export async function seedPlatformData() {
     try {
-        const result = await seedRoadmapDataFlow();
+        const result = await seedPlatformDataFlow();
         return { message: result };
     } catch(e) {
         return { error: e instanceof Error ? e.message : 'Unknown error' };
@@ -116,15 +115,6 @@ export async function translateTextAction(values: any) {
 
 export async function updateCommunityRoadmapCardColumnAction(communityId: string, cardId: string, sourceColumnId: string, targetColumnId: string) {
     return await updateCommunityRoadmapCardColumnFlow(communityId, cardId, sourceColumnId, targetColumnId);
-}
-
-export async function seedCommunityRoadmapData(values: { communityId: string }) {
-     try {
-        const result = await seedCommunityRoadmapFlow(values);
-        return { message: result };
-    } catch(e) {
-        return { error: e instanceof Error ? e.message : 'Unknown error' };
-    }
 }
 
 export async function generateDualStoryAction(values: any) {
