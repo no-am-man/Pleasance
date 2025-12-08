@@ -38,8 +38,8 @@ export default function RootLayout({
         )}
       >
         <Providers>
-            <FirebaseErrorListener />
             <AppLayout>
+              <FirebaseErrorListener />
               {children}
             </AppLayout>
             <Toaster />

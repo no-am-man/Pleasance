@@ -21,7 +21,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <Header />
         <header className="fixed top-0 z-40 hidden h-16 w-full items-center border-b bg-background/80 backdrop-blur-sm sm:flex sm:w-[calc(100%-var(--sidebar-width))]">
           <div className="flex h-full w-full items-center">
-            <Breadcrumbs />
+            {/* The presence bar was here */}
           </div>
         </header>
         <main className="flex-grow pt-16">
