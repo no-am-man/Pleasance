@@ -1,4 +1,3 @@
-
 // src/hooks/use-presence.ts
 'use client';
 
@@ -48,6 +47,9 @@ export function usePresence() {
                     lastSeen: serverTimestamp(),
                 };
 
+                // This is a fire-and-forget update to Firestore.
+                // We don't await it to avoid blocking the main thread.
+                // Errors are handled via the emitted event.
                 setDoc(userStatusFirestoreRef, isOnlineForFirestore, { merge: true }).catch(error => {
                      errorEmitter.emit('permission-error', new FirestorePermissionError({
                         path: userStatusFirestoreRef.path,
@@ -68,5 +70,5 @@ export function usePresence() {
       // status to 'offline' correctly and reliably without leaving pending async operations.
       goOffline(database);
     };
-  }, [user?.uid, user?.displayName, user?.photoURL]);
+  }, [user?.uid, user?.displayName, user?.photoURL]); // Use specific dependencies instead of the whole user object
 }
