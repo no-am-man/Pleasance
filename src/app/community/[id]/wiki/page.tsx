@@ -1,3 +1,4 @@
+
 // src/app/community/[id]/wiki/page.tsx
 'use client';
 
@@ -291,7 +292,7 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
     const [error, setError] = useState<Error | null>(null);
     const { toast } = useToast();
 
-    // Unified useEffect for fetching articles and setting the initial one.
+    // Unified useEffect for fetching articles
     useEffect(() => {
         if (!firestore || !communityId) {
             setIsLoading(false);
@@ -304,17 +305,10 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedArticles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WikiArticle));
             setArticles(fetchedArticles);
-            
-            // This is the crucial change:
-            // Only set the selected article if one isn't already selected.
-            // This prevents the infinite loop.
-            setSelectedArticle(prevSelected => {
-                if (prevSelected && fetchedArticles.some(a => a.id === prevSelected.id)) {
-                    return prevSelected;
-                }
-                return fetchedArticles[0] || null;
-            });
-            
+            // Select the first article only if one isn't already selected or the selected one was deleted
+            if (!selectedArticle || !fetchedArticles.some(a => a.id === selectedArticle.id)) {
+                setSelectedArticle(fetchedArticles[0] || null);
+            }
             setIsLoading(false);
         }, (err) => {
             setError(err);
@@ -695,7 +689,7 @@ export default function CommunityProfilePage() {
         <Card className="w-full max-w-lg text-center">
           <CardHeader>
             <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
-            <CardTitle className="mt-4">{t('community_page_error_title')}</CardHeader>
+            <CardTitle className="mt-4">{t('community_page_error_title')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-4">
@@ -952,6 +946,7 @@ export default function CommunityProfilePage() {
     
 
     
+
 
 
 
