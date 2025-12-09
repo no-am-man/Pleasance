@@ -105,7 +105,7 @@ export default function HomePage() {
                     {t('pleasance')}
                 </h1>
                 <p className="mt-4 text-xl text-muted-foreground">
-                    {t('federationSubtitle')}
+                    A Federation of Republics
                 </p>
             </div>
             
