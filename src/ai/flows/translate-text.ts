@@ -48,8 +48,9 @@ const translateTextFlow = ai.defineFlow(
       return { translation: '' };
     }
 
-    const { output } = await translatePrompt(input);
+    const { output } = await translatePrompt(input, { model: GEMINI_PRO });
 
     return output || { translation: input.text };
   }
 );
+
