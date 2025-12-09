@@ -57,7 +57,7 @@ service cloud.firestore {
     // Rule for publicly readable, but privately writable, user profiles.
     match /community-profiles/{userId} {
         allow get: if true; 
-        allow list: if isSignedIn();
+        allow list: if true;
         allow create, update, delete: if isOwner(userId);
     }
     
