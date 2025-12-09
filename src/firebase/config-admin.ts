@@ -18,32 +18,33 @@ function getAdminApp(): admin.app.App {
     return adminApp;
   }
 
-  // Get the entire service account JSON from the environment variable.
-  const serviceAccountJSON = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+  // --- Use Individual Environment Variables (More Robust) ---
+  const projectId = process.env.GCLOUD_PROJECT;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  // The private key needs to have its newline characters restored.
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
-  if (!serviceAccountJSON) {
-      throw new Error('Server configuration error: The FIREBASE_SERVICE_ACCOUNT_JSON environment variable is not set or is empty. Please generate a key in your Firebase project settings and add it to your .env file.');
+  if (!projectId || !clientEmail || !privateKey) {
+      throw new Error('Server configuration error: The required Firebase Admin environment variables (GCLOUD_PROJECT, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY) are not set. Please add them to your .env file.');
   }
 
-  let serviceAccount: admin.ServiceAccount;
   try {
-      // Parse the JSON string into an object.
-      serviceAccount = JSON.parse(serviceAccountJSON);
-  } catch (e) {
-      throw new Error('Server configuration error: Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON. Please ensure it is a valid JSON string, enclosed in double quotes in your .env file.');
-  }
-  
-  try {
-    // Initialize the app with the full service account object.
+    const serviceAccount: admin.ServiceAccount = {
+        projectId,
+        clientEmail,
+        privateKey,
+    };
+    
+    // Initialize the app with the constructed service account object.
     adminApp = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-      projectId: serviceAccount.project_id, 
+      projectId: projectId, 
     }, appName);
     return adminApp;
 
   } catch (e: any) {
     if (e.code === 'auth/invalid-credential' || e.errorInfo?.code === 'auth/invalid-credential') {
-        throw new Error(`Server configuration error: The provided Firebase service account credential is invalid. This could be due to a revoked key. Please generate a new key from your Firebase project settings and update your .env file. Original error: ${e.message}`);
+        throw new Error(`Server configuration error: The provided Firebase service account credentials are invalid. This could be due to a revoked key. Please generate a new key from your Firebase project settings and update your .env file. Original error: ${e.message}`);
     }
     throw new Error(`Server configuration error: Failed to initialize Firebase Admin SDK. Original error: ${e.message}`);
   }
