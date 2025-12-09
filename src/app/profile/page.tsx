@@ -248,6 +248,10 @@ export default function ProfilePage() {
         }
         setIsProfileLoading(true);
         const { firestore } = getFirebase();
+        if (!firestore) {
+            setIsProfileLoading(false);
+            return;
+        }
         const profileDocRef = doc(firestore, 'community-profiles', user.uid);
         const docSnap = await getDoc(profileDocRef);
         
@@ -266,8 +270,10 @@ export default function ProfilePage() {
         }
         setIsProfileLoading(false);
       }
-      fetchProfile();
-  }, [user, form]);
+      if (!isUserLoading) {
+        fetchProfile();
+      }
+  }, [user, form, isUserLoading]);
 
 
   async function onSubmit(data: z.infer<typeof ProfileSchema>) {

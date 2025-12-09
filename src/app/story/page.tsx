@@ -110,6 +110,10 @@ function StoryHistory({ onSelectStory, onClearStory }: { onSelectStory: (story: 
         const fetchStories = async () => {
             try {
                 const { firestore } = getFirebase();
+                if (!firestore) {
+                    setIsLoading(false);
+                    return;
+                }
                 const storiesQuery = query(collection(firestore, 'users', user.uid, 'stories'), orderBy('createdAt', 'desc'));
                 const snapshot = await getDocs(storiesQuery);
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as StoryDataType));
@@ -226,6 +230,7 @@ function TimeMachine() {
         const fetchSnapshots = async () => {
             try {
                 const { firestore } = getFirebase();
+                if (!firestore) return;
                 const snapshotsQuery = query(collection(firestore, 'users', user.uid, 'historySnapshots'), orderBy('createdAt', 'desc'));
                 const snapshot = await getDocs(snapshotsQuery);
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as HistorySnapshot));
@@ -255,6 +260,7 @@ function TimeMachine() {
     const handleDeleteSnapshot = async (snapshotId: string) => {
         if (!user) return;
         const { firestore } = getFirebase();
+        if (!firestore) return;
         const docRef = doc(firestore, `users/${user.uid}/historySnapshots/${snapshotId}`);
         await deleteDoc(docRef);
         toast({ title: t('toast_snapshot_deleted_title') });
@@ -322,6 +328,7 @@ export default function StoryPage() {
   });
 
   useEffect(() => {
+      if (isUserLoading) return;
       const fetchProfile = async () => {
         if (!user) {
             setIsProfileLoading(false);
@@ -329,6 +336,10 @@ export default function StoryPage() {
         }
         setIsProfileLoading(true);
         const { firestore } = getFirebase();
+        if (!firestore) {
+             setIsProfileLoading(false);
+            return;
+        }
         const profileDocRef = doc(firestore, 'community-profiles', user.uid);
         const docSnap = await getDoc(profileDocRef);
         
@@ -345,7 +356,7 @@ export default function StoryPage() {
         setIsProfileLoading(false);
       }
       fetchProfile();
-  }, [user, form]);
+  }, [user, form, isUserLoading]);
 
 
   async function onSubmit(data: z.infer<typeof StoryFormSchema>) {
@@ -358,6 +369,11 @@ export default function StoryPage() {
     setActiveStory(null);
 
     const { firestore } = getFirebase();
+    if (!firestore) {
+        setError("Firestore not initialized.");
+        setIsGenerating(false);
+        return;
+    }
     const storyRef = doc(collection(firestore, `users/${user.uid}/stories`));
     
     const initialData = {

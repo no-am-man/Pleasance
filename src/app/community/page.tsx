@@ -58,7 +58,7 @@ function CommunityCard({ community, allProfiles, isOwner }: { community: Communi
   const router = useRouter();
 
   const getMemberData = (memberIdentifier: string | Member): Member | undefined => {
-    if (typeof memberIdentifier === 'object' && memberIdentifier !== null) {
+    if (typeof memberIdentifier === 'object' && memberIdentifier !== null && memberIdentifier.name) {
       return memberIdentifier; // It's already a full Member object (AI)
     }
     if (typeof memberIdentifier === 'string') {

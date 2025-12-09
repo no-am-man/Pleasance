@@ -62,6 +62,7 @@ export default function LoginPage() {
   }, []);
 
   useEffect(() => {
+    if (isUserLoading) return;
     if (!user) {
         setIsProfileLoading(false);
         setProfileExists(null);
@@ -79,7 +80,7 @@ export default function LoginPage() {
     };
 
     checkProfile();
-  }, [user]);
+  }, [user, isUserLoading]);
 
   const handleGoogleSignIn = async () => {
     setIsSigningIn(true);
