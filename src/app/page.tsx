@@ -58,7 +58,7 @@ function CommunityCard({ community, allProfiles, isOwner }: { community: Communi
   const router = useRouter();
 
   const getMemberData = (memberIdentifier: string | Member): Member | undefined => {
-    if (typeof memberIdentifier === 'object' && memberIdentifier !== null) {
+    if (typeof memberIdentifier === 'object' && memberIdentifier !== null && memberIdentifier.name) {
       return memberIdentifier; // It's already a full Member object (AI)
     }
     if (typeof memberIdentifier === 'string') {
@@ -157,7 +157,7 @@ function CreateCommunityForm() {
         setIsRefining(true);
         try {
             const result = await refineCommunityPromptAction({ prompt });
-            if (result.error) throw new Error(result.error);
+            if ('error' in result) throw new Error(result.error);
             form.setValue('prompt', result.refinedPrompt, { shouldValidate: true });
             toast({
                 title: t('community_idea_refined_title'),
