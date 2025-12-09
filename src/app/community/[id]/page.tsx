@@ -133,7 +133,7 @@ function FormBubble({ form, allCommunities, onClick }: { form: Form; allCommunit
 }
 
 
-function SphericalizingChatRoom({ communityId, isOwner, allCommunities }: { communityId: string; isOwner: boolean, allCommunities: Community[] }) {
+function SphericalizingChatRoom({ communityId, isOwner, allMembers, allCommunities }: { communityId: string; isOwner: boolean, allMembers: Member[], allCommunities: Community[] }) {
     const { user } = useUser();
     const { t } = useTranslation();
     
@@ -141,22 +141,6 @@ function SphericalizingChatRoom({ communityId, isOwner, allCommunities }: { comm
     const [visibleForms, setVisibleForms] = useState<Form[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
-
-    const [allMembers, setAllMembers] = useState<Member[]>([]);
-
-    // Fetch members of the current community
-    useEffect(() => {
-        if (!firestore || !communityId) return;
-        const membersRef = collection(firestore, `communities/${communityId}/members`);
-        const unsubscribe = onSnapshot(membersRef, (snapshot) => {
-            const membersData = snapshot.docs.map(doc => doc.data() as Member);
-            setAllMembers(membersData);
-        }, (err) => {
-            console.error("Error fetching community members:", err);
-        });
-        return unsubscribe;
-    }, [communityId]);
-
 
     useEffect(() => {
         if (!firestore || !communityId) {
@@ -453,17 +437,16 @@ export default function CommunityProfilePage() {
   
   const [allProfiles, setAllProfiles] = useState<CommunityProfile[]>([]);
   const [allCommunities, setAllCommunities] = useState<Community[]>([]);
-  const [allMembers, setAllMembers] = useState<Member[]>([]);
   const [isLoadingAncillary, setIsLoadingAncillary] = useState(true);
 
 
   // Effect for fetching ancillary data (runs once)
   useEffect(() => {
     const fetchAncillaryData = async () => {
-        if (!firestore) {
-            setIsLoadingAncillary(false);
+        if (isUserLoading || !firestore) {
+            if (!isUserLoading) setIsLoadingAncillary(false);
             return;
-        };
+        }
         setIsLoadingAncillary(true);
         try {
             const [communitiesSnapshot, profilesSnapshot] = await Promise.all([
@@ -479,7 +462,7 @@ export default function CommunityProfilePage() {
         }
     };
     fetchAncillaryData();
-  }, []);
+  }, [isUserLoading]);
 
   // Effect for the main community document (real-time)
   useEffect(() => {
@@ -500,16 +483,7 @@ export default function CommunityProfilePage() {
         setIsLoading(false);
     });
 
-    const membersColRef = collection(firestore, `communities/${id}/members`);
-    const unsubscribeMembers = onSnapshot(membersColRef, (snapshot) => {
-        const membersData = snapshot.docs.map(doc => doc.data() as Member);
-        setAllMembers(membersData);
-    });
-
-    return () => {
-        unsubscribeCommunity();
-        unsubscribeMembers();
-    };
+    return () => unsubscribeCommunity();
   }, [id]);
 
   // Effect for user-specific data (profile and join request)
@@ -554,19 +528,20 @@ export default function CommunityProfilePage() {
 
   const isOwner = useMemo(() => user?.uid === community?.ownerId, [user, community]);
   
-  const sortedMembers = useMemo(() => {
-    if (!allMembers) return [];
-    return [...allMembers].sort((a, b) => {
-      if (a.type === 'human' && b.type !== 'human') return -1;
-      if (a.type !== 'human' && b.type === 'human') return 1;
+  const allMembers = useMemo(() => {
+    if (!community?.members) return [];
+    return [...community.members].sort((a, b) => {
+      if (typeof a === 'string' && typeof b !== 'string') return -1;
+      if (typeof a !== 'string' && typeof b === 'string') return 1;
       return 0;
     });
-  }, [allMembers]);
-  
+  }, [community]);
+
   const isMember = useMemo(() => {
     if (!user || !community) return false;
-    return community.members.includes(user.uid);
-  }, [user, community]);
+    if (user.uid === community.ownerId) return true;
+    return community.members.some(member => typeof member === 'string' && member === user.uid);
+}, [user, community]);
 
 
   const handleRequestToJoin = async () => {
@@ -603,23 +578,12 @@ export default function CommunityProfilePage() {
   const handleInvite = async (profile: CommunityProfile) => {
     if (!community || !firestore) return;
     
-    const newMember: Member = {
-        userId: profile.userId,
-        name: profile.name,
-        bio: profile.bio,
-        role: 'Member',
-        type: 'human',
-        avatarUrl: profile.avatarUrl || '',
-    };
     const communityDocRef = doc(firestore, 'communities', community.id);
-    const memberDocRef = doc(firestore, `communities/${community.id}/members`, profile.userId);
-    
     await updateDoc(communityDocRef, {
         members: arrayUnion(profile.userId)
     });
-    await setDoc(memberDocRef, newMember);
 
-    await welcomeNewMemberAction({ communityId: community.id, communityName: community.name, newMemberName: newMember.name });
+    await welcomeNewMemberAction({ communityId: community.id, communityName: community.name, newMemberName: profile.name });
 
     toast({
         title: t('community_page_member_invited_title'),
@@ -640,14 +604,10 @@ export default function CommunityProfilePage() {
     }
     
     const communityDocRef = doc(firestore, 'communities', community.id);
-    const memberDocRef = doc(firestore, `communities/${community.id}/members`, memberToRemove.userId);
-
     try {
       await updateDoc(communityDocRef, {
         members: arrayRemove(memberToRemove.userId)
       });
-      await deleteDoc(memberDocRef);
-
       toast({ title: t('community_page_member_removed_title'), description: t('community_page_member_removed_desc', { name: memberToRemove.name }) });
     } catch (e) {
       const message = e instanceof Error ? e.message : t('community_page_unexpected_error');
@@ -832,7 +792,7 @@ export default function CommunityProfilePage() {
                 {isOwner && <TabsTrigger value="admin">{t('community_tab_admin')}</TabsTrigger>}
             </TabsList>
             <TabsContent value="feed" className="mt-6">
-                <SphericalizingChatRoom communityId={community.id} isOwner={isOwner} allCommunities={allCommunities} />
+                <SphericalizingChatRoom communityId={community.id} isOwner={isOwner} allMembers={allMembers} allCommunities={allCommunities} />
             </TabsContent>
             <TabsContent value="members" className="mt-6">
                 <Card>
@@ -841,7 +801,7 @@ export default function CommunityProfilePage() {
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 gap-6">
-                            {sortedMembers.map((member) => (
+                            {allMembers.map((member) => (
                                 <MemberCard key={member.userId || member.name} member={member} communityId={community.id} isOwner={isOwner} onRemove={handleRemoveMember} />
                             ))}
                         </div>
@@ -859,7 +819,7 @@ export default function CommunityProfilePage() {
                                     <LoaderCircle className="animate-spin mx-auto" />
                                 ) : allProfiles.length > 0 ? (
                                     <div className="space-y-4">
-                                        {allProfiles.filter(p => p.userId !== user?.uid && !community.members.includes(p.userId)).map(profile => (
+                                        {allProfiles.filter(p => p.userId !== user?.uid && !allMembers.some(m => typeof m === 'string' ? m === p.userId : m.userId === p.userId)).map(profile => (
                                             <Card key={profile.id} className="flex items-center p-4">
                                                 <Avatar className="w-12 h-12 mr-4">
                                                     <AvatarImage src={profile.avatarUrl || `https://i.pravatar.cc/150?u=${profile.name}`} alt={profile.name} />
@@ -939,7 +899,7 @@ export default function CommunityProfilePage() {
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                         <AlertDialogCancel>{t('community_page_delete_cancel')}</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleRemoveMember(community.members.find(m => m.userId === user.uid)!)} className="bg-destructive hover:bg-destructive/90">
+                                        <AlertDialogAction onClick={() => handleRemoveMember(community.members.find(m => typeof m !== 'string' && m.userId === user?.uid)!)} className="bg-destructive hover:bg-destructive/90">
                                             {t('community_page_leave_confirm')}
                                         </AlertDialogAction>
                                     </AlertDialogFooter>
@@ -968,3 +928,17 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
+    
+
+    
+
+
+
+    
+
+    
+
+
+
+
+

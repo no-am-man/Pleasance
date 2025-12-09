@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Bot, User, UserX } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
 import type { Member } from '@/lib/types';
+import { useUser } from '@/firebase';
 
 // Inlined Icons to resolve build error
 function HumanIcon(props: SVGProps<SVGSVGElement>) {
@@ -59,7 +60,9 @@ function AiIcon(props: SVGProps<SVGSVGElement>) {
 
 export function MemberCard({ member, communityId, isOwner, onRemove }: { member: Member; communityId: string; isOwner: boolean; onRemove: (member: Member) => void; }) {
     const { t } = useTranslation();
+    const { user } = useUser();
     const isHuman = member.type === 'human';
+    const isSelf = isHuman && user?.uid === member.userId;
     
     const memberLink = isHuman && member.userId
       ? `/profile/${member.userId}`
@@ -95,7 +98,7 @@ export function MemberCard({ member, communityId, isOwner, onRemove }: { member:
                 <Badge variant="outline" className="flex-shrink-0"><Bot className="w-3 h-3 mr-1" /> {t('community_page_member_type_ai')}</Badge>
             )}
 
-            {isOwner && isHuman && (
+            {isOwner && isHuman && !isSelf && (
               <AlertDialog>
                   <AlertDialogTrigger asChild>
                       <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100">

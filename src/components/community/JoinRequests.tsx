@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getFirebase } from '@/firebase';
-import { doc, collection, query, where, arrayUnion, updateDoc, getDocs, setDoc } from 'firebase/firestore';
+import { doc, collection, query, where, arrayUnion, updateDoc, getDocs, setDoc, deleteDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, Check, X } from 'lucide-react';
 import Link from 'next/link';
@@ -52,27 +52,19 @@ export function JoinRequests({ communityId, communityName }: { communityId: stri
         
         try {
             if (newStatus === 'approved') {
-                const { firestore } = getFirebase();
-                const profileRef = doc(firestore, 'community-profiles', request.userId);
                 const profileSnap = await getDocs(query(collection(firestore, 'community-profiles'), where('userId', '==', request.userId)));
                 const profileData = !profileSnap.empty ? profileSnap.docs[0].data() as CommunityProfile : null;
 
-                const newMember: Member = {
-                    userId: request.userId,
-                    name: request.userName,
-                    bio: request.userBio,
-                    role: 'Member',
-                    type: 'human',
-                    avatarUrl: profileData?.avatarUrl || '',
-                };
+                // Add the user's UID to the members array
                 await updateDoc(communityDocRef, {
-                    members: arrayUnion(newMember)
+                    members: arrayUnion(request.userId)
                 });
-
-                // After member is added, trigger the welcome message flow
-                await welcomeNewMemberAction({ communityId, communityName, newMemberName: newMember.name });
+                
+                await welcomeNewMemberAction({ communityId, communityName, newMemberName: request.userName });
             }
-            await updateDoc(requestDocRef, { status: newStatus });
+            // After action, delete the request document instead of updating its status
+            await deleteDoc(requestDocRef);
+
             toast({ title: t('community_page_request_status_toast', { status: newStatus }) });
             fetchRequests(); // Refresh the list
         } catch (error) {
