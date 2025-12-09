@@ -1,4 +1,3 @@
-
 /**
  * Core Philosophy: This ruleset enforces a strict user-ownership model for writes,
  * but allows for public readability of shared content like communities and profiles.
