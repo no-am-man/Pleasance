@@ -1,3 +1,4 @@
+
 // src/firebase/config.ts
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
@@ -5,8 +6,10 @@ import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getDatabase, type Database } from 'firebase/database';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
+// This is a public configuration and is safe to be exposed on the client side.
+// Security is enforced by Firebase Security Rules and App Check.
 export const firebaseConfig = {
-  apiKey: "AIzaSyC5xXIFuwBzBCF08FpnEoNbrliZCYJgaFU",
+  apiKey: "AIzaSyDFG320I4t1YmJpYb0j39bY9S2u2h5iC0",
   authDomain: "studio-2441219031-242ae.firebaseapp.com",
   projectId: "studio-2441219031-242ae",
   storageBucket: "studio-2441219031-242ae.appspot.com",
