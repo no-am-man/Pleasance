@@ -33,6 +33,8 @@ const translatePrompt = ai.definePrompt({
 
 Text to translate:
 "{{text}}"`,
+    // Set the model directly in the prompt definition to ensure it's always used.
+    model: GEMINI_PRO,
 });
 
 // The flow is now self-contained and explicitly calls the model.
@@ -47,7 +49,7 @@ const translateTextFlow = ai.defineFlow(
       return { translation: '' };
     }
 
-    const { output } = await translatePrompt(input, { model: GEMINI_PRO });
+    const { output } = await translatePrompt(input);
 
     return output || { translation: input.text };
   }
