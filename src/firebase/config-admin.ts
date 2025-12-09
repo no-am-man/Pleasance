@@ -1,4 +1,3 @@
-
 // src/firebase/config-admin.ts
 import admin from 'firebase-admin';
 
@@ -20,38 +19,31 @@ function getAdminApp(): admin.app.App {
     return adminApp;
   }
 
-  // The private key from environment variables often has escaped newlines (\\n).
-  // We need to replace them with actual newline characters (\n).
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  const serviceAccountJSON = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
 
-  if (!privateKey) {
-      throw new Error('Server configuration error: The FIREBASE_PRIVATE_KEY environment variable is not set or is empty.');
+  if (!serviceAccountJSON) {
+      throw new Error('Server configuration error: The FIREBASE_SERVICE_ACCOUNT_JSON environment variable is not set or is empty.');
   }
 
-  const serviceAccount = {
-      "type": "service_account",
-      "project_id": "studio-2441219031-242ae",
-      "private_key_id": "97e68f3a34a87754d924151b5c464a93f73315a0",
-      "private_key": privateKey,
-      "client_email": "firebase-adminsdk-32r47@studio-2441219031-242ae.iam.gserviceaccount.com",
-      "client_id": "111956976214470393223",
-      "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-      "token_uri": "https://oauth2.googleapis.com/token",
-      "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-      "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-32r47%40studio-2441219031-242ae.iam.gserviceaccount.com"
-  };
-  
-  const projectId = "studio-2441219031-242ae";
+  let serviceAccount: admin.ServiceAccount;
+  try {
+      serviceAccount = JSON.parse(serviceAccountJSON);
+  } catch (e) {
+      throw new Error('Server configuration error: Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON. Please ensure it is a valid JSON string.');
+  }
 
   try {
     adminApp = admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-      projectId: projectId, 
+      credential: admin.credential.cert(serviceAccount),
+      projectId: serviceAccount.project_id, 
     }, appName);
     return adminApp;
 
   } catch (e: any) {
-    throw new Error(`Server configuration error: Failed to parse or initialize the service account key. Original error: ${e.message}`);
+    if (e.code === 'auth/invalid-credential') {
+        throw new Error(`Server configuration error: The provided Firebase service account credential is invalid. This could be due to an incorrect key or a revoked key. Please generate a new key from your Firebase project settings. Original error: ${e.message}`);
+    }
+    throw new Error(`Server configuration error: Failed to initialize Firebase Admin SDK. Original error: ${e.message}`);
   }
 }
 
