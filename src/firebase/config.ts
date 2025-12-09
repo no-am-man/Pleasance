@@ -6,13 +6,25 @@ import { getStorage, type FirebaseStorage } from 'firebase/storage';
 import { getDatabase, type Database } from 'firebase/database';
 
 export const firebaseConfig = {
-  "apiKey": "AIzaSyCMDygvQZnjbVLtr9RQn0IT2p4-STcHRk8",
-  "appId": "1:865373195178:web:194231a9d92b92c16979d3",
-  "authDomain": "studio-2441219031-242ae.firebaseapp.com",
-  "messagingSenderId": "865373195178",
-  "projectId": "studio-2441219031-242ae",
-  "storageBucket": "pleasance_bucket",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
+
+// Validate that all required client-side environment variables are set.
+if (
+  !firebaseConfig.apiKey ||
+  !firebaseConfig.authDomain ||
+  !firebaseConfig.projectId
+) {
+  // In a client component, this will only log on the browser console.
+  // The server will log a more detailed error if this code runs during SSR.
+  console.error("Firebase client configuration is incomplete. Please check your NEXT_PUBLIC_ environment variables.");
+}
+
 
 type FirebaseServices = {
     app: FirebaseApp;
