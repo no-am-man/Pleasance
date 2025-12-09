@@ -9,7 +9,7 @@ test('has title', async ({ page }) => {
 
 // Test to check navigation to the main community page
 test('get to community page', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/home');
   // Click the link with text "Explore Communities"
   await page.getByRole('link', { name: 'Explore Communities' }).click();
   // Expects the URL to contain "community"
@@ -59,7 +59,7 @@ test('get to bug tracker page', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('link', { name: 'Bug Tracker' }).click();
   await expect(page).toHaveURL(/.*bugs/);
-  await expect(page.getByRole('heading', { name: 'Submit a New Bug Report' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Bug Tracker' })).toBeVisible();
 });
 
 // Test for navigating to the story page
