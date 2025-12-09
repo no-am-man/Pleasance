@@ -8,8 +8,8 @@ import { googleAI } from '@genkit-ai/google-genai';
  * We now export the model objects directly to ensure the correct API version is used.
  */
 
-// Explicitly setting the apiVersion to 'v1' to prevent calls to the 'v1beta' endpoint.
-const API_OPTIONS = { apiVersion: 'v1' };
+// Forcing the v1beta API version is necessary for features like JSON mode.
+const API_OPTIONS = { apiVersion: 'v1beta' };
 
 // For complex generation, reasoning, and multi-turn chat
 export const GEMINI_PRO = googleAI.model('gemini-1.5-pro', API_OPTIONS);
