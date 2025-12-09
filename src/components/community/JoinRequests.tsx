@@ -63,13 +63,20 @@ export function JoinRequests({ communityId, communityName }: { communityId: stri
                 const profileData = profileSnap.exists() ? profileSnap.data() as CommunityProfile : null;
                 
                 if (profileData) {
-                    const newMemberIdentifier = profileData.userId;
+                    const newMember: Member = {
+                        userId: profileData.userId,
+                        name: profileData.name,
+                        bio: profileData.bio,
+                        role: 'Member',
+                        type: 'human',
+                        avatarUrl: profileData.avatarUrl || '',
+                    };
 
                     await updateDoc(communityDocRef, {
-                        members: arrayUnion(newMemberIdentifier)
+                        members: arrayUnion(newMember)
                     });
                     
-                    await welcomeNewMemberAction({ communityId, communityName, newMemberName: profileData.name });
+                    await welcomeNewMemberAction({ communityId, communityName, newMemberName: newMember.name });
                 } else {
                     throw new Error("Could not find user profile to add member.");
                 }

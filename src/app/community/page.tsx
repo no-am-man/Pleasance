@@ -330,6 +330,7 @@ export default function CommunityPage() {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
 
     useEffect(() => {
+        // 1. Don't run logic while Auth is initializing
         if (isUserLoading) {
             return;
         }
@@ -339,14 +340,16 @@ export default function CommunityPage() {
         const fetchInitialData = async () => {
             setIsLoading(true);
             try {
-                // Fetch communities (public)
+                // 2. Fetch Communities (Allowed for Everyone)
                 const communitiesQuery = query(collection(firestore, 'communities'), orderBy('name'));
                 const communitiesSnapshot = await getDocs(communitiesQuery);
                 setCommunities(communitiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community)));
 
+                // 3. Fetch Profiles (now public)
                 const profilesQuery = query(collection(firestore, 'community-profiles'));
                 const profilesSnapshot = await getDocs(profilesQuery);
                 setAllProfiles(profilesSnapshot.docs.map(doc => doc.data() as CommunityProfile));
+                
             } catch (error) {
                 console.error("Failed to fetch initial community data:", error);
             } finally {
