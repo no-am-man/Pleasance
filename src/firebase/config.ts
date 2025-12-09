@@ -1,4 +1,3 @@
-
 // src/firebase/config.ts
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
@@ -24,28 +23,39 @@ type FirebaseServices = {
     database: Database;
 };
 
-let firebaseServices: FirebaseServices | null = null;
+// --- SINGLETON PATTERN ---
+// This ensures that Firebase is initialized only once across the entire application.
+const FirebaseServiceSingleton = (() => {
+    let instance: FirebaseServices;
 
-// This function is the single source of truth for getting Firebase services.
-// It ensures that Firebase is initialized only once.
-export function getFirebase(): FirebaseServices {
-    if (firebaseServices) {
-        return firebaseServices;
+    function createInstance(): FirebaseServices {
+        const apps = getApps();
+        const app = !apps.length ? initializeApp(firebaseConfig) : apps[0];
+        
+        const auth = getAuth(app);
+        const firestore = getFirestore(app);
+        const storage = getStorage(app);
+        const database = getDatabase(app);
+
+        return { app, auth, firestore, storage, database };
     }
 
-    const apps = getApps();
-    const app = !apps.length ? initializeApp(firebaseConfig) : apps[0];
-    
-    const auth = getAuth(app);
-    const firestore = getFirestore(app);
-    const storage = getStorage(app);
-    const database = getDatabase(app);
+    return {
+        getInstance: (): FirebaseServices => {
+            if (!instance) {
+                instance = createInstance();
+            }
+            return instance;
+        }
+    };
+})();
 
-    firebaseServices = { app, auth, firestore, storage, database };
-
-    return firebaseServices;
+// This function is the single source of truth for getting Firebase services.
+export function getFirebase(): FirebaseServices {
+    return FirebaseServiceSingleton.getInstance();
 }
+// --- END SINGLETON PATTERN ---
+
 
 // For convenience, we can also export the individual services from the getter.
-// This maintains a similar import pattern for consumers but uses the managed instance.
 export const { firestore, auth, storage, database } = getFirebase();

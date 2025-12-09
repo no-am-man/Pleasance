@@ -1,18 +1,24 @@
-
 // src/firebase/config-admin.ts
 import admin from 'firebase-admin';
 
 const appName = 'pleasance-admin';
 
-// This function ensures Firebase Admin is initialized only once.
-export function initializeAdminApp() {
-  // Check if the app is already initialized to prevent errors
-  const existingApp = admin.apps.find(app => app?.name === appName);
-  if (existingApp) {
-    return existingApp;
+// --- SINGLETON PATTERN ---
+// A self-invoking function that ensures only one instance of the Firebase Admin app is created.
+
+let adminApp: admin.app.App;
+
+function getAdminApp(): admin.app.App {
+  if (adminApp) {
+    return adminApp;
   }
 
-  // The service account JSON is now directly included and parsed.
+  const existingApp = admin.apps.find(app => app?.name === appName);
+  if (existingApp) {
+    adminApp = existingApp;
+    return adminApp;
+  }
+
   const serviceAccount = {
       "type": "service_account",
       "project_id": "studio-2441219031-242ae",
@@ -25,10 +31,10 @@ export function initializeAdminApp() {
       "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
       "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-32r47%40studio-2441219031-242ae.iam.gserviceaccount.com"
   };
-
-  const projectId = process.env.GCLOUD_PROJECT;
+  
+  const projectId = "studio-2441219031-242ae";
   if (!projectId) {
-      throw new Error('Server configuration error: The GCLOUD_PROJECT environment variable is not set.');
+      throw new Error('Server configuration error: The project ID is not set.');
   }
   
   if (!serviceAccount.private_key) {
@@ -36,14 +42,17 @@ export function initializeAdminApp() {
   }
 
   try {
-    // Explicitly setting the projectId to override any other configuration.
-    // This is the definitive fix for the PERMISSION_DENIED error.
-    return admin.initializeApp({
+    adminApp = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
       projectId: projectId, 
     }, appName);
+    return adminApp;
 
   } catch (e: any) {
     throw new Error(`Server configuration error: Failed to parse or initialize the service account key. Original error: ${e.message}`);
   }
 }
+
+// Export the function to get the singleton instance.
+export { getAdminApp as initializeAdminApp };
+// --- END SINGLETON PATTERN ---

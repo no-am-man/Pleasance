@@ -1,4 +1,3 @@
-
 // src/app/story/page.tsx
 'use client';
 
@@ -13,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LoaderCircle, Sparkles, LogIn, History, BookOpen, PencilRuler, Camera, Clock, X } from 'lucide-react';
 import { LANGUAGES } from '@/config/languages';
-import { generateDualStoryAction, createHistorySnapshot, generateSpeechAction } from '@/app/actions';
+import { generateDualStoryAction, createHistorySnapshot, generateSpeechAction, generateStoryAction, translateStoryAction } from '@/app/actions';
 import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useUser, getFirebase } from '@/firebase';
@@ -46,6 +45,52 @@ type CommunityProfile = {
     nativeLanguage: string;
     learningLanguage: string;
 };
+
+// --- STRATEGY PATTERN IMPLEMENTATION ---
+
+interface StoryGenerationStrategy {
+    generate(data: z.infer<typeof StoryFormSchema>, user: { uid: string }, storyRef: any): Promise<StoryDataType>;
+}
+
+class TextAndSpeechStrategy implements StoryGenerationStrategy {
+    async generate(data: z.infer<typeof StoryFormSchema>, user: { uid: string }, storyRef: any): Promise<StoryDataType> {
+        const storyResult = await generateDualStoryAction(data);
+        if (storyResult.error || !storyResult.data) {
+            throw new Error(storyResult.error || 'Failed to generate story text.');
+        }
+
+        await updateDoc(storyRef, storyResult.data);
+        
+        const speechResult = await generateSpeechAction({ text: storyResult.data.contentOriginal });
+        if (speechResult.error || !speechResult.audioUrl) {
+            console.error("Speech generation failed:", speechError);
+            throw new Error(speechResult.error || 'Failed to generate audio.');
+        }
+
+        const finalData = { ...storyResult.data, audioUrl: speechResult.audioUrl, status: 'complete' as const };
+        await updateDoc(storyRef, { audioUrl: speechResult.audioUrl, status: 'complete' });
+        
+        return { ...finalData, id: storyRef.id, createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } };
+    }
+}
+
+// Context for using the strategy
+class StoryGenerator {
+    private strategy: StoryGenerationStrategy;
+
+    constructor(strategy: StoryGenerationStrategy) {
+        this.strategy = strategy;
+    }
+
+    setStrategy(strategy: StoryGenerationStrategy) {
+        this.strategy = strategy;
+    }
+
+    async execute(data: z.infer<typeof StoryFormSchema>, user: { uid: string }, storyRef: any): Promise<StoryDataType> {
+        return this.strategy.generate(data, user, storyRef);
+    }
+}
+// --- END STRATEGY PATTERN ---
 
 
 function StoryHistory({ onSelectStory, onClearStory }: { onSelectStory: (story: StoryDataType) => void; onClearStory: () => void; }) {
@@ -315,7 +360,6 @@ export default function StoryPage() {
     const { firestore } = getFirebase();
     const storyRef = doc(collection(firestore, `users/${user.uid}/stories`));
     
-    // Step 1: Create a placeholder document to show loading state immediately
     const initialData = {
         ...data,
         userId: user.uid,
@@ -333,53 +377,20 @@ export default function StoryPage() {
     setActiveStory({ ...initialData, id: storyRef.id, createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } });
 
     try {
-        // Step 2: Generate story content
-        const storyResult = await generateDualStoryAction(data);
-        if (storyResult.error || !storyResult.data) {
-            throw new Error(storyResult.error || 'Failed to generate story text.');
-        }
-
-        // We have the text, update the story in UI and Firestore
-        const storyData = { ...initialData, ...storyResult.data };
-        setActiveStory({ ...storyData, id: storyRef.id, createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } });
-        await updateDoc(storyRef, storyResult.data);
-
-        // Step 3: Generate speech (this is the part that might fail due to permissions)
-        try {
-            const speechResult = await generateSpeechAction({ text: storyResult.data.contentOriginal });
-            if (speechResult.error || !speechResult.audioUrl) {
-                throw new Error(speechResult.error || 'Failed to generate speech audio.');
-            }
-
-            // Final update with audio URL and set status to complete
-            const finalStoryData = {
-                ...storyData,
-                id: storyRef.id,
-                audioUrl: speechResult.audioUrl,
-                status: 'complete' as const,
-                createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } // a bit of a hack
-            };
-            await updateDoc(storyRef, { audioUrl: speechResult.audioUrl, status: 'complete' });
-            setActiveStory(finalStoryData);
-            toast({ title: t('toast_story_generated_title'), description: t('toast_story_generated_desc') });
-
-        } catch (speechError: any) {
-            // Handle speech generation failure specifically
-            console.error("Speech generation failed:", speechError);
-            toast({
-                variant: 'destructive',
-                title: 'Audio Generation Failed',
-                description: `The story was created, but audio could not be generated. Please ensure the Vertex AI API is enabled in your Google Cloud project. Error: ${speechError.message}`
-            });
-            // Update the story status to 'failed'
-            await updateDoc(storyRef, { status: 'failed' });
-            setActiveStory(prev => prev ? { ...prev, status: 'failed' } : null);
-        }
-
+        const generator = new StoryGenerator(new TextAndSpeechStrategy());
+        const finalStoryData = await generator.execute(data, user, storyRef);
+        setActiveStory(finalStoryData);
+        toast({ title: t('toast_story_generated_title'), description: t('toast_story_generated_desc') });
     } catch (e: any) {
-        setError(e.message);
-        await deleteDoc(storyRef); // Clean up the placeholder document
+        const errorMessage = e.message || 'An unknown error occurred.';
+        setError(errorMessage);
+        await deleteDoc(storyRef);
         setActiveStory(null);
+        toast({
+            variant: 'destructive',
+            title: 'Story Generation Failed',
+            description: `The process failed. Please try again. Error: ${errorMessage}`,
+        });
     } finally {
         setIsGenerating(false);
     }
