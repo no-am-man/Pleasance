@@ -28,6 +28,9 @@ import { useDynamicTranslation } from '@/hooks/use-dynamic-translation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Member, Community, Form, CommunityProfile, WikiArticle } from '@/lib/types';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { Textarea } from '@/components/ui/textarea';
 import { marked } from 'marked';
 
@@ -311,7 +314,7 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
         });
 
         return () => unsubscribe();
-    }, [communityId, selectedArticle]);
+    }, [communityId]);
 
 
     const handleDeleteArticle = async (articleId: string) => {
@@ -435,13 +438,14 @@ export default function CommunityProfilePage() {
   const [allCommunities, setAllCommunities] = useState<Community[]>([]);
   const [isLoadingAncillary, setIsLoadingAncillary] = useState(true);
 
-  // This one-time effect fetches data that doesn't need to be real-time.
+  // Effect for fetching ancillary data (runs once)
   useEffect(() => {
     const fetchAncillaryData = async () => {
         if (!firestore) {
             setIsLoadingAncillary(false);
             return;
-        }
+        };
+        setIsLoadingAncillary(true);
         try {
             const [communitiesSnapshot, profilesSnapshot] = await Promise.all([
                 getDocs(query(collection(firestore, 'communities'))),
@@ -456,15 +460,14 @@ export default function CommunityProfilePage() {
         }
     };
     fetchAncillaryData();
-  }, []); // Empty dependency array means it runs once.
+  }, []);
 
-
-  // This real-time effect listens to the specific community document.
+  // Effect for the main community document (real-time)
   useEffect(() => {
     if (!id || !firestore) {
         setIsLoading(false);
-        return () => {};
-    }
+        return;
+    };
     
     setIsLoading(true);
     const communityDocRef = doc(firestore, 'communities', id);
@@ -481,36 +484,41 @@ export default function CommunityProfilePage() {
     return () => unsubscribeCommunity();
   }, [id]);
 
-
-  // This effect listens to user-specific data and reacts to auth state changes.
+  // Effect for user-specific data (profile and join request)
   useEffect(() => {
     if (isUserLoading || !user || !firestore) {
-      if (!isUserLoading) setIsRequestLoading(false);
-      return () => {};
+      if (!isUserLoading) {
+        setIsRequestLoading(false);
+      }
+      return;
     }
 
-    const unsubscribes: Unsubscribe[] = [];
+    let unsubscribeProfile: Unsubscribe | undefined;
+    let unsubscribeJoinRequest: Unsubscribe | undefined;
     
     const profileDocRef = doc(firestore, 'community-profiles', user.uid);
-    unsubscribes.push(onSnapshot(profileDocRef, (docSnap) => {
+    unsubscribeProfile = onSnapshot(profileDocRef, (docSnap) => {
         setUserProfile(docSnap.exists() ? docSnap.data() as CommunityProfile : null);
-    }));
+    });
 
     if (id) {
       setIsRequestLoading(true);
       const requestDocRef = doc(firestore, `communities/${id}/joinRequests/${user.uid}`);
-      unsubscribes.push(onSnapshot(requestDocRef, (docSnap) => {
+      unsubscribeJoinRequest = onSnapshot(requestDocRef, (docSnap) => {
           setUserJoinRequest(docSnap.exists() ? docSnap.data() as any : null);
           setIsRequestLoading(false);
       }, (error) => {
           console.error("Error fetching join request:", error);
           setIsRequestLoading(false);
-      }));
+      });
     } else {
       setIsRequestLoading(false);
     }
     
-    return () => unsubscribes.forEach(unsub => unsub());
+    return () => {
+      if (unsubscribeProfile) unsubscribeProfile();
+      if (unsubscribeJoinRequest) unsubscribeJoinRequest();
+    };
   }, [id, user, isUserLoading]);
 
 
@@ -529,11 +537,11 @@ export default function CommunityProfilePage() {
 
   const isMember = useMemo(() => {
     if (!user || !community) return false;
-    return community.members.some(member => {
-        if (typeof member === 'string') return member === user.uid;
-        return member.userId === user.uid;
+    return allMembers.some(member => {
+        const memberId = typeof member === 'string' ? member : member.userId;
+        return memberId === user.uid;
     });
-}, [user, community]);
+}, [user, community, allMembers]);
 
 
   const handleRequestToJoin = async () => {
@@ -806,7 +814,7 @@ export default function CommunityProfilePage() {
                     <CardContent>
                         <div className="grid grid-cols-1 gap-6">
                             {allMembers.map((member) => (
-                                <MemberCard key={member.userId || member.name} member={member} communityId={community.id} isOwner={isOwner} onRemove={handleRemoveMember} allProfiles={allProfiles}/>
+                                <MemberCard key={typeof member === 'string' ? member : (member.userId || member.name)} member={member} communityId={community.id} isOwner={isOwner} onRemove={handleRemoveMember} allProfiles={allProfiles}/>
                             ))}
                         </div>
                     </CardContent>
@@ -903,7 +911,12 @@ export default function CommunityProfilePage() {
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                         <AlertDialogCancel>{t('community_page_delete_cancel')}</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleRemoveMember(community.members.find(m => typeof m !== 'string' && m.userId === user?.uid) as Member)} className="bg-destructive hover:bg-destructive/90">
+                                        <AlertDialogAction onClick={() => {
+                                            const memberToRemove = allMembers.find(m => typeof m !== 'string' && m.userId === user?.uid);
+                                            if (memberToRemove) {
+                                                handleRemoveMember(memberToRemove as Member);
+                                            }
+                                        }} className="bg-destructive hover:bg-destructive/90">
                                             {t('community_page_leave_confirm')}
                                         </AlertDialogAction>
                                     </AlertDialogFooter>
