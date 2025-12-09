@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Bot, User, UserX } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
-import type { Member } from '@/lib/types';
+import type { Member, CommunityProfile } from '@/lib/types';
 import { useUser } from '@/firebase';
 
 // Inlined Icons to resolve build error
@@ -58,23 +58,30 @@ function AiIcon(props: SVGProps<SVGSVGElement>) {
 }
 
 
-export function MemberCard({ member, communityId, isOwner, onRemove }: { member: Member; communityId: string; isOwner: boolean; onRemove: (member: Member) => void; }) {
+export function MemberCard({ member, communityId, isOwner, onRemove, allProfiles }: { member: Member | string; communityId: string; isOwner: boolean; onRemove: (member: Member) => void; allProfiles: CommunityProfile[] }) {
     const { t } = useTranslation();
     const { user } = useUser();
-    const isHuman = member.type === 'human';
-    const isSelf = isHuman && user?.uid === member.userId;
+
+    const memberData: Member | undefined = typeof member === 'string'
+        ? allProfiles.find(p => p.userId === member) as Member | undefined
+        : member;
+
+    if (!memberData) return null; // or some placeholder
+
+    const isHuman = memberData.type === 'human';
+    const isSelf = isHuman && user?.uid === memberData.userId;
     
-    const memberLink = isHuman && member.userId
-      ? `/profile/${member.userId}`
+    const memberLink = isHuman && memberData.userId
+      ? `/profile/${memberData.userId}`
       : !isHuman
-      ? `/community/${communityId}/member/${encodeURIComponent(member.name)}`
+      ? `/community/${communityId}/member/${encodeURIComponent(memberData.name)}`
       : '#';
 
     return (
       <div className="flex items-center gap-4 rounded-md border p-4 transition-colors hover:bg-muted/50 group">
         <Link href={memberLink}>
             <Avatar className="w-16 h-16 rounded-lg bg-background border-2 border-primary/20 cursor-pointer">
-                <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
+                <AvatarImage src={memberData.avatarUrl || `https://i.pravatar.cc/150?u=${memberData.userId || memberData.name}`} />
                 <AvatarFallback>
                     {isHuman ? (
                         <HumanIcon className="w-10 h-10 text-primary" />
@@ -86,10 +93,10 @@ export function MemberCard({ member, communityId, isOwner, onRemove }: { member:
         </Link>
         <div className="flex-1 space-y-1">
             <Link href={memberLink}>
-                <span className="font-semibold text-lg group-hover:underline cursor-pointer">{member.name}</span>
+                <span className="font-semibold text-lg group-hover:underline cursor-pointer">{memberData.name}</span>
             </Link>
-          <p className="text-sm text-primary font-medium">{member.role}</p>
-          <p className="text-sm text-muted-foreground line-clamp-2">{member.bio}</p>
+          <p className="text-sm text-primary font-medium">{memberData.role}</p>
+          <p className="text-sm text-muted-foreground line-clamp-2">{memberData.bio}</p>
         </div>
         <div className="flex flex-col items-end gap-2">
             {isHuman ? (
@@ -107,14 +114,14 @@ export function MemberCard({ member, communityId, isOwner, onRemove }: { member:
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                       <AlertDialogHeader>
-                          <AlertDialogTitle>{t('community_page_remove_member_dialog_title', { name: member.name })}</AlertDialogTitle>
+                          <AlertDialogTitle>{t('community_page_remove_member_dialog_title', { name: memberData.name })}</AlertDialogTitle>
                           <AlertDialogDescription>
                               {t('community_page_remove_member_dialog_desc')}
                           </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                           <AlertDialogCancel>{t('community_page_delete_cancel')}</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => onRemove(member)} className="bg-destructive hover:bg-destructive/90">
+                          <AlertDialogAction onClick={() => onRemove(memberData)} className="bg-destructive hover:bg-destructive/90">
                               {t('community_page_remove_member_confirm')}
                           </AlertDialogAction>
                       </AlertDialogFooter>

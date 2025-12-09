@@ -14,11 +14,18 @@ import type { User } from 'firebase/auth';
 class PresenceMonitor {
     private observers: PresenceObserver[] = [];
     private unsubscribe: Unsubscribe | null = null;
-    private database: Database;
+    private database: Database | null = null; // Can be null initially
 
     constructor() {
         // Delay getting the instance until it's needed.
-        this.database = getFirebase().database;
+    }
+
+    private getDb(): Database | null {
+        if (typeof window === 'undefined') return null; // Don't run on server
+        if (!this.database) {
+            this.database = getFirebase().database;
+        }
+        return this.database;
     }
 
     public attach(observer: PresenceObserver): void {
@@ -44,11 +51,12 @@ class PresenceMonitor {
     }
 
     public startMonitoring(user: User): void {
-        if (this.unsubscribe) return; // Already monitoring
+        const db = this.getDb();
+        if (this.unsubscribe || !db) return; // Already monitoring or no DB
 
-        goOnline(this.database);
-        const userStatusDatabaseRef = ref(this.database, `/presence/${user.uid}`);
-        const connectedRef = ref(this.database, '.info/connected');
+        goOnline(db);
+        const userStatusDatabaseRef = ref(db, `/presence/${user.uid}`);
+        const connectedRef = ref(db, '.info/connected');
 
         this.unsubscribe = onValue(connectedRef, (snapshot) => {
             const isConnected = snapshot.val() === true;
@@ -69,10 +77,11 @@ class PresenceMonitor {
     }
 
     public stopMonitoring(): void {
-        if (this.unsubscribe) {
+        const db = this.getDb();
+        if (this.unsubscribe && db) {
             this.unsubscribe();
             this.unsubscribe = null;
-            goOffline(this.database);
+            goOffline(db);
         }
     }
 }
@@ -88,6 +97,8 @@ class FirestoreUpdater implements PresenceObserver {
         if (!isOnline) return;
 
         const { firestore } = getFirebase();
+        if (!firestore) return; // Ensure firestore is available
+        
         const userStatusFirestoreRef = doc(firestore, `/presence/${user.uid}`);
         
         const presenceData = {
@@ -113,6 +124,8 @@ export function usePresence() {
   const { user } = useUser();
 
   useEffect(() => {
+    if (typeof window === 'undefined') return; // Don't run on server
+
     if (user?.uid) {
         presenceMonitor.startMonitoring(user);
     }

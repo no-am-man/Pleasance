@@ -15,7 +15,7 @@ export async function declareAssetWithFileAction(formData: FormData) {
         const description = formData.get('description') as string;
         const type = formData.get('type') as 'physical' | 'virtual' | 'ip';
         const value = Number(formData.get('value'));
-        const communityId = formData.get('communityId') as string | null;
+        const communityId = formData.get('communityId') as string | undefined;
 
         if (!userId || !assetName || !description || !type || isNaN(value)) {
             throw new Error("Missing required form fields.");
