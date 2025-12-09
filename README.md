@@ -1,6 +1,6 @@
 # Pleasance
 
-> A Federation of Social Communities for communion, co-learning, and creation.
+> A Federation of Republics for communion, co-learning, and creation.
 
 **[Staging App](https://studio--studio-2441219031-242ae.us-central1.hosted.app) | [GitHub Repository](https://github.com/no-am-man/Pleasance)**
 
@@ -10,9 +10,9 @@
 
 Pleasance is a **decentralized, autonomous community** where individuals from different spiritual, philosophical, or psychological schools of thought can unite to share, learn, and create, without having to abandon their specific paths. It is an organization focused on **interdisciplinary spirituality** and **conscious personal development**.
 
-The name itself—a **Federation of Social Communities**—describes this structure:
+The name itself—a **Federation of Republics**—describes this structure:
 *   **Federation:** A network of independent units (individuals or groups) that unite under a common umbrella while retaining their unique identities.
-*   **Social Communities:** A community governed by its members, emphasizing autonomy, shared governance, and equality, with a focus on matters of meaning, consciousness, transcendence, and well-being.
+*   **Republics:** A community governed by its members, emphasizing autonomy, shared governance, and equality, with a focus on matters of meaning, consciousness, transcendence, and well-being.
 
 ---
 
