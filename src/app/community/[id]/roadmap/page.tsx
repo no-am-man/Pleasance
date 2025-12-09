@@ -1,4 +1,3 @@
-
 // src/app/community/[id]/roadmap/page.tsx
 'use client';
 
@@ -240,7 +239,7 @@ function KanbanColumn({ id, title, cards, children, onMoveCard, allProfiles, onU
 
 
 export default function CommunityRoadmapPage() {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const params = useParams();
   const communityId = params.id as string;
@@ -258,8 +257,8 @@ export default function CommunityRoadmapPage() {
   const isOwner = useMemo(() => user?.uid === community?.ownerId, [user, community]);
 
   const fetchRoadmap = async () => {
-      if (!communityId || !firestore) {
-        setIsLoading(false);
+      if (isUserLoading || !communityId || !firestore) {
+        if (!isUserLoading) setIsLoading(false);
         return;
       }
       setIsLoading(true);
@@ -276,6 +275,7 @@ export default function CommunityRoadmapPage() {
   };
 
   useEffect(() => {
+    if (isUserLoading) return;
     if (!communityId || !firestore) {
         setIsCommunityLoading(false);
         return;
@@ -309,7 +309,7 @@ export default function CommunityRoadmapPage() {
     };
     fetchCommunity();
     fetchRoadmap();
-  }, [communityId]);
+  }, [communityId, isUserLoading]);
   
   
   const [columns, setColumns] = useState<RoadmapColumnType[]>([]);

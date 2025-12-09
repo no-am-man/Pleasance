@@ -94,7 +94,7 @@ class StoryGenerator {
 
 
 function StoryHistory({ onSelectStory, onClearStory }: { onSelectStory: (story: StoryDataType) => void; onClearStory: () => void; }) {
-    const { user } = useUser();
+    const { user, isUserLoading } = useUser();
     const { t } = useTranslation();
     
     const [stories, setStories] = useState<StoryDataType[]>([]);
@@ -102,8 +102,8 @@ function StoryHistory({ onSelectStory, onClearStory }: { onSelectStory: (story: 
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
-        if (!user) {
-            setIsLoading(false);
+        if (isUserLoading || !user) {
+            if (!isUserLoading) setIsLoading(false);
             return;
         }
 
@@ -126,7 +126,7 @@ function StoryHistory({ onSelectStory, onClearStory }: { onSelectStory: (story: 
         };
 
         fetchStories();
-    }, [user]);
+    }, [user, isUserLoading]);
     
     const handleSelect = (story: StoryDataType) => {
         onClearStory(); // Clear any existing story first
@@ -222,8 +222,8 @@ function TimeMachine() {
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
-        if (!user) {
-            setIsLoading(false);
+        if (isUserLoading || !user) {
+            if (!isUserLoading) setIsLoading(false);
             return;
         }
 
@@ -243,7 +243,7 @@ function TimeMachine() {
         };
 
         fetchSnapshots();
-    }, [user]);
+    }, [user, isUserLoading]);
 
     const handleCreateSnapshot = async () => {
         if (!user) return;

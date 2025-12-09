@@ -291,7 +291,6 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
     const [error, setError] = useState<Error | null>(null);
     const { toast } = useToast();
 
-    // Unified useEffect for fetching articles
     useEffect(() => {
         if (!firestore || !communityId) {
             setIsLoading(false);
@@ -304,7 +303,6 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedArticles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WikiArticle));
             setArticles(fetchedArticles);
-            // Select the first article only if one isn't already selected or the selected one was deleted
             if (!selectedArticle || !fetchedArticles.some(a => a.id === selectedArticle.id)) {
                 setSelectedArticle(fetchedArticles[0] || null);
             }
@@ -324,7 +322,6 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
         try {
             await deleteDoc(docRef);
             toast({ title: 'Article Deleted' });
-            // The onSnapshot listener will handle the UI update.
         } catch (e) {
             const message = e instanceof Error ? e.message : 'An unknown error occurred';
             toast({ variant: 'destructive', title: 'Failed to delete article', description: message });
@@ -451,7 +448,7 @@ export default function CommunityProfilePage() {
         try {
             const [communitiesSnapshot, profilesSnapshot] = await Promise.all([
                 getDocs(query(collection(firestore, 'communities'))),
-                getDocs(query(collection(firestore, 'community-profiles')))
+                user ? getDocs(query(collection(firestore, 'community-profiles'))) : Promise.resolve({ docs: [] })
             ]);
             setAllCommunities(communitiesSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as Community)));
             setAllProfiles(profilesSnapshot.docs.map(d => d.data() as CommunityProfile));
@@ -462,7 +459,7 @@ export default function CommunityProfilePage() {
         }
     };
     fetchAncillaryData();
-  }, [isUserLoading]);
+  }, [isUserLoading, user]);
 
   // Effect for the main community document (real-time)
   useEffect(() => {
@@ -531,8 +528,8 @@ export default function CommunityProfilePage() {
   const allMembers = useMemo(() => {
     if (!community?.members) return [];
     return [...community.members].sort((a, b) => {
-      if (typeof a === 'string' && typeof b !== 'string') return -1;
-      if (typeof a !== 'string' && typeof b === 'string') return 1;
+      if (a.type === 'human' && b.type !== 'human') return -1;
+      if (a.type !== 'human' && b.type === 'human') return 1;
       return 0;
     });
   }, [community]);
@@ -540,7 +537,7 @@ export default function CommunityProfilePage() {
   const isMember = useMemo(() => {
     if (!user || !community) return false;
     if (user.uid === community.ownerId) return true;
-    return community.members.some(member => typeof member === 'string' && member === user.uid);
+    return community.members.some(member => member.type === 'human' && member.userId === user.uid);
 }, [user, community]);
 
 
@@ -578,12 +575,20 @@ export default function CommunityProfilePage() {
   const handleInvite = async (profile: CommunityProfile) => {
     if (!community || !firestore) return;
     
+    const newMember: Member = {
+        userId: profile.userId,
+        name: profile.name,
+        bio: profile.bio,
+        role: 'Member',
+        type: 'human',
+        avatarUrl: profile.avatarUrl || '',
+    };
     const communityDocRef = doc(firestore, 'communities', community.id);
     await updateDoc(communityDocRef, {
-        members: arrayUnion(profile.userId)
+        members: arrayUnion(newMember)
     });
 
-    await welcomeNewMemberAction({ communityId: community.id, communityName: community.name, newMemberName: profile.name });
+    await welcomeNewMemberAction({ communityId: community.id, communityName: community.name, newMemberName: newMember.name });
 
     toast({
         title: t('community_page_member_invited_title'),
@@ -592,7 +597,7 @@ export default function CommunityProfilePage() {
   };
 
   const handleRemoveMember = async (memberToRemove: Member) => {
-    if (!community || !firestore || !memberToRemove.userId) {
+    if (!community || !firestore) {
       toast({ variant: "destructive", title: t('community_page_community_not_found') });
       return;
     }
@@ -606,9 +611,10 @@ export default function CommunityProfilePage() {
     const communityDocRef = doc(firestore, 'communities', community.id);
     try {
       await updateDoc(communityDocRef, {
-        members: arrayRemove(memberToRemove.userId)
+        members: arrayRemove(memberToRemove)
       });
       toast({ title: t('community_page_member_removed_title'), description: t('community_page_member_removed_desc', { name: memberToRemove.name }) });
+      // UI will update via onSnapshot
     } catch (e) {
       const message = e instanceof Error ? e.message : t('community_page_unexpected_error');
       toast({ variant: "destructive", title: t('community_page_remove_member_fail_title'), description: message });
@@ -819,7 +825,7 @@ export default function CommunityProfilePage() {
                                     <LoaderCircle className="animate-spin mx-auto" />
                                 ) : allProfiles.length > 0 ? (
                                     <div className="space-y-4">
-                                        {allProfiles.filter(p => p.userId !== user?.uid && !allMembers.some(m => typeof m === 'string' ? m === p.userId : m.userId === p.userId)).map(profile => (
+                                        {allProfiles.filter(p => p.userId !== user?.uid && !allMembers.some(m => m.userId === p.userId)).map(profile => (
                                             <Card key={profile.id} className="flex items-center p-4">
                                                 <Avatar className="w-12 h-12 mr-4">
                                                     <AvatarImage src={profile.avatarUrl || `https://i.pravatar.cc/150?u=${profile.name}`} alt={profile.name} />
@@ -899,7 +905,7 @@ export default function CommunityProfilePage() {
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                         <AlertDialogCancel>{t('community_page_delete_cancel')}</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleRemoveMember(community.members.find(m => typeof m !== 'string' && m.userId === user?.uid)!)} className="bg-destructive hover:bg-destructive/90">
+                                        <AlertDialogAction onClick={() => handleRemoveMember(community.members.find(m => m.userId === user.uid)!)} className="bg-destructive hover:bg-destructive/90">
                                             {t('community_page_leave_confirm')}
                                         </AlertDialogAction>
                                     </AlertDialogFooter>
@@ -928,17 +934,3 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
-    
-
-    
-
-
-
-    
-
-    
-
-
-
-
-

@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { getFirebase } from '@/firebase';
+import { getFirebase, useUser } from '@/firebase';
 import { doc, collection, query, where, arrayUnion, updateDoc, getDocs, setDoc, deleteDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, Check, X } from 'lucide-react';
@@ -18,12 +18,16 @@ import type { JoinRequest, CommunityProfile, Member } from '@/lib/types';
 export function JoinRequests({ communityId, communityName }: { communityId: string, communityName: string }) {
     const { toast } = useToast();
     const { t } = useTranslation();
+    const { isUserLoading } = useUser();
     const [requests, setRequests] = useState<JoinRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const fetchRequests = useCallback(async () => {
         const { firestore } = getFirebase();
-        if (!firestore || !communityId) return;
+        if (isUserLoading || !firestore || !communityId) {
+            if (!isUserLoading) setIsLoading(false);
+            return;
+        }
         setIsLoading(true);
         try {
             const requestsQuery = query(collection(firestore, `communities/${communityId}/joinRequests`), where('status', '==', 'pending'));
@@ -35,7 +39,7 @@ export function JoinRequests({ communityId, communityName }: { communityId: stri
         } finally {
             setIsLoading(false);
         }
-    }, [communityId]);
+    }, [communityId, isUserLoading]);
 
     useEffect(() => {
         fetchRequests();

@@ -229,25 +229,22 @@ export default function TreasuryPage() {
 
   const fetchAllData = useCallback(async () => {
     const { firestore } = getFirebase();
-    if (!user || !firestore) {
-        setIsLoading(false);
+    if (isUserLoading || !user || !firestore) {
+        if (!isUserLoading) setIsLoading(false);
         return;
     }
     setIsLoading(true);
     setError(null);
     try {
-        // Fetch communities user is a member of
         const communitiesQuery = query(collection(firestore, 'communities'), where('members', 'array-contains', user.uid));
         const communitiesSnapshot = await getDocs(communitiesQuery);
         const communitiesData = communitiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community));
         setUserCommunities(communitiesData);
 
-        // Fetch personal assets
         const personalAssetsQuery = query(collection(firestore, `users/${user.uid}/assets`));
         const personalAssetsSnapshot = await getDocs(personalAssetsQuery);
         setPersonalAssets(personalAssetsSnapshot.docs.map(doc => doc.data() as Asset));
         
-        // Fetch assets from all communities the user is in
         const communityAssetPromises = communitiesData.map(async (community) => {
             const assetsQuery = query(collection(firestore, `communities/${community.id}/assets`));
             const assetsSnapshot = await getDocs(assetsQuery);
@@ -262,13 +259,11 @@ export default function TreasuryPage() {
     } finally {
         setIsLoading(false);
     }
-  }, [user]);
+  }, [user, isUserLoading]);
 
   useEffect(() => {
-    if (!isUserLoading) {
-      fetchAllData();
-    }
-  }, [isUserLoading, fetchAllData]);
+    fetchAllData();
+  }, [fetchAllData]);
 
   if (isUserLoading || isLoading) {
     return (
