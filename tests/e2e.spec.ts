@@ -32,7 +32,7 @@ test('get to museum page', async ({ page }) => {
   await page.getByRole('button', { name: 'Toggle menu' }).click();
   await page.getByRole('link', { name: 'Museum' }).click();
   await page.waitForURL('**/museum');
-  await expect(page).toHaveURL(/.*museum/);
+  await expect(page.getByRole('heading', { name: 'Virtual Museum' })).toBeVisible();
 });
 
 // Test for navigating to the treasury
@@ -41,7 +41,7 @@ test('get to treasury page', async ({ page }) => {
   await page.getByRole('button', { name: 'Toggle menu' }).click();
   await page.getByRole('link', { name: 'Treasury' }).click();
   await page.waitForURL('**/treasury');
-  await expect(page).toHaveURL(/.*treasury/);
+  await expect(page.getByRole('heading', { name: 'The Treasury' })).toBeVisible();
 });
 
 // Test for navigating to the roadmap
@@ -50,7 +50,6 @@ test('get to roadmap page', async ({ page }) => {
   await page.getByRole('button', { name: 'Toggle menu' }).click();
   await page.getByRole('link', { name: 'Roadmap' }).click();
   await page.waitForURL('**/roadmap');
-  await expect(page).toHaveURL(/.*roadmap/);
   await expect(page.getByRole('heading', { name: 'Project Roadmap' })).toBeVisible();
 });
 
@@ -60,7 +59,6 @@ test('get to bug tracker page', async ({ page }) => {
   await page.getByRole('button', { name: 'Toggle menu' }).click();
   await page.getByRole('link', { name: 'Bug Tracker' }).click();
   await page.waitForURL('**/bugs');
-  await expect(page).toHaveURL(/.*bugs/);
   await expect(page.getByRole('heading', { name: 'Bug Tracker' })).toBeVisible();
 });
 
@@ -70,7 +68,6 @@ test('get to story (Nuncy Lingua) page', async ({ page }) => {
     await page.getByRole('button', { name: 'Toggle menu' }).click();
     await page.getByRole('link', { name: 'Nuncy Lingua' }).click();
     await page.waitForURL('**/story');
-    await expect(page).toHaveURL(/.*story/);
     await expect(page.getByRole('heading', { name: 'Nuncy Lingua' })).toBeVisible();
 });
 
@@ -80,7 +77,6 @@ test('get to AI Workshop (svg3d) page', async ({ page }) => {
     await page.getByRole('button', { name: 'Toggle menu' }).click();
     await page.getByRole('link', { name: 'AI Workshop' }).click();
     await page.waitForURL('**/svg3d');
-    await expect(page).toHaveURL(/.*svg3d/);
     await expect(page.getByRole('heading', { name: 'AI Workshop' })).toBeVisible();
 });
 
@@ -90,7 +86,6 @@ test('get to pricing page', async ({ page }) => {
     await page.getByRole('button', { name: 'Toggle menu' }).click();
     await page.getByRole('link', { name: 'Pricing' }).click();
     await page.waitForURL('**/pricing');
-    await expect(page).toHaveURL(/.*pricing/);
     await expect(page.getByRole('heading', { name: 'Tiers of Contribution' })).toBeVisible();
 });
 
