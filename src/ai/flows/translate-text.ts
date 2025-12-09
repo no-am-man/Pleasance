@@ -1,3 +1,4 @@
+
 // src/ai/flows/translate-text.ts
 'use server';
 /**
@@ -47,7 +48,7 @@ const translateTextFlow = ai.defineFlow(
       return { translation: '' };
     }
 
-    const { output } = await translatePrompt(input, { model: GEMINI_PRO });
+    const { output } = await translatePrompt(input);
 
     return output || { translation: input.text };
   }

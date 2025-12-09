@@ -1,3 +1,4 @@
+
 // src/config/models.ts
 
 import { googleAI } from '@genkit-ai/google-genai';
@@ -17,4 +18,4 @@ export const GEMINI_FLASH = googleAI.model('gemini-1.5-flash-preview');
 export const IMAGEN = googleAI.model('imagen-2');
 
 // For text-to-speech
-export const TTS_MODEL = googleAI.model('text-to-speech');
+export const TTS_MODEL = googleAI.model('text-to-speech-2');
