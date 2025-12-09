@@ -34,6 +34,10 @@ const translatePrompt = ai.definePrompt({
 
 Text to translate:
 "{{text}}"`,
+    // Add the config here to force JSON output mode correctly
+    config: {
+        responseMimeType: 'application/json',
+    },
 });
 
 // The flow is now self-contained and explicitly calls the model.
