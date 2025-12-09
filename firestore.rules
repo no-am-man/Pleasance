@@ -30,12 +30,14 @@ service cloud.firestore {
                get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId == request.auth.uid;
     }
     
-    // Checks if the requesting user's UID is in the community's 'members' array.
+    // CORRECTED: Checks if a userId is present in the `members` array of strings.
     function isHumanMember(communityId) {
-      let members = get(/databases/$(database)/documents/communities/$(communityId)).data.members;
-      // The 'members' field is an array that can contain UIDs (strings) and AI member objects.
-      // We check if the user's UID exists as a string in the array.
-      return isSignedIn() && request.auth.uid in members;
+      let communityDoc = get(/databases/$(database)/documents/communities/$(communityId));
+      // Safeguard against missing doc or `members` field.
+      return isSignedIn() 
+          && communityDoc != null
+          && "members" in communityDoc.data
+          && request.auth.uid in communityDoc.data.members;
     }
     
     // A broader check to see if a user is part of the community, either as owner or member.
@@ -68,22 +70,27 @@ service cloud.firestore {
 
         // --- Nested Community Sub-collections ---
 
-        // Generic rule for member-only access to most sub-collections
-        match /{allChildren=**} {
-            allow read, write: if isMember(communityId);
-        }
-
-        // More specific rules can override the generic one above.
         // Forms (Messages) & Comments: Readable by all, writable by members.
         match /forms/{formId}/{allChildren=**} {
             allow read: if true;
             allow write: if isMember(communityId);
         }
         
+        // Wiki: Readable by anyone, but only writable by community members.
+        match /wiki/{articleId} {
+            allow read: if true;
+            allow write: if isMember(communityId);
+        }
+
         // Join Requests: Readable by owner, writable by the requesting user
         match /joinRequests/{userId} {
             allow read: if isCommunityOwner(communityId);
             allow create, update: if isOwner(userId);
+        }
+        
+        // Generic rule for member-only access to other sub-collections
+        match /{path=**} {
+            allow read, write: if isMember(communityId);
         }
     }
     
@@ -112,8 +119,8 @@ service cloud.firestore {
       // Allow create/update/delete only by the organizer.
       allow create: if isSignedIn() && request.resource.data.organizerId == request.auth.uid;
       allow update, delete: if isSignedIn() && resource.data.organizerId == request.auth.uid;
-      // Allow any signed-in user to modify ONLY the attendees list to RSVP.
-      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attendees']);
+      // CORRECTED: Allow any signed-in user to modify ONLY the attendees list (and an updatedAt timestamp) to RSVP.
+      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attendees', 'updatedAt']);
     }
 
     // Rule for Ambassador chat history.
