@@ -25,11 +25,11 @@ service cloud.firestore {
     }
     
     function isCommunityOwner(communityId) {
+        // Robust check: Ensure user is signed in AND the community document exists before getting its data.
         return isSignedIn() && exists(/databases/$(database)/documents/communities/$(communityId)) &&
                get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId == request.auth.uid;
     }
     
-    // CORRECTED: Checks if a userId is present in the `members` array of strings.
     function isHumanMember(communityId) {
       let communityDoc = get(/databases/$(database)/documents/communities/$(communityId));
       // Safeguard against missing doc or `members` field.

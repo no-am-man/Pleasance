@@ -3,22 +3,22 @@ import admin from 'firebase-admin';
 
 const appName = 'pleasance-admin';
 
-// --- SINGLETON PATTERN ---
-// A self-invoking function that ensures only one instance of the Firebase Admin app is created.
-
 let adminApp: admin.app.App;
 
 function getAdminApp(): admin.app.App {
+  // If the app is already initialized, return it.
   if (adminApp) {
     return adminApp;
   }
 
+  // Check if an app with this name has already been initialized.
   const existingApp = admin.apps.find(app => app?.name === appName);
   if (existingApp) {
     adminApp = existingApp;
     return adminApp;
   }
 
+  // Get the entire service account JSON from the environment variable.
   const serviceAccountJSON = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
 
   if (!serviceAccountJSON) {
@@ -27,12 +27,14 @@ function getAdminApp(): admin.app.App {
 
   let serviceAccount: admin.ServiceAccount;
   try {
+      // Parse the JSON string into an object.
       serviceAccount = JSON.parse(serviceAccountJSON);
   } catch (e) {
       throw new Error('Server configuration error: Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON. Please ensure it is a valid JSON string.');
   }
-
+  
   try {
+    // Initialize the app with the full service account object.
     adminApp = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
       projectId: serviceAccount.project_id, 
@@ -49,4 +51,3 @@ function getAdminApp(): admin.app.App {
 
 // Export the function to get the singleton instance.
 export { getAdminApp as initializeAdminApp };
-// --- END SINGLETON PATTERN ---

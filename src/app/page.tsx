@@ -206,7 +206,7 @@ function CreateCommunityForm() {
             router.push(`/community/${newCommunityData.id}`);
 
         } catch (error) {
-            const message = error instanceof Error ? e.message : 'An unknown error occurred';
+            const message = error instanceof Error ? error.message : 'An unknown error occurred';
             toast({
                 variant: 'destructive',
                 title: 'Community Creation Failed',
@@ -317,16 +317,20 @@ export default function CommunityPage() {
         const fetchInitialData = async () => {
             setIsLoading(true);
             try {
+                // Fetch Communities (Allowed for everyone)
                 const communitiesQuery = query(collection(firestore, 'communities'), orderBy('name'));
-                const profilesQuery = query(collection(firestore, 'community-profiles'));
-                
-                const [communitiesSnapshot, profilesSnapshot] = await Promise.all([
-                    getDocs(communitiesQuery),
-                    getDocs(profilesQuery)
-                ]);
-
+                const communitiesSnapshot = await getDocs(communitiesQuery);
                 setCommunities(communitiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community)));
-                setAllProfiles(profilesSnapshot.docs.map(doc => doc.data() as CommunityProfile));
+
+                // Fetch Profiles ONLY if logged in
+                if (user) {
+                    const profilesQuery = query(collection(firestore, 'community-profiles'));
+                    const profilesSnapshot = await getDocs(profilesQuery);
+                    setAllProfiles(profilesSnapshot.docs.map(doc => doc.data() as CommunityProfile));
+                } else {
+                    // If guest, set empty profiles to avoid "undefined" errors
+                    setAllProfiles([]);
+                }
             } catch (error) {
                 console.error("Failed to fetch initial community data:", error);
             } finally {
@@ -335,7 +339,7 @@ export default function CommunityPage() {
         };
 
         fetchInitialData();
-    }, [isUserLoading]);
+    }, [isUserLoading, user]);
 
     const filteredCommunities = useMemo(() => {
         return communities.filter(community => 
