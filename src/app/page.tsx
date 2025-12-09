@@ -308,6 +308,7 @@ export default function CommunityPage() {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
 
     useEffect(() => {
+        // 1. Don't run logic while Auth is initializing
         if (isUserLoading) {
             return;
         }
@@ -317,18 +318,19 @@ export default function CommunityPage() {
         const fetchInitialData = async () => {
             setIsLoading(true);
             try {
-                // Fetch Communities (Allowed for everyone)
+                // 2. Fetch Communities (Allowed for Everyone)
                 const communitiesQuery = query(collection(firestore, 'communities'), orderBy('name'));
                 const communitiesSnapshot = await getDocs(communitiesQuery);
                 setCommunities(communitiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community)));
 
-                // Fetch Profiles ONLY if logged in
+                // 3. Fetch Profiles (ONLY if user is logged in)
+                // This prevents the PERMISSION_DENIED crash for guests
                 if (user) {
                     const profilesQuery = query(collection(firestore, 'community-profiles'));
                     const profilesSnapshot = await getDocs(profilesQuery);
                     setAllProfiles(profilesSnapshot.docs.map(doc => doc.data() as CommunityProfile));
                 } else {
-                    // If guest, set empty profiles to avoid "undefined" errors
+                    // For guests, set empty profiles so the UI doesn't break
                     setAllProfiles([]);
                 }
             } catch (error) {
@@ -339,7 +341,7 @@ export default function CommunityPage() {
         };
 
         fetchInitialData();
-    }, [isUserLoading, user]);
+    }, [isUserLoading, user]); // <--- IMPORTANT: Added 'user' to dependency array
 
     const filteredCommunities = useMemo(() => {
         return communities.filter(community => 
