@@ -30,7 +30,7 @@ const translatePrompt = ai.definePrompt({
     input: { schema: TranslateTextInputSchema },
     output: { schema: TranslateTextOutputSchema },
     config: {
-        model: GEMINI_PRO,
+        model: GEMINI_PRO, // Explicitly set the model here
     },
     prompt: `Translate the following text to {{targetLanguage}}. Return only the translated text, with no additional commentary or formatting.
 
