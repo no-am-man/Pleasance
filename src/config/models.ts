@@ -13,8 +13,8 @@ export const API_VERSION = 'v1';
 export const GEMINI_PRO = googleAI.model('gemini-1.5-pro-preview-0514');
 
 // For fast, lightweight tasks, and summarization
-// Using 'gemini-pro' as it is a stable identifier with broader compatibility across API versions.
-export const GEMINI_FLASH = googleAI.model('gemini-pro');
+// Using a stable identifier that is less prone to API version issues.
+export const GEMINI_FLASH = googleAI.model('gemini-1.5-pro-preview-0514');
 
 // For image generation
 export const IMAGEN = googleAI.model('imagen-4.0-fast-generate-001');
