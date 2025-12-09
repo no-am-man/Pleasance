@@ -27,7 +27,7 @@ const notifyPrompt = ai.definePrompt({
     input: { schema: NotifyInputSchema },
     output: { schema: NotifyOutputSchema },
     config: {
-        model: 'googleai/gemini-1.5-flash-001',
+        model: 'googleai/gemini-1.5-pro-preview-0514',
     },
     prompt: `You are the Concierge of the "{{communityName}}" online community.
 

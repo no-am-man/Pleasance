@@ -29,7 +29,7 @@ const analyzeLevelPrompt = ai.definePrompt({
     input: { schema: AnalyzeLevelInputSchema },
     output: { schema: AnalyzeLevelOutputSchema },
     config: {
-        model: "googleai/gemini-1.5-flash-001",
+        model: "googleai/gemini-1.5-pro-preview-0514",
     },
     prompt: `You are an expert academic advisor. Your task is to analyze the user's description of their studies and determine a concise, equivalent academic level.
     Focus on the depth and breadth of the subjects mentioned. Be realistic but encouraging.

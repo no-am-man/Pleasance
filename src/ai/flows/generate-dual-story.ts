@@ -36,7 +36,7 @@ const dualStoryPrompt = ai.definePrompt({
     input: { schema: GenerateDualStoryInputSchema },
     output: { schema: StorySchema },
     config: {
-        model: "googleai/gemini-1.5-flash-001",
+        model: "googleai/gemini-1.5-pro-preview-0514",
     },
     prompt: `You are an expert storyteller and language teacher. Create a short, simple, and engaging story based on the user's prompt.
     The story should be suitable for a {{difficultyLevel}} language learner.

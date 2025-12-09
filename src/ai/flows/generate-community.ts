@@ -40,7 +40,7 @@ const generateCommunityPrompt = ai.definePrompt({
   input: {schema: GenerateCommunityInputSchema},
   output: {schema: GenerateCommunityOutputSchema},
   config: {
-    model: 'googleai/gemini-1.5-flash-001',
+    model: 'googleai/gemini-1.5-pro-preview-0514',
   },
   prompt: `You are an expert at founding online communities. Based on the user's prompt, generate a name, a short description, and a welcome message.
 

@@ -46,7 +46,7 @@ When reporting information, format it clearly using markdown.
 The current user's name is ${flowInput.userName} and their ID is ${flowInput.userId}. You MUST pass this information to any tool that requires it.`;
 
     const { response } = await ai.generate({
-        model: 'googleai/gemini-1.5-flash-001',
+        model: 'googleai/gemini-1.5-pro-preview-0514',
         system: systemPrompt,
         prompt: flowInput.prompt,
         history: flowInput.history,

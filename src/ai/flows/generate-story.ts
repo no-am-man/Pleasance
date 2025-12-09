@@ -1,3 +1,4 @@
+
 // src/ai/flows/generate-story.ts
 'use server';
 /**
@@ -31,7 +32,7 @@ const generateStoryPrompt = ai.definePrompt({
   input: {schema: GenerateStoryInputSchema},
   output: {schema: GenerateStoryOutputSchema},
   config: {
-    model: 'googleai/gemini-1.5-flash-001',
+    model: 'googleai/gemini-1.5-pro-preview-0514',
     safetySettings: [
         {
             category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
