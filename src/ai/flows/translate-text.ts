@@ -8,7 +8,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { GEMINI_PRO } from '@/config/models';
 
 const TranslateTextInputSchema = z.object({
   text: z.string().describe('The text to be translated.'),
@@ -38,7 +37,7 @@ const translateTextFlow = ai.defineFlow(
     }
 
     const { output } = await ai.generate({
-      model: GEMINI_PRO,
+      model: 'googleai/gemini-1.5-flash',
       prompt: `Translate the following text to ${input.targetLanguage}. Return only the translated text, with no additional commentary or formatting.
 
 Text to translate:
