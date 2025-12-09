@@ -11,7 +11,8 @@
     "start": "next start",
     "lint": "next lint",
     "lint:autofix": "next lint --fix",
-    "test": "playwright test --project=chromium"
+    "test": "playwright test --project=chromium",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
