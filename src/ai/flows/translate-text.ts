@@ -1,4 +1,3 @@
-
 // src/ai/flows/translate-text.ts
 'use server';
 /**
@@ -31,9 +30,6 @@ const translatePrompt = ai.definePrompt({
     input: { schema: TranslateTextInputSchema },
     output: { schema: TranslateTextOutputSchema },
     model: GEMINI_PRO,
-    generationConfig: {
-      responseMimeType: "application/json",
-    },
     prompt: `Translate the following text to {{targetLanguage}}. Return only the translated text as a raw JSON object with a single key "translation", with no additional commentary or formatting.
 
 Text to translate:

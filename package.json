@@ -12,7 +12,7 @@
     "lint": "next lint",
     "lint:autofix": "next lint --fix",
     "test": "playwright test --project=chromium tests/ai/flows/",
-    "test:e2e": "playwright test --project=chromium"
+    "test:e2e": "playwright test --project=chromium tests/e2e.spec.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
@@ -48,8 +48,8 @@
     "firebase": "10.12.3",
     "firebase-admin": "12.0.0",
     "framer-motion": "11.3.17",
-    "genkit": "^1.24.0",
-    "@genkit-ai/google-genai": "^1.24.0",
+    "genkit": "latest",
+    "@genkit-ai/google-genai": "latest",
     "lucide-react": "0.417.0",
     "marked": "13.0.2",
     "next": "16.0.7",
