@@ -37,7 +37,7 @@ const translateTextFlow = ai.defineFlow(
     }
 
     const { output } = await ai.generate({
-      model: googleAI.model('gemini-1.5-flash-001'), // Use the imported model reference
+      model: 'googleai/gemini-1.5-flash-001',
       prompt: `Translate the following text to ${input.targetLanguage}. Return only the translated text, with no additional commentary or formatting.
 
 Text to translate:
