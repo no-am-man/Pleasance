@@ -1,3 +1,4 @@
+
 // src/firebase/config-admin.ts
 import admin from 'firebase-admin';
 
@@ -19,11 +20,19 @@ function getAdminApp(): admin.app.App {
     return adminApp;
   }
 
+  // The private key from environment variables often has escaped newlines (\\n).
+  // We need to replace them with actual newline characters (\n).
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+  if (!privateKey) {
+      throw new Error('Server configuration error: The FIREBASE_PRIVATE_KEY environment variable is not set or is empty.');
+  }
+
   const serviceAccount = {
       "type": "service_account",
       "project_id": "studio-2441219031-242ae",
       "private_key_id": "97e68f3a34a87754d924151b5c464a93f73315a0",
-      "private_key": process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      "private_key": privateKey,
       "client_email": "firebase-adminsdk-32r47@studio-2441219031-242ae.iam.gserviceaccount.com",
       "client_id": "111956976214470393223",
       "auth_uri": "https://accounts.google.com/o/oauth2/auth",
@@ -33,17 +42,10 @@ function getAdminApp(): admin.app.App {
   };
   
   const projectId = "studio-2441219031-242ae";
-  if (!projectId) {
-      throw new Error('Server configuration error: The project ID is not set.');
-  }
-  
-  if (!serviceAccount.private_key) {
-      throw new Error('Server configuration error: The FIREBASE_PRIVATE_KEY environment variable is not set.');
-  }
 
   try {
     adminApp = admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
+      credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
       projectId: projectId, 
     }, appName);
     return adminApp;
