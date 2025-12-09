@@ -5,24 +5,27 @@ import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
 import { getDatabase, type Database } from 'firebase/database';
 
+// IMPORTANT: REPLACE THESE PLACEHOLDER VALUES WITH YOUR ACTUAL FIREBASE CONFIG
 export const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "AIzaSyC5xXIFuwBzBCF08FpnEoNbrliZCYJgaFU",
+  authDomain: "studio-2441219031-242ae.firebaseapp.com",
+  projectId: "studio-2441219031-242ae",
+  storageBucket: "studio-2441219031-242ae.appspot.com",
+  messagingSenderId: "36997451383",
+  appId: "1:36997451383:web:5317454867fa23126f3152",
 };
 
-// Validate that all required client-side environment variables are set.
+// You can find these values in your Firebase project settings.
+// Go to Project Settings (⚙️) > General > Your apps > Web app.
+
+// Validation to ensure placeholder values are replaced.
 if (
   !firebaseConfig.apiKey ||
-  !firebaseConfig.authDomain ||
-  !firebaseConfig.projectId
+  firebaseConfig.apiKey.startsWith("REPLACE_")
 ) {
   // This error will be thrown on the server during build and on the client at runtime.
-  // It provides a clear, actionable message instead of a cryptic Firebase error.
-  throw new Error("Firebase client configuration is incomplete. Please ensure that NEXT_PUBLIC_FIREBASE_API_KEY, NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN, and NEXT_PUBLIC_FIREBASE_PROJECT_ID are set in your .env file.");
+  // It provides a clear, actionable message.
+  throw new Error("Firebase client configuration is incomplete. Please update the placeholder values in 'src/firebase/config.ts' with your actual Firebase project credentials.");
 }
 
 
