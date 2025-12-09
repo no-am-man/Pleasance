@@ -119,7 +119,7 @@ export default function HomePage() {
             </div>
 
             <div className="mt-20">
-                <h2 className="text-4xl font-bold text-center mb-12 font-headline" data-testid="main-heading">{t('coreConceptsTitle')}</h2>
+                <h2 className="text-4xl font-bold text-center mb-12 font-headline">{t('coreConceptsTitle')}</h2>
                 <div className="grid grid-cols-1 gap-8">
                     {features.map((feature: any, index: number) => {
                         const placeholder = PlaceHolderImages.find(p => p.id === feature.id);

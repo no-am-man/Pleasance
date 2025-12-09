@@ -1,4 +1,4 @@
-// src/app/page.tsx (formerly community/page.tsx)
+// src/app/page.tsx
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
@@ -206,7 +206,7 @@ function CreateCommunityForm() {
             router.push(`/community/${newCommunityData.id}`);
 
         } catch (error) {
-            const message = error instanceof Error ? error.message : 'An unknown error occurred';
+            const message = error instanceof Error ? e.message : 'An unknown error occurred';
             toast({
                 variant: 'destructive',
                 title: 'Community Creation Failed',
