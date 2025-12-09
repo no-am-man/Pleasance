@@ -10,6 +10,7 @@ import { FederationDiagram } from "@/components/federation-diagram";
 import { useTranslation } from "@/hooks/use-translation";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useEffect, useState } from "react";
+import DebugFirebase from "@/components/DebugFirebase";
 
 
 function FeatureCard({ title, description, imageUrl, imageHint, isFirst, ctaText, ctaLink, t }: { title: string, description: string, imageUrl: string, imageHint: string, isFirst: boolean, ctaText: string, ctaLink: string, t: (key: string) => string }) {
@@ -98,6 +99,7 @@ export default function HomePage() {
 
     return (
         <div className="container mx-auto max-w-4xl py-12 px-4">
+            <DebugFirebase />
             <div className="text-center mb-12">
                 <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-primary font-headline" data-testid="main-heading">
                     {t('pleasance')}
