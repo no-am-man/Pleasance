@@ -26,13 +26,21 @@ service cloud.firestore {
     }
     
     function isCommunityOwner(communityId) {
-        return isSignedIn() && get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId == request.auth.uid;
+        return isSignedIn() && exists(/databases/$(database)/documents/communities/$(communityId)) &&
+               get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId == request.auth.uid;
     }
     
-    // CORRECTED: Checks if a userId is in the 'members' array of strings.
+    // Checks if the requesting user's UID is in the community's 'members' array.
     function isHumanMember(communityId) {
-        let members = get(/databases/$(database)/documents/communities/$(communityId)).data.members;
-        return isSignedIn() && request.auth.uid in members;
+      let members = get(/databases/$(database)/documents/communities/$(communityId)).data.members;
+      // The 'members' field is an array that can contain UIDs (strings) and AI member objects.
+      // We check if the user's UID exists as a string in the array.
+      return isSignedIn() && request.auth.uid in members;
+    }
+    
+    // A broader check to see if a user is part of the community, either as owner or member.
+    function isMember(communityId) {
+        return isCommunityOwner(communityId) || isHumanMember(communityId);
     }
     
     //================================================================================
@@ -40,13 +48,8 @@ service cloud.firestore {
     //================================================================================
 
     // Rule for private user data.
-    match /users/{userId} {
+    match /users/{userId}/{allChildren=**} {
       allow read, write: if isOwner(userId);
-      
-      // Nested user-specific collections inherit the parent rule.
-      match /{allChildren=**} {
-        allow read, write: if isOwner(userId);
-      }
     }
 
     // Rule for publicly readable, but privately writable, user profiles.
@@ -63,46 +66,24 @@ service cloud.firestore {
         allow create: if isSignedIn();
         allow update, delete: if isCommunityOwner(communityId);
 
-        // Community Assets: Readable by members, writable by the community owner
-        match /assets/{assetId} {
-          allow read, write: if isCommunityOwner(communityId);
+        // --- Nested Community Sub-collections ---
+
+        // Generic rule for member-only access to most sub-collections
+        match /{allChildren=**} {
+            allow read, write: if isMember(communityId);
         }
 
-        // Community Creations: Readable by all, writable by members
-        match /creations/{creationId} {
+        // More specific rules can override the generic one above.
+        // Forms (Messages) & Comments: Readable by all, writable by members.
+        match /forms/{formId}/{allChildren=**} {
             allow read: if true;
-            allow write: if isHumanMember(communityId);
-        }
-        
-        // Community Roadmap: Readable by all, writable by owner
-        match /roadmap/{columnId} {
-            allow read: if true;
-            allow write: if isCommunityOwner(communityId);
+            allow write: if isMember(communityId);
         }
         
         // Join Requests: Readable by owner, writable by the requesting user
         match /joinRequests/{userId} {
             allow read: if isCommunityOwner(communityId);
             allow create, update: if isOwner(userId);
-        }
-        
-        // Forms (Messages): Readable by all, writable by members or founder (for system messages)
-        match /forms/{formId} {
-            allow read: if true;
-            allow create: if isHumanMember(communityId) || isFounder(); // CORRECTED
-            allow update, delete: if isOwner(resource.data.userId);
-            
-            // Comments: Readable by all, writable by members
-            match /comments/{commentId} {
-                allow read: if true;
-                allow create: if isHumanMember(communityId); // CORRECTED
-                allow update, delete: if isOwner(resource.data.userId);
-            }
-        }
-        
-        // Wiki Articles: Readable and writable only by community members.
-        match /wiki/{articleId} {
-            allow read, write: if isHumanMember(communityId); // CORRECTED
         }
     }
     
