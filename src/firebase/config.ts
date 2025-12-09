@@ -20,9 +20,9 @@ if (
   !firebaseConfig.authDomain ||
   !firebaseConfig.projectId
 ) {
-  // In a client component, this will only log on the browser console.
-  // The server will log a more detailed error if this code runs during SSR.
-  console.error("Firebase client configuration is incomplete. Please check your NEXT_PUBLIC_ environment variables.");
+  // This error will be thrown on the server during build and on the client at runtime.
+  // It provides a clear, actionable message instead of a cryptic Firebase error.
+  throw new Error("Firebase client configuration is incomplete. Please ensure that NEXT_PUBLIC_FIREBASE_API_KEY, NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN, and NEXT_PUBLIC_FIREBASE_PROJECT_ID are set in your .env file.");
 }
 
 
