@@ -1,3 +1,4 @@
+
 // src/app/story/page.tsx
 'use client';
 
@@ -102,12 +103,15 @@ function StoryHistory({ onSelectStory, onClearStory }: { onSelectStory: (story: 
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
-        if (isUserLoading || !user) {
-            if (!isUserLoading) setIsLoading(false);
+        if (isUserLoading) return;
+        if (!user) {
+            setIsLoading(false);
+            setStories([]); // Clear stories if user logs out
             return;
         }
 
         const fetchStories = async () => {
+            setIsLoading(true);
             try {
                 const { firestore } = getFirebase();
                 if (!firestore) {
@@ -145,7 +149,7 @@ function StoryHistory({ onSelectStory, onClearStory }: { onSelectStory: (story: 
             <CardContent>
                 {isLoading && <LoaderCircle className="animate-spin mx-auto" />}
                 {error && <p className="text-destructive">Error loading history: {error.message}</p>}
-                {stories && stories.length === 0 && <p className="text-muted-foreground text-center">{t('story_history_empty')}</p>}
+                {stories && stories.length === 0 && !isLoading && <p className="text-muted-foreground text-center">{t('story_history_empty')}</p>}
                 {stories && stories.length > 0 && (
                     <ul className="space-y-2 max-h-80 overflow-y-auto">
                         {stories.map((story, index) => (
@@ -329,11 +333,11 @@ export default function StoryPage() {
 
   useEffect(() => {
       if (isUserLoading) return;
+      if (!user) {
+          setIsProfileLoading(false);
+          return;
+      }
       const fetchProfile = async () => {
-        if (!user) {
-            setIsProfileLoading(false);
-            return;
-        }
         setIsProfileLoading(true);
         const { firestore } = getFirebase();
         if (!firestore) {

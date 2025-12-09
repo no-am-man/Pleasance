@@ -1,3 +1,4 @@
+
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -291,10 +292,11 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
     const [error, setError] = useState<Error | null>(null);
     const { toast } = useToast();
 
+    // Unified useEffect for fetching articles
     useEffect(() => {
         if (!firestore || !communityId) {
             setIsLoading(false);
-            return () => {};
+            return;
         }
         
         setIsLoading(true);
@@ -303,6 +305,7 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedArticles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WikiArticle));
             setArticles(fetchedArticles);
+            // Select the first article only if one isn't already selected or the selected one was deleted
             if (!selectedArticle || !fetchedArticles.some(a => a.id === selectedArticle.id)) {
                 setSelectedArticle(fetchedArticles[0] || null);
             }
@@ -322,6 +325,7 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
         try {
             await deleteDoc(docRef);
             toast({ title: 'Article Deleted' });
+            // The onSnapshot listener will handle the UI update.
         } catch (e) {
             const message = e instanceof Error ? e.message : 'An unknown error occurred';
             toast({ variant: 'destructive', title: 'Failed to delete article', description: message });
@@ -478,7 +482,12 @@ export default function CommunityProfilePage() {
     setIsLoading(true);
     const communityDocRef = doc(firestore, 'communities', id);
     const unsubscribeCommunity = onSnapshot(communityDocRef, (doc) => {
-        setCommunity(doc.exists() ? { id: doc.id, ...doc.data() } as Community : null);
+        if (doc.exists()) {
+            setCommunity({ id: doc.id, ...doc.data() } as Community);
+        } else {
+            setCommunity(null);
+            setError(new Error("Community not found."));
+        }
         setIsLoading(false);
     }, (err) => {
         const permissionError = new FirestorePermissionError({ path: `communities/${id}`, operation: 'get' });
@@ -492,19 +501,24 @@ export default function CommunityProfilePage() {
 
   // Effect for user-specific data (profile and join request)
   useEffect(() => {
-    if (isUserLoading || !user || !firestore) {
-      if (!isUserLoading) {
+    if (isUserLoading) return;
+    if (!user) {
+        // If there's no user, we're done loading user-specific data.
+        setIsProfileLoading(false);
         setIsRequestLoading(false);
-      }
-      return;
+        setUserProfile(null);
+        setUserJoinRequest(null);
+        return;
     }
+    if (!firestore) return;
 
     const unsubscribers: Unsubscribe[] = [];
     
     const profileDocRef = doc(firestore, 'community-profiles', user.uid);
     unsubscribers.push(onSnapshot(profileDocRef, (docSnap) => {
         setUserProfile(docSnap.exists() ? docSnap.data() as CommunityProfile : null);
-    }));
+        setIsProfileLoading(false);
+    }, () => setIsProfileLoading(false))); // Also handle errors
 
     if (id) {
       setIsRequestLoading(true);
@@ -677,7 +691,7 @@ export default function CommunityProfilePage() {
   };
 
 
-  if (isLoading || isRequestLoading || isLoadingAncillary) {
+  if (isLoading || isRequestLoading || isLoadingAncillary || isUserLoading) {
     return (
       <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
         <LoaderCircle className="w-12 h-12 animate-spin text-primary" />

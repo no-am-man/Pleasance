@@ -1,3 +1,4 @@
+
 // src/components/community/JoinRequests.tsx
 'use client';
 
@@ -58,15 +59,28 @@ export function JoinRequests({ communityId, communityName }: { communityId: stri
         
         try {
             if (newStatus === 'approved') {
-                const profileSnap = await getDocs(query(collection(firestore, 'community-profiles'), where('userId', '==', request.userId)));
-                const profileData = !profileSnap.empty ? profileSnap.docs[0].data() as CommunityProfile : null;
-
-                // Add the user's UID to the members array
-                await updateDoc(communityDocRef, {
-                    members: arrayUnion(request.userId)
-                });
+                // Fetch the full profile to get all details
+                const profileSnap = await getDoc(doc(firestore, 'community-profiles', request.userId));
+                const profileData = profileSnap.exists() ? profileSnap.data() as CommunityProfile : null;
                 
-                await welcomeNewMemberAction({ communityId, communityName, newMemberName: request.userName });
+                if (profileData) {
+                    const newMember: Member = {
+                        userId: profileData.userId,
+                        name: profileData.name,
+                        bio: profileData.bio,
+                        role: 'Member',
+                        type: 'human',
+                        avatarUrl: profileData.avatarUrl,
+                    };
+
+                    await updateDoc(communityDocRef, {
+                        members: arrayUnion(newMember)
+                    });
+                    
+                    await welcomeNewMemberAction({ communityId, communityName, newMemberName: newMember.name });
+                } else {
+                    throw new Error("Could not find user profile to add member.");
+                }
             }
             // After action, delete the request document instead of updating its status
             await deleteDoc(requestDocRef);

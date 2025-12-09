@@ -1,3 +1,4 @@
+
 // src/app/treasury/page.tsx
 'use client';
 
@@ -228,11 +229,17 @@ export default function TreasuryPage() {
   const [error, setError] = useState<Error | null>(null);
 
   const fetchAllData = useCallback(async () => {
-    const { firestore } = getFirebase();
-    if (!user || !firestore) {
+    if (!user) {
         setIsLoading(false);
         return;
     }
+    
+    const { firestore } = getFirebase();
+    if (!firestore) {
+        setIsLoading(false);
+        return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {

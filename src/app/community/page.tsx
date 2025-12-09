@@ -1,3 +1,4 @@
+
 // src/app/community/page.tsx (formerly community/page.tsx)
 'use client';
 
@@ -157,7 +158,7 @@ function CreateCommunityForm() {
         setIsRefining(true);
         try {
             const result = await refineCommunityPromptAction({ prompt });
-            if (result.error) throw new Error(result.error);
+            if ('error' in result) throw new Error(result.error);
             form.setValue('prompt', result.refinedPrompt, { shouldValidate: true });
             toast({
                 title: t('community_idea_refined_title'),
@@ -317,16 +318,16 @@ export default function CommunityPage() {
         const fetchInitialData = async () => {
             setIsLoading(true);
             try {
+                // Fetch communities (public)
                 const communitiesQuery = query(collection(firestore, 'communities'), orderBy('name'));
-                const profilesQuery = query(collection(firestore, 'community-profiles'));
-                
-                const [communitiesSnapshot, profilesSnapshot] = await Promise.all([
-                    getDocs(communitiesQuery),
-                    getDocs(profilesQuery)
-                ]);
-
+                const communitiesSnapshot = await getDocs(communitiesQuery);
                 setCommunities(communitiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community)));
+
+                // Fetch all profiles (public list)
+                const profilesQuery = query(collection(firestore, 'community-profiles'));
+                const profilesSnapshot = await getDocs(profilesQuery);
                 setAllProfiles(profilesSnapshot.docs.map(doc => doc.data() as CommunityProfile));
+
             } catch (error) {
                 console.error("Failed to fetch initial community data:", error);
             } finally {
@@ -335,7 +336,8 @@ export default function CommunityPage() {
         };
 
         fetchInitialData();
-    }, [isUserLoading]);
+    }, [isUserLoading, user]);
+
 
     const filteredCommunities = useMemo(() => {
         return communities.filter(community => 
