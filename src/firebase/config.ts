@@ -1,9 +1,10 @@
 // src/firebase/config.ts
-import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
+import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getDatabase, type Database } from 'firebase/database';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
-// IMPORTANT: REPLACE THESE PLACEHOLDER VALUES WITH YOUR ACTUAL FIREBASE CONFIG
 export const firebaseConfig = {
   apiKey: "AIzaSyC5xXIFuwBzBCF08FpnEoNbrliZCYJgaFU",
   authDomain: "studio-2441219031-242ae.firebaseapp.com",
@@ -13,30 +14,22 @@ export const firebaseConfig = {
   appId: "1:36997451383:web:5317454867fa23126f3152",
 };
 
-// You can find these values in your Firebase project settings.
-// Go to Project Settings (⚙️) > General > Your apps > Web app.
-
-// Validation to ensure placeholder values are replaced.
-if (
-  !firebaseConfig.apiKey ||
-  firebaseConfig.apiKey.startsWith("REPLACE_")
-) {
-  // This error will be thrown on the server during build and on the client at runtime.
-  // It provides a clear, actionable message.
+// This error is a safeguard. If you see this, you need to replace the placeholder values above.
+if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("REPLACE_")) {
   throw new Error("Firebase client configuration is incomplete. Please update the placeholder values in 'src/firebase/config.ts' with your actual Firebase project credentials.");
 }
-
 
 type FirebaseServices = {
     app: FirebaseApp;
     auth: Auth;
     firestore: Firestore;
+    database: Database;
+    storage: FirebaseStorage;
 };
 
 // --- SINGLETON PATTERN ---
-// This ensures that Firebase is initialized only once across the entire application.
 const FirebaseServiceSingleton = (() => {
-    let instance: FirebaseServices;
+    let instance: FirebaseServices | undefined;
 
     function createInstance(): FirebaseServices {
         const apps = getApps();
@@ -44,8 +37,10 @@ const FirebaseServiceSingleton = (() => {
         
         const auth = getAuth(app);
         const firestore = getFirestore(app);
+        const database = getDatabase(app);
+        const storage = getStorage(app);
 
-        return { app, auth, firestore };
+        return { app, auth, firestore, database, storage };
     }
 
     return {
@@ -58,12 +53,10 @@ const FirebaseServiceSingleton = (() => {
     };
 })();
 
-// This function is the single source of truth for getting Firebase services.
 export function getFirebase(): FirebaseServices {
     return FirebaseServiceSingleton.getInstance();
 }
 // --- END SINGLETON PATTERN ---
 
-
-// For convenience, we can also export the individual services from the getter.
+// For convenience, we can also export the individual services.
 export const { firestore, auth } = getFirebase();

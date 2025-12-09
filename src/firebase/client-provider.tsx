@@ -1,13 +1,12 @@
 // src/firebase/client-provider.tsx
 'use client';
 
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Auth } from 'firebase/auth';
 import { Firestore } from 'firebase/firestore';
 import { getFirebase } from './config';
 import { AuthProvider } from './auth-provider';
-import { LoaderCircle } from 'lucide-react';
 import { PresenceManager } from '@/components/PresenceManager';
 
 interface FirebaseClientProviderProps {
@@ -15,29 +14,9 @@ interface FirebaseClientProviderProps {
 }
 
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
-  const [services, setServices] = useState<{
-    app: FirebaseApp;
-    auth: Auth;
-    firestore: Firestore;
-  } | null>(null);
-
-  useEffect(() => {
-    // getFirebase() initializes the app and returns the services
-    const firebaseServices = getFirebase();
-    setServices({
-      app: firebaseServices.app,
-      auth: firebaseServices.auth,
-      firestore: firebaseServices.firestore,
-    });
-  }, []);
-
-  if (!services) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <LoaderCircle className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
+  // getFirebase() now handles the singleton instance, so we can call it directly.
+  // There is no need for useState or useEffect here anymore.
+  const { app, auth, firestore } = getFirebase();
 
   return (
     <AuthProvider>

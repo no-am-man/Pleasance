@@ -7,6 +7,7 @@ import { Inter, Lexend } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import DebugFirebase from '@/components/DebugFirebase';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -39,6 +40,7 @@ export default function RootLayout({
       >
         <Providers>
             <AppLayout>
+              <DebugFirebase />
               <FirebaseErrorListener />
               {children}
             </AppLayout>

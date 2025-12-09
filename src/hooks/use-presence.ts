@@ -1,7 +1,7 @@
 // src/hooks/use-presence.ts
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { useUser } from '@/firebase';
 import { getFirebase } from '@/firebase/config';
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
@@ -17,6 +17,7 @@ class PresenceMonitor {
     private database: Database;
 
     constructor() {
+        // Delay getting the instance until it's needed.
         this.database = getFirebase().database;
     }
 
@@ -46,7 +47,7 @@ class PresenceMonitor {
         if (this.unsubscribe) return; // Already monitoring
 
         goOnline(this.database);
-        const userStatusDatabaseRef = ref(this.database, `/status/${user.uid}`);
+        const userStatusDatabaseRef = ref(this.database, `/presence/${user.uid}`);
         const connectedRef = ref(this.database, '.info/connected');
 
         this.unsubscribe = onValue(connectedRef, (snapshot) => {
