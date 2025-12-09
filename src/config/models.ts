@@ -1,6 +1,6 @@
 // src/config/models.ts
 
-import { googleAI } from '@genkit-ai/googleai';
+import { googleAI } from '@genkit-ai/google-genai';
 
 /**
  * A centralized place for defining model references.
