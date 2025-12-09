@@ -8,6 +8,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import { GEMINI_PRO } from '@/config/models';
 
 const RefineCardInputSchema = z.object({
   title: z.string().describe('The title of the idea to be refined.'),
@@ -31,7 +32,7 @@ const refineCardPrompt = ai.definePrompt({
     input: { schema: RefineCardInputSchema },
     output: { schema: RefineCardOutputSchema },
     config: {
-        model: "googleai/gemini-1.5-pro-preview-0514",
+        model: GEMINI_PRO,
     },
     prompt: `You are an expert product manager. Your task is to take a raw idea title and an optional brief description and expand it into a clear, concise, and actionable description for a Kanban card.
 

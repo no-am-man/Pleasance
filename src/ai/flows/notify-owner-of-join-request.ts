@@ -10,6 +10,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { getFirestore, serverTimestamp } from 'firebase-admin/firestore';
+import { GEMINI_PRO } from '@/config/models';
 
 const NotifyInputSchema = z.object({
   communityId: z.string().describe("The ID of the community."),
@@ -27,7 +28,7 @@ const notifyPrompt = ai.definePrompt({
     input: { schema: NotifyInputSchema },
     output: { schema: NotifyOutputSchema },
     config: {
-        model: 'googleai/gemini-1.5-pro-preview-0514',
+        model: GEMINI_PRO,
     },
     prompt: `You are the Concierge of the "{{communityName}}" online community.
 

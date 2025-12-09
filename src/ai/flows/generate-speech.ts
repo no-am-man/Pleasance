@@ -8,8 +8,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { googleAI } from '@genkit-ai/googleai';
 import wav from 'wav';
+import { TTS_MODEL } from '@/config/models';
 
 const GenerateSpeechInputSchema = z.object({
   text: z.string().describe('The text to convert to speech.'),
@@ -63,7 +63,7 @@ const generateSpeechFlow = ai.defineFlow(
   },
   async (input) => {
     const { media } = await ai.generate({
-      model: googleAI.model('gemini-2.5-flash-preview-tts'),
+      model: TTS_MODEL,
       prompt: input.text,
       config: {
         responseModalities: ['AUDIO'],

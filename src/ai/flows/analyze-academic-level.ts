@@ -9,6 +9,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import { GEMINI_PRO } from '@/config/models';
 
 const AnalyzeLevelInputSchema = z.object({
   studies: z.string().describe("A user's description of their autodidactic or formal studies."),
@@ -29,7 +30,7 @@ const analyzeLevelPrompt = ai.definePrompt({
     input: { schema: AnalyzeLevelInputSchema },
     output: { schema: AnalyzeLevelOutputSchema },
     config: {
-        model: "googleai/gemini-1.5-pro-preview-0514",
+        model: GEMINI_PRO,
     },
     prompt: `You are an expert academic advisor. Your task is to analyze the user's description of their studies and determine a concise, equivalent academic level.
     Focus on the depth and breadth of the subjects mentioned. Be realistic but encouraging.

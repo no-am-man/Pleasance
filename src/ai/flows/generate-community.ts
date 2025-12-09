@@ -8,6 +8,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
+import { GEMINI_PRO } from '@/config/models';
 
 const GenerateCommunityInputSchema = z.object({
   prompt: z
@@ -40,7 +41,7 @@ const generateCommunityPrompt = ai.definePrompt({
   input: {schema: GenerateCommunityInputSchema},
   output: {schema: GenerateCommunityOutputSchema},
   config: {
-    model: 'googleai/gemini-1.5-pro-preview-0514',
+    model: GEMINI_PRO,
   },
   prompt: `You are an expert at founding online communities. Based on the user's prompt, generate a name, a short description, and a welcome message.
 

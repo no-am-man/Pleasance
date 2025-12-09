@@ -10,6 +10,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { GenerateRoadmapIdeaOutputSchema } from '@/lib/types';
 import type { GenerateRoadmapIdeaOutput } from '@/lib/types';
+import { GEMINI_PRO } from '@/config/models';
 
 const GenerateIdeaInputSchema = z.object({
   prompt: z.string().describe('The user\'s core idea or prompt.'),
@@ -27,7 +28,7 @@ const generateIdeaPrompt = ai.definePrompt({
     input: { schema: GenerateIdeaInputSchema },
     output: { schema: GenerateRoadmapIdeaOutputSchema },
     config: {
-        model: "googleai/gemini-1.5-pro-preview-0514",
+        model: GEMINI_PRO,
     },
     prompt: `You are an expert product manager. Your task is to take a user's raw idea and expand it into a well-defined roadmap card.
 

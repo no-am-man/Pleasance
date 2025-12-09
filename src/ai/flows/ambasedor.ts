@@ -14,6 +14,7 @@ import { getRoadmapColumnTool } from '../tools/roadmap-tool';
 import { addBugReportTool } from '../tools/bug-reporter-tool';
 import { getCommunityDetailsTool } from '../tools/community-tool';
 import { analyzeStudiesAndBoostCommunityTool } from '../tools/academic-analyzer-tool';
+import { GEMINI_PRO } from '@/config/models';
 
 const AmbasedorInputSchema = z.object({
   userId: z.string(),
@@ -46,7 +47,7 @@ When reporting information, format it clearly using markdown.
 The current user's name is ${flowInput.userName} and their ID is ${flowInput.userId}. You MUST pass this information to any tool that requires it.`;
 
     const { response } = await ai.generate({
-        model: 'googleai/gemini-1.5-pro-preview-0514',
+        model: GEMINI_PRO,
         system: systemPrompt,
         prompt: flowInput.prompt,
         history: flowInput.history,

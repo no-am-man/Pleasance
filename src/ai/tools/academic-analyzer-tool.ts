@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { analyzeAcademicLevel } from '../flows/analyze-academic-level';
+import { GEMINI_PRO } from '@/config/models';
 
 const AnalyzeStudiesInputSchema = z.object({
   userId: z.string().describe("The ID of the user whose studies are being analyzed."),

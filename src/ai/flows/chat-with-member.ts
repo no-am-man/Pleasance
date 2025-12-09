@@ -9,6 +9,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { GenerateRequest, type ChatHistory } from 'genkit/generate';
+import { GEMINI_PRO } from '@/config/models';
 
 const MemberSchema = z.object({
   name: z.string().describe("The AI member's unique name."),
@@ -48,7 +49,7 @@ Bio: ${input.member.bio}
 Your response must be concise, engaging, and directly related to the user's message.`;
 
     const generateOptions: GenerateRequest = {
-        model: 'googleai/gemini-1.5-pro-preview-0514',
+        model: GEMINI_PRO,
         system: systemPrompt,
         prompt: input.userMessage,
     };

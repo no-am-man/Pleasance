@@ -8,6 +8,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import { IMAGEN } from '@/config/models';
 
 const GenerateAvatarsInputSchema = z.object({
   name: z.string().describe('The name of the user, to be used as a seed for the avatar style.'),
@@ -43,7 +44,7 @@ const generateAvatarsFlow = ai.defineFlow(
         
         promises.push(
             ai.generate({
-                model: 'googleai/imagen-4.0-fast-generate-001',
+                model: IMAGEN,
                 prompt: prompt,
                 config: {
                     aspectRatio: "1:1",

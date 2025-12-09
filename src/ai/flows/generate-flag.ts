@@ -11,6 +11,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import admin from 'firebase-admin';
+import { GEMINI_PRO } from '@/config/models';
 
 // 1. Schemas
 const GenerateFlagInputSchema = z.object({
@@ -59,7 +60,7 @@ const generateFlagFlow = ai.defineFlow(
     // Failure to grant this role will result in a PERMISSION_DENIED gRPC error.
     const { output } = await ai.generate({
         prompt: PROMPT_TEMPLATE,
-        model: 'googleai/gemini-1.5-pro-preview-0514',
+        model: GEMINI_PRO,
         input,
         output: { schema: GenerateFlagOutputSchema },
     });

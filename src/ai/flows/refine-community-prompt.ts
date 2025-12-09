@@ -8,6 +8,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import { GEMINI_PRO } from '@/config/models';
 
 const RefinePromptInputSchema = z.object({
   prompt: z.string().describe('The rough prompt for a community to be refined.'),
@@ -30,7 +31,7 @@ const refinePromptGenkit = ai.definePrompt({
     input: { schema: RefinePromptInputSchema },
     output: { schema: RefinePromptOutputSchema },
     config: {
-        model: 'googleai/gemini-1.5-pro-preview-0514',
+        model: GEMINI_PRO,
     },
     prompt: `You are an expert community builder. Your task is to take a user's rough idea and expand it into a detailed, evocative prompt. This new prompt will be fed into another AI to generate a community name, description, welcome message, and AI members.
 

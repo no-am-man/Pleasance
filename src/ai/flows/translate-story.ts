@@ -8,6 +8,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
+import { GEMINI_PRO } from '@/config/models';
 
 const TranslateStoryInputSchema = z.object({
   storyText: z.string().describe('The story text in the source language.'),
@@ -29,7 +30,7 @@ const translateStoryPrompt = ai.definePrompt({
   input: {schema: TranslateStoryInputSchema},
   output: {schema: TranslateStoryOutputSchema},
   config: {
-    model: 'googleai/gemini-1.5-pro-preview-0514',
+    model: GEMINI_PRO,
   },
   prompt: `Translate the following story from {{sourceLanguage}} to {{targetLanguage}}:\n\n{{{storyText}}}`,
 });

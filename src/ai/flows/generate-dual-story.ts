@@ -10,6 +10,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { DualLanguageStorySchema as StorySchema } from '@/lib/types';
 import type { DualLanguageStory as StoryDataType } from '@/lib/types';
+import { GEMINI_PRO } from '@/config/models';
 
 const GenerateDualStoryInputSchema = z.object({
   prompt: z.string().describe("A simple prompt or theme for the story."),
@@ -36,7 +37,7 @@ const dualStoryPrompt = ai.definePrompt({
     input: { schema: GenerateDualStoryInputSchema },
     output: { schema: StorySchema },
     config: {
-        model: "googleai/gemini-1.5-pro-preview-0514",
+        model: GEMINI_PRO,
     },
     prompt: `You are an expert storyteller and language teacher. Create a short, simple, and engaging story based on the user's prompt.
     The story should be suitable for a {{difficultyLevel}} language learner.

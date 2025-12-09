@@ -9,6 +9,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
+import { GEMINI_PRO } from '@/config/models';
 
 const GenerateStoryInputSchema = z.object({
   difficultyLevel: z
@@ -32,7 +33,7 @@ const generateStoryPrompt = ai.definePrompt({
   input: {schema: GenerateStoryInputSchema},
   output: {schema: GenerateStoryOutputSchema},
   config: {
-    model: 'googleai/gemini-1.5-pro-preview-0514',
+    model: GEMINI_PRO,
     safetySettings: [
         {
             category: 'HARM_CATEGORY_DANGEROUS_CONTENT',

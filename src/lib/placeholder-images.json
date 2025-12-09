@@ -1,0 +1,34 @@
+{
+  "placeholderImages": [
+    {
+      "id": "wiki-community",
+      "imageUrl": "https://images.unsplash.com/photo-1723202594781-640f7b591641?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxjb21tdW5pdHklMjBwZW9wbGV8ZW58MHx8fHwxNzY1MjA0OTg5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "community people"
+    },
+    {
+      "id": "wiki-workshop",
+      "imageUrl": "https://images.unsplash.com/photo-1615339725569-80172615f345?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxhcnQlMjB3b3Jrc2hvcHxlbnwwfHx8fDE3NjUyNTkwMDh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "art workshop"
+    },
+    {
+      "id": "wiki-museum",
+      "imageUrl": "https://images.unsplash.com/photo-1569783721854-33a99b4c0bae?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxhcnQlMjBnYWxsZXJ5fGVufDB8fHx8MTc2NTI3MDYzNnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "art gallery"
+    },
+    {
+      "id": "wiki-lingua",
+      "imageUrl": "https://images.unsplash.com/photo-1634992278141-905a73b9d799?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxsYW5ndWFnZSUyMGJvb2tzfGVufDB8fHx8MTc2NTI3MDk5NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "language books"
+    },
+    {
+      "id": "wiki-fabrication",
+      "imageUrl": "https://images.unsplash.com/photo-1549563316-5384a923453e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHwzZCUyMHByaW50ZXJ8ZW58MHx8fHwxNzY1MjcwOTk0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "3d printer"
+    },
+    {
+      "id": "wiki-treasury",
+      "imageUrl": "https://images.unsplash.com/photo-1517097473408-c0d7983cb95c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxnb2xkJTIwY29pbnN8ZW58MHx8fHwxNzY1MjcwOTk0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "gold coins"
+    }
+  ]
+}
