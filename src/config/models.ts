@@ -5,6 +5,7 @@ import { googleAI } from '@genkit-ai/google-genai';
 /**
  * A centralized place for defining model references.
  * This helps ensure consistency and makes it easy to update models.
+ * We now export the model objects directly to ensure the correct API version is used.
  */
 
 export const API_VERSION = 'v1';
