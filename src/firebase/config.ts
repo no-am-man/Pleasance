@@ -2,8 +2,6 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
-import { getStorage, type FirebaseStorage } from 'firebase/storage';
-import { getDatabase, type Database } from 'firebase/database';
 
 // IMPORTANT: REPLACE THESE PLACEHOLDER VALUES WITH YOUR ACTUAL FIREBASE CONFIG
 export const firebaseConfig = {
@@ -33,8 +31,6 @@ type FirebaseServices = {
     app: FirebaseApp;
     auth: Auth;
     firestore: Firestore;
-    storage: FirebaseStorage;
-    database: Database;
 };
 
 // --- SINGLETON PATTERN ---
@@ -48,10 +44,8 @@ const FirebaseServiceSingleton = (() => {
         
         const auth = getAuth(app);
         const firestore = getFirestore(app);
-        const storage = getStorage(app);
-        const database = getDatabase(app);
 
-        return { app, auth, firestore, storage, database };
+        return { app, auth, firestore };
     }
 
     return {
@@ -72,4 +66,4 @@ export function getFirebase(): FirebaseServices {
 
 
 // For convenience, we can also export the individual services from the getter.
-export const { firestore, auth, storage, database } = getFirebase();
+export const { firestore, auth } = getFirebase();
