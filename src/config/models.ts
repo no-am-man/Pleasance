@@ -7,6 +7,8 @@ import { googleAI } from '@genkit-ai/googleai';
  * This helps ensure consistency and makes it easy to update models.
  */
 
+export const API_VERSION = 'v1';
+
 // For complex generation, reasoning, and multi-turn chat
 export const GEMINI_PRO = googleAI.model('gemini-1.5-pro-preview-0514');
 
