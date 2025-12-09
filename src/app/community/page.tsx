@@ -1,4 +1,4 @@
-// src/app/community/page.tsx (formerly community/page.tsx)
+// src/app/community/page.tsx
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
@@ -82,6 +82,8 @@ function CommunityCard({ community, allProfiles, isOwner }: { community: Communi
     .filter((m): m is Member => m !== undefined && m.name !== undefined)
     .slice(0, 5);
 
+  const founderProfile = allProfiles.find(p => p.userId === community.ownerId);
+
   return (
     <Card 
       className="overflow-hidden shadow-lg transition-all duration-300 ease-in-out hover:shadow-primary/20 hover:-translate-y-1 cursor-pointer flex flex-col h-full"
@@ -105,7 +107,18 @@ function CommunityCard({ community, allProfiles, isOwner }: { community: Communi
       <div className="flex flex-col flex-grow">
         <CardHeader>
             <CardTitle>{community.name}</CardTitle>
-            <CardDescription className="line-clamp-2">{community.description}</CardDescription>
+            <CardDescription className="line-clamp-2 h-[40px]">{community.description}</CardDescription>
+            {founderProfile && (
+                <div className="flex items-center gap-2 pt-2 border-t border-border mt-2">
+                    <Avatar className="h-6 w-6">
+                        <AvatarImage src={founderProfile.avatarUrl || `https://i.pravatar.cc/150?u=${founderProfile.userId}`} />
+                        <AvatarFallback>{founderProfile.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-xs text-muted-foreground">
+                        Founded by {founderProfile.name}
+                    </span>
+                </div>
+            )}
         </CardHeader>
         <CardFooter className="mt-auto">
             <div className="flex -space-x-2 overflow-hidden">
@@ -157,7 +170,7 @@ function CreateCommunityForm() {
         setIsRefining(true);
         try {
             const result = await refineCommunityPromptAction({ prompt });
-            if ('error' in result) throw new Error(result.error);
+            if ('error' in result) throw new Error(String(result.error));
             form.setValue('prompt', result.refinedPrompt, { shouldValidate: true });
             toast({
                 title: t('community_idea_refined_title'),
@@ -196,8 +209,17 @@ function CreateCommunityForm() {
                 members: [], // Start with no members
             };
             
-            // The owner's UID is the first member
-            const finalMembers = [user.uid, ...(communityDetails.members || [])];
+            const ownerAsMember: Member = {
+                userId: user.uid,
+                name: user.displayName || 'Founder',
+                bio: 'The founder of this community.',
+                type: 'human',
+                role: 'Founder',
+                avatarUrl: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`
+            };
+            
+            const finalMembers: (string | Member)[] = [ownerAsMember, ...(communityDetails.members || [])];
+
 
             await addDocument(communityColRef, { ...newCommunityData, members: finalMembers });
             
@@ -322,11 +344,9 @@ export default function CommunityPage() {
                 const communitiesSnapshot = await getDocs(communitiesQuery);
                 setCommunities(communitiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community)));
 
-                // Fetch all profiles (public list)
                 const profilesQuery = query(collection(firestore, 'community-profiles'));
                 const profilesSnapshot = await getDocs(profilesQuery);
                 setAllProfiles(profilesSnapshot.docs.map(doc => doc.data() as CommunityProfile));
-
             } catch (error) {
                 console.error("Failed to fetch initial community data:", error);
             } finally {
