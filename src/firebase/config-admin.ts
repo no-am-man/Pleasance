@@ -22,7 +22,7 @@ function getAdminApp(): admin.app.App {
   const serviceAccountJSON = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
 
   if (!serviceAccountJSON) {
-      throw new Error('Server configuration error: The FIREBASE_SERVICE_ACCOUNT_JSON environment variable is not set or is empty.');
+      throw new Error('Server configuration error: The FIREBASE_SERVICE_ACCOUNT_JSON environment variable is not set or is empty. Please generate a key in your Firebase project settings and add it to your .env file.');
   }
 
   let serviceAccount: admin.ServiceAccount;
@@ -30,7 +30,7 @@ function getAdminApp(): admin.app.App {
       // Parse the JSON string into an object.
       serviceAccount = JSON.parse(serviceAccountJSON);
   } catch (e) {
-      throw new Error('Server configuration error: Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON. Please ensure it is a valid JSON string.');
+      throw new Error('Server configuration error: Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON. Please ensure it is a valid JSON string, enclosed in double quotes in your .env file.');
   }
   
   try {
@@ -42,8 +42,8 @@ function getAdminApp(): admin.app.App {
     return adminApp;
 
   } catch (e: any) {
-    if (e.code === 'auth/invalid-credential') {
-        throw new Error(`Server configuration error: The provided Firebase service account credential is invalid. This could be due to an incorrect key or a revoked key. Please generate a new key from your Firebase project settings. Original error: ${e.message}`);
+    if (e.code === 'auth/invalid-credential' || e.errorInfo?.code === 'auth/invalid-credential') {
+        throw new Error(`Server configuration error: The provided Firebase service account credential is invalid. This could be due to a revoked key. Please generate a new key from your Firebase project settings and update your .env file. Original error: ${e.message}`);
     }
     throw new Error(`Server configuration error: Failed to initialize Firebase Admin SDK. Original error: ${e.message}`);
   }
