@@ -1,4 +1,3 @@
-
 // src/app/treasury/page.tsx
 'use client';
 
@@ -302,6 +301,27 @@ export default function TreasuryPage() {
     );
   }
   
+  if (!assets || assets.length === 0) {
+    return (
+      <main className="container mx-auto max-w-2xl py-8">
+        <Card className="shadow-lg text-center">
+          <CardHeader>
+            <Info className="mx-auto h-12 w-12 text-primary" />
+            <CardTitle>{t('treasury_empty_treasury_title')}</CardTitle>
+            <CardDescription>{t('treasury_empty_treasury_desc')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild>
+              <Link href="/treasury">
+                <PlusCircle className="mr-2 h-4 w-4" /> {t('treasury_go_to_treasury_button')}
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+
   return (
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
        <div className="text-center mb-8">

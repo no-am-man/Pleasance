@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useUser } from '@/firebase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, ShieldCheck, AlertTriangle, CheckCircle, Bone, Database, Info } from 'lucide-react';
+import { LoaderCircle, ShieldCheck, AlertTriangle, CheckCircle, Bone, Database } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { runMemberSync, seedPlatformData } from '../actions';
 import { useTranslation } from '@/hooks/use-translation';
@@ -56,10 +56,10 @@ function AdminDashboard() {
 
         try {
             const result = await seedPlatformData();
-             if (typeof result === 'object' && result !== null && 'error' in result) {
+             if (typeof result === 'object' && result !== null && 'error' in result && result.error) {
                 setSeedError(String(result.error));
-            } else if (typeof result === 'string') {
-                setSeedResult(result);
+            } else if (typeof result === 'object' && result !== null && 'message' in result && result.message) {
+                setSeedResult(String(result.message));
             }
         } catch (e) {
             const message = e instanceof Error ? e.message : 'An unknown error occurred.';

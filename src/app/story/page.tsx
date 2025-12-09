@@ -1,4 +1,3 @@
-
 // src/app/story/page.tsx
 'use client';
 
@@ -13,11 +12,11 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LoaderCircle, Sparkles, LogIn, History, BookOpen, PencilRuler, Camera, Clock, X } from 'lucide-react';
 import { LANGUAGES } from '@/config/languages';
-import { generateDualStoryAction, createHistorySnapshot, generateSpeechAction, generateStoryAction, translateStoryAction } from '@/app/actions';
+import { generateDualStoryAction, createHistorySnapshot } from '@/app/actions';
 import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useUser, getFirebase } from '@/firebase';
-import { collection, query, orderBy, doc, deleteDoc, getDocs, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, deleteDoc, getDocs, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
@@ -55,6 +54,8 @@ interface StoryGenerationStrategy {
 
 class TextAndSpeechStrategy implements StoryGenerationStrategy {
     async generate(data: z.infer<typeof StoryFormSchema>, user: { uid: string }, storyRef: any): Promise<StoryDataType> {
+        const { generateDualStoryAction, generateSpeechAction } = await import('@/app/actions');
+        
         const storyResult = await generateDualStoryAction(data);
         if (storyResult.error || !('titleOriginal' in storyResult)) {
             throw new Error(storyResult.error || 'Failed to generate story text.');
@@ -271,7 +272,6 @@ function TimeMachine() {
         setSnapshots(prev => prev.filter(s => s.id !== snapshotId));
     }
 
-    if (isUserLoading) return <LoaderCircle className="w-8 h-8 animate-spin text-primary" />;
     if (!user) return null;
 
     return (

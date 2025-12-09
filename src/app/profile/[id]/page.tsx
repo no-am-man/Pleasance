@@ -1,4 +1,3 @@
-
 // src/app/profile/[id]/page.tsx
 'use client';
 
@@ -36,12 +35,20 @@ export default function UserProfilePage() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    const { firestore } = getFirebase();
-    if (!id || !firestore) {
+    if (!id) {
         setIsLoading(false);
+        setError(new Error("No profile ID provided."));
         return;
-    };
+    }
+    
     const fetchProfile = async () => {
+        const { firestore } = getFirebase();
+        if (!firestore) {
+            setIsLoading(false);
+            setError(new Error("Firestore not initialized."));
+            return;
+        }
+
         setIsLoading(true);
         try {
             const profileDocRef = doc(firestore, 'community-profiles', id as string);

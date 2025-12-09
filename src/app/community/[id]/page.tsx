@@ -1,4 +1,3 @@
-
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -434,45 +433,32 @@ export default function CommunityProfilePage() {
   const [userProfile, setUserProfile] = useState<CommunityProfile | null>(null);
 
   const [userJoinRequest, setUserJoinRequest] = useState<any | null>(null);
-  const [isRequestLoading, setIsRequestLoading] = useState(true);
   
   const [allProfiles, setAllProfiles] = useState<CommunityProfile[]>([]);
   const [allCommunities, setAllCommunities] = useState<Community[]>([]);
-  const [isLoadingAncillary, setIsLoadingAncillary] = useState(true);
+  
+  const [isAncillaryLoading, setIsAncillaryLoading] = useState(true);
 
 
-  // Effect for fetching ancillary data (runs once)
   useEffect(() => {
-    if (isUserLoading) return; // Wait for auth state to be known
-
     const fetchAncillaryData = async () => {
-        if (!firestore) {
-            setIsLoadingAncillary(false);
-            return;
-        }
-        setIsLoadingAncillary(true);
+        if (!firestore) return;
         try {
-            // Communities are public, fetch them always
-            const communitiesSnapshot = await getDocs(query(collection(firestore, 'communities')));
+            const [communitiesSnapshot, profilesSnapshot] = await Promise.all([
+                getDocs(query(collection(firestore, 'communities'))),
+                getDocs(query(collection(firestore, 'community-profiles')))
+            ]);
             setAllCommunities(communitiesSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as Community)));
-
-            // Profiles require auth, only fetch if logged in
-            if (user) {
-                const profilesSnapshot = await getDocs(query(collection(firestore, 'community-profiles')));
-                setAllProfiles(profilesSnapshot.docs.map(d => d.data() as CommunityProfile));
-            } else {
-                setAllProfiles([]); // Ensure profiles are empty for guests
-            }
+            setAllProfiles(profilesSnapshot.docs.map(d => d.data() as CommunityProfile));
         } catch (e) {
             console.error("Error fetching ancillary data:", e);
         } finally {
-            setIsLoadingAncillary(false);
+            setIsAncillaryLoading(false);
         }
     };
     fetchAncillaryData();
-  }, [isUserLoading, user]);
+  }, []);
 
-  // Effect for the main community document (real-time)
   useEffect(() => {
     if (!id || !firestore) {
         setIsLoading(false);
@@ -499,44 +485,27 @@ export default function CommunityProfilePage() {
     return () => unsubscribeCommunity();
   }, [id]);
 
-  // Effect for user-specific data (profile and join request)
   useEffect(() => {
-    if (isUserLoading) return;
-    if (!user) {
-        // If there's no user, we're done loading user-specific data.
-        setIsProfileLoading(false);
-        setIsRequestLoading(false);
-        setUserProfile(null);
-        setUserJoinRequest(null);
-        return;
+    if (isUserLoading || !user || !firestore) {
+      if (!isUserLoading) setIsLoading(false);
+      return;
     }
-    if (!firestore) return;
-
+    
     const unsubscribers: Unsubscribe[] = [];
     
     const profileDocRef = doc(firestore, 'community-profiles', user.uid);
     unsubscribers.push(onSnapshot(profileDocRef, (docSnap) => {
         setUserProfile(docSnap.exists() ? docSnap.data() as CommunityProfile : null);
-        setIsProfileLoading(false);
-    }, () => setIsProfileLoading(false))); // Also handle errors
+    }));
 
     if (id) {
-      setIsRequestLoading(true);
       const requestDocRef = doc(firestore, `communities/${id}/joinRequests/${user.uid}`);
       unsubscribers.push(onSnapshot(requestDocRef, (docSnap) => {
           setUserJoinRequest(docSnap.exists() ? docSnap.data() as any : null);
-          setIsRequestLoading(false);
-      }, (error) => {
-          console.error("Error fetching join request:", error);
-          setIsRequestLoading(false);
       }));
-    } else {
-      setIsRequestLoading(false);
     }
     
-    return () => {
-      unsubscribers.forEach(unsub => unsub());
-    };
+    return () => unsubscribers.forEach(unsub => unsub());
   }, [id, user, isUserLoading]);
 
 
@@ -547,8 +516,8 @@ export default function CommunityProfilePage() {
   const allMembers = useMemo(() => {
     if (!community?.members) return [];
     return [...community.members].sort((a, b) => {
-      if (a.type === 'human' && b.type !== 'human') return -1;
-      if (a.type !== 'human' && b.type === 'human') return 1;
+      if (typeof a === 'object' && a.type === 'human' && (typeof b !== 'object' || b.type !== 'human')) return -1;
+      if ((typeof a !== 'object' || a.type !== 'human') && typeof b === 'object' && b.type === 'human') return 1;
       return 0;
     });
   }, [community]);
@@ -556,7 +525,11 @@ export default function CommunityProfilePage() {
   const isMember = useMemo(() => {
     if (!user || !community) return false;
     if (user.uid === community.ownerId) return true;
-    return community.members.some(member => member.type === 'human' && member.userId === user.uid);
+    return community.members.some(member => {
+        if (typeof member === 'string') return member === user.uid;
+        if (typeof member === 'object') return member.userId === user.uid;
+        return false;
+    });
 }, [user, community]);
 
 
@@ -594,20 +567,13 @@ export default function CommunityProfilePage() {
   const handleInvite = async (profile: CommunityProfile) => {
     if (!community || !firestore) return;
     
-    const newMember: Member = {
-        userId: profile.userId,
-        name: profile.name,
-        bio: profile.bio,
-        role: 'Member',
-        type: 'human',
-        avatarUrl: profile.avatarUrl || '',
-    };
+    const newMemberId = profile.userId; // Just store the UID
     const communityDocRef = doc(firestore, 'communities', community.id);
     await updateDoc(communityDocRef, {
-        members: arrayUnion(newMember)
+        members: arrayUnion(newMemberId)
     });
 
-    await welcomeNewMemberAction({ communityId: community.id, communityName: community.name, newMemberName: newMember.name });
+    await welcomeNewMemberAction({ communityId: community.id, communityName: community.name, newMemberName: profile.name });
 
     toast({
         title: t('community_page_member_invited_title'),
@@ -629,11 +595,17 @@ export default function CommunityProfilePage() {
     
     const communityDocRef = doc(firestore, 'communities', community.id);
     try {
-      await updateDoc(communityDocRef, {
-        members: arrayRemove(memberToRemove)
-      });
-      toast({ title: t('community_page_member_removed_title'), description: t('community_page_member_removed_desc', { name: memberToRemove.name }) });
-      // UI will update via onSnapshot
+      // Find the correct representation to remove: could be a string UID or an object
+      const memberToRemoveIdentifier = community.members.find(m => (typeof m === 'string' && m === memberToRemove.userId) || (typeof m === 'object' && m.userId === memberToRemove.userId));
+
+      if (memberToRemoveIdentifier) {
+        await updateDoc(communityDocRef, {
+            members: arrayRemove(memberToRemoveIdentifier)
+        });
+        toast({ title: t('community_page_member_removed_title'), description: t('community_page_member_removed_desc', { name: memberToRemove.name }) });
+      } else {
+        toast({ variant: "destructive", title: "Member not found in array for removal."});
+      }
     } catch (e) {
       const message = e instanceof Error ? e.message : t('community_page_unexpected_error');
       toast({ variant: "destructive", title: t('community_page_remove_member_fail_title'), description: message });
@@ -691,7 +663,7 @@ export default function CommunityProfilePage() {
   };
 
 
-  if (isLoading || isRequestLoading || isLoadingAncillary || isUserLoading) {
+  if (isLoading || isAncillaryLoading || isUserLoading) {
     return (
       <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
         <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
@@ -826,9 +798,12 @@ export default function CommunityProfilePage() {
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 gap-6">
-                            {allMembers.map((member) => (
-                                <MemberCard key={member.userId || member.name} member={member} communityId={community.id} isOwner={isOwner} onRemove={handleRemoveMember} />
-                            ))}
+                            {allMembers.map((member) => {
+                                const memberData = typeof member === 'string' ? allProfiles.find(p => p.userId === member) : member;
+                                if (!memberData) return null;
+                                const fullMember: Member = typeof member === 'string' && memberData ? { userId: member, name: memberData.name, bio: memberData.bio, type: 'human', role: 'Member', avatarUrl: memberData.avatarUrl } : member as Member;
+                                return <MemberCard key={fullMember.userId || fullMember.name} member={fullMember} communityId={community.id} isOwner={isOwner} onRemove={handleRemoveMember} />;
+                            })}
                         </div>
                     </CardContent>
                 </Card>
@@ -840,11 +815,11 @@ export default function CommunityProfilePage() {
                                 <CardTitle>{t('community_page_invite_title')}</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                {isLoadingAncillary ? (
+                                {isAncillaryLoading ? (
                                     <LoaderCircle className="animate-spin mx-auto" />
                                 ) : allProfiles.length > 0 ? (
                                     <div className="space-y-4">
-                                        {allProfiles.filter(p => p.userId !== user?.uid && !allMembers.some(m => m.userId === p.userId)).map(profile => (
+                                        {allProfiles.filter(p => p.userId !== user?.uid && !allMembers.some(m => (typeof m === 'string' ? m : m.userId) === p.userId)).map(profile => (
                                             <Card key={profile.id} className="flex items-center p-4">
                                                 <Avatar className="w-12 h-12 mr-4">
                                                     <AvatarImage src={profile.avatarUrl || `https://i.pravatar.cc/150?u=${profile.name}`} alt={profile.name} />
@@ -924,7 +899,10 @@ export default function CommunityProfilePage() {
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                         <AlertDialogCancel>{t('community_page_delete_cancel')}</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleRemoveMember(community.members.find(m => m.userId === user.uid)!)} className="bg-destructive hover:bg-destructive/90">
+                                        <AlertDialogAction onClick={() => {
+                                            const memberToRemove = allMembers.find(m => typeof m !== 'string' && m.userId === user.uid) as Member | undefined;
+                                            if (memberToRemove) handleRemoveMember(memberToRemove);
+                                        }} className="bg-destructive hover:bg-destructive/90">
                                             {t('community_page_leave_confirm')}
                                         </AlertDialogAction>
                                     </AlertDialogFooter>

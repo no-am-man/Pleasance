@@ -1,4 +1,3 @@
-
 // src/app/community/page.tsx (formerly community/page.tsx)
 'use client';
 
