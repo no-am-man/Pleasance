@@ -8,14 +8,16 @@ import { googleAI } from '@genkit-ai/google-genai';
  */
 
 // For complex generation, reasoning, and multi-turn chat.
-// Using Flash as it's a reliable and capable model available on the beta endpoint.
-export const GEMINI_PRO = googleAI.model('gemini-1.5-flash-latest');
+// Reverting to gemini-pro to ensure stability and avoid v1beta endpoint issues.
+export const GEMINI_PRO = googleAI.model('gemini-pro');
 
 // For fast, lightweight tasks, and summarization
-export const GEMINI_FLASH = googleAI.model('gemini-1.5-flash-latest');
+// Using the same stable model for consistency.
+export const GEMINI_FLASH = googleAI.model('gemini-pro');
 
 // For image generation
 export const IMAGEN = googleAI.model('imagen-4.0-fast-generate-001');
 
 // For text-to-speech
-export const TTS_MODEL = googleAI.model('gemini-1.5-flash-tts');
+// Reverting to a standard TTS model name.
+export const TTS_MODEL = googleAI.model('text-to-speech');
