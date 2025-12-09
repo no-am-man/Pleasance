@@ -12,10 +12,10 @@ import { googleAI } from '@genkit-ai/google-genai';
 const API_OPTIONS = { apiVersion: 'v1beta' };
 
 // For complex generation, reasoning, and multi-turn chat
-export const GEMINI_PRO = googleAI.model('gemini-1.5-pro', API_OPTIONS);
+export const GEMINI_PRO = googleAI.model('gemini-1.5-pro-latest', API_OPTIONS);
 
 // For fast, lightweight tasks, and summarization
-export const GEMINI_FLASH = googleAI.model('gemini-1.5-flash', API_OPTIONS);
+export const GEMINI_FLASH = googleAI.model('gemini-1.5-flash-latest', API_OPTIONS);
 
 // For image generation
 export const IMAGEN = googleAI.model('imagen-4.0-fast-generate-001', API_OPTIONS);
