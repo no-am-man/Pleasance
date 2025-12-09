@@ -1,4 +1,3 @@
-
 // src/firebase/config.ts
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
@@ -9,7 +8,7 @@ import { getStorage, type FirebaseStorage } from 'firebase/storage';
 // This is a public configuration and is safe to be exposed on the client side.
 // Security is enforced by Firebase Security Rules and App Check.
 export const firebaseConfig = {
-  apiKey: "AIzaSyDFG320I4t1YmJpYb0j39bY9S2u2h5iC0o",
+  apiKey: "AIzaSyCMDygvQZnjbVLtr9RQn0IT2p4-STcHRk8",
   authDomain: "studio-2441219031-242ae.firebaseapp.com",
   projectId: "studio-2441219031-242ae",
   storageBucket: "studio-2441219031-242ae.appspot.com",
@@ -18,7 +17,7 @@ export const firebaseConfig = {
 };
 
 // This error is a safeguard. If you see this, you need to replace the placeholder values above.
-if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("AIzaSyC...")) {
+if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("YOUR_API_KEY_HERE")) {
   throw new Error("Firebase client configuration is incomplete. Please update the placeholder values in 'src/firebase/config.ts' with your actual Firebase project credentials.");
 }
 
