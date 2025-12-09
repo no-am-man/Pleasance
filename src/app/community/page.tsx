@@ -18,7 +18,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { createCommunityDetailsAction, refineCommunityPromptAction } from '@/app/actions';
-import { addDocument } from '@/firebase/non-blocking-updates';
+import { addDocument } from '@/firebase/db-updates';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
 import { useTranslation } from '@/hooks/use-translation';
@@ -79,7 +79,7 @@ function CommunityCard({ community, allProfiles, isOwner }: { community: Communi
 
   const visibleMembers = community.members
     .map(getMemberData)
-    .filter((m): m is Member => m !== undefined)
+    .filter((m): m is Member => m !== undefined && m.name !== undefined)
     .slice(0, 5);
 
   return (
@@ -112,7 +112,7 @@ function CommunityCard({ community, allProfiles, isOwner }: { community: Communi
             {visibleMembers.map((member, index) => (
                 <Avatar key={member.userId || member.name || index} className="inline-block h-8 w-8 rounded-full ring-2 ring-background">
                     <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
-                    <AvatarFallback>{member.name?.charAt(0) || '?'}</AvatarFallback>
+                    <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
                 </Avatar>
             ))}
             </div>

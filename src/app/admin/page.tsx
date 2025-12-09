@@ -35,11 +35,11 @@ function AdminDashboard() {
         setSyncResult(null);
 
         try {
-            const syncResult = await runMemberSync();
-            if (syncResult.error) {
-                setSyncError(syncResult.error);
-            } else if (syncResult.data) {
-                setSyncResult(syncResult.data);
+            const result = await runMemberSync();
+            if ('error' in result) {
+                setSyncError(String(result.error));
+            } else {
+                setSyncResult(result as SyncResult);
             }
         } catch (e) {
             const message = e instanceof Error ? e.message : 'An unknown error occurred.';
@@ -55,11 +55,11 @@ function AdminDashboard() {
         setSeedResult(null);
 
         try {
-            const seedResult = await seedPlatformData();
-            if (seedResult.error) {
-                setSeedError(seedResult.error);
-            } else if (seedResult.message) {
-                setSeedResult(seedResult.message);
+            const result = await seedPlatformData();
+             if (typeof result === 'object' && result !== null && 'error' in result) {
+                setSeedError(String(result.error));
+            } else if (typeof result === 'string') {
+                setSeedResult(result);
             }
         } catch (e) {
             const message = e instanceof Error ? e.message : 'An unknown error occurred.';
@@ -185,7 +185,7 @@ export default function AdminPage() {
     return (
         <main className="container mx-auto max-w-2xl py-8">
             <div className="text-center mb-8">
-                <h1 className="text-4xl font-bold text-primary">{t('navAdmin')}</h1>
+                <h1 className="text-4xl font-bold text-primary" data-testid="main-heading">{t('navAdmin')}</h1>
                 <p className="text-muted-foreground">Application Maintenance Tools</p>
             </div>
             <AdminDashboard />

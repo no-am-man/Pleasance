@@ -79,7 +79,7 @@ function CommunityCard({ community, allProfiles, isOwner }: { community: Communi
 
   const visibleMembers = community.members
     .map(getMemberData)
-    .filter((m): m is Member => m !== undefined)
+    .filter((m): m is Member => m !== undefined && m.name !== undefined)
     .slice(0, 5);
 
   return (
@@ -112,7 +112,7 @@ function CommunityCard({ community, allProfiles, isOwner }: { community: Communi
             {visibleMembers.map((member, index) => (
                 <Avatar key={member.userId || member.name || index} className="inline-block h-8 w-8 rounded-full ring-2 ring-background">
                     <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
-                    <AvatarFallback>{member.name?.charAt(0) || '?'}</AvatarFallback>
+                    <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
                 </Avatar>
             ))}
             </div>
@@ -354,7 +354,7 @@ export default function CommunityPage() {
     return (
         <main className="container mx-auto min-h-screen max-w-6xl py-8 px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-8">
-                <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
+                <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3" data-testid="main-heading">
                     <Users /> {t('community_page_title')}
                 </h1>
                 <p className="text-lg text-muted-foreground mt-2">{t('community_page_subtitle')}</p>

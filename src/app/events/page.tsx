@@ -67,7 +67,7 @@ export default function EventsPage() {
     <main className="container mx-auto max-w-4xl py-8 px-4">
       <div className="flex justify-between items-center mb-8">
         <div className="text-center sm:text-left">
-          <h1 className="text-4xl font-bold tracking-tight text-primary flex items-center gap-3">
+          <h1 className="text-4xl font-bold tracking-tight text-primary flex items-center gap-3" data-testid="main-heading">
             <CalendarHeart className="w-10 h-10" />
             {t('events_page_title')}
           </h1>
