@@ -30,9 +30,10 @@ const translatePrompt = ai.definePrompt({
     input: { schema: TranslateTextInputSchema },
     output: { schema: TranslateTextOutputSchema },
     model: GEMINI_PRO,
-    // Corrected: generationConfig is a top-level property, not nested under config
-    generationConfig: { 
-        responseMimeType: "application/json" 
+    config: { 
+        generationConfig: {
+            responseMimeType: "application/json" 
+        }
     },
     prompt: `Translate the following text to {{targetLanguage}}. Return only the translated text, with no additional commentary or formatting.
 
