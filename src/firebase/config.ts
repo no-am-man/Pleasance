@@ -9,12 +9,12 @@ import { getStorage, type FirebaseStorage } from 'firebase/storage';
 // This is a public configuration and is safe to be exposed on the client side.
 // Security is enforced by Firebase Security Rules and App Check.
 export const firebaseConfig = {
-  apiKey: "AIzaSyDFG320I4t1YmJpYb0j39bY9S2u2h5iC0",
+  apiKey: "AIzaSyDFG320I4t1YmJpYb0j39bY9S2u2h5iC0o",
   authDomain: "studio-2441219031-242ae.firebaseapp.com",
   projectId: "studio-2441219031-242ae",
   storageBucket: "studio-2441219031-242ae.appspot.com",
-  messagingSenderId: "36997451383",
-  appId: "1:36997451383:web:5317454867fa23126f3152",
+  messagingSenderId: "369974513830",
+  appId: "1:369974513830:web:5317454867fa23126f3152",
 };
 
 // This error is a safeguard. If you see this, you need to replace the placeholder values above.
