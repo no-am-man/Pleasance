@@ -1,3 +1,4 @@
+
 // src/app/page.tsx (formerly community/page.tsx)
 'use client';
 
@@ -128,7 +129,6 @@ function CreateCommunityForm() {
         setIsRefining(true);
         try {
             const result = await refineCommunityPromptAction({ prompt });
-            if (result.error) throw new Error(result.error);
             form.setValue('prompt', result.refinedPrompt, { shouldValidate: true });
             toast({
                 title: t('community_idea_refined_title'),
