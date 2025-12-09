@@ -301,7 +301,7 @@ export default function TreasuryPage() {
   return (
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
        <div className="text-center mb-8">
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3 font-headline">
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3 font-headline" data-testid="main-heading">
           <Coins /> {t('treasury_page_title')}
         </h1>
         <p className="text-lg text-muted-foreground mt-2">{t('treasury_page_subtitle')}</p>

@@ -179,7 +179,7 @@ export default function MuseumPage() {
     return (
         <main className="container mx-auto max-w-7xl py-8">
             <div className="text-center mb-12">
-                <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
+                <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3" data-testid="main-heading">
                     <Landmark className="w-10 h-10" /> {t('museum_title')}
                 </h1>
                 <p className="text-lg text-muted-foreground mt-2">{t('museum_subtitle')}</p>

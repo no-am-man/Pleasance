@@ -624,7 +624,7 @@ export default function RoadmapPage() {
   return (
     <main className="container mx-auto min-h-screen py-8">
       <div className="text-center mb-12">
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3 font-headline">
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3 font-headline" data-testid="main-heading">
           <KanbanIcon className="w-10 h-10" /> {t('roadmap_title')}
         </h1>
         <p className="text-lg text-muted-foreground mt-2">{t('roadmap_subtitle')}</p>

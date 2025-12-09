@@ -5,8 +5,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useUser } from '@/firebase';
-import { firestore } from '@/firebase/config';
+import { useUser, getFirebase } from '@/firebase';
 import { collection, query, where, orderBy, getDocs, doc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,22 +17,25 @@ import { LoaderCircle, User, Users, PlusCircle, LogIn, Search, Sparkles, Shield,
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { createCommunityDetailsAction } from '@/app/actions';
+import { createCommunityDetailsAction, refineCommunityPromptAction } from '@/app/actions';
 import { addDocument } from '@/firebase/non-blocking-updates';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
-import { refineCommunityPromptAction } from './actions';
 import { useTranslation } from '@/hooks/use-translation';
 import { Textarea } from '@/components/ui/textarea';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import type { CommunityProfile } from '@/lib/types';
+
 
 type Member = {
   name: string;
   role: string;
   bio: string;
   type: 'AI' | 'human';
+  userId?: string;
+  avatarUrl?: string;
 };
 
 type Community = {
@@ -41,7 +43,7 @@ type Community = {
   name: string;
   description: string;
   ownerId: string;
-  members: Member[];
+  members: (string | Member)[]; // Can be user IDs or full AI member objects
   flagUrl?: string;
 };
 
@@ -52,8 +54,33 @@ const CreateCommunitySchema = z.object({
   includeAiAgents: z.boolean().default(false),
 });
 
-function CommunityCard({ community, isOwner }: { community: Community, isOwner: boolean }) {
+function CommunityCard({ community, allProfiles, isOwner }: { community: Community, allProfiles: CommunityProfile[], isOwner: boolean }) {
   const router = useRouter();
+
+  const getMemberData = (memberIdentifier: string | Member): Member | undefined => {
+    if (typeof memberIdentifier === 'object' && memberIdentifier !== null) {
+      return memberIdentifier; // It's already a full Member object (AI)
+    }
+    if (typeof memberIdentifier === 'string') {
+      const profile = allProfiles.find(p => p.userId === memberIdentifier);
+      if (profile) {
+        return {
+            userId: profile.userId,
+            name: profile.name,
+            bio: profile.bio,
+            type: 'human',
+            role: 'Member', // Default role
+            avatarUrl: profile.avatarUrl,
+        };
+      }
+    }
+    return undefined; // Not found or invalid identifier
+  };
+
+  const visibleMembers = community.members
+    .map(getMemberData)
+    .filter((m): m is Member => m !== undefined)
+    .slice(0, 5);
 
   return (
     <Card 
@@ -82,10 +109,10 @@ function CommunityCard({ community, isOwner }: { community: Community, isOwner: 
         </CardHeader>
         <CardFooter className="mt-auto">
             <div className="flex -space-x-2 overflow-hidden">
-            {community.members.slice(0, 5).map((member, index) => (
-                <Avatar key={index} className="inline-block h-8 w-8 rounded-full ring-2 ring-background">
-                <AvatarImage src={`https://i.pravatar.cc/150?u=${member.name}`} />
-                <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+            {visibleMembers.map((member, index) => (
+                <Avatar key={member.userId || member.name || index} className="inline-block h-8 w-8 rounded-full ring-2 ring-background">
+                    <AvatarImage src={member.avatarUrl || `https://i.pravatar.cc/150?u=${member.userId || member.name}`} />
+                    <AvatarFallback>{member.name?.charAt(0) || '?'}</AvatarFallback>
                 </Avatar>
             ))}
             </div>
@@ -144,13 +171,15 @@ function CreateCommunityForm() {
     }
 
     async function onSubmit(values: z.infer<typeof CreateCommunitySchema>) {
-        if (!user || !firestore) {
+        if (!user) {
             toast({
                 variant: 'destructive',
                 title: t('community_must_be_logged_in'),
             });
             return;
         }
+        const { firestore } = getFirebase();
+        if (!firestore) return;
         setIsSubmitting(true);
         try {
             const communityDetails = await createCommunityDetailsAction(values);
@@ -167,25 +196,8 @@ function CreateCommunityForm() {
                 members: [], // Start with no members
             };
             
-            // Add owner as a member
-            const ownerProfileDoc = await getDoc(doc(firestore, 'community-profiles', user.uid));
-            let ownerMember;
-            if (ownerProfileDoc.exists()) {
-                const ownerProfile = ownerProfileDoc.data();
-                ownerMember = {
-                    userId: user.uid,
-                    name: ownerProfile.name,
-                    bio: ownerProfile.bio,
-                    role: 'Founder',
-                    type: 'human',
-                    avatarUrl: ownerProfile.avatarUrl || user.photoURL || '',
-                };
-            }
-            
-            const finalMembers = [
-                ...(ownerMember ? [ownerMember] : []),
-                ...(communityDetails.members || [])
-            ];
+            // The owner's UID is the first member
+            const finalMembers = [user.uid, ...(communityDetails.members || [])];
 
             await addDocument(communityColRef, { ...newCommunityData, members: finalMembers });
             
@@ -289,26 +301,40 @@ function CreateCommunityForm() {
 export default function CommunityPage() {
     const { user, isUserLoading } = useUser();
     const [communities, setCommunities] = useState<Community[]>([]);
+    const [allProfiles, setAllProfiles] = useState<CommunityProfile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const { t } = useTranslation();
     const [isCreateOpen, setIsCreateOpen] = useState(false);
 
     useEffect(() => {
-        if (isUserLoading || !firestore) {
-            // Wait for authentication to be resolved
+        if (isUserLoading) {
             return;
         }
+        const { firestore } = getFirebase();
+        if (!firestore) return;
 
-        const fetchCommunities = async () => {
+        const fetchInitialData = async () => {
             setIsLoading(true);
-            const communitiesQuery = query(collection(firestore, 'communities'), orderBy('name'));
-            const snapshot = await getDocs(communitiesQuery);
-            setCommunities(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community)));
-            setIsLoading(false);
+            try {
+                const communitiesQuery = query(collection(firestore, 'communities'), orderBy('name'));
+                const profilesQuery = query(collection(firestore, 'community-profiles'));
+                
+                const [communitiesSnapshot, profilesSnapshot] = await Promise.all([
+                    getDocs(communitiesQuery),
+                    getDocs(profilesQuery)
+                ]);
+
+                setCommunities(communitiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community)));
+                setAllProfiles(profilesSnapshot.docs.map(doc => doc.data() as CommunityProfile));
+            } catch (error) {
+                console.error("Failed to fetch initial community data:", error);
+            } finally {
+                setIsLoading(false);
+            }
         };
 
-        fetchCommunities();
+        fetchInitialData();
     }, [isUserLoading]);
 
     const filteredCommunities = useMemo(() => {
@@ -328,7 +354,7 @@ export default function CommunityPage() {
     return (
         <main className="container mx-auto min-h-screen max-w-6xl py-8 px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-8">
-                <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
+                <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3" data-testid="main-heading">
                     <Users /> {t('community_page_title')}
                 </h1>
                 <p className="text-lg text-muted-foreground mt-2">{t('community_page_subtitle')}</p>
@@ -388,6 +414,7 @@ export default function CommunityPage() {
                             <CommunityCard 
                                 key={community.id} 
                                 community={community}
+                                allProfiles={allProfiles}
                                 isOwner={user?.uid === community.ownerId}
                             />
                         ))}

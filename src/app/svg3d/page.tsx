@@ -1,4 +1,3 @@
-
 // src/app/svg3d/page.tsx
 'use client';
 
@@ -303,7 +302,7 @@ export default function PersonalWorkshopPage() {
   return (
     <main className="container mx-auto max-w-4xl py-8">
        <div className="text-center mb-8">
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3">
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3" data-testid="main-heading">
           <Sparkles className="w-10 h-10" /> {t('workshop_title')}
         </h1>
         <p className="text-lg text-muted-foreground mt-2">{t('workshop_subtitle')}</p>
@@ -432,5 +431,3 @@ export default function PersonalWorkshopPage() {
     </main>
   );
 }
-
-    

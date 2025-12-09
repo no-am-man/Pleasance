@@ -99,7 +99,7 @@ export default function HomePage() {
     return (
         <div className="container mx-auto max-w-4xl py-12 px-4">
             <div className="text-center mb-12">
-                <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-primary font-headline">
+                <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-primary font-headline" data-testid="main-heading">
                     {t('pleasance')}
                 </h1>
                 <p className="mt-4 text-xl text-muted-foreground">

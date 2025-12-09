@@ -55,19 +55,19 @@ interface StoryGenerationStrategy {
 class TextAndSpeechStrategy implements StoryGenerationStrategy {
     async generate(data: z.infer<typeof StoryFormSchema>, user: { uid: string }, storyRef: any): Promise<StoryDataType> {
         const storyResult = await generateDualStoryAction(data);
-        if (storyResult.error || !storyResult.data) {
+        if (storyResult.error || !('titleOriginal' in storyResult)) {
             throw new Error(storyResult.error || 'Failed to generate story text.');
         }
 
-        await updateDoc(storyRef, storyResult.data);
+        await updateDoc(storyRef, storyResult);
         
-        const speechResult = await generateSpeechAction({ text: storyResult.data.contentOriginal });
+        const speechResult = await generateSpeechAction({ text: storyResult.contentOriginal });
         if (speechResult.error || !speechResult.audioUrl) {
-            console.error("Speech generation failed:", speechError);
+            console.error("Speech generation failed:", speechResult.error);
             throw new Error(speechResult.error || 'Failed to generate audio.');
         }
 
-        const finalData = { ...storyResult.data, audioUrl: speechResult.audioUrl, status: 'complete' as const };
+        const finalData = { ...storyResult, audioUrl: speechResult.audioUrl, status: 'complete' as const };
         await updateDoc(storyRef, { audioUrl: speechResult.audioUrl, status: 'complete' });
         
         return { ...finalData, id: storyRef.id, createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } };
@@ -419,7 +419,7 @@ export default function StoryPage() {
         style={{
             background: 'radial-gradient(circle, hsl(var(--accent) / 0.2) 0%, transparent 70%)',
         }}>
-        <h1 className="text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3">
+        <h1 className="text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3" data-testid="main-heading">
           <BookOpen className="w-12 h-12" /> {t('nuncy_lingua_title')}
         </h1>
         <p className="text-lg text-muted-foreground mt-2">

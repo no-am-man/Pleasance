@@ -1,4 +1,3 @@
-
 // src/app/pricing/page.tsx
 'use client';
 
@@ -26,7 +25,7 @@ export default function PricingPage() {
   return (
     <main className="container mx-auto min-h-screen max-w-5xl py-12 px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-12">
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3 font-headline">
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3 font-headline" data-testid="main-heading">
           <DollarSign className="w-10 h-10" />
           {t('pricing_title')}
         </h1>
