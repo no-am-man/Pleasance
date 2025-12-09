@@ -33,7 +33,7 @@ const translatePrompt = ai.definePrompt({
     model: GEMINI_PRO,
     config: {
         generationConfig: {
-            responseMimeType: "application/json" 
+            responseMimeType: "application/json"
         }
     },
     prompt: `Translate the following text to {{targetLanguage}}. Return only the translated text, with no additional commentary or formatting.
