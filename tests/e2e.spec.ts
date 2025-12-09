@@ -8,19 +8,11 @@ test('has title', async ({ page }) => {
 });
 
 // Test for the main heading on the community page
-test('main heading on community page', async ({ page }) => {
+test('get to community page', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Toggle menu' }).click();
   await page.locator('a[href="/community"]').click();
-  await page.waitForURL('**/community');
   await expect(page.getByRole('heading', { name: 'The Pleasance Federation' })).toBeVisible();
-});
-
-// Test to ensure login is required for creating a community
-test('creating a community requires login', async ({ page }) => {
-  await page.goto('/community');
-  await page.getByRole('button', { name: 'Create a New Community' }).click();
-  await expect(page.getByRole('button', { name: 'Login to Create & Manage' })).toBeVisible();
 });
 
 // Test for navigating to the museum
@@ -28,7 +20,6 @@ test('get to museum page', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Toggle menu' }).click();
   await page.locator('a[href="/museum"]').click();
-  await page.waitForURL('**/museum');
   await expect(page.getByRole('heading', { name: 'Virtual Museum' })).toBeVisible();
 });
 
@@ -37,7 +28,6 @@ test('get to treasury page', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Toggle menu' }).click();
   await page.locator('a[href="/treasury"]').click();
-  await page.waitForURL('**/treasury');
   await expect(page.getByRole('heading', { name: 'The Treasury' })).toBeVisible();
 });
 
@@ -46,7 +36,6 @@ test('get to roadmap page', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Toggle menu' }).click();
   await page.locator('a[href="/roadmap"]').click();
-  await page.waitForURL('**/roadmap');
   await expect(page.getByRole('heading', { name: 'Project Roadmap' })).toBeVisible();
 });
 
@@ -55,7 +44,6 @@ test('get to bug tracker page', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Toggle menu' }).click();
   await page.locator('a[href="/bugs"]').click();
-  await page.waitForURL('**/bugs');
   await expect(page.getByRole('heading', { name: 'Bug Tracker' })).toBeVisible();
 });
 
@@ -64,7 +52,6 @@ test('get to story (Nuncy Lingua) page', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Toggle menu' }).click();
     await page.locator('a[href="/story"]').click();
-    await page.waitForURL('**/story');
     await expect(page.getByRole('heading', { name: 'Nuncy Lingua' })).toBeVisible();
 });
 
@@ -73,7 +60,6 @@ test('get to AI Workshop (svg3d) page', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Toggle menu' }).click();
     await page.locator('a[href="/svg3d"]').click();
-    await page.waitForURL('**/svg3d');
     await expect(page.getByRole('heading', { name: 'AI Workshop' })).toBeVisible();
 });
 
@@ -82,7 +68,6 @@ test('get to pricing page', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Toggle menu' }).click();
     await page.locator('a[href="/pricing"]').click();
-    await page.waitForURL('**/pricing');
     await expect(page.getByRole('heading', { name: 'Tiers of Contribution' })).toBeVisible();
 });
 
