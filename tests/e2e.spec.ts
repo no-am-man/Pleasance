@@ -10,8 +10,9 @@ test('has title', async ({ page }) => {
 // Test to check navigation to the main community page
 test('get to community page', async ({ page }) => {
   await page.goto('/');
-  // Click the link with text "Explore Communities"
-  await page.getByRole('link', { name: 'Explore Communities' }).click();
+  await page.getByRole('button', { name: 'Toggle menu' }).click();
+  // Click the link with text "Community"
+  await page.getByRole('link', { name: 'Community' }).click();
   // Expects the URL to contain "community"
   await expect(page).toHaveURL(/.*community/);
 });
