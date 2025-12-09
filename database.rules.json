@@ -1,10 +1,9 @@
-
 {
   "rules": {
-    "status": {
-      ".read": "auth != null",
+    "presence": {
+      ".read": true,
       "$uid": {
-        ".write": "(auth != null && auth.uid === $uid) || (newData.child('state').val() === 'offline')"
+        ".write": "auth != null && auth.uid === $uid"
       }
     }
   }
