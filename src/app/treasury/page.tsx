@@ -229,8 +229,8 @@ export default function TreasuryPage() {
 
   const fetchAllData = useCallback(async () => {
     const { firestore } = getFirebase();
-    if (isUserLoading || !user || !firestore) {
-        if (!isUserLoading) setIsLoading(false);
+    if (!user || !firestore) {
+        setIsLoading(false);
         return;
     }
     setIsLoading(true);
@@ -259,11 +259,13 @@ export default function TreasuryPage() {
     } finally {
         setIsLoading(false);
     }
-  }, [user, isUserLoading]);
+  }, [user]);
 
   useEffect(() => {
-    fetchAllData();
-  }, [fetchAllData]);
+    if (!isUserLoading) {
+        fetchAllData();
+    }
+  }, [isUserLoading, fetchAllData]);
 
   if (isUserLoading || isLoading) {
     return (

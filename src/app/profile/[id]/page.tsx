@@ -36,8 +36,8 @@ export default function UserProfilePage() {
 
   useEffect(() => {
     const { firestore } = getFirebase();
-    if (!id || !firestore || isUserLoading) {
-        if (!isUserLoading) setIsLoading(false);
+    if (!id || !firestore) {
+        setIsLoading(false);
         return;
     };
     const fetchProfile = async () => {
@@ -53,10 +53,10 @@ export default function UserProfilePage() {
         }
     }
     fetchProfile();
-  }, [id, isUserLoading]);
+  }, [id]);
 
 
-  if (isLoading) {
+  if (isLoading || isUserLoading) {
     return (
       <main className="container mx-auto flex min-h-[80vh] items-center justify-center">
         <LoaderCircle className="w-12 h-12 animate-spin text-primary" />

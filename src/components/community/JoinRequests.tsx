@@ -24,8 +24,8 @@ export function JoinRequests({ communityId, communityName }: { communityId: stri
 
     const fetchRequests = useCallback(async () => {
         const { firestore } = getFirebase();
-        if (isUserLoading || !firestore || !communityId) {
-            if (!isUserLoading) setIsLoading(false);
+        if (!firestore || !communityId) {
+            setIsLoading(false);
             return;
         }
         setIsLoading(true);
@@ -39,11 +39,13 @@ export function JoinRequests({ communityId, communityName }: { communityId: stri
         } finally {
             setIsLoading(false);
         }
-    }, [communityId, isUserLoading]);
+    }, [communityId]);
 
     useEffect(() => {
-        fetchRequests();
-    }, [fetchRequests]);
+        if (!isUserLoading) {
+            fetchRequests();
+        }
+    }, [isUserLoading, fetchRequests]);
 
     const handleRequest = async (request: JoinRequest, newStatus: 'approved' | 'rejected') => {
         const { firestore } = getFirebase();

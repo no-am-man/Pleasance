@@ -294,7 +294,7 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
     useEffect(() => {
         if (!firestore || !communityId) {
             setIsLoading(false);
-            return;
+            return () => {};
         }
         
         setIsLoading(true);
@@ -439,19 +439,26 @@ export default function CommunityProfilePage() {
 
   // Effect for fetching ancillary data (runs once)
   useEffect(() => {
+    if (isUserLoading) return; // Wait for auth state to be known
+
     const fetchAncillaryData = async () => {
-        if (isUserLoading || !firestore) {
-            if (!isUserLoading) setIsLoadingAncillary(false);
+        if (!firestore) {
+            setIsLoadingAncillary(false);
             return;
         }
         setIsLoadingAncillary(true);
         try {
-            const [communitiesSnapshot, profilesSnapshot] = await Promise.all([
-                getDocs(query(collection(firestore, 'communities'))),
-                user ? getDocs(query(collection(firestore, 'community-profiles'))) : Promise.resolve({ docs: [] })
-            ]);
+            // Communities are public, fetch them always
+            const communitiesSnapshot = await getDocs(query(collection(firestore, 'communities')));
             setAllCommunities(communitiesSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as Community)));
-            setAllProfiles(profilesSnapshot.docs.map(d => d.data() as CommunityProfile));
+
+            // Profiles require auth, only fetch if logged in
+            if (user) {
+                const profilesSnapshot = await getDocs(query(collection(firestore, 'community-profiles')));
+                setAllProfiles(profilesSnapshot.docs.map(d => d.data() as CommunityProfile));
+            } else {
+                setAllProfiles([]); // Ensure profiles are empty for guests
+            }
         } catch (e) {
             console.error("Error fetching ancillary data:", e);
         } finally {
@@ -492,31 +499,29 @@ export default function CommunityProfilePage() {
       return;
     }
 
-    let unsubscribeProfile: Unsubscribe;
-    let unsubscribeJoinRequest: Unsubscribe;
+    const unsubscribers: Unsubscribe[] = [];
     
     const profileDocRef = doc(firestore, 'community-profiles', user.uid);
-    unsubscribeProfile = onSnapshot(profileDocRef, (docSnap) => {
+    unsubscribers.push(onSnapshot(profileDocRef, (docSnap) => {
         setUserProfile(docSnap.exists() ? docSnap.data() as CommunityProfile : null);
-    });
+    }));
 
     if (id) {
       setIsRequestLoading(true);
       const requestDocRef = doc(firestore, `communities/${id}/joinRequests/${user.uid}`);
-      unsubscribeJoinRequest = onSnapshot(requestDocRef, (docSnap) => {
+      unsubscribers.push(onSnapshot(requestDocRef, (docSnap) => {
           setUserJoinRequest(docSnap.exists() ? docSnap.data() as any : null);
           setIsRequestLoading(false);
       }, (error) => {
           console.error("Error fetching join request:", error);
           setIsRequestLoading(false);
-      });
+      }));
     } else {
       setIsRequestLoading(false);
     }
     
     return () => {
-      if (unsubscribeProfile) unsubscribeProfile();
-      if (unsubscribeJoinRequest) unsubscribeJoinRequest();
+      unsubscribers.forEach(unsub => unsub());
     };
   }, [id, user, isUserLoading]);
 
