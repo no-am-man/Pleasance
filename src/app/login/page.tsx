@@ -1,3 +1,4 @@
+
 // src/app/login/page.tsx
 'use client';
 
@@ -111,11 +112,15 @@ export default function LoginPage() {
   useEffect(() => {
     if (!isUserLoading && !isProfileLoading) {
       if (user) {
-        if (profileExists) {
-          router.push('/community');
-        } else if (profileExists === false) {
-          router.push('/profile');
-        }
+        // Use a small timeout to ensure the router is ready before redirecting.
+        const timer = setTimeout(() => {
+          if (profileExists) {
+            router.push('/community');
+          } else if (profileExists === false) {
+            router.push('/profile');
+          }
+        }, 0);
+        return () => clearTimeout(timer);
       }
     }
   }, [user, isUserLoading, profileExists, isProfileLoading, router]);
