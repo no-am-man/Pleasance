@@ -24,21 +24,7 @@ export async function translateText(
   return translateTextFlow(input);
 }
 
-const translateTextPrompt = ai.definePrompt(
-  {
-    name: 'translateTextPrompt',
-    input: { schema: TranslateTextInputSchema },
-    output: { schema: TranslateTextOutputSchema },
-    config: {
-      model: 'googleai/gemini-1.5-flash-001',
-    },
-    prompt: `Translate the following text to {{targetLanguage}}. Return only the translated text, with no additional commentary or formatting.
-
-Text to translate:
-"{{{text}}}"`,
-  },
-);
-
+// The flow is now self-contained and explicitly calls the model.
 const translateTextFlow = ai.defineFlow(
   {
     name: 'translateTextFlow',
@@ -49,9 +35,17 @@ const translateTextFlow = ai.defineFlow(
     if (!input.text.trim()) {
       return { translation: '' };
     }
-    
-    // The prompt itself is a function that can be awaited.
-    const { output } = await translateTextPrompt(input);
+
+    const { output } = await ai.generate({
+      model: 'googleai/gemini-1.5-flash-001', // Model is specified directly here.
+      prompt: `Translate the following text to ${input.targetLanguage}. Return only the translated text, with no additional commentary or formatting.
+
+Text to translate:
+"${input.text}"`,
+      output: {
+        schema: TranslateTextOutputSchema,
+      },
+    });
 
     return output || { translation: input.text };
   }
