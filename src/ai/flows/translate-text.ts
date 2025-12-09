@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview A generic flow to translate a piece of text.
@@ -8,6 +7,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import { googleAI } from '@genkit-ai/google-genai';
 
 const TranslateTextInputSchema = z.object({
   text: z.string().describe('The text to be translated.'),
@@ -37,7 +37,7 @@ const translateTextFlow = ai.defineFlow(
     }
 
     const { output } = await ai.generate({
-      model: 'googleai/gemini-1.5-flash-001', // Model is specified directly here.
+      model: googleAI.model('gemini-1.5-flash-001'), // Use the imported model reference
       prompt: `Translate the following text to ${input.targetLanguage}. Return only the translated text, with no additional commentary or formatting.
 
 Text to translate:
