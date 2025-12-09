@@ -1,4 +1,4 @@
-
+// src/ai/flows/refine-roadmap-card.ts
 'use server';
 /**
  * @fileOverview A flow to refine a roadmap card idea using AI.
@@ -22,8 +22,13 @@ const RefineCardOutputSchema = z.object({
 export type RefineCardOutput = z.infer<typeof RefineCardOutputSchema>;
 
 
-export async function refineRoadmapCard(input: RefineCardInput): Promise<RefineCardOutput> {
-  return refineRoadmapCardFlow(input);
+export async function refineRoadmapCard(input: RefineCardInput): Promise<{error?: string, refinedDescription?: string}> {
+  try {
+    const result = await refineRoadmapCardFlow(input);
+    return { refinedDescription: result.refinedDescription };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'An unknown error occurred.' };
+  }
 }
 
 
@@ -31,9 +36,6 @@ const refineCardPrompt = ai.definePrompt({
     name: 'refineRoadmapCardPrompt',
     input: { schema: RefineCardInputSchema },
     output: { schema: RefineCardOutputSchema },
-    config: {
-        model: GEMINI_PRO,
-    },
     prompt: `You are an expert product manager. Your task is to take a raw idea title and an optional brief description and expand it into a clear, concise, and actionable description for a Kanban card.
 
 The description should be suitable for a public roadmap, providing context for users and developers. Focus on the "what" and the "why".
@@ -55,7 +57,7 @@ const refineRoadmapCardFlow = ai.defineFlow(
     outputSchema: RefineCardOutputSchema,
   },
   async (input) => {
-    const { output } = await refineCardPrompt(input);
+    const { output } = await refineCardPrompt(input, { model: GEMINI_PRO });
     if (!output) {
         throw new Error("The AI failed to generate a refined description.");
     }

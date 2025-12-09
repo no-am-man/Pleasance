@@ -1,4 +1,4 @@
-
+// src/ai/flows/analyze-academic-level.ts
 'use server';
 /**
  * @fileOverview A flow to analyze a user's self-described academic experience
@@ -29,9 +29,6 @@ const analyzeLevelPrompt = ai.definePrompt({
     name: 'analyzeAcademicLevelPrompt',
     input: { schema: AnalyzeLevelInputSchema },
     output: { schema: AnalyzeLevelOutputSchema },
-    config: {
-        model: GEMINI_PRO,
-    },
     prompt: `You are an expert academic advisor. Your task is to analyze the user's description of their studies and determine a concise, equivalent academic level.
     Focus on the depth and breadth of the subjects mentioned. Be realistic but encouraging.
 
@@ -53,7 +50,7 @@ const analyzeAcademicLevelFlow = ai.defineFlow(
     outputSchema: AnalyzeLevelOutputSchema,
   },
   async (input) => {
-    const { output } = await analyzeLevelPrompt(input);
+    const { output } = await analyzeLevelPrompt(input, { model: GEMINI_PRO });
     if (!output) {
         throw new Error("The AI failed to analyze the academic level.");
     }

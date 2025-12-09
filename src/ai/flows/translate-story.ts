@@ -1,4 +1,4 @@
-
+// src/ai/flows/translate-story.ts
 'use server';
 /**
  * @fileOverview Translates a story from a source language to a target language.
@@ -29,9 +29,6 @@ const translateStoryPrompt = ai.definePrompt({
   name: 'translateStoryPrompt',
   input: {schema: TranslateStoryInputSchema},
   output: {schema: TranslateStoryOutputSchema},
-  config: {
-    model: GEMINI_PRO,
-  },
   prompt: `Translate the following story from {{sourceLanguage}} to {{targetLanguage}}:\n\n{{{storyText}}}`,
 });
 
@@ -42,7 +39,7 @@ const translateStoryFlow = ai.defineFlow(
     outputSchema: TranslateStoryOutputSchema,
   },
   async input => {
-    const {output} = await translateStoryPrompt(input);
+    const {output} = await translateStoryPrompt(input, { model: GEMINI_PRO });
     
     // Ensure we always return a valid object, even if the AI returns nothing.
     const translatedText = output?.translatedText || '';

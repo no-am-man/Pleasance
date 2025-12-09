@@ -1,4 +1,4 @@
-
+// src/ai/flows/welcome-new-member.ts
 'use server';
 /**
  * @fileOverview A flow to generate a welcome message from the Concierge to a new member.
@@ -27,9 +27,6 @@ const welcomePrompt = ai.definePrompt({
     name: 'welcomeNewMemberPrompt',
     input: { schema: WelcomeInputSchema },
     output: { schema: WelcomeOutputSchema },
-    config: {
-        model: GEMINI_PRO,
-    },
     prompt: `You are the Concierge of the "{{communityName}}" online community.
 
 A new member named "{{newMemberName}}" has just joined.
@@ -41,7 +38,7 @@ Your task is to write a brief, warm, and welcoming message to them. Post this me
 export async function welcomeNewMember(input: WelcomeInput): Promise<{ success: boolean; error?: string }> {
     try {
         // Step 1: Generate the welcome message text
-        const { output } = await welcomePrompt(input);
+        const { output } = await welcomePrompt(input, { model: GEMINI_PRO });
         
         if (!output?.welcomeMessage) {
             throw new Error('AI failed to generate a welcome message.');

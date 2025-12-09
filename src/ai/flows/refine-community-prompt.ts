@@ -1,4 +1,4 @@
-
+// src/ai/flows/refine-community-prompt.ts
 'use server';
 /**
  * @fileOverview A flow to refine a user's community prompt using AI.
@@ -30,9 +30,6 @@ const refinePromptGenkit = ai.definePrompt({
     name: 'refineCommunityPrompt',
     input: { schema: RefinePromptInputSchema },
     output: { schema: RefinePromptOutputSchema },
-    config: {
-        model: GEMINI_PRO,
-    },
     prompt: `You are an expert community builder. Your task is to take a user's rough idea and expand it into a detailed, evocative prompt. This new prompt will be fed into another AI to generate a community name, description, welcome message, and AI members.
 
 The refined prompt should be rich with detail, suggesting themes, tones, and potential member archetypes.
@@ -51,7 +48,7 @@ const refineCommunityPromptFlow = ai.defineFlow(
     outputSchema: RefinePromptOutputSchema,
   },
   async (input) => {
-    const { output } = await refinePromptGenkit(input);
+    const { output } = await refinePromptGenkit(input, { model: GEMINI_PRO });
     
     if (!output) {
         throw new Error("The AI failed to generate a refined prompt.");

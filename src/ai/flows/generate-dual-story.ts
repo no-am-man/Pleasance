@@ -1,4 +1,4 @@
-
+// src/ai/flows/generate-dual-story.ts
 'use server';
 /**
  * @fileOverview Generates a story in two languages with vocabulary.
@@ -36,9 +36,6 @@ const dualStoryPrompt = ai.definePrompt({
     name: 'generateDualStoryPrompt',
     input: { schema: GenerateDualStoryInputSchema },
     output: { schema: StorySchema },
-    config: {
-        model: GEMINI_PRO,
-    },
     prompt: `You are an expert storyteller and language teacher. Create a short, simple, and engaging story based on the user's prompt.
     The story should be suitable for a {{difficultyLevel}} language learner.
 
@@ -64,7 +61,7 @@ const generateDualStoryFlow = ai.defineFlow(
     outputSchema: StorySchema,
   },
   async (input) => {
-    const { output } = await dualStoryPrompt(input);
+    const { output } = await dualStoryPrompt(input, { model: GEMINI_PRO });
     if (!output) {
       throw new Error("The AI failed to generate a story.");
     }

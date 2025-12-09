@@ -1,4 +1,4 @@
-
+// src/ai/flows/generate-roadmap-idea.ts
 'use server';
 /**
  * @fileOverview A flow to generate a new roadmap card idea from a simple prompt.
@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { GenerateRoadmapIdeaOutputSchema } from '@/lib/types';
 import type { GenerateRoadmapIdeaOutput } from '@/lib/types';
 import { GEMINI_PRO } from '@/config/models';
+import { addRoadmapCardAction } from '@/app/actions';
 
 const GenerateIdeaInputSchema = z.object({
   prompt: z.string().describe('The user\'s core idea or prompt.'),
@@ -18,8 +19,17 @@ const GenerateIdeaInputSchema = z.object({
 type GenerateIdeaInput = z.infer<typeof GenerateIdeaInputSchema>;
 
 
-export async function generateRoadmapIdea(input: GenerateIdeaInput): Promise<GenerateRoadmapIdeaOutput> {
-  return generateRoadmapIdeaFlow(input);
+export async function generateRoadmapIdea(input: GenerateIdeaInput): Promise<{error?: string, card?: GenerateRoadmapIdeaOutput}> {
+  try {
+    const cardData = await generateRoadmapIdeaFlow(input);
+    const result = await addRoadmapCardAction({ title: cardData.title, description: cardData.description });
+    if (result.error) {
+        throw new Error(result.error);
+    }
+    return { card: cardData };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'An unknown error occurred.' };
+  }
 }
 
 
@@ -27,9 +37,6 @@ const generateIdeaPrompt = ai.definePrompt({
     name: 'generateRoadmapIdeaPrompt',
     input: { schema: GenerateIdeaInputSchema },
     output: { schema: GenerateRoadmapIdeaOutputSchema },
-    config: {
-        model: GEMINI_PRO,
-    },
     prompt: `You are an expert product manager. Your task is to take a user's raw idea and expand it into a well-defined roadmap card.
 
 The output should be a JSON object with a title, a detailed description, and an array of relevant tags. The title should be concise and action-oriented. The description should clearly explain the "what" and the "why" of the feature for a public audience. The tags should be 2-3 relevant keywords.
@@ -48,7 +55,7 @@ const generateRoadmapIdeaFlow = ai.defineFlow(
     outputSchema: GenerateRoadmapIdeaOutputSchema,
   },
   async (input) => {
-    const { output } = await generateIdeaPrompt(input);
+    const { output } = await generateIdeaPrompt(input, { model: GEMINI_PRO });
     if (!output) {
         throw new Error("The AI failed to generate a roadmap idea.");
     }

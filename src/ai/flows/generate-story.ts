@@ -31,15 +31,6 @@ const generateStoryPrompt = ai.definePrompt({
   name: 'generateStoryPrompt',
   input: {schema: GenerateStoryInputSchema},
   output: {schema: GenerateStoryOutputSchema},
-  config: {
-    model: GEMINI_PRO,
-    safetySettings: [
-        {
-            category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-            threshold: 'BLOCK_ONLY_HIGH',
-        }
-    ]
-  },
   prompt: `You are a creative story writer. Write a short story in {{sourceLanguage}} for a {{difficultyLevel}} level language learner. The story should be engaging and suitable for language learning purposes.
   {{#if prompt}}
   The story should be about: "{{prompt}}".
@@ -54,7 +45,17 @@ const generateStoryFlow = ai.defineFlow(
     outputSchema: GenerateStoryOutputSchema,
   },
   async input => {
-    const { output } = await generateStoryPrompt(input);
+    const { output } = await generateStoryPrompt(input, {
+        model: GEMINI_PRO,
+        config: {
+            safetySettings: [
+                {
+                    category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+                    threshold: 'BLOCK_ONLY_HIGH',
+                }
+            ]
+        }
+    });
     
     if (!output) {
       throw new Error("AI failed to generate a story.");

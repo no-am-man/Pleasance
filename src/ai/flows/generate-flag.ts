@@ -1,4 +1,3 @@
-
 // src/ai/flows/generate-flag.ts
 'use server';
 /**
@@ -54,12 +53,13 @@ const generateFlagFlow = ai.defineFlow(
     outputSchema: GenerateFlagOutputSchema,
   },
   async (input) => {
-    const { output } = await ai.generate({
-        prompt: PROMPT_TEMPLATE,
-        model: GEMINI_PRO,
-        input,
-        output: { schema: GenerateFlagOutputSchema },
-    });
+    const { output } = await ai.prompt(
+        PROMPT_TEMPLATE, 
+        { 
+            input,
+            output: { schema: GenerateFlagOutputSchema },
+            model: GEMINI_PRO
+        });
     
     if (!output) {
       throw new Error('AI failed to generate a flag SVG.');

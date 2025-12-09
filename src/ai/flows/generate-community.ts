@@ -1,4 +1,4 @@
-
+// src/ai/flows/generate-community.ts
 'use server';
 /**
  * @fileOverview A flow to generate a community based on a user prompt, including AI members.
@@ -40,9 +40,6 @@ const generateCommunityPrompt = ai.definePrompt({
   name: 'generateCommunityPrompt',
   input: {schema: GenerateCommunityInputSchema},
   output: {schema: GenerateCommunityOutputSchema},
-  config: {
-    model: GEMINI_PRO,
-  },
   prompt: `You are an expert at founding online communities. Based on the user's prompt, generate a name, a short description, and a welcome message.
 
 Your first member must ALWAYS be a special 'Concierge' agent.
@@ -69,7 +66,7 @@ const generateCommunityFlow = ai.defineFlow(
     outputSchema: GenerateCommunityOutputSchema,
   },
   async input => {
-    const {output} = await generateCommunityPrompt(input);
+    const {output} = await generateCommunityPrompt(input, { model: GEMINI_PRO });
     return output!;
   }
 );

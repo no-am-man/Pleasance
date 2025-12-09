@@ -1,4 +1,4 @@
-
+// src/ai/flows/notify-owner-of-join-request.ts
 'use server';
 /**
  * @fileOverview A flow to notify a community owner about a new join request.
@@ -27,9 +27,6 @@ const notifyPrompt = ai.definePrompt({
     name: 'notifyOwnerPrompt',
     input: { schema: NotifyInputSchema },
     output: { schema: NotifyOutputSchema },
-    config: {
-        model: GEMINI_PRO,
-    },
     prompt: `You are the Concierge of the "{{communityName}}" online community.
 
 A user named "{{requestingUserName}}" has just requested to join the community.
@@ -41,7 +38,7 @@ Your task is to write a brief, private notification message to the community own
 export async function notifyOwnerOfJoinRequest(input: NotifyInput): Promise<{ success: boolean; error?: string }> {
     try {
         // Step 1: Generate the notification message text
-        const { output } = await notifyPrompt(input);
+        const { output } = await notifyPrompt(input, { model: GEMINI_PRO });
         
         if (!output?.notificationMessage) {
             throw new Error('AI failed to generate a notification message.');

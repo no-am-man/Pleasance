@@ -29,9 +29,6 @@ const translatePrompt = ai.definePrompt({
     name: 'translateTextPrompt',
     input: { schema: TranslateTextInputSchema },
     output: { schema: TranslateTextOutputSchema },
-    config: {
-        model: GEMINI_PRO, // Explicitly set the model here
-    },
     prompt: `Translate the following text to {{targetLanguage}}. Return only the translated text, with no additional commentary or formatting.
 
 Text to translate:
@@ -50,7 +47,7 @@ const translateTextFlow = ai.defineFlow(
       return { translation: '' };
     }
 
-    const { output } = await translatePrompt(input);
+    const { output } = await translatePrompt(input, { model: GEMINI_PRO });
 
     return output || { translation: input.text };
   }
