@@ -1,4 +1,3 @@
-
 // tests/e2e.spec.ts
 import { test, expect } from '@playwright/test';
 
@@ -10,7 +9,7 @@ test('has title', async ({ page }) => {
 
 // Test to check navigation to the main community page
 test('get to community page', async ({ page }) => {
-  await page.goto('/home');
+  await page.goto('/');
   // Click the link with text "Explore Communities"
   await page.getByRole('link', { name: 'Explore Communities' }).click();
   // Expects the URL to contain "community"
@@ -36,6 +35,7 @@ test('creating a community requires login', async ({ page }) => {
 // Test for navigating to the museum
 test('get to museum page', async ({ page }) => {
   await page.goto('/');
+  await page.getByRole('button', { name: 'Toggle menu' }).click();
   await page.getByRole('link', { name: 'Museum' }).click();
   await expect(page).toHaveURL(/.*museum/);
 });
@@ -43,6 +43,7 @@ test('get to museum page', async ({ page }) => {
 // Test for navigating to the treasury
 test('get to treasury page', async ({ page }) => {
   await page.goto('/');
+  await page.getByRole('button', { name: 'Toggle menu' }).click();
   await page.getByRole('link', { name: 'Treasury' }).click();
   await expect(page).toHaveURL(/.*treasury/);
 });
@@ -50,6 +51,7 @@ test('get to treasury page', async ({ page }) => {
 // Test for navigating to the roadmap
 test('get to roadmap page', async ({ page }) => {
   await page.goto('/');
+  await page.getByRole('button', { name: 'Toggle menu' }).click();
   await page.getByRole('link', { name: 'Roadmap' }).click();
   await expect(page).toHaveURL(/.*roadmap/);
   await expect(page.getByRole('heading', { name: 'Project Roadmap' })).toBeVisible();
@@ -58,6 +60,7 @@ test('get to roadmap page', async ({ page }) => {
 // Test for navigating to the bug tracker
 test('get to bug tracker page', async ({ page }) => {
   await page.goto('/');
+  await page.getByRole('button', { name: 'Toggle menu' }).click();
   await page.getByRole('link', { name: 'Bug Tracker' }).click();
   await expect(page).toHaveURL(/.*bugs/);
   await expect(page.getByRole('heading', { name: 'Bug Tracker' })).toBeVisible();
@@ -66,6 +69,7 @@ test('get to bug tracker page', async ({ page }) => {
 // Test for navigating to the story page
 test('get to story (Nuncy Lingua) page', async ({ page }) => {
     await page.goto('/');
+    await page.getByRole('button', { name: 'Toggle menu' }).click();
     await page.getByRole('link', { name: 'Nuncy Lingua' }).click();
     await expect(page).toHaveURL(/.*story/);
     await expect(page.getByRole('heading', { name: 'Nuncy Lingua' })).toBeVisible();
@@ -74,6 +78,7 @@ test('get to story (Nuncy Lingua) page', async ({ page }) => {
 // Test for navigating to the AI Workshop page
 test('get to AI Workshop (svg3d) page', async ({ page }) => {
     await page.goto('/');
+    await page.getByRole('button', { name: 'Toggle menu' }).click();
     await page.getByRole('link', { name: 'AI Workshop' }).click();
     await expect(page).toHaveURL(/.*svg3d/);
     await expect(page.getByRole('heading', { name: 'AI Workshop' })).toBeVisible();
@@ -82,6 +87,7 @@ test('get to AI Workshop (svg3d) page', async ({ page }) => {
 // Test for navigating to the pricing page
 test('get to pricing page', async ({ page }) => {
     await page.goto('/');
+    await page.getByRole('button', { name: 'Toggle menu' }).click();
     await page.getByRole('link', { name: 'Pricing' }).click();
     await expect(page).toHaveURL(/.*pricing/);
     await expect(page.getByRole('heading', { name: 'Tiers of Contribution' })).toBeVisible();
