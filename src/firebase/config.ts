@@ -15,7 +15,7 @@ export const firebaseConfig = {
 };
 
 // This error is a safeguard. If you see this, you need to replace the placeholder values above.
-if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("REPLACE_")) {
+if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("AIzaSyC...")) {
   throw new Error("Firebase client configuration is incomplete. Please update the placeholder values in 'src/firebase/config.ts' with your actual Firebase project credentials.");
 }
 
