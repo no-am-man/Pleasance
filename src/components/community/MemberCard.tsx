@@ -19,7 +19,7 @@ export function MemberCard({ member, communityId, isOwner, onRemove, allProfiles
     const { user } = useUser();
 
     // Hydrate string member IDs with profile data
-    const memberData: Member | null = useMemo(() => {
+    const memberData = useMemo(() => {
         if (typeof member === 'string') {
             const profile = allProfiles.find(p => p.userId === member);
             if (profile) {

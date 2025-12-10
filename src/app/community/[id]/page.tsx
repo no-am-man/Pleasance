@@ -361,8 +361,8 @@ export default function CommunityProfilePage() {
 
         if (user) {
             const userComms = allComms.filter(c => c.members.some(m => {
-                if (typeof m === 'string') return m === user.uid;
-                return m.userId === user.uid;
+                const memberId = typeof m === 'string' ? m : m.userId;
+                return memberId === user.uid;
             }));
             setUserCommunities(userComms);
         }
@@ -477,20 +477,12 @@ export default function CommunityProfilePage() {
   const handleInvite = async (profile: CommunityProfile) => {
     if (!community || !firestore) return;
     
-    const newMember: Member = {
-        userId: profile.userId,
-        name: profile.name,
-        bio: profile.bio,
-        role: 'Member',
-        type: 'human',
-        avatarUrl: profile.avatarUrl || '',
-    };
     const communityDocRef = doc(firestore, 'communities', community.id);
     await updateDoc(communityDocRef, {
-        members: arrayUnion(newMember)
+        members: arrayUnion(profile.userId)
     });
 
-    await welcomeNewMemberAction({ communityId: community.id, communityName: community.name, newMemberName: newMember.name });
+    await welcomeNewMemberAction({ communityId: community.id, communityName: community.name, newMemberName: profile.name });
 
     toast({
         title: t('community_page_member_invited_title'),
@@ -513,9 +505,7 @@ export default function CommunityProfilePage() {
     const communityDocRef = doc(firestore, 'communities', community.id);
     try {
       const memberIdentifierToRemove = community.members.find(m => {
-          if (typeof m === 'string') {
-              return m === memberToRemove.userId;
-          }
+          if (typeof m === 'string') return m === memberToRemove.userId;
           if (typeof m === 'object' && m !== null && 'userId' in m) {
             return m.userId === memberToRemove.userId;
           }

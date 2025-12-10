@@ -74,7 +74,7 @@ export const CommunitySchema = z.object({
   name: z.string(),
   description: z.string(),
   ownerId: z.string(),
-  members: z.array(MemberSchema),
+  members: z.array(z.union([z.string(), MemberSchema])),
   flagUrl: z.string().optional(),
   welcomeMessage: z.string(),
 });
