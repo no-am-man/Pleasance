@@ -6,16 +6,15 @@ import { usePathname } from 'next/navigation';
 import {
   Banknote,
   BookOpen,
-  Home,
   LogOut,
   Menu,
   Shield,
   UserCircle,
+  UserX,
   Users,
   Warehouse,
   Sparkles,
   Bug,
-  UserX,
   Bot,
   DollarSign,
   Landmark,
@@ -118,7 +117,7 @@ export function Header() {
       {
           title: t('navSystem'),
           links: [
-              { href: '/home', label: 'navWiki', icon: Info },
+              { href: '/wiki', label: 'navWiki', icon: Info },
               { href: '/pricing', label: 'navPricing', icon: DollarSign },
           ]
       }
