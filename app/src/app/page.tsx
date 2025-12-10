@@ -229,7 +229,7 @@ function CommunityCard({ community }: { community: Community }) {
   const { t } = useTranslation();
   if (!community) return null;
   
-  const owner = community.members?.find(m => m.type === 'human' && m.userId === community.ownerId);
+  const owner = community.members?.find(m => typeof m !== 'string' && m.userId === community.ownerId);
   const isOwner = user?.uid === community.ownerId;
 
   return (

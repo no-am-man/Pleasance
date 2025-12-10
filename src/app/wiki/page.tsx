@@ -102,7 +102,7 @@ export default function WikiPage() {
                     {t('pleasance')}
                 </h1>
                 <p className="mt-4 text-xl text-muted-foreground">
-                    A Federation of Republics
+                    {t('federationSubtitle')}
                 </p>
             </div>
             
@@ -131,7 +131,7 @@ export default function WikiPage() {
                                 imageHint={placeholder?.imageHint || ''}
                                 isFirst={index === 0}
                                 ctaText={exploreCta}
-                                ctaLink="/community"
+                                ctaLink="/"
                                 t={t}
                             />
                         )
