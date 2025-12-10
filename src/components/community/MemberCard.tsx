@@ -1,4 +1,3 @@
-
 // src/components/community/MemberCard.tsx
 'use client';
 
@@ -32,13 +31,16 @@ export function MemberCard({ member, communityId, isOwner, onRemove, allProfiles
                     avatarUrl: profile.avatarUrl,
                 } as Member;
             }
-            return null; // or a placeholder/loading state
+            // If the profile for the string ID isn't found in allProfiles, return null.
+            return null;
         }
+        // If it's already a Member object, just return it.
         return member;
     }, [member, allProfiles]);
 
+    // CRITICAL FIX: If memberData could not be resolved, do not render anything.
+    // This prevents rendering a card with an invalid link while data is loading.
     if (!memberData) {
-        // This can happen briefly while profiles are loading
         return null; 
     }
 
@@ -106,5 +108,3 @@ export function MemberCard({ member, communityId, isOwner, onRemove, allProfiles
       </div>
     );
 }
-
-    
