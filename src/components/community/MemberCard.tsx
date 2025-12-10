@@ -35,7 +35,7 @@ export function MemberCard({ member, communityId, isOwner, onRemove, allProfiles
             // If the profile for the string ID isn't found in allProfiles, return null.
             return null;
         }
-        // If it's already a Member object (an AI), just return it.
+        // If it's already a Member object, just return it.
         return member;
     }, [member, allProfiles]);
 
