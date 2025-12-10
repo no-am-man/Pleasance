@@ -225,6 +225,7 @@ function CommunityCard({ community }: { community: Community }) {
   const { user } = useUser();
   const { t } = useTranslation();
   const owner = community.members.find(m => typeof m !== 'string' && m.userId === community.ownerId);
+  const isOwner = user?.uid === community.ownerId;
 
   return (
     <Card className="flex flex-col shadow-lg hover:shadow-primary/20 transition-shadow duration-300">
@@ -256,7 +257,7 @@ function CommunityCard({ community }: { community: Community }) {
       <CardContent>
          <Button asChild className="w-full">
             <Link href={`/community/${community.id}`}>
-                {t('community_request_to_join')}
+                {isOwner ? 'View Your Community' : t('community_request_to_join')}
             </Link>
         </Button>
       </CardContent>
