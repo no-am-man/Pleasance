@@ -1,3 +1,4 @@
+
 // src/components/community/MemberCard.tsx
 'use client';
 
@@ -18,7 +19,7 @@ export function MemberCard({ member, communityId, isOwner, onRemove, allProfiles
     const { user } = useUser();
 
     // Hydrate string member IDs with profile data
-    const memberData = useMemo(() => {
+    const memberData: Member | null = useMemo(() => {
         if (typeof member === 'string') {
             const profile = allProfiles.find(p => p.userId === member);
             if (profile) {
@@ -34,7 +35,7 @@ export function MemberCard({ member, communityId, isOwner, onRemove, allProfiles
             // If the profile for the string ID isn't found in allProfiles, return null.
             return null;
         }
-        // If it's already a Member object, just return it.
+        // If it's already a Member object (an AI), just return it.
         return member;
     }, [member, allProfiles]);
 

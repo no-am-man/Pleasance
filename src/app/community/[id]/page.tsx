@@ -1,3 +1,4 @@
+
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -225,7 +226,7 @@ function FormBubble({ form, allCommunities, userCommunities, isMember, onClick }
 }
 
 
-function SphericalizingChatRoom({ communityId, isOwner, allMembers, allCommunities, userCommunities, isMember }: { communityId: string; isOwner: boolean, allMembers: Member[], allCommunities: Community[], userCommunities: Community[], isMember: boolean }) {
+function SphericalizingChatRoom({ communityId, isOwner, allMembers, allCommunities, userCommunities, isMember }: { communityId: string; isOwner: boolean, allMembers: (Member | string)[], allCommunities: Community[], userCommunities: Community[], isMember: boolean }) {
     const { user } = useUser();
     const { t } = useTranslation();
     const { firestore } = getFirebase();
@@ -359,10 +360,7 @@ export default function CommunityProfilePage() {
         setAllProfiles(profilesSnapshot.docs.map(d => ({id: d.id, ...d.data()} as CommunityProfile)));
 
         if (user) {
-            const userComms = allComms.filter(c => c.members.some(m => {
-                const memberId = typeof m === 'string' ? m : m.userId;
-                return memberId === user.uid;
-            }));
+            const userComms = allComms.filter(c => c.members.some(memberId => memberId === user.uid));
             setUserCommunities(userComms);
         }
       } catch (e) {
@@ -426,20 +424,22 @@ export default function CommunityProfilePage() {
   const allMembers = useMemo(() => {
     if (!community?.members) return [];
     return [...community.members].sort((a, b) => {
-        if (typeof a === 'string' || typeof b === 'string') return 0;
-        if (a.type === 'human' && b.type !== 'human') return -1;
-        if (a.type !== 'human' && b.type === 'human') return 1;
-        return 0;
+        if (typeof a === 'string') { // a is human
+            if (typeof b !== 'string') return -1; // b is AI, human comes first
+        } else { // a is AI
+            if (typeof b === 'string') return 1; // b is human, AI comes second
+        }
+        return 0; // both are AI or both are human (don't reorder within type)
     });
   }, [community]);
 
   const isMember = useMemo(() => {
     if (!user || !community) return false;
-    return allMembers.some(member => {
+    return community.members.some(member => {
         const memberId = typeof member === 'string' ? member : member.userId;
         return memberId === user.uid;
     });
-}, [user, community, allMembers]);
+}, [user, community]);
 
 
   const handleRequestToJoin = async () => {
@@ -476,20 +476,12 @@ export default function CommunityProfilePage() {
   const handleInvite = async (profile: CommunityProfile) => {
     if (!community || !firestore) return;
     
-    const newMember: Member = {
-        userId: profile.userId,
-        name: profile.name,
-        bio: profile.bio,
-        role: 'Member',
-        type: 'human',
-        avatarUrl: profile.avatarUrl || '',
-    };
     const communityDocRef = doc(firestore, 'communities', community.id);
     await updateDoc(communityDocRef, {
-        members: arrayUnion(newMember)
+        members: arrayUnion(profile.userId) // Add the user ID string
     });
 
-    await welcomeNewMemberAction({ communityId: community.id, communityName: community.name, newMemberName: newMember.name });
+    await welcomeNewMemberAction({ communityId: community.id, communityName: community.name, newMemberName: profile.name });
 
     toast({
         title: t('community_page_member_invited_title'),
@@ -513,9 +505,7 @@ export default function CommunityProfilePage() {
     try {
       const memberIdentifierToRemove = community.members.find(m => {
           if (typeof m === 'string') return m === memberToRemove.userId;
-          if (typeof m === 'object' && m !== null && 'userId' in m) {
-            return m.userId === memberToRemove.userId;
-          }
+          if (typeof m === 'object' && m !== null) return m.name === memberToRemove.name; // For AI members
           return false;
       });
 
@@ -720,7 +710,7 @@ export default function CommunityProfilePage() {
                     <CardContent>
                         <div className="grid grid-cols-1 gap-6">
                             {allMembers.map((member) => (
-                                <MemberCard key={typeof member === 'string' ? member : (member.userId || member.name)} member={member} communityId={community.id} isOwner={isOwner} onRemove={handleRemoveMember} allProfiles={allProfiles}/>
+                                <MemberCard key={typeof member === 'string' ? member : member.name} member={member} communityId={community.id} isOwner={isOwner} onRemove={handleRemoveMember} allProfiles={allProfiles}/>
                             ))}
                         </div>
                     </CardContent>
@@ -825,9 +815,17 @@ export default function CommunityProfilePage() {
                                     <AlertDialogFooter>
                                         <AlertDialogCancel>{t('community_page_delete_cancel')}</AlertDialogCancel>
                                         <AlertDialogAction onClick={() => {
-                                            const memberToRemove = allMembers.find(m => typeof m !== 'string' && m.userId === user?.uid);
-                                            if (memberToRemove) {
-                                                handleRemoveMember(memberToRemove as Member);
+                                            const memberData = allProfiles.find(p => p.userId === user?.uid);
+                                            if (memberData) {
+                                                const memberToRemove = {
+                                                    userId: memberData.userId,
+                                                    name: memberData.name,
+                                                    bio: memberData.bio,
+                                                    role: 'Member',
+                                                    type: 'human' as const,
+                                                    avatarUrl: memberData.avatarUrl
+                                                };
+                                                handleRemoveMember(memberToRemove);
                                             }
                                         }} className="bg-destructive hover:bg-destructive/90">
                                             {t('community_page_leave_confirm')}

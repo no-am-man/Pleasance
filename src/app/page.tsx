@@ -22,7 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { FederationDiagram } from '@/components/federation-diagram';
 import { useTranslation } from '@/hooks/use-translation';
-import type { Community, Member } from '@/lib/types';
+import type { Community, Member, CommunityProfile } from '@/lib/types';
 import Image from 'next/image';
 import { Separator } from '@/components/ui/separator';
 
@@ -94,30 +94,16 @@ function CreateCommunityCard() {
 
       const communityRef = doc(collection(firestore, 'communities'));
       
-      const profileRef = doc(firestore, 'community-profiles', user.uid);
-      const profileSnap = await getDoc(profileRef);
-      
-      const ownerMember: Member = {
-          userId: user.uid,
-          name: user.displayName || 'Founder',
-          bio: 'Community Founder',
-          role: 'Founder',
-          type: 'human',
-          avatarUrl: user.photoURL || '',
-      };
-
-      if (profileSnap.exists()) {
-        const profile = profileSnap.data();
-        ownerMember.name = profile.name;
-        ownerMember.bio = profile.bio;
-        ownerMember.avatarUrl = profile.avatarUrl || user.photoURL || '';
-      }
+      const allMembers = [
+        user.uid, // Add founder as a string ID
+        ...newCommunityData.members, // Add AI members as objects
+      ];
       
       batch.set(communityRef, {
         ...newCommunityData,
         id: communityRef.id,
         ownerId: user.uid,
-        members: [ownerMember, ...newCommunityData.members],
+        members: allMembers, // Use the new consistent array
         createdAt: serverTimestamp(),
       });
       
@@ -224,11 +210,12 @@ function CreateCommunityCard() {
   );
 }
 
-function CommunityCard({ community }: { community: Community }) {
+function CommunityCard({ community, allProfiles }: { community: Community, allProfiles: CommunityProfile[] }) {
   const { user } = useUser();
   const { t } = useTranslation();
   if (!community) return null;
-  const owner = community.members.find(m => typeof m !== 'string' && m.userId === community.ownerId);
+  
+  const ownerProfile = useMemo(() => allProfiles.find(p => p.userId === community.ownerId), [allProfiles, community.ownerId]);
   const isOwner = user?.uid === community.ownerId;
 
   return (
@@ -253,12 +240,12 @@ function CommunityCard({ community }: { community: Community }) {
             <UserIcon className="h-4 w-4 mr-2" />
             <span>
               {t('community_founded_by')}{' '}
-              {owner && owner.userId ? (
-                <Link href={`/profile/${owner.userId}`} className="font-semibold underline hover:text-primary">
-                  {owner.name || 'Founder'}
+              {ownerProfile ? (
+                <Link href={`/profile/${ownerProfile.userId}`} className="font-semibold underline hover:text-primary">
+                  {ownerProfile.name || 'Founder'}
                 </Link>
               ) : (
-                <span>{owner?.name || 'Founder'}</span>
+                <span>Founder</span>
               )}
             </span>
         </div>
@@ -325,6 +312,10 @@ export default function CommunitiesPage() {
     }, [firestore]);
 
     const { data: communities, isLoading: isLoadingCommunities } = useCollection<Community>(communitiesQuery);
+    
+    const { data: allProfiles, isLoading: isLoadingProfiles } = useCollection<CommunityProfile>(
+        useMemoFirebase(() => firestore ? query(collection(firestore, 'community-profiles')) : null, [firestore])
+    );
 
     const filteredCommunities = useMemo(() => {
         if (!communities) return [];
@@ -336,7 +327,7 @@ export default function CommunitiesPage() {
         return communities.filter(c => c.ownerId === user.uid);
     }, [user, communities]);
 
-    const isLoading = isUserLoading || isLoadingCommunities;
+    const isLoading = isUserLoading || isLoadingCommunities || isLoadingProfiles;
 
   return (
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
@@ -353,7 +344,7 @@ export default function CommunitiesPage() {
                      <h2 className="text-3xl font-bold mb-6 font-headline">{t('community_your_communities')}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {userCommunities.map(community => (
-                            <CommunityCard key={community.id} community={community} />
+                            <CommunityCard key={community.id} community={community} allProfiles={allProfiles || []}/>
                         ))}
                     </div>
                     <Separator className="my-12" />
@@ -378,7 +369,7 @@ export default function CommunitiesPage() {
                 ) : filteredCommunities.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {filteredCommunities.filter(c => !userCommunities.some(uc => uc.id === c.id)).map(community => (
-                            <CommunityCard key={community.id} community={community} />
+                            <CommunityCard key={community.id} community={community} allProfiles={allProfiles || []} />
                         ))}
                     </div>
                 ) : (
