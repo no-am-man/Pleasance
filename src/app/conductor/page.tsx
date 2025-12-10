@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Bot, User, Send, LoaderCircle, LogIn, Info } from 'lucide-react';
+import { Bot, User, Send, LoaderCircle, LogIn, Info, Link as LinkIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { conductSuperAgentAction } from '../actions';
@@ -49,23 +49,67 @@ function ToolCall({ part }: { part: ContentPart }) {
 
 function AmbassadorExplanation() {
     const { t } = useTranslation();
+    const [echoUrl, setEchoUrl] = useState('');
+    
+    const handleEchoSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!echoUrl.trim()) return;
+        const prompt = `Echo this form into my current community: ${echoUrl}`;
+        // This is a bit of a hack to inject the action into the main chat input.
+        // A more robust solution might use a dedicated button in this component.
+        const inputElement = document.querySelector('form input[placeholder^="Ask the Ambassador"]') as HTMLInputElement;
+        const submitButton = inputElement?.nextElementSibling as HTMLButtonElement;
+        
+        if (inputElement) {
+            inputElement.value = prompt;
+            // We need to manually trigger the 'change' event for React's state to update.
+            const event = new Event('input', { bubbles: true });
+            inputElement.dispatchEvent(event);
+
+            // A small delay to ensure the state updates before we "click"
+            setTimeout(() => {
+                submitButton?.click();
+                setEchoUrl('');
+            }, 100);
+        }
+    };
 
     return (
-        <Card className="mt-8">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Info className="text-primary"/> {t('ambasedor_explanation_title')}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-muted-foreground">
-                <p>{t('ambasedor_explanation_p1')}</p>
-                <p>{t('ambasedor_explanation_p2')}</p>
-                <ul className="list-disc pl-5 space-y-2">
-                    <li>{t('ambasedor_explanation_li1')}</li>
-                    <li>{t('ambasedor_explanation_li2')}</li>
-                    <li>{t('ambasedor_explanation_li3')}</li>
-                </ul>
-                <p>{t('ambasedor_explanation_p3')}</p>
-            </CardContent>
-        </Card>
+        <div className="mt-8 space-y-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><LinkIcon className="text-primary"/> Echo a Thought-Form</CardTitle>
+                    <CardDescription>
+                        Paste the full URL of a community page containing a thought-form you wish to echo into your active community.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleEchoSubmit} className="flex gap-2">
+                        <Input 
+                            value={echoUrl} 
+                            onChange={(e) => setEchoUrl(e.target.value)} 
+                            placeholder="e.g., https://your-app/community/community-id/..."
+                        />
+                        <Button type="submit">Echo</Button>
+                    </form>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Info className="text-primary"/> {t('ambasedor_explanation_title')}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 text-muted-foreground">
+                    <p>{t('ambasedor_explanation_p1')}</p>
+                    <p>{t('ambasedor_explanation_p2')}</p>
+                    <ul className="list-disc pl-5 space-y-2">
+                        <li>{t('ambasedor_explanation_li1')}</li>
+                        <li>{t('ambasedor_explanation_li2')}</li>
+                        <li>{t('ambasedor_explanation_li3')}</li>
+                    </ul>
+                    <p>{t('ambasedor_explanation_p3')}</p>
+                </CardContent>
+            </Card>
+        </div>
     )
 }
 
@@ -179,7 +223,7 @@ export default function ConductorPage() {
                                 <div className={cn("rounded-lg px-4 py-2 max-w-[85%]", msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
                                     {msg.content.map((part, partIndex) => {
                                         if (part.type === 'text') {
-                                            return <div key={partIndex} dangerouslySetInnerHTML={{ __html: marked(part.text) }} />;
+                                            return <div key={partIndex} className="prose dark:prose-invert prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: marked(part.text) }} />;
                                         }
                                         if (part.type === 'toolRequest') {
                                             return <ToolCall key={partIndex} part={part} />;

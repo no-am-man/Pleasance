@@ -1,4 +1,3 @@
-
 // src/ai/flows/ambasedor.ts
 'use server';
 /**
@@ -12,7 +11,7 @@ import { initializeAdminApp } from '@/firebase/config-admin';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getRoadmapColumnTool } from '../tools/roadmap-tool';
 import { addBugReportTool } from '../tools/bug-reporter-tool';
-import { getCommunityDetailsTool } from '../tools/community-tool';
+import { getCommunityDetailsTool, echoThoughtFormTool } from '../tools/community-tool';
 import { analyzeStudiesAndBoostCommunityTool } from '../tools/academic-analyzer-tool';
 import { GEMINI_PRO } from '@/config/models';
 
@@ -51,7 +50,7 @@ The current user's name is ${flowInput.userName} and their ID is ${flowInput.use
         system: systemPrompt,
         prompt: flowInput.prompt,
         history: flowInput.history,
-        tools: [getRoadmapColumnTool, addBugReportTool, getCommunityDetailsTool, analyzeStudiesAndBoostCommunityTool],
+        tools: [getRoadmapColumnTool, addBugReportTool, getCommunityDetailsTool, analyzeStudiesAndBoostCommunityTool, echoThoughtFormTool],
     });
 
     return response.content;
