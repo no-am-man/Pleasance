@@ -7,7 +7,7 @@ import { firestore } from '@/firebase/config';
 import { doc, collection, query, orderBy, serverTimestamp, where, arrayUnion, arrayRemove, updateDoc, getDoc, getDocs, setDoc, onSnapshot, Unsubscribe, addDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info, LogOut, Wrench, Banknote, UserX, CornerDownRight, BookOpen, Trash2 } from 'lucide-react';
+import { LoaderCircle, AlertCircle, ArrowLeft, Bot, User, PlusCircle, Send, MessageSquare, LogIn, Check, X, Hourglass, CheckCircle, Circle, Undo2, Ban, RefreshCw, Flag, Save, Download, Sparkles, Presentation, KanbanIcon, Info, LogOut, Wrench, Banknote, UserX, CornerDownRight, BookOpen, Trash2, GitBranch } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -16,9 +16,11 @@ import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
-import { generateCommunityFlagAction, welcomeNewMemberAction, notifyOwnerOfJoinRequestAction } from '@/app/actions';
+import { generateCommunityFlagAction, welcomeNewMemberAction, notifyOwnerOfJoinRequestAction, echoThoughtFormAction } from '@/app/actions';
 import { addDocument } from '@/firebase/db-updates';
 import { PresentationHall } from '@/components/community/PresentationHall';
 import { JoinRequests } from '@/components/community/JoinRequests';
@@ -85,7 +87,94 @@ function TextFormForm({ communityId, onFormSent }: { communityId: string, onForm
     );
 }
 
-function FormBubble({ form, allCommunities, onClick }: { form: Form; allCommunities: Community[]; onClick: () => void }) {
+function EchoFormDialog({ form, userCommunities }: { form: Form; userCommunities: Community[] }) {
+    const { user } = useUser();
+    const { toast } = useToast();
+    const [isEchoing, setIsEchoing] = useState(false);
+    const [selectedCommunity, setSelectedCommunity] = useState('');
+    const [isOpen, setIsOpen] = useState(false);
+
+    const handleEcho = async () => {
+        if (!user || !selectedCommunity) {
+            toast({ variant: "destructive", title: "Selection Required", description: "Please select a community to echo to." });
+            return;
+        }
+        setIsEchoing(true);
+        try {
+            const result = await echoThoughtFormAction({
+                sourceCommunityId: form.communityId,
+                sourceFormId: form.id,
+                targetCommunityId: selectedCommunity,
+                userId: user.uid,
+                userName: user.displayName || 'Anonymous',
+                userAvatarUrl: user.photoURL || undefined,
+            });
+            toast({ title: "Successfully Echoed!", description: `The thought-form has been echoed to the selected community.` });
+            setIsOpen(false);
+        } catch (e) {
+            const message = e instanceof Error ? e.message : "An unexpected error occurred.";
+            toast({ variant: "destructive", title: "Echo Failed", description: message });
+        } finally {
+            setIsEchoing(false);
+        }
+    };
+    
+    const availableCommunities = userCommunities.filter(c => c.id !== form.communityId);
+
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
+                    <GitBranch className="mr-2 h-4 w-4" />
+                    Echo
+                </Button>
+            </DialogTrigger>
+            <DialogContent onClick={(e) => e.stopPropagation()}>
+                <DialogHeader>
+                    <DialogTitle>Echo a Thought-Form</DialogTitle>
+                    <DialogDescription>
+                        Select one of your communities to replicate this thought-form into its feed.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <Card className="p-4 bg-muted">
+                        <p className="text-sm font-medium">"{form.text}"</p>
+                        <p className="text-xs text-muted-foreground mt-1">- {form.userName}</p>
+                    </Card>
+                    
+                    {availableCommunities.length > 0 ? (
+                         <Select onValueChange={setSelectedCommunity} value={selectedCommunity}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Choose a community..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {availableCommunities.map(community => (
+                                    <SelectItem key={community.id} value={community.id}>
+                                        {community.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    ) : (
+                        <p className="text-sm text-center text-muted-foreground py-4">You are not a member of any other communities to echo this to.</p>
+                    )}
+                   
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button variant="ghost">Cancel</Button>
+                    </DialogClose>
+                    <Button onClick={handleEcho} disabled={isEchoing || !selectedCommunity || availableCommunities.length === 0}>
+                        {isEchoing ? <LoaderCircle className="animate-spin mr-2" /> : <GitBranch className="mr-2 h-4 w-4" />}
+                        Confirm Echo
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function FormBubble({ form, allCommunities, userCommunities, isMember, onClick }: { form: Form; allCommunities: Community[]; userCommunities: Community[]; isMember: boolean; onClick: () => void }) {
     const originCommunity = allCommunities.find(c => c.id === form.originCommunityId);
 
     return (
@@ -96,7 +185,7 @@ function FormBubble({ form, allCommunities, onClick }: { form: Form; allCommunit
             exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.3 } }}
             transition={{ type: 'spring', stiffness: 200, damping: 20 }}
             whileHover={{ scale: 1.02, zIndex: 10 }}
-            className="w-full max-w-lg mx-auto cursor-pointer -mt-8 first:mt-0"
+            className="w-full max-w-lg mx-auto cursor-pointer -mt-8 first:mt-0 group"
             onClick={onClick}
         >
             <Card className="bg-card shadow-lg flex items-center gap-3 p-3">
@@ -116,6 +205,11 @@ function FormBubble({ form, allCommunities, onClick }: { form: Form; allCommunit
                     </div>
                     <p className="font-medium text-sm text-foreground mt-0.5 line-clamp-2">{form.text}</p>
                 </div>
+                 {isMember && (
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <EchoFormDialog form={form} userCommunities={userCommunities} />
+                    </div>
+                )}
                  {originCommunity?.flagUrl && (
                     <div className="w-8 h-8 flex-shrink-0 relative">
                         <Image src={originCommunity.flagUrl} alt={`${originCommunity.name} Flag`} fill className="rounded-full object-cover border border-border" />
@@ -127,7 +221,7 @@ function FormBubble({ form, allCommunities, onClick }: { form: Form; allCommunit
 }
 
 
-function SphericalizingChatRoom({ communityId, isOwner, allMembers, allCommunities }: { communityId: string; isOwner: boolean, allMembers: Member[], allCommunities: Community[] }) {
+function SphericalizingChatRoom({ communityId, isOwner, allMembers, allCommunities, userCommunities, isMember }: { communityId: string; isOwner: boolean, allMembers: Member[], allCommunities: Community[], userCommunities: Community[], isMember: boolean }) {
     const { user } = useUser();
     const { t } = useTranslation();
     
@@ -207,7 +301,7 @@ function SphericalizingChatRoom({ communityId, isOwner, allMembers, allCommuniti
                     <AnimatePresence>
                         {visibleForms?.map(form => {
                             const key = form.id || `${form.userId}-${form.createdAt?.seconds || Date.now()}`;
-                            return <FormBubble key={key} form={form} allCommunities={allCommunities} onClick={() => handleBubbleClick(form.id)} />
+                            return <FormBubble key={key} form={form} allCommunities={allCommunities} userCommunities={userCommunities} isMember={isMember} onClick={() => handleBubbleClick(form.id)} />
                         })}
                     </AnimatePresence>
                     {!isLoading && visibleForms && visibleForms.length === 0 && <p className="flex items-center justify-center text-muted-foreground text-center h-full">{t('community_page_no_messages')}</p>}
@@ -238,6 +332,7 @@ export default function CommunityProfilePage() {
   
   const [allProfiles, setAllProfiles] = useState<CommunityProfile[]>([]);
   const [allCommunities, setAllCommunities] = useState<Community[]>([]);
+  const [userCommunities, setUserCommunities] = useState<Community[]>([]);
 
   // Effect for all data fetching
   useEffect(() => {
@@ -255,8 +350,14 @@ export default function CommunityProfilePage() {
           getDocs(query(collection(firestore, 'communities'))),
           getDocs(query(collection(firestore, 'community-profiles'))),
         ]);
-        setAllCommunities(communitiesSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as Community)));
+        const allComms = communitiesSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as Community));
+        setAllCommunities(allComms);
         setAllProfiles(profilesSnapshot.docs.map(d => d.data() as CommunityProfile));
+
+        if (user) {
+            setUserCommunities(allComms.filter(c => c.members.some(m => (typeof m !== 'string' && m.userId === user.uid) || (typeof m === 'string' && m === user.uid))));
+        }
+
       } catch (e) {
         console.error("Error fetching ancillary data:", e);
         // We can let the component render without this data, it's not critical
@@ -584,7 +685,7 @@ export default function CommunityProfilePage() {
                 {isOwner && <TabsTrigger value="admin">{t('community_tab_admin')}</TabsTrigger>}
             </TabsList>
             <TabsContent value="feed" className="mt-6">
-                <SphericalizingChatRoom communityId={community.id} isOwner={isOwner} allMembers={allMembers} allCommunities={allCommunities} />
+                <SphericalizingChatRoom communityId={community.id} isOwner={isOwner} allMembers={allMembers} allCommunities={allCommunities} userCommunities={userCommunities} isMember={isMember}/>
             </TabsContent>
             <TabsContent value="members" className="mt-6">
                 <Card>

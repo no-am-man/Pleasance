@@ -49,30 +49,6 @@ function ToolCall({ part }: { part: ContentPart }) {
 
 function AmbassadorExplanation() {
     const { t } = useTranslation();
-    const [echoUrl, setEchoUrl] = useState('');
-    
-    const handleEchoSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!echoUrl.trim()) return;
-        const prompt = `Echo this form into my current community: ${echoUrl}`;
-        // This is a bit of a hack to inject the action into the main chat input.
-        // A more robust solution might use a dedicated button in this component.
-        const inputElement = document.querySelector('form input[placeholder^="Ask the Ambassador"]') as HTMLInputElement;
-        const submitButton = inputElement?.nextElementSibling as HTMLButtonElement;
-        
-        if (inputElement) {
-            inputElement.value = prompt;
-            // We need to manually trigger the 'change' event for React's state to update.
-            const event = new Event('input', { bubbles: true });
-            inputElement.dispatchEvent(event);
-
-            // A small delay to ensure the state updates before we "click"
-            setTimeout(() => {
-                submitButton?.click();
-                setEchoUrl('');
-            }, 100);
-        }
-    };
 
     return (
         <div className="mt-8 space-y-8">
@@ -88,22 +64,6 @@ function AmbassadorExplanation() {
                         <li><code className="bg-muted px-1 py-0.5 rounded-sm">/bug Title: "Mobile view is broken" Desc: "The main page does not render correctly on mobile devices." P: high</code> - {t('ambasedor_explanation_li2')}</li>
                         <li><code className="bg-muted px-1 py-0.5 rounded-sm">/community "Pleasance"</code> - {t('ambasedor_explanation_li3')}</li>
                     </ul>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><LinkIcon className="text-primary"/> {t('echo_form_title')}</CardTitle>
-                    <CardDescription>{t('echo_form_desc')}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleEchoSubmit} className="flex gap-2">
-                        <Input 
-                            value={echoUrl} 
-                            onChange={(e) => setEchoUrl(e.target.value)} 
-                            placeholder={t('echo_form_placeholder')}
-                        />
-                        <Button type="submit">{t('echo_form_button')}</Button>
-                    </form>
                 </CardContent>
             </Card>
             <Card>

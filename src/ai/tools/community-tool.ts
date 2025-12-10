@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { initializeAdminApp } from '@/firebase/config-admin';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import type { Community, Form, Member } from '@/lib/types';
+import { echoThoughtFormAction } from '@/app/actions';
 
 
 const GetCommunityDetailsInputSchema = z.object({
@@ -105,45 +106,8 @@ export const echoThoughtFormTool = ai.defineTool(
         outputSchema: z.object({ newFormId: z.string() }),
     },
     async (input) => {
-        const adminApp = initializeAdminApp();
-        const firestore = getFirestore(adminApp);
-        const { sourceCommunityId, sourceFormId, targetCommunityId, userId, userName, userAvatarUrl } = input;
-
-        const sourceFormRef = firestore.collection(`communities/${sourceCommunityId}/forms`).doc(sourceFormId);
-        const targetFormsColRef = firestore.collection(`communities/${targetCommunityId}/forms`);
-        const newFormRef = targetFormsColRef.doc(); // Create a new doc with a unique ID
-
-        return firestore.runTransaction(async (transaction) => {
-            const sourceFormDoc = await transaction.get(sourceFormRef);
-            if (!sourceFormDoc.exists) {
-                throw new Error('Original thought-form not found.');
-            }
-            const sourceFormData = sourceFormDoc.data() as Form;
-
-            // Create the new "echo" form
-            const newForm: Omit<Form, 'id'> = {
-                ...sourceFormData,
-                communityId: targetCommunityId, // Set the new community ID
-                originFormId: sourceFormData.originFormId || sourceFormId, // Link back to the original
-                originCommunityId: sourceFormData.originCommunityId,
-                userId: userId, // The user who echoed it
-                userName: userName,
-                userAvatarUrl: userAvatarUrl,
-                createdAt: FieldValue.serverTimestamp(),
-                lastEchoAt: FieldValue.serverTimestamp(), // Mark the echo time
-                echoCount: 0, // Echoes of an echo don't count initially
-            };
-
-            transaction.set(newFormRef, newForm);
-
-            // Update the original form's echo count and timestamp
-            transaction.update(sourceFormRef, {
-                echoCount: FieldValue.increment(1),
-                lastEchoAt: FieldValue.serverTimestamp(),
-            });
-
-            return { newFormId: newFormRef.id };
-        });
+        // This tool now acts as a simple wrapper around the robust server action.
+        return await echoThoughtFormAction(input);
     }
 );
     

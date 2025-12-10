@@ -20,6 +20,7 @@ import { notifyOwnerOfJoinRequest } from '@/ai/flows/notify-owner-of-join-reques
 import { syncAllMembers } from '@/ai/flows/sync-members';
 import { updateCommunityRoadmapCardColumn } from '@/ai/flows/update-community-roadmap-column';
 import { generateProfileAvatars } from '@/ai/flows/generate-avatars';
+import { echoThoughtForm as echoThoughtFormFlow } from './community-actions';
 
 // --- Roadmap & Bug Actions ---
 import { addBugReportTool } from '@/ai/tools/bug-reporter-tool';
@@ -75,3 +76,4 @@ export const deleteRoadmapCardAction = deleteRoadmapCardFlow;
 export const generateProfileAvatarsAction = generateProfileAvatars;
 export const analyzeAcademicLevelAction = analyzeAcademicLevel;
 export const analyzeStudiesAndBoostCommunityAction = analyzeStudiesAndBoostCommunityTool;
+export const echoThoughtFormAction = echoThoughtFormFlow;
