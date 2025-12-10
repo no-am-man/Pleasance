@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { useTranslation } from '@/hooks/use-translation';
 import { analyzeStudiesAndBoostCommunityAction } from '../actions';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const ProfileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -467,7 +468,7 @@ export default function ProfilePage() {
                         <Alert variant="destructive">
                         <AlertCircle className="h-4 w-4" />
                         <AlertTitle>Error</AlertTitle>
-                        <p>{error}</p>
+                        <AlertDescription>{error}</AlertDescription>
                         </Alert>
                     )}
                     </form>
