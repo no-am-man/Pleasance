@@ -15,7 +15,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { LoaderCircle, User as UserIcon, Users, LogIn, Sparkles, PlusCircle } from 'lucide-react';
+import { LoaderCircle, User as UserIcon, Users, LogIn, Sparkles, PlusCircle, Link as LinkIcon, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -23,6 +23,7 @@ import { FederationDiagram } from '@/components/federation-diagram';
 import { useTranslation } from '@/hooks/use-translation';
 import type { Community, Member } from '@/lib/types';
 import Image from 'next/image';
+import { Separator } from '@/components/ui/separator';
 
 
 const PromptSchema = z.object({
@@ -263,6 +264,41 @@ function CommunityCard({ community }: { community: Community }) {
   );
 }
 
+function FederationCard({ name, description, url, imageUrl }: { name: string, description: string, url: string, imageUrl?: string }) {
+  return (
+    <Card className="flex flex-col shadow-lg hover:shadow-primary/20 transition-shadow duration-300">
+      <CardHeader>
+        <div className="flex items-center gap-4">
+            {imageUrl ? (
+                <Image src={imageUrl} alt={`${name} Flag`} width={64} height={40} className="rounded-sm border" />
+            ): (
+                <div className="w-16 h-10 bg-muted rounded-sm border flex items-center justify-center">
+                    <LinkIcon className="h-6 w-6 text-muted-foreground" />
+                </div>
+            )}
+            <div>
+                <a href={url} target="_blank" rel="noopener noreferrer">
+                    <CardTitle className="hover:underline">{name}</CardTitle>
+                </a>
+                <CardDescription className="line-clamp-2">{description}</CardDescription>
+            </div>
+        </div>
+      </CardHeader>
+      <CardContent className="flex-grow">
+        <p className="text-xs text-muted-foreground break-all">{url}</p>
+      </CardContent>
+      <CardContent>
+         <Button asChild className="w-full" variant="secondary">
+            <a href={url} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Visit Federation
+            </a>
+        </Button>
+      </CardContent>
+    </Card>
+  )
+}
+
 export default function CommunitiesPage() {
     const { user, isUserLoading } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
@@ -333,6 +369,20 @@ export default function CommunitiesPage() {
                 ) : (
                     <p className="text-center text-muted-foreground py-8">{t('community_none_found')}</p>
                 )}
+            </div>
+
+            <Separator />
+
+             <div>
+                <h2 className="text-3xl font-bold mb-6 font-headline">Allied Federations</h2>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FederationCard 
+                        name="Lashirilo" 
+                        description="A sister project focused on the co-creation of sacred song, poetry, and scripture."
+                        url="https://lashirilo.com"
+                        imageUrl="https://lashirilo.com/favicon.ico"
+                    />
+                </div>
             </div>
             
             <div className="mt-16 text-center">
