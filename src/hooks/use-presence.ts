@@ -5,10 +5,15 @@ import { useEffect } from 'react';
 import { useUser } from '@/firebase';
 import { getFirebase } from '@/firebase/config';
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { ref, onValue, onDisconnect, set, serverTimestamp as dbServerTimestamp, goOnline, goOffline, Database, Unsubscribe } from 'firebase/database';
+import { ref, onValue, onDisconnect, set, serverTimestamp as dbServerTimestamp, goOnline, goOffline, type Database, type Unsubscribe } from 'firebase/database';
 import type { User } from 'firebase/auth';
 
 // --- OBSERVER PATTERN IMPLEMENTATION ---
+
+// The Observer interface
+interface PresenceObserver {
+    update(user: User, isOnline: boolean): void;
+}
 
 // The Subject (or Observable)
 class PresenceMonitor {
@@ -84,11 +89,6 @@ class PresenceMonitor {
             goOffline(db);
         }
     }
-}
-
-// The Observer interface
-interface PresenceObserver {
-    update(user: User, isOnline: boolean): void;
 }
 
 // A Concrete Observer that updates Firestore

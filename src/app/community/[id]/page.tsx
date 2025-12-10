@@ -27,12 +27,7 @@ import { useTranslation } from '@/hooks/use-translation';
 import { useDynamicTranslation } from '@/hooks/use-dynamic-translation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { Member, Community, Form, CommunityProfile, WikiArticle } from '@/lib/types';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Textarea } from '@/components/ui/textarea';
-import { marked } from 'marked';
+import type { Member, Community, Form, CommunityProfile } from '@/lib/types';
 
 
 function TextFormForm({ communityId, onFormSent }: { communityId: string, onFormSent: () => void }) {
@@ -222,198 +217,6 @@ function SphericalizingChatRoom({ communityId, isOwner, allMembers, allCommuniti
     )
 }
 
-const WikiArticleSchema = z.object({
-    title: z.string().min(3, "Title must be at least 3 characters."),
-    content: z.string().min(20, "Content must be at least 20 characters."),
-});
-
-function WikiArticleForm({ communityId, onArticleAdded }: { communityId: string, onArticleAdded: () => void }) {
-    const { user } = useUser();
-    const { toast } = useToast();
-    const [isLoading, setIsLoading] = useState(false);
-    
-    const form = useForm<z.infer<typeof WikiArticleSchema>>({
-        resolver: zodResolver(WikiArticleSchema),
-        defaultValues: { title: '', content: '' },
-    });
-
-    async function onSubmit(data: z.infer<typeof WikiArticleSchema>) {
-        if (!user || !firestore) {
-            toast({ variant: 'destructive', title: 'You must be logged in.' });
-            return;
-        }
-        setIsLoading(true);
-
-        try {
-            const articlesColRef = collection(firestore, `communities/${communityId}/wiki`);
-            await addDoc(articlesColRef, {
-                ...data,
-                authorId: user.uid,
-                authorName: user.displayName || 'Anonymous',
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            });
-            toast({ title: "Article Added", description: `"${data.title}" has been added to the wiki.` });
-            form.reset();
-            onArticleAdded();
-        } catch (e) {
-            const message = e instanceof Error ? e.message : 'An unexpected error occurred';
-            toast({ variant: 'destructive', title: 'Failed to add article', description: message });
-        } finally {
-            setIsLoading(false);
-        }
-    }
-
-    return (
-        <Card className="shadow-lg">
-            <CardHeader>
-                <CardTitle>Create New Wiki Article</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <Input {...form.register('title')} placeholder="Article Title" />
-                    <Textarea {...form.register('content')} placeholder="Article content (Markdown supported)..." rows={8} />
-                    <Button type="submit" disabled={isLoading}>
-                        {isLoading ? <LoaderCircle className="mr-2 animate-spin" /> : <PlusCircle className="mr-2" />}
-                        Create Article
-                    </Button>
-                </form>
-            </CardContent>
-        </Card>
-    );
-}
-
-function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner: boolean }) {
-    const [articles, setArticles] = useState<WikiArticle[]>([]);
-    const [selectedArticle, setSelectedArticle] = useState<WikiArticle | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<Error | null>(null);
-    const { toast } = useToast();
-
-    // Unified useEffect for fetching articles
-    useEffect(() => {
-        if (!firestore || !communityId) {
-            setIsLoading(false);
-            return;
-        }
-        
-        setIsLoading(true);
-        const q = query(collection(firestore, `communities/${communityId}/wiki`), orderBy('title', 'asc'));
-        
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const fetchedArticles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WikiArticle));
-            setArticles(fetchedArticles);
-            // Select the first article only if one isn't already selected or the selected one was deleted
-            if (!selectedArticle || !fetchedArticles.some(a => a.id === selectedArticle.id)) {
-                setSelectedArticle(fetchedArticles[0] || null);
-            }
-            setIsLoading(false);
-        }, (err) => {
-            setError(err);
-            setIsLoading(false);
-        });
-
-        return () => unsubscribe();
-    }, [communityId]);
-
-
-    const handleDeleteArticle = async (articleId: string) => {
-        if (!communityId || !firestore) return;
-        const docRef = doc(firestore, `communities/${communityId}/wiki/${articleId}`);
-        try {
-            await deleteDoc(docRef);
-            toast({ title: 'Article Deleted' });
-            // The onSnapshot listener will handle the UI update.
-        } catch (e) {
-            const message = e instanceof Error ? e.message : 'An unknown error occurred';
-            toast({ variant: 'destructive', title: 'Failed to delete article', description: message });
-        }
-    };
-    
-    if (isLoading) {
-        return (
-            <div className="flex justify-center p-8">
-                <LoaderCircle className="w-8 h-8 animate-spin text-primary" />
-            </div>
-        );
-    }
-    
-    if (error) {
-        return <p className="text-destructive text-center">Error loading wiki: {error.message}</p>;
-    }
-
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="md:col-span-1">
-                <WikiArticleForm communityId={communityId} onArticleAdded={() => {}} />
-                <Card className="mt-8">
-                    <CardHeader>
-                        <CardTitle>Articles</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ul className="space-y-2">
-                            {articles.map(article => (
-                                <li key={article.id}>
-                                    <button
-                                        className={`w-full text-left p-2 rounded-md transition-colors ${selectedArticle?.id === article.id ? 'bg-primary/20' : 'hover:bg-accent/50'}`}
-                                        onClick={() => setSelectedArticle(article)}
-                                    >
-                                        {article.title}
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
-                    </CardContent>
-                </Card>
-            </div>
-            <div className="md:col-span-3">
-                <Card className="min-h-[60vh]">
-                    {selectedArticle ? (
-                        <>
-                        <CardHeader className="flex flex-row justify-between items-start">
-                            <div>
-                                <CardTitle className="text-2xl">{selectedArticle.title}</CardTitle>
-                                <CardDescription>
-                                    By {selectedArticle.authorName} on {selectedArticle.createdAt ? new Date(selectedArticle.createdAt.seconds * 1000).toLocaleDateString() : ''}
-                                </CardDescription>
-                            </div>
-                            {isOwner && (
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="text-destructive">
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                            <AlertDialogDescription>This will permanently delete "{selectedArticle.title}".</AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => handleDeleteArticle(selectedArticle.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                            )}
-                        </CardHeader>
-                        <CardContent>
-                            <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: marked(selectedArticle.content) }} />
-                        </CardContent>
-                        </>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-8 text-center">
-                            <BookOpen className="w-16 h-16 mb-4" />
-                            <h3 className="text-lg font-semibold">Welcome to the Wiki</h3>
-                            <p>Select an article to read or create a new one to get started.</p>
-                        </div>
-                    )}
-                </Card>
-            </div>
-        </div>
-    )
-}
-
 export default function CommunityProfilePage() {
   const params = useParams();
   const { user, isUserLoading } = useUser();
@@ -432,90 +235,67 @@ export default function CommunityProfilePage() {
   const [userProfile, setUserProfile] = useState<CommunityProfile | null>(null);
 
   const [userJoinRequest, setUserJoinRequest] = useState<any | null>(null);
-  const [isRequestLoading, setIsRequestLoading] = useState(true);
   
   const [allProfiles, setAllProfiles] = useState<CommunityProfile[]>([]);
   const [allCommunities, setAllCommunities] = useState<Community[]>([]);
-  const [isLoadingAncillary, setIsLoadingAncillary] = useState(true);
 
-  // Effect for fetching ancillary data (runs once)
-  useEffect(() => {
-    const fetchAncillaryData = async () => {
-        if (!firestore) {
-            setIsLoadingAncillary(false);
-            return;
-        };
-        setIsLoadingAncillary(true);
-        try {
-            const [communitiesSnapshot, profilesSnapshot] = await Promise.all([
-                getDocs(query(collection(firestore, 'communities'))),
-                getDocs(query(collection(firestore, 'community-profiles')))
-            ]);
-            setAllCommunities(communitiesSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as Community)));
-            setAllProfiles(profilesSnapshot.docs.map(d => d.data() as CommunityProfile));
-        } catch (e) {
-            console.error("Error fetching ancillary data:", e);
-        } finally {
-            setIsLoadingAncillary(false);
-        }
-    };
-    fetchAncillaryData();
-  }, []);
-
-  // Effect for the main community document (real-time)
+  // Effect for all data fetching
   useEffect(() => {
     if (!id || !firestore) {
-        setIsLoading(false);
-        return;
-    };
-    
-    setIsLoading(true);
-    const communityDocRef = doc(firestore, 'communities', id);
-    const unsubscribeCommunity = onSnapshot(communityDocRef, (doc) => {
-        setCommunity(doc.exists() ? { id: doc.id, ...doc.data() } as Community : null);
-        setIsLoading(false);
-    }, (err) => {
-        const permissionError = new FirestorePermissionError({ path: `communities/${id}`, operation: 'get' });
-        errorEmitter.emit('permission-error', permissionError);
-        setError(err as Error);
-        setIsLoading(false);
-    });
-
-    return () => unsubscribeCommunity();
-  }, [id]);
-
-  // Effect for user-specific data (profile and join request)
-  useEffect(() => {
-    if (isUserLoading || !user || !firestore) {
-      if (!isUserLoading) {
-        setIsRequestLoading(false);
-      }
+      setIsLoading(false);
       return;
     }
-
+  
+    setIsLoading(true);
+  
+    // 1. Fetch ancillary data (all communities and profiles) once
+    const fetchAncillaryData = async () => {
+      try {
+        const [communitiesSnapshot, profilesSnapshot] = await Promise.all([
+          getDocs(query(collection(firestore, 'communities'))),
+          getDocs(query(collection(firestore, 'community-profiles'))),
+        ]);
+        setAllCommunities(communitiesSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as Community)));
+        setAllProfiles(profilesSnapshot.docs.map(d => d.data() as CommunityProfile));
+      } catch (e) {
+        console.error("Error fetching ancillary data:", e);
+        // We can let the component render without this data, it's not critical
+      }
+    };
+  
+    fetchAncillaryData();
+  
+    // 2. Set up real-time listener for the main community document
+    const communityDocRef = doc(firestore, 'communities', id);
+    const unsubscribeCommunity = onSnapshot(communityDocRef, (doc) => {
+      setCommunity(doc.exists() ? { id: doc.id, ...doc.data() } as Community : null);
+      setIsLoading(false);
+    }, (err) => {
+      const permissionError = new FirestorePermissionError({ path: `communities/${id}`, operation: 'get' });
+      errorEmitter.emit('permission-error', permissionError);
+      setError(err as Error);
+      setIsLoading(false);
+    });
+  
+    // 3. Set up listeners for user-specific data (if the user changes)
     let unsubscribeProfile: Unsubscribe | undefined;
     let unsubscribeJoinRequest: Unsubscribe | undefined;
-    
-    const profileDocRef = doc(firestore, 'community-profiles', user.uid);
-    unsubscribeProfile = onSnapshot(profileDocRef, (docSnap) => {
+  
+    if (user && !isUserLoading) {
+      const profileDocRef = doc(firestore, 'community-profiles', user.uid);
+      unsubscribeProfile = onSnapshot(profileDocRef, (docSnap) => {
         setUserProfile(docSnap.exists() ? docSnap.data() as CommunityProfile : null);
-    });
-
-    if (id) {
-      setIsRequestLoading(true);
+      });
+  
       const requestDocRef = doc(firestore, `communities/${id}/joinRequests/${user.uid}`);
       unsubscribeJoinRequest = onSnapshot(requestDocRef, (docSnap) => {
-          setUserJoinRequest(docSnap.exists() ? docSnap.data() as any : null);
-          setIsRequestLoading(false);
-      }, (error) => {
-          console.error("Error fetching join request:", error);
-          setIsRequestLoading(false);
+        setUserJoinRequest(docSnap.exists() ? docSnap.data() as any : null);
       });
-    } else {
-      setIsRequestLoading(false);
     }
-    
+  
+    // 4. Cleanup all listeners
     return () => {
+      unsubscribeCommunity();
       if (unsubscribeProfile) unsubscribeProfile();
       if (unsubscribeJoinRequest) unsubscribeJoinRequest();
     };
@@ -678,7 +458,7 @@ export default function CommunityProfilePage() {
   };
 
 
-  if (isLoading || isRequestLoading || isLoadingAncillary) {
+  if (isLoading || isUserLoading) {
     return (
       <main className="container mx-auto flex min-h-[80vh] items-center justify-center px-4">
         <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
@@ -702,7 +482,7 @@ export default function CommunityProfilePage() {
               <code>{error.message}</code>
             </pre>
             <Button asChild variant="outline">
-              <Link href="/">
+              <Link href="/community">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 {t('community_page_back_all_button')}
               </Link>
@@ -723,7 +503,7 @@ export default function CommunityProfilePage() {
             <CardContent>
               <p className="text-muted-foreground mb-4">{t('community_page_not_found_desc')}</p>
               <Button asChild variant="outline">
-              <Link href="/">
+              <Link href="/community">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 {t('community_page_back_all_button')}
               </Link>
@@ -738,7 +518,7 @@ export default function CommunityProfilePage() {
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
       <div className="mb-6 flex justify-between items-center">
         <Button asChild variant="ghost">
-            <Link href="/">
+            <Link href="/community">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 {t('community_page_back_all_button')}
             </Link>
@@ -827,7 +607,7 @@ export default function CommunityProfilePage() {
                                 <CardTitle>{t('community_page_invite_title')}</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                {isLoadingAncillary ? (
+                                {isLoading ? (
                                     <LoaderCircle className="animate-spin mx-auto" />
                                 ) : allProfiles.length > 0 ? (
                                     <div className="space-y-4">
@@ -888,7 +668,7 @@ export default function CommunityProfilePage() {
                 </Card>
             </TabsContent>
             <TabsContent value="wiki" className="mt-6">
-                <WikiTabContent communityId={id} isOwner={isOwner} />
+                <Card><CardHeader><CardTitle>Wiki</CardTitle></CardHeader></Card>
             </TabsContent>
             <TabsContent value="about" className="mt-6">
                 <Card className="shadow-lg">

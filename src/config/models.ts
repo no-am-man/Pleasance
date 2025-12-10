@@ -7,7 +7,7 @@
  */
 
 // For complex generation, reasoning, and multi-turn chat that requires JSON output.
-export const GEMINI_PRO = 'googleai/gemini-pro';
+export const GEMINI_PRO = 'googleai/gemini-1.5-flash-preview-0514';
 
 // For fast, lightweight tasks, and summarization.
 export const GEMINI_FLASH = 'googleai/gemini-1.5-flash-preview-0514';
@@ -16,4 +16,4 @@ export const GEMINI_FLASH = 'googleai/gemini-1.5-flash-preview-0514';
 export const IMAGEN = 'googleai/imagen-2';
 
 // For text-to-speech. Using a specific preview version.
-export const TTS_MODEL = 'googleai/tts-1';
+export const TTS_MODEL = 'googleai/gemini-2.5-flash-preview-tts';
