@@ -16,7 +16,7 @@ import { generateDualStoryAction, createHistorySnapshot } from '@/app/actions';
 import StoryViewer from '@/components/story-viewer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useUser, getFirebase } from '@/firebase';
-import { collection, query, orderBy, doc, deleteDoc, getDocs, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, deleteDoc, getDocs, setDoc, serverTimestamp, updateDoc, getDoc } from 'firebase/firestore';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
