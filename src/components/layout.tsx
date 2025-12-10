@@ -14,7 +14,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className={cn("flex min-h-screen w-full", direction === 'rtl' ? 'rtl' : 'ltr')}>
       <Sidebar />
-      <div className="flex flex-1 flex-col sm:ml-[var(--sidebar-margin-left)] sm:mr-[var(--sidebar-margin-right)]">
+      <div className={cn(
+        "flex flex-1 flex-col",
+        direction === 'rtl' ? 'sm:mr-[var(--sidebar-width)]' : 'sm:ml-[var(--sidebar-width)]'
+      )}>
         <Header />
         <main className="flex-grow pt-16">
           <div className="pt-4">{children}</div>

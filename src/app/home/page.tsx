@@ -1,4 +1,4 @@
-// src/app/home/page.tsx (formerly page.tsx)
+// src/app/page.tsx (formerly home/page.tsx)
 "use client";
 
 import Image from "next/image";
