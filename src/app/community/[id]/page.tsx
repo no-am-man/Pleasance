@@ -1,3 +1,4 @@
+
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -341,7 +342,7 @@ export default function CommunityProfilePage() {
   
   const [userJoinRequest, setUserJoinRequest] = useState<any | null>(null);
 
-  // Effect for fetching ancillary data (runs once)
+  // Effect for fetching ancillary data (all profiles and communities)
   useEffect(() => {
     if (!firestore) {
       setIsLoadingAncillary(false);
@@ -357,14 +358,6 @@ export default function CommunityProfilePage() {
         const allComms = communitiesSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as Community));
         setAllCommunities(allComms);
         setAllProfiles(profilesSnapshot.docs.map(d => ({id: d.id, ...d.data()} as CommunityProfile)));
-
-        if (user) {
-            const userComms = allComms.filter(c => c.members.some(m => {
-                const memberId = typeof m === 'string' ? m : m.userId;
-                return memberId === user.uid;
-            }));
-            setUserCommunities(userComms);
-        }
       } catch (e) {
         console.error("Error fetching ancillary data:", e);
       } finally {
@@ -372,7 +365,18 @@ export default function CommunityProfilePage() {
       }
     };
     fetchAncillaryData();
-  }, [user, firestore]);
+  }, [firestore]);
+  
+  // Effect to set user-specific communities once all data is loaded
+  useEffect(() => {
+    if (user && !isLoadingAncillary) {
+        const userComms = allCommunities.filter(c => c.members.some(m => {
+             const memberId = typeof m === 'string' ? m : m.userId;
+             return memberId === user.uid;
+        }));
+        setUserCommunities(userComms);
+    }
+  }, [user, allCommunities, isLoadingAncillary]);
 
   // Effect for the main community document (real-time)
   useEffect(() => {
@@ -425,21 +429,21 @@ export default function CommunityProfilePage() {
   
   const allMembers = useMemo(() => {
     if (!community?.members) return [];
+    // Sort so human members appear first
     return [...community.members].sort((a, b) => {
-        if (typeof a === 'string' || typeof b === 'string') return 0;
-        if (a.type === 'human' && b.type !== 'human') return -1;
-        if (a.type !== 'human' && b.type === 'human') return 1;
+        if (typeof a !== 'string' && a.type === 'human' && (typeof b === 'string' || b.type !== 'human')) return -1;
+        if ((typeof a === 'string' || a.type !== 'human') && typeof b !== 'string' && b.type === 'human') return 1;
         return 0;
     });
   }, [community]);
 
   const isMember = useMemo(() => {
     if (!user || !community) return false;
-    return allMembers.some(member => {
+    return community.members.some(member => {
         const memberId = typeof member === 'string' ? member : member.userId;
         return memberId === user.uid;
     });
-}, [user, community, allMembers]);
+  }, [user, community]);
 
 
   const handleRequestToJoin = async () => {
@@ -504,14 +508,11 @@ export default function CommunityProfilePage() {
     const communityDocRef = doc(firestore, 'communities', community.id);
     try {
       const memberIdentifierToRemove = community.members.find(m => {
-          if (typeof m === 'string') return m === memberToRemove.userId;
-          if (typeof m === 'object' && m !== null && 'userId' in m) {
-            return m.userId === memberToRemove.userId;
-          }
-          return false;
+          const memberId = typeof m === 'string' ? m : m.userId;
+          return memberId === memberToRemove.userId;
       });
 
-      if (!memberIdentifierToRemove) {
+      if (memberIdentifierToRemove === undefined) {
           throw new Error("Could not find the member in the community list to remove.");
       }
       

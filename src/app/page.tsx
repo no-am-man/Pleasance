@@ -1,7 +1,8 @@
+
 // src/app/page.tsx
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -32,7 +33,7 @@ const PromptSchema = z.object({
 });
 
 
-function CreateCommunityCard() {
+function CreateCommunityCard({ onCommunityCreated }: { onCommunityCreated: (newCommunity: Community) => void }) {
   const { user } = useUser();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -106,19 +107,21 @@ function CreateCommunityCard() {
       };
 
       if (profileSnap.exists()) {
-        const profile = profileSnap.data();
+        const profile = profileSnap.data() as CommunityProfile;
         ownerMember.name = profile.name;
         ownerMember.bio = profile.bio;
         ownerMember.avatarUrl = profile.avatarUrl || user.photoURL || '';
       }
       
-      batch.set(communityRef, {
+      const finalCommunityObject: Community = {
         ...newCommunityData,
         id: communityRef.id,
         ownerId: user.uid,
         members: [ownerMember, ...newCommunityData.members],
         createdAt: serverTimestamp(),
-      });
+      };
+      
+      batch.set(communityRef, finalCommunityObject);
       
       await batch.commit();
 
@@ -126,6 +129,7 @@ function CreateCommunityCard() {
         title: 'Community Created!',
         description: `"${newCommunityData.name}" has been founded.`,
       });
+      onCommunityCreated(finalCommunityObject);
       form.reset();
     } catch (e) {
       const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
@@ -228,7 +232,7 @@ function CommunityCard({ community }: { community: Community }) {
   const { t } = useTranslation();
   if (!community) return null;
   
-  const owner = community.members?.find(m => typeof m !== 'string' && m.userId === community.ownerId);
+  const owner = community.members?.find(m => m.userId === community.ownerId);
   const isOwner = user?.uid === community.ownerId;
 
   return (
@@ -317,26 +321,44 @@ export default function CommunitiesPage() {
     const { user, isUserLoading } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
     const { t } = useTranslation();
-
     const { firestore } = getFirebase();
-    const communitiesQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
-        return query(collection(firestore, 'communities'));
+
+    const [allCommunities, setAllCommunities] = useState<Community[]>([]);
+    const [isLoadingCommunities, setIsLoadingCommunities] = useState(true);
+
+    useEffect(() => {
+        if (!firestore) {
+            setIsLoadingCommunities(false);
+            return;
+        }
+        const q = query(collection(firestore, 'communities'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const communitiesData = snapshot.docs.map(doc => doc.data() as Community);
+            setAllCommunities(communitiesData);
+            setIsLoadingCommunities(false);
+        }, (error) => {
+            console.error("Error fetching communities:", error);
+            setIsLoadingCommunities(false);
+        });
+        return () => unsubscribe();
     }, [firestore]);
 
-    const { data: communities, isLoading: isLoadingCommunities } = useCollection<Community>(communitiesQuery);
 
     const filteredCommunities = useMemo(() => {
-        if (!communities) return [];
-        return communities.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    }, [communities, searchTerm]);
+        if (!allCommunities) return [];
+        return allCommunities.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }, [allCommunities, searchTerm]);
     
     const userCommunities = useMemo(() => {
-        if (!user || !communities) return [];
-        return communities.filter(c => c.ownerId === user.uid);
-    }, [user, communities]);
+        if (!user || !allCommunities) return [];
+        return allCommunities.filter(c => c.ownerId === user.uid);
+    }, [user, allCommunities]);
 
     const isLoading = isUserLoading || isLoadingCommunities;
+
+    const handleCommunityCreated = (newCommunity: Community) => {
+        setAllCommunities(prev => [newCommunity, ...prev]);
+    }
 
   return (
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
@@ -360,7 +382,7 @@ export default function CommunitiesPage() {
                 </div>
             )}
             
-            <CreateCommunityCard />
+            <CreateCommunityCard onCommunityCreated={handleCommunityCreated} />
 
             <div className="mt-12">
                 <h2 className="text-3xl font-bold mb-6 font-headline">{t('community_find_title')}</h2>
