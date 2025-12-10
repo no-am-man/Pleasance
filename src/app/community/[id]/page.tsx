@@ -1,3 +1,4 @@
+
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -845,3 +846,5 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
+
+    

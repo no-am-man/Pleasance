@@ -1,3 +1,4 @@
+
 // src/app/profile/[id]/page.tsx
 'use client';
 
@@ -105,8 +106,10 @@ export default function UserProfilePage() {
             <CardDescription>{t('profile_view_not_found_desc')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => router.back()}>
-              <ArrowLeft className="mr-2 h-4 w-4" /> {t('profile_view_go_back')}
+            <Button asChild>
+              <Link href="/">
+                <ArrowLeft className="mr-2 h-4 w-4" /> {t('community_page_back_all_button')}
+              </Link>
             </Button>
           </CardContent>
         </Card>
@@ -161,3 +164,5 @@ export default function UserProfilePage() {
     </main>
   );
 }
+
+    
