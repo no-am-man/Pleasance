@@ -1,4 +1,3 @@
-
 // src/config/models.ts
 
 import { googleAI } from '@genkit-ai/google-genai';
@@ -9,13 +8,13 @@ import { googleAI } from '@genkit-ai/google-genai';
  */
 
 // For complex generation, reasoning, and multi-turn chat.
-export const GEMINI_PRO = googleAI.model('gemini-1.5-flash');
+export const GEMINI_PRO = googleAI.model('googleai/gemini-1.5-flash');
 
 // For fast, lightweight tasks, and summarization
-export const GEMINI_FLASH = googleAI.model('gemini-1.5-flash');
+export const GEMINI_FLASH = googleAI.model('googleai/gemini-1.5-flash');
 
 // For image generation
-export const IMAGEN = googleAI.model('imagen-2');
+export const IMAGEN = googleAI.model('googleai/imagen-2');
 
 // For text-to-speech
-export const TTS_MODEL = googleAI.model('tts-1');
+export const TTS_MODEL = googleAI.model('googleai/tts-1');
