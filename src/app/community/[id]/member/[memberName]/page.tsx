@@ -178,7 +178,7 @@ export default function AiMemberProfilePage() {
         }
     };
     fetchCommunity();
-  }, [communityId]);
+  }, [communityId, firestore]);
 
   const member = community?.members.find(
     (m) => m.name === decodeURIComponent(memberName)
