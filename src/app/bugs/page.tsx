@@ -245,7 +245,7 @@ export default function BugsPage() {
     } finally {
         setIsLoadingBugs(false);
     }
-  }, [isUserLoading]);
+  }, [isUserLoading, getFirebase]);
 
   useEffect(() => {
     fetchBugs();
