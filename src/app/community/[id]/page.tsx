@@ -360,7 +360,10 @@ export default function CommunityProfilePage() {
         setAllProfiles(profilesSnapshot.docs.map(d => ({id: d.id, ...d.data()} as CommunityProfile)));
 
         if (user) {
-            const userComms = allComms.filter(c => c.members.some(m => m.userId === user.uid));
+            const userComms = allComms.filter(c => c.members.some(m => {
+                if (typeof m === 'string') return m === user.uid;
+                return m.userId === user.uid;
+            }));
             setUserCommunities(userComms);
         }
       } catch (e) {
@@ -424,6 +427,7 @@ export default function CommunityProfilePage() {
   const allMembers = useMemo(() => {
     if (!community?.members) return [];
     return [...community.members].sort((a, b) => {
+        if (typeof a === 'string' || typeof b === 'string') return 0;
         if (a.type === 'human' && b.type !== 'human') return -1;
         if (a.type !== 'human' && b.type === 'human') return 1;
         return 0;
@@ -432,7 +436,10 @@ export default function CommunityProfilePage() {
 
   const isMember = useMemo(() => {
     if (!user || !community) return false;
-    return allMembers.some(member => member.userId === user.uid);
+    return allMembers.some(member => {
+        const memberId = typeof member === 'string' ? member : member.userId;
+        return memberId === user.uid;
+    });
 }, [user, community, allMembers]);
 
 
@@ -505,21 +512,22 @@ export default function CommunityProfilePage() {
     
     const communityDocRef = doc(firestore, 'communities', community.id);
     try {
-      // Find the full member object to remove. This is safer than relying on partial data.
-      const memberObjectToRemove = community.members.find(m => {
-          if (memberToRemove.type === 'human') {
-              return m.userId === memberToRemove.userId;
+      const memberIdentifierToRemove = community.members.find(m => {
+          if (typeof m === 'string') {
+              return m === memberToRemove.userId;
           }
-          // For AI members, assuming name is unique within the community.
-          return m.type === 'AI' && m.name === memberToRemove.name;
+          if (typeof m === 'object' && m !== null && 'userId' in m) {
+            return m.userId === memberToRemove.userId;
+          }
+          return false;
       });
 
-      if (!memberObjectToRemove) {
+      if (!memberIdentifierToRemove) {
           throw new Error("Could not find the member in the community list to remove.");
       }
       
       await updateDoc(communityDocRef, {
-        members: arrayRemove(memberObjectToRemove)
+        members: arrayRemove(memberIdentifierToRemove)
       });
 
       toast({ title: t('community_page_member_removed_title'), description: t('community_page_member_removed_desc', { name: memberToRemove.name }) });
@@ -715,7 +723,7 @@ export default function CommunityProfilePage() {
                     <CardContent>
                         <div className="grid grid-cols-1 gap-6">
                             {allMembers.map((member) => (
-                                <MemberCard key={member.userId || member.name} member={member} communityId={community.id} isOwner={isOwner} onRemove={handleRemoveMember} allProfiles={allProfiles}/>
+                                <MemberCard key={typeof member === 'string' ? member : (member.userId || member.name)} member={member} communityId={community.id} isOwner={isOwner} onRemove={handleRemoveMember} allProfiles={allProfiles}/>
                             ))}
                         </div>
                     </CardContent>
@@ -732,7 +740,10 @@ export default function CommunityProfilePage() {
                                     <LoaderCircle className="animate-spin mx-auto" />
                                 ) : allProfiles.length > 0 ? (
                                     <div className="space-y-4">
-                                        {allProfiles.filter(p => !allMembers.some(m => m.userId === p.userId)).map(profile => (
+                                        {allProfiles.filter(p => !allMembers.some(m => {
+                                            const memberId = typeof m === 'string' ? m : m.userId;
+                                            return memberId === p.userId;
+                                        })).map(profile => (
                                             <Card key={profile.id} className="flex items-center p-4">
                                                 <Avatar className="w-12 h-12 mr-4">
                                                     <AvatarImage src={profile.avatarUrl || `https://i.pravatar.cc/150?u=${profile.name}`} alt={profile.name} />
@@ -817,9 +828,9 @@ export default function CommunityProfilePage() {
                                     <AlertDialogFooter>
                                         <AlertDialogCancel>{t('community_page_delete_cancel')}</AlertDialogCancel>
                                         <AlertDialogAction onClick={() => {
-                                            const memberToRemove = allMembers.find(m => m.userId === user?.uid);
+                                            const memberToRemove = allMembers.find(m => typeof m !== 'string' && m.userId === user?.uid);
                                             if (memberToRemove) {
-                                                handleRemoveMember(memberToRemove);
+                                                handleRemoveMember(memberToRemove as Member);
                                             }
                                         }} className="bg-destructive hover:bg-destructive/90">
                                             {t('community_page_leave_confirm')}
