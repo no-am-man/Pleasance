@@ -16,12 +16,16 @@ type LanguageProviderState = {
   language: Language;
   direction: Direction;
   setLanguage: (language: Language) => void;
+  translations: any;
+  isTranslationsLoading: boolean;
 };
 
 const initialState: LanguageProviderState = {
   language: 'he',
   direction: 'rtl',
   setLanguage: () => null,
+  translations: null,
+  isTranslationsLoading: true,
 };
 
 const LanguageProviderContext = createContext<LanguageProviderState>(initialState);
@@ -35,6 +39,8 @@ export function LanguageProvider({
   const [language, setLanguage] = useState<Language>(
     () => (typeof window !== 'undefined' ? (localStorage.getItem(storageKey) as Language) : defaultLanguage) || defaultLanguage
   );
+  const [translations, setTranslations] = useState<any>(null);
+  const [isTranslationsLoading, setIsTranslationsLoading] = useState(true);
 
   const direction = language === 'he' ? 'rtl' : 'ltr';
 
@@ -43,6 +49,25 @@ export function LanguageProvider({
     root.lang = language;
     root.dir = direction;
     localStorage.setItem(storageKey, language);
+
+    const fetchTranslations = async () => {
+      setIsTranslationsLoading(true);
+      try {
+        const langModule = await import(`@/locales/${language}.json`);
+        setTranslations(langModule.default);
+      } catch (error) {
+        console.error(`Could not load translation file for language: ${language}`, error);
+        if (language !== 'en') {
+          const fallbackModule = await import(`@/locales/en.json`);
+          setTranslations(fallbackModule.default);
+        }
+      } finally {
+        setIsTranslationsLoading(false);
+      }
+    };
+
+    fetchTranslations();
+
   }, [language, direction, storageKey]);
 
 
@@ -52,6 +77,8 @@ export function LanguageProvider({
     setLanguage: (lang: Language) => {
       setLanguage(lang);
     },
+    translations,
+    isTranslationsLoading,
   };
 
   return (

@@ -1,53 +1,33 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useLanguage } from '@/components/language-provider';
 
 export function useTranslation() {
-  const { language } = useLanguage();
-  const [translations, setTranslations] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchTranslations = async () => {
-      setIsLoading(true);
-      try {
-        const langModule = await import(`@/locales/${language}.json`);
-        setTranslations(langModule.default);
-      } catch (error) {
-        console.error(`Could not load translation file for language: ${language}`, error);
-        // Fallback to English if the desired language file fails
-        if (language !== 'en') {
-          const fallbackModule = await import(`@/locales/en.json`);
-          setTranslations(fallbackModule.default);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTranslations();
-  }, [language]);
+  const { translations, isTranslationsLoading } = useLanguage();
 
   const t = (key: string, options?: { [key: string]: string | number }): string => {
-    if (!translations) return key;
+    if (isTranslationsLoading || !translations) {
+      // During load, or if translations are missing, return the key or a loading indicator
+      return key;
+    }
 
     let translation = translations[key] || key;
 
     if (options) {
-        Object.keys(options).forEach(optionKey => {
-            translation = translation.replace(`{${optionKey}}`, String(options[optionKey]));
-        });
+      Object.keys(options).forEach(optionKey => {
+        const regex = new RegExp(`{${optionKey}}`, 'g');
+        translation = translation.replace(regex, String(options[optionKey]));
+      });
     }
 
     return translation;
   };
-  
-   const tData = (key: string): any => {
-    if (!translations) return null;
-    return translations[key] || null;
-  }
 
-  return { t, tData, isLoading };
+  const tData = (key: string): any => {
+    if (isTranslationsLoading || !translations) return null;
+    return translations[key] || null;
+  };
+
+  return { t, tData, isLoading: isTranslationsLoading };
 }
