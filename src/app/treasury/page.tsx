@@ -1,3 +1,4 @@
+
 // src/app/treasury/page.tsx
 'use client';
 
@@ -272,6 +273,9 @@ export default function TreasuryPage() {
         fetchAllData();
     }
   }, [isUserLoading, fetchAllData]);
+  
+  const allAssets = useMemo(() => [...personalAssets, ...communityAssets], [personalAssets, communityAssets]);
+
 
   if (isUserLoading || isLoading) {
     return (
@@ -301,22 +305,22 @@ export default function TreasuryPage() {
     );
   }
   
-  if (!assets || assets.length === 0) {
+  if (!allAssets || allAssets.length === 0) {
     return (
       <main className="container mx-auto max-w-2xl py-8">
-        <Card className="shadow-lg text-center">
+         <div className="text-center mb-8">
+            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary flex items-center justify-center gap-3 font-headline" data-testid="main-heading">
+            <Coins /> {t('treasury_page_title')}
+            </h1>
+            <p className="text-lg text-muted-foreground mt-2">{t('treasury_page_subtitle')}</p>
+        </div>
+        <AddAssetForm userCommunities={userCommunities} onAssetAdded={fetchAllData} />
+        <Card className="shadow-lg text-center mt-8">
           <CardHeader>
             <Info className="mx-auto h-12 w-12 text-primary" />
             <CardTitle>{t('treasury_empty_treasury_title')}</CardTitle>
             <CardDescription>{t('treasury_empty_treasury_desc')}</CardDescription>
           </CardHeader>
-          <CardContent>
-            <Button asChild>
-              <Link href="/treasury">
-                <PlusCircle className="mr-2 h-4 w-4" /> {t('treasury_go_to_treasury_button')}
-              </Link>
-            </Button>
-          </CardContent>
         </Card>
       </main>
     );
