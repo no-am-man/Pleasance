@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useUser, useMemoFirebase, getFirebase } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, where, getDocs, serverTimestamp, writeBatch, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, serverTimestamp, writeBatch, doc, getDoc } from 'firebase/firestore';
 import { refineCommunityPromptAction, createCommunityDetailsAction } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -86,21 +86,12 @@ function CreateCommunityCard() {
 
     try {
       const { firestore } = getFirebase();
-      if (!firestore) {
-        throw new Error('Firestore is not initialized');
-      }
       const newCommunityData = await createCommunityDetailsAction(data);
       const batch = writeBatch(firestore);
 
       // Create community doc
       const communityRef = doc(collection(firestore, 'communities'));
-      batch.set(communityRef, {
-        ...newCommunityData,
-        id: communityRef.id,
-        ownerId: user.uid,
-      });
-
-      // Add owner as a human member
+      
       const profileRef = doc(firestore, 'community-profiles', user.uid);
       const profileSnap = await getDoc(profileRef);
       
@@ -112,19 +103,22 @@ function CreateCommunityCard() {
           type: 'human',
           avatarUrl: user.photoURL || '',
       };
-      
+
       if (profileSnap.exists()) {
         const profile = profileSnap.data();
         ownerMember.name = profile.name;
         ownerMember.bio = profile.bio;
         ownerMember.avatarUrl = profile.avatarUrl || user.photoURL || '';
       }
-
-      batch.update(communityRef, {
-        members: [ownerMember, ...newCommunityData.members]
+      
+      batch.set(communityRef, {
+        ...newCommunityData,
+        id: communityRef.id,
+        ownerId: user.uid,
+        members: [ownerMember, ...newCommunityData.members],
+        createdAt: serverTimestamp(),
       });
-
-
+      
       await batch.commit();
 
       toast({

@@ -1,4 +1,3 @@
-
 // src/app/story/page.tsx
 'use client';
 
@@ -361,7 +360,7 @@ export default function StoryPage() {
         setIsProfileLoading(false);
       }
       fetchProfile();
-  }, [user, form, isUserLoading, getFirebase]);
+  }, [user, form, isUserLoading]);
 
 
   async function onSubmit(data: z.infer<typeof StoryFormSchema>) {

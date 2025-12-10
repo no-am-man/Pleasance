@@ -1,3 +1,4 @@
+
 // src/app/treasury/page.tsx
 'use client';
 
@@ -242,9 +243,14 @@ export default function TreasuryPage() {
     setIsLoading(true);
     setError(null);
     try {
-        const communitiesQuery = query(collection(firestore, 'communities'), where('members', 'array-contains', user.uid));
+        const communitiesQuery = query(collection(firestore, 'communities'), where('members', 'array-contains-any', [user.uid]));
         const communitiesSnapshot = await getDocs(communitiesQuery);
-        const communitiesData = communitiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community));
+        
+        // This additional client-side filter is necessary because array-contains-any can return false positives on objects
+        const communitiesData = communitiesSnapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() } as Community))
+            .filter(community => community.members.some(m => typeof m !== 'string' && m.userId === user.uid));
+        
         setUserCommunities(communitiesData);
 
         const personalAssetsQuery = query(collection(firestore, `users/${user.uid}/assets`));
@@ -265,7 +271,7 @@ export default function TreasuryPage() {
     } finally {
         setIsLoading(false);
     }
-  }, [user, getFirebase]);
+  }, [user]);
 
   useEffect(() => {
     if (!isUserLoading) {

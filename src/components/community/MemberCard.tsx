@@ -1,3 +1,4 @@
+
 // src/components/community/MemberCard.tsx
 'use client';
 
@@ -12,61 +13,33 @@ import { useTranslation } from '@/hooks/use-translation';
 import type { Member, CommunityProfile } from '@/lib/types';
 import { useUser } from '@/firebase';
 
-// Inlined Icons to resolve build error
-function HumanIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
-      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z" />
-      <path d="M20 21v-2c0-2.21-1.79-4-4-4H8c-2.21 0-4 1.79-4 4v2" />
-    </svg>
-  );
-}
-
-function AiIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
-        <path d="M12 8V4H8" />
-        <rect width="16" height="12" x="4" y="8" rx="2" />
-        <path d="M2 14h2" />
-        <path d="M20 14h2" />
-        <path d="M15 13v2" />
-        <path d="M9 13v2" />
-    </svg>
-  );
-}
-
-
 export function MemberCard({ member, communityId, isOwner, onRemove, allProfiles }: { member: Member | string; communityId: string; isOwner: boolean; onRemove: (member: Member) => void; allProfiles: CommunityProfile[] }) {
     const { t } = useTranslation();
     const { user } = useUser();
 
-    const memberData: Member | undefined = typeof member === 'string'
-        ? allProfiles.find(p => p.userId === member) as Member | undefined
-        : member;
+    // Hydrate string member IDs with profile data
+    const memberData = useMemo(() => {
+        if (typeof member === 'string') {
+            const profile = allProfiles.find(p => p.userId === member);
+            if (profile) {
+                return {
+                    userId: profile.userId,
+                    name: profile.name,
+                    bio: profile.bio,
+                    role: 'Member', // Default role for hydrated members
+                    type: 'human',
+                    avatarUrl: profile.avatarUrl,
+                } as Member;
+            }
+            return null; // or a placeholder/loading state
+        }
+        return member;
+    }, [member, allProfiles]);
 
-    if (!memberData) return null; // or some placeholder
+    if (!memberData) {
+        // This can happen briefly while profiles are loading
+        return null; 
+    }
 
     const isHuman = memberData.type === 'human';
     const isSelf = isHuman && user?.uid === memberData.userId;
@@ -84,9 +57,9 @@ export function MemberCard({ member, communityId, isOwner, onRemove, allProfiles
                 <AvatarImage src={memberData.avatarUrl || `https://i.pravatar.cc/150?u=${memberData.userId || memberData.name}`} />
                 <AvatarFallback>
                     {isHuman ? (
-                        <HumanIcon className="w-10 h-10 text-primary" />
+                        <User className="w-10 h-10 text-primary" />
                     ) : (
-                        <AiIcon className="w-10 h-10 text-primary" />
+                        <Bot className="w-10 h-10 text-primary" />
                     )}
                 </AvatarFallback>
             </Avatar>

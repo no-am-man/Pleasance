@@ -1,3 +1,4 @@
+
 // src/app/page.tsx
 'use client';
 
@@ -7,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useUser, useMemoFirebase, getFirebase } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, where, getDocs, serverTimestamp, writeBatch, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, serverTimestamp, writeBatch, doc, getDoc } from 'firebase/firestore';
 import { refineCommunityPromptAction, createCommunityDetailsAction } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -90,34 +91,34 @@ function CreateCommunityCard() {
 
       // Create community doc
       const communityRef = doc(collection(firestore, 'communities'));
+      
+      const profileRef = doc(firestore, 'community-profiles', user.uid);
+      const profileSnap = await getDoc(profileRef);
+      
+      const ownerMember: Member = {
+          userId: user.uid,
+          name: user.displayName || 'Founder',
+          bio: 'Community Founder',
+          role: 'Founder',
+          type: 'human',
+          avatarUrl: user.photoURL || '',
+      };
+
+      if (profileSnap.exists()) {
+        const profile = profileSnap.data();
+        ownerMember.name = profile.name;
+        ownerMember.bio = profile.bio;
+        ownerMember.avatarUrl = profile.avatarUrl || user.photoURL || '';
+      }
+      
       batch.set(communityRef, {
         ...newCommunityData,
         id: communityRef.id,
         ownerId: user.uid,
+        members: [ownerMember, ...newCommunityData.members],
+        createdAt: serverTimestamp(),
       });
-
-      // Add owner as a human member
-      const profileRef = doc(firestore, 'community-profiles', user.uid);
-      const profileSnap = await getDoc(profileRef);
-      if (profileSnap.exists()) {
-        const profile = profileSnap.data();
-        const ownerMember: Member = {
-            userId: user.uid,
-            name: profile.name,
-            bio: profile.bio,
-            role: 'Founder',
-            type: 'human',
-            avatarUrl: profile.avatarUrl || user.photoURL || '',
-        };
-         batch.update(communityRef, {
-            members: [ownerMember, ...newCommunityData.members]
-        });
-      } else {
-         batch.update(communityRef, {
-            members: [user.uid, ...newCommunityData.members]
-        });
-      }
-
+      
       await batch.commit();
 
       toast({
@@ -225,6 +226,7 @@ function CommunityCard({ community }: { community: Community }) {
   const { user } = useUser();
   const { t } = useTranslation();
   const owner = community.members.find(m => typeof m !== 'string' && m.userId === community.ownerId);
+  const isOwner = user?.uid === community.ownerId;
 
   return (
     <Card className="flex flex-col shadow-lg hover:shadow-primary/20 transition-shadow duration-300">
@@ -256,7 +258,7 @@ function CommunityCard({ community }: { community: Community }) {
       <CardContent>
          <Button asChild className="w-full">
             <Link href={`/community/${community.id}`}>
-                {t('community_request_to_join')}
+                {isOwner ? 'View Your Community' : t('community_request_to_join')}
             </Link>
         </Button>
       </CardContent>
@@ -319,7 +321,10 @@ export default function CommunitiesPage() {
     
     const userCommunities = useMemo(() => {
         if (!user || !communities) return [];
-        return communities.filter(c => c.ownerId === user.uid);
+        return communities.filter(c => c.members.some(member => {
+            if (typeof member === 'string') return false; // old format, ignore
+            return member.type === 'human' && member.userId === user.uid && member.role === 'Founder';
+        }));
     }, [user, communities]);
 
     const isLoading = isUserLoading || isLoadingCommunities;

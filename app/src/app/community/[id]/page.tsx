@@ -362,7 +362,7 @@ export default function CommunityProfilePage() {
         setAllProfiles(profilesSnapshot.docs.map(d => d.data() as CommunityProfile));
 
         if (user) {
-            setUserCommunities(allComms.filter(c => c.members.some(m => typeof m !== 'string' && m.userId === user.uid)));
+            setUserCommunities(allComms.filter(c => c.members.some(m => (typeof m !== 'string' && m.userId === user.uid))));
         }
 
       } catch (e) {
@@ -497,8 +497,8 @@ export default function CommunityProfilePage() {
     const communityDocRef = doc(firestore, 'communities', community.id);
     try {
       const memberIdentifierToRemove = community.members.find(m => {
-          if (typeof m === 'string') return false; // Should not happen with new data model
-          return m.userId === memberToRemove.userId;
+          if (typeof m === 'string') return m === memberToRemove.userId;
+          return m.userId === memberToRemove.userId || m.name === memberToRemove.name;
       });
 
       if (!memberIdentifierToRemove) {
@@ -719,7 +719,7 @@ export default function CommunityProfilePage() {
                                     <LoaderCircle className="animate-spin mx-auto" />
                                 ) : allProfiles.length > 0 ? (
                                     <div className="space-y-4">
-                                        {allProfiles.filter(p => !community.members.some(m => typeof m !== 'string' && m.userId === p.userId)).map(profile => (
+                                        {allProfiles.filter(p => !community.members.some(m => (typeof m === 'string' ? m : m.userId) === p.userId)).map(profile => (
                                             <Card key={profile.id} className="flex items-center p-4">
                                                 <Avatar className="w-12 h-12 mr-4">
                                                     <AvatarImage src={profile.avatarUrl || `https://i.pravatar.cc/150?u=${profile.name}`} alt={profile.name} />
