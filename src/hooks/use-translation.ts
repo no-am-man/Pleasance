@@ -7,9 +7,11 @@ import { useLanguage } from '@/components/language-provider';
 export function useTranslation() {
   const { language } = useLanguage();
   const [translations, setTranslations] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchTranslations = async () => {
+      setIsLoading(true);
       try {
         const langModule = await import(`@/locales/${language}.json`);
         setTranslations(langModule.default);
@@ -20,18 +22,26 @@ export function useTranslation() {
           const fallbackModule = await import(`@/locales/en.json`);
           setTranslations(fallbackModule.default);
         }
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchTranslations();
   }, [language]);
 
-  const t = (key: string): string => {
+  const t = (key: string, options?: { [key: string]: string | number }): string => {
     if (!translations) return key;
 
-    // Simple key lookup. For nested keys, you might expand this.
-    // e.g., key.split('.').reduce((obj, k) => obj?.[k], translations)
-    return translations[key] || key;
+    let translation = translations[key] || key;
+
+    if (options) {
+        Object.keys(options).forEach(optionKey => {
+            translation = translation.replace(`{${optionKey}}`, String(options[optionKey]));
+        });
+    }
+
+    return translation;
   };
   
    const tData = (key: string): any => {
@@ -39,5 +49,5 @@ export function useTranslation() {
     return translations[key] || null;
   }
 
-  return { t, tData, isLoading: !translations };
+  return { t, tData, isLoading };
 }

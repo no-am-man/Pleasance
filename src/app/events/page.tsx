@@ -1,3 +1,4 @@
+
 // src/app/events/page.tsx
 'use client';
 
@@ -12,8 +13,8 @@ import { type Event } from '@/lib/types';
 import { useTranslation } from '@/hooks/use-translation';
 
 export default function EventsPage() {
-  const { user } = useUser();
-  const { t } = useTranslation();
+  const { user, isUserLoading } = useUser();
+  const { t, isLoading: isTranslationLoading } = useTranslation();
   const [showForm, setShowForm] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
@@ -51,7 +52,7 @@ export default function EventsPage() {
     });
 
     return () => unsubscribe();
-  }, [user]); // Add user as a dependency to re-fetch on auth state change
+  }, []);
   
   const handleEdit = (event: Event) => {
     setEditingEvent(event);
@@ -62,6 +63,14 @@ export default function EventsPage() {
     setShowForm(false);
     setEditingEvent(null);
   };
+
+  if (isUserLoading || isTranslationLoading) {
+    return (
+        <main className="container mx-auto flex min-h-[80vh] items-center justify-center">
+            <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
+        </main>
+    );
+  }
 
   return (
     <main className="container mx-auto max-w-4xl py-8 px-4">
