@@ -9,8 +9,10 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import type { Community, Member, RoadmapCard, RoadmapColumn } from './types';
 
-// --- FOUNDER & AI MEMBER DATA ---
-const FOUNDER_UID = 'h2b0wMo3A3XgY6p3D0bS1cI2g7m2'; // You can replace this with your actual UID if needed
+// --- FOUNDER & AI MEMBER DATA (PLACEHOLDERS) ---
+// NOTE: "Noam" and this UID are placeholders for the founding developer of the project.
+// This ensures a default admin and community exist upon initial seeding.
+const FOUNDER_UID = 'h2b0wMo3A3XgY6p3D0bS1cI2g7m2'; 
 const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com';
 
 const FOUNDER_PROFILE = {
