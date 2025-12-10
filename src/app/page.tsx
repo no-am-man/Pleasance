@@ -374,7 +374,10 @@ export default function CommunitiesPage() {
             <Separator />
 
              <div>
-                <h2 className="text-3xl font-bold mb-6 font-headline">Allied Federations</h2>
+                <h2 className="text-3xl font-bold mb-4 font-headline">Allied Federations</h2>
+                <p className="text-muted-foreground mb-6 max-w-2xl">
+                    An Allied Federation is an independent community running on a forked version of the Pleasance source code from our GitHub repository. They have their own infrastructure and governance but share our core principles of decentralized creation and communion.
+                </p>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FederationCard 
                         name="Lashirilo" 
