@@ -9,13 +9,13 @@ import { googleAI } from '@genkit-ai/google-genai';
  */
 
 // For complex generation, reasoning, and multi-turn chat.
-export const GEMINI_PRO = googleAI.model('gemini-1.5-flash-preview-0514');
+export const GEMINI_PRO = googleAI.model('gemini-1.5-flash');
 
 // For fast, lightweight tasks, and summarization
-export const GEMINI_FLASH = googleAI.model('gemini-1.5-flash-preview-0514');
+export const GEMINI_FLASH = googleAI.model('gemini-1.5-flash');
 
 // For image generation
 export const IMAGEN = googleAI.model('imagen-2');
 
 // For text-to-speech
-export const TTS_MODEL = googleAI.model('gemini-2.5-flash-preview-tts');
+export const TTS_MODEL = googleAI.model('tts-1');
