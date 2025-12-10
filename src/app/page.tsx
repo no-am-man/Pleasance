@@ -85,6 +85,9 @@ function CreateCommunityCard() {
 
     try {
       const { firestore } = getFirebase();
+      if (!firestore) {
+        throw new Error('Firestore is not initialized');
+      }
       const newCommunityData = await createCommunityDetailsAction(data);
       const batch = writeBatch(firestore);
 
@@ -98,25 +101,28 @@ function CreateCommunityCard() {
 
       // Add owner as a human member
       const profileRef = doc(firestore, 'community-profiles', user.uid);
-      const profileSnap = await getDoc(profileRef);
-      if (profileSnap.exists()) {
-        const profile = profileSnap.data();
-        const ownerMember: Member = {
-            userId: user.uid,
-            name: profile.name,
-            bio: profile.bio,
-            role: 'Founder',
-            type: 'human',
-            avatarUrl: profile.avatarUrl || user.photoURL || '',
-        };
-         batch.update(communityRef, {
-            members: [ownerMember, ...newCommunityData.members]
-        });
-      } else {
-         batch.update(communityRef, {
-            members: [user.uid, ...newCommunityData.members]
-        });
+      const profileSnap = await getDocs(query(collection(firestore, 'community-profiles'), where('userId', '==', user.uid)));
+      
+      const ownerMember: Member = {
+          userId: user.uid,
+          name: user.displayName || 'Founder',
+          bio: 'Community Founder',
+          role: 'Founder',
+          type: 'human',
+          avatarUrl: user.photoURL || '',
+      };
+      
+      if (!profileSnap.empty) {
+        const profile = profileSnap.docs[0].data();
+        ownerMember.name = profile.name;
+        ownerMember.bio = profile.bio;
+        ownerMember.avatarUrl = profile.avatarUrl || user.photoURL || '';
       }
+
+      batch.update(communityRef, {
+        members: [ownerMember, ...newCommunityData.members]
+      });
+
 
       await batch.commit();
 

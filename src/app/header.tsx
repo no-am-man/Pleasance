@@ -31,7 +31,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useUser } from '@/firebase/use-user';
-import { auth } from '@/firebase/config';
+import { getFirebase } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { KanbanIcon } from '@/components/icons/kanban-icon';
@@ -85,7 +85,9 @@ export function Header() {
   const isFounder = user?.email === FOUNDER_EMAIL;
 
   const handleSignOut = async () => {
+    const { auth } = getFirebase();
     await signOut(auth);
+    await fetch('/api/auth/session', { method: 'DELETE' });
   };
 
   const navGroups = [
@@ -156,7 +158,7 @@ export function Header() {
                             <div key={groupIndex} className="mb-4">
                                 <h3 className={cn("px-3 py-2 text-xs font-semibold uppercase text-muted-foreground tracking-wider", direction === 'rtl' && 'text-right')}>{group.title}</h3>
                                 {group.links.map((link) => {
-                                  const isActive = link.href === '/' ? pathname === link.href : pathname.startsWith(link.href);
+                                  const isActive = link.href === '/' ? pathname === link.href : pathname.startsWith(link.href) && link.href !== '/';
                                   return (
                                     <NavLink
                                         key={link.href}

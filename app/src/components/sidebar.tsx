@@ -34,7 +34,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useUser } from '@/firebase/use-user';
-import { getFirebase } from '@/firebase/config';
+import { getFirebase } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -238,7 +238,7 @@ export function Sidebar() {
                         <div key={groupIndex} className="mb-2">
                             <h3 className={cn("px-3 py-2 text-xs font-semibold uppercase text-muted-foreground tracking-wider", direction === 'rtl' && 'text-right')}>{group.title}</h3>
                             {group.links.map((link) => {
-                              const isActive = link.href === '/' ? pathname === link.href : pathname.startsWith(link.href) && link.href !== '/';
+                              const isActive = link.href === '/' ? pathname === link.href : pathname.startsWith(link.href);
                               return (
                                 <NavLink
                                     key={link.href}
@@ -256,7 +256,7 @@ export function Sidebar() {
                             <NavLink
                                 key={adminLink.href}
                                 {...adminLink}
-                                isActive={pathname === adminLink.href}
+                                isActive={pathname.startsWith(adminLink.href)}
                             />
                         </div>
                     )}

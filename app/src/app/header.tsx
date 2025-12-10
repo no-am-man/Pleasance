@@ -158,7 +158,7 @@ export function Header() {
                             <div key={groupIndex} className="mb-4">
                                 <h3 className={cn("px-3 py-2 text-xs font-semibold uppercase text-muted-foreground tracking-wider", direction === 'rtl' && 'text-right')}>{group.title}</h3>
                                 {group.links.map((link) => {
-                                  const isActive = link.href === '/' ? pathname === link.href : pathname.startsWith(link.href) && link.href !== '/';
+                                  const isActive = link.href === '/' ? pathname === link.href : pathname.startsWith(link.href);
                                   return (
                                     <NavLink
                                         key={link.href}
@@ -175,7 +175,7 @@ export function Header() {
                                 <NavLink
                                     key={adminLink.href}
                                     {...adminLink}
-                                    isActive={pathname === adminLink.href}
+                                    isActive={pathname.startsWith(adminLink.href)}
                                 />
                             </div>
                         )}
@@ -207,7 +207,7 @@ export function Header() {
                             </AlertDialogTrigger>
                         </div>
                     ) : (
-                        <NavLink href="/login" label="navLogin" icon={UserCircle} isActive={false} />
+                        <NavLink href="/login" label="navLogin" icon={UserCircle} isActive={pathname.startsWith('/login')} />
                     )}
                  </div>
             </SheetContent>
