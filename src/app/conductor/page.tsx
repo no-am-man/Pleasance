@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Bot, User, Send, LoaderCircle, LogIn, Info, Link as LinkIcon } from 'lucide-react';
+import { Bot, User, Send, LoaderCircle, LogIn, Info, Link as LinkIcon, Github } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { conductSuperAgentAction } from '../actions';
@@ -88,14 +88,13 @@ function AmbassadorExplanation() {
                         <li><code className="bg-muted px-1 py-0.5 rounded-sm">/bug Title: "Mobile view is broken" Desc: "The main page does not render correctly on mobile devices." P: high</code> - {t('ambasedor_explanation_li2')}</li>
                         <li><code className="bg-muted px-1 py-0.5 rounded-sm">/community "Pleasance"</code> - {t('ambasedor_explanation_li3')}</li>
                     </ul>
-                    <p>{t('ambasedor_explanation_p3')}</p>
                 </CardContent>
             </Card>
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2"><LinkIcon className="text-primary"/> Echo a Thought-Form</CardTitle>
                     <CardDescription>
-                        Paste the full URL of a community page containing a thought-form you wish to echo into your active community.
+                        This is the core mechanic for sharing ideas across the Federation. Find a message bubble in another community, get its URL, and paste it here to create an "echo" in your own community's feed.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -103,10 +102,23 @@ function AmbassadorExplanation() {
                         <Input 
                             value={echoUrl} 
                             onChange={(e) => setEchoUrl(e.target.value)} 
-                            placeholder="e.g., https://your-app/community/community-id/..."
+                            placeholder="e.g., https://your-app/community/community-id"
                         />
                         <Button type="submit">Echo</Button>
                     </form>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Resources</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Button asChild variant="outline">
+                        <a href="https://github.com/no-am-man/Pleasance" target="_blank" rel="noopener noreferrer">
+                            <Github className="mr-2 h-4 w-4" />
+                            {t('navGithub')}
+                        </a>
+                    </Button>
                 </CardContent>
             </Card>
         </div>
