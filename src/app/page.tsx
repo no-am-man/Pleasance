@@ -24,6 +24,7 @@ import { useTranslation } from '@/hooks/use-translation';
 import type { Community, Member, CommunityProfile } from '@/lib/types';
 import Image from 'next/image';
 import { Separator } from '@/components/ui/separator';
+import { useRouter } from 'next/navigation';
 
 
 const PromptSchema = z.object({
@@ -38,6 +39,7 @@ function CreateCommunityCard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRefining, setIsRefining] = useState(false);
   const { t } = useTranslation();
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof PromptSchema>>({
     resolver: zodResolver(PromptSchema),
@@ -112,15 +114,13 @@ function CreateCommunityCard() {
         ownerMember.avatarUrl = profile.avatarUrl || user.photoURL || '';
       }
       
-      const finalCommunityObject: Community = {
+      batch.set(communityRef, {
         ...newCommunityData,
         id: communityRef.id,
         ownerId: user.uid,
         members: [ownerMember, ...newCommunityData.members],
-        createdAt: serverTimestamp() as any, // Let server set timestamp
-      };
-      
-      batch.set(communityRef, finalCommunityObject);
+        createdAt: serverTimestamp(),
+      });
       
       await batch.commit();
 
@@ -129,6 +129,11 @@ function CreateCommunityCard() {
         description: `"${newCommunityData.name}" has been founded.`,
       });
       form.reset();
+
+      // THE FIX: Navigate after the write has been confirmed.
+      // The onSnapshot listener on the main page will handle the UI update.
+      router.push(`/community/${communityRef.id}`);
+
     } catch (e) {
       const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
       toast({
@@ -320,7 +325,7 @@ export default function CommunitiesPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const { t } = useTranslation();
     
-    const [communities, setCommunities] = useState<Community[]>([]);
+    const [allCommunities, setAllCommunities] = useState<Community[]>([]);
     const [isLoadingCommunities, setIsLoadingCommunities] = useState(true);
 
     useEffect(() => {
@@ -332,7 +337,7 @@ export default function CommunitiesPage() {
         const q = query(collection(firestore, 'communities'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const communitiesData = snapshot.docs.map(doc => doc.data() as Community);
-            setCommunities(communitiesData);
+            setAllCommunities(communitiesData);
             setIsLoadingCommunities(false);
         }, (error) => {
             console.error("Error fetching communities:", error);
@@ -343,14 +348,14 @@ export default function CommunitiesPage() {
 
 
     const filteredCommunities = useMemo(() => {
-        if (!communities) return [];
-        return communities.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    }, [communities, searchTerm]);
+        if (!allCommunities) return [];
+        return allCommunities.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }, [allCommunities, searchTerm]);
     
     const userCommunities = useMemo(() => {
-        if (!user || !communities) return [];
-        return communities.filter(c => c.ownerId === user.uid);
-    }, [user, communities]);
+        if (!user || !allCommunities) return [];
+        return allCommunities.filter(c => c.ownerId === user.uid);
+    }, [user, allCommunities]);
 
     const isLoading = isUserLoading || isLoadingCommunities;
 
