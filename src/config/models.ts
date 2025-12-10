@@ -1,3 +1,4 @@
+
 // src/config/models.ts
 
 /**
@@ -15,5 +16,5 @@ export const GEMINI_FLASH = 'googleai/gemini-1.5-flash-preview-0514';
 // For image generation
 export const IMAGEN = 'googleai/imagen-2';
 
-// For text-to-speech. Using a specific preview version.
-export const TTS_MODEL = 'googleai/gemini-2.5-flash-preview-tts';
+// For text-to-speech.
+export const TTS_MODEL = 'googleai/tts-1';
