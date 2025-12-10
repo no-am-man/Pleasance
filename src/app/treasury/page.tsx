@@ -1,4 +1,3 @@
-
 // src/app/treasury/page.tsx
 'use client';
 
@@ -266,7 +265,7 @@ export default function TreasuryPage() {
     } finally {
         setIsLoading(false);
     }
-  }, [user]);
+  }, [user, getFirebase]);
 
   useEffect(() => {
     if (!isUserLoading) {
