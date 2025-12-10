@@ -86,10 +86,12 @@ function CreateCommunityCard() {
 
     try {
       const { firestore } = getFirebase();
+      if (!firestore) {
+          throw new Error("Firestore not initialized.");
+      }
       const newCommunityData = await createCommunityDetailsAction(data);
       const batch = writeBatch(firestore);
 
-      // Create community doc
       const communityRef = doc(collection(firestore, 'communities'));
       
       const profileRef = doc(firestore, 'community-profiles', user.uid);
@@ -321,10 +323,7 @@ export default function CommunitiesPage() {
     
     const userCommunities = useMemo(() => {
         if (!user || !communities) return [];
-        return communities.filter(c => c.members.some(member => {
-            if (typeof member === 'string') return false; // old format, ignore
-            return member.type === 'human' && member.userId === user.uid && member.role === 'Founder';
-        }));
+        return communities.filter(c => c.ownerId === user.uid);
     }, [user, communities]);
 
     const isLoading = isUserLoading || isLoadingCommunities;
@@ -347,12 +346,13 @@ export default function CommunitiesPage() {
                             <CommunityCard key={community.id} community={community} />
                         ))}
                     </div>
+                    <Separator className="my-12" />
                 </div>
             )}
             
             <CreateCommunityCard />
 
-            <div>
+            <div className="mt-12">
                 <h2 className="text-3xl font-bold mb-6 font-headline">{t('community_find_title')}</h2>
                 <div className="mb-6">
                     <Input
@@ -367,7 +367,7 @@ export default function CommunitiesPage() {
                      <div className="flex justify-center p-8"><LoaderCircle className="w-12 h-12 animate-spin text-primary" /></div>
                 ) : filteredCommunities.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {filteredCommunities.map(community => (
+                        {filteredCommunities.filter(c => !userCommunities.some(uc => uc.id === c.id)).map(community => (
                             <CommunityCard key={community.id} community={community} />
                         ))}
                     </div>
