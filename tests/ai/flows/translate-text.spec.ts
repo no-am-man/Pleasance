@@ -1,5 +1,5 @@
 // tests/ai/flows/translate-text.spec.ts
-import { test, expect } from '@playwright/test';
+import { test, expect } from 'vitest';
 import { translateText } from '@/ai/flows/translate-text';
 
 // This test calls the server action directly to verify the Genkit flow.
