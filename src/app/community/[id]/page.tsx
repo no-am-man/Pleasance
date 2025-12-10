@@ -1,4 +1,3 @@
-
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -361,10 +360,8 @@ export default function CommunityProfilePage() {
 
         if (user) {
             const userComms = allComms.filter(c => c.members.some(m => {
-                if (typeof m === 'object' && m !== null && 'userId' in m) {
-                    return m.userId === user.uid;
-                }
-                return false;
+                const memberId = typeof m === 'string' ? m : m.userId;
+                return memberId === user.uid;
             }));
             setUserCommunities(userComms);
         }
