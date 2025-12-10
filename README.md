@@ -46,7 +46,25 @@ To get a local copy up and running, follow these simple steps.
 - Node.js (v20 or later)
 - npm
 
-### Installation
+### Environment Setup
+
+This project requires credentials for Google AI (Gemini) and Firebase services.
+
+1.  **Google AI API Key:**
+    *   Create an API key from the [Google AI Studio](https://aistudio.google.com/app/apikey).
+    *   Create a file named `.env` in the root of the project.
+    *   Add your API key to the `.env` file like this:
+        ```
+        GEMINI_API_KEY=YOUR_API_KEY_HERE
+        ```
+
+2.  **Firebase Service Account:**
+    *   Go to your [Firebase Project Settings](https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk).
+    *   Select your project, click **"Generate new private key"**, and download the JSON file.
+    *   Rename the downloaded file to `service-account.json`.
+    *   Place this file in the root directory of the project. **Important:** This file is included in `.gitignore` and should never be committed to source control.
+
+### Installation & Running
 
 1.  **Clone the repo**
     ```sh
