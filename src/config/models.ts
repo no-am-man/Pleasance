@@ -1,4 +1,3 @@
-
 // src/config/models.ts
 
 import { googleAI } from '@genkit-ai/google-genai';
