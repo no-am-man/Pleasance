@@ -316,7 +316,7 @@ function WikiTabContent({ communityId, isOwner }: { communityId: string; isOwner
         });
 
         return () => unsubscribe();
-    }, [communityId]);
+    }, [communityId, firestore]);
 
 
     const handleDeleteArticle = async (articleId: string) => {
@@ -946,6 +946,7 @@ export default function CommunityProfilePage() {
     
 
     
+
 
 
 
