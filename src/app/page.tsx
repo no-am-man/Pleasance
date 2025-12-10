@@ -1,3 +1,4 @@
+
 // src/app/page.tsx
 'use client';
 
@@ -101,7 +102,7 @@ function CreateCommunityCard() {
 
       // Add owner as a human member
       const profileRef = doc(firestore, 'community-profiles', user.uid);
-      const profileSnap = await getDocs(query(collection(firestore, 'community-profiles'), where('userId', '==', user.uid)));
+      const profileSnap = await getDoc(profileRef);
       
       const ownerMember: Member = {
           userId: user.uid,
@@ -112,8 +113,8 @@ function CreateCommunityCard() {
           avatarUrl: user.photoURL || '',
       };
       
-      if (!profileSnap.empty) {
-        const profile = profileSnap.docs[0].data();
+      if (profileSnap.exists()) {
+        const profile = profileSnap.data();
         ownerMember.name = profile.name;
         ownerMember.bio = profile.bio;
         ownerMember.avatarUrl = profile.avatarUrl || user.photoURL || '';
