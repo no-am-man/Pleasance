@@ -12,6 +12,7 @@ import { Bot, User, UserX } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
 import type { Member, CommunityProfile } from '@/lib/types';
 import { useUser } from '@/firebase';
+import { useMemo } from 'react';
 
 export function MemberCard({ member, communityId, isOwner, onRemove, allProfiles }: { member: Member | string; communityId: string; isOwner: boolean; onRemove: (member: Member) => void; allProfiles: CommunityProfile[] }) {
     const { t } = useTranslation();
@@ -78,7 +79,7 @@ export function MemberCard({ member, communityId, isOwner, onRemove, allProfiles
                 <Badge variant="outline" className="flex-shrink-0"><Bot className="w-3 h-3 mr-1" /> {t('community_page_member_type_ai')}</Badge>
             )}
 
-            {isOwner && isHuman && !isSelf && (
+            {isOwner && !isSelf && (
               <AlertDialog>
                   <AlertDialogTrigger asChild>
                       <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100">
@@ -105,3 +106,5 @@ export function MemberCard({ member, communityId, isOwner, onRemove, allProfiles
       </div>
     );
 }
+
+    
