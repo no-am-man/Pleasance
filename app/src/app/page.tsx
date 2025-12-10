@@ -22,7 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { FederationDiagram } from '@/components/federation-diagram';
 import { useTranslation } from '@/hooks/use-translation';
-import type { Community, Member } from '@/lib/types';
+import type { Community, Member, CommunityProfile } from '@/lib/types';
 import Image from 'next/image';
 import { Separator } from '@/components/ui/separator';
 
@@ -229,7 +229,7 @@ function CommunityCard({ community }: { community: Community }) {
   const { t } = useTranslation();
   if (!community) return null;
   
-  const owner = community.members?.find(m => typeof m !== 'string' && m.userId === community.ownerId);
+  const owner = community.members?.find(m => m.type === 'human' && m.userId === community.ownerId);
   const isOwner = user?.uid === community.ownerId;
 
   return (

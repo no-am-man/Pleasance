@@ -1,4 +1,5 @@
 
+// src/components/header.tsx
 'use client';
 
 import Link from 'next/link';
@@ -34,11 +35,9 @@ import { useUser } from '@/firebase/use-user';
 import { getFirebase } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { KanbanIcon } from '@/components/icons/kanban-icon';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { useTranslation } from '@/hooks/use-translation';
 import { LanguageToggle } from '@/components/language-toggle';
 import { useLanguage } from '@/components/language-provider';

@@ -1,4 +1,3 @@
-
 // src/app/community/[id]/page.tsx
 'use client';
 
@@ -361,8 +360,8 @@ export default function CommunityProfilePage() {
 
         if (user) {
             const userComms = allComms.filter(c => c.members.some(m => {
-                const memberId = typeof m === 'string' ? m : m.userId;
-                return memberId === user.uid;
+                if (typeof m === 'string') return m === user.uid;
+                return m.type === 'human' && m.userId === user.uid;
             }));
             setUserCommunities(userComms);
         }
@@ -435,12 +434,12 @@ export default function CommunityProfilePage() {
   }, [community]);
 
   const isMember = useMemo(() => {
-    if (!user || !community) return false;
-    return allMembers.some(member => {
-        const memberId = typeof member === 'string' ? member : member.userId;
+    if (!user || !community?.members) return false;
+    return community.members.some(member => {
+        const memberId = typeof member === 'string' ? member : (member as Member).userId;
         return memberId === user.uid;
     });
-}, [user, community, allMembers]);
+}, [user, community]);
 
 
   const handleRequestToJoin = async () => {
@@ -477,20 +476,12 @@ export default function CommunityProfilePage() {
   const handleInvite = async (profile: CommunityProfile) => {
     if (!community || !firestore) return;
     
-    const newMember: Member = {
-        userId: profile.userId,
-        name: profile.name,
-        bio: profile.bio,
-        role: 'Member',
-        type: 'human',
-        avatarUrl: profile.avatarUrl || '',
-    };
     const communityDocRef = doc(firestore, 'communities', community.id);
     await updateDoc(communityDocRef, {
-        members: arrayUnion(newMember)
+        members: arrayUnion(profile.userId)
     });
 
-    await welcomeNewMemberAction({ communityId: community.id, communityName: community.name, newMemberName: newMember.name });
+    await welcomeNewMemberAction({ communityId: community.id, communityName: community.name, newMemberName: profile.name });
 
     toast({
         title: t('community_page_member_invited_title'),
@@ -739,7 +730,7 @@ export default function CommunityProfilePage() {
                                 ) : allProfiles.length > 0 ? (
                                     <div className="space-y-4">
                                         {allProfiles.filter(p => !allMembers.some(m => {
-                                            const memberId = typeof m === 'string' ? m : m.userId;
+                                            const memberId = typeof m === 'string' ? m : (m as Member).userId;
                                             return memberId === p.userId;
                                         })).map(profile => (
                                             <Card key={profile.id} className="flex items-center p-4">
