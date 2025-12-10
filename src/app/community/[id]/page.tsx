@@ -403,7 +403,7 @@ export default function CommunityProfilePage() {
       if (unsubscribeProfile) unsubscribeProfile();
       if (unsubscribeJoinRequest) unsubscribeJoinRequest();
     };
-  }, [id, user, isUserLoading]);
+  }, [id, user, isUserLoading, firestore]);
 
 
   const [isSubmitting, setIsSubmitting] = useState(false);
