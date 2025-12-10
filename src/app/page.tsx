@@ -6,9 +6,8 @@ import { useState, useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useUser, useMemoFirebase, getFirebase } from '@/firebase';
-import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, where, getDocs, serverTimestamp, writeBatch, doc, getDoc } from 'firebase/firestore';
+import { useUser, getFirebase } from '@/firebase';
+import { collection, query, onSnapshot, serverTimestamp, writeBatch, doc, getDoc } from 'firebase/firestore';
 import { refineCommunityPromptAction, createCommunityDetailsAction } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,7 +32,7 @@ const PromptSchema = z.object({
 });
 
 
-function CreateCommunityCard({ onCommunityCreated }: { onCommunityCreated: (newCommunity: Community) => void }) {
+function CreateCommunityCard() {
   const { user } = useUser();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -118,7 +117,7 @@ function CreateCommunityCard({ onCommunityCreated }: { onCommunityCreated: (newC
         id: communityRef.id,
         ownerId: user.uid,
         members: [ownerMember, ...newCommunityData.members],
-        createdAt: serverTimestamp(),
+        createdAt: serverTimestamp() as any, // Let server set timestamp
       };
       
       batch.set(communityRef, finalCommunityObject);
@@ -129,7 +128,6 @@ function CreateCommunityCard({ onCommunityCreated }: { onCommunityCreated: (newC
         title: 'Community Created!',
         description: `"${newCommunityData.name}" has been founded.`,
       });
-      onCommunityCreated(finalCommunityObject);
       form.reset();
     } catch (e) {
       const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
@@ -321,44 +319,40 @@ export default function CommunitiesPage() {
     const { user, isUserLoading } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
     const { t } = useTranslation();
-    const { firestore } = getFirebase();
-
-    const [allCommunities, setAllCommunities] = useState<Community[]>([]);
+    
+    const [communities, setCommunities] = useState<Community[]>([]);
     const [isLoadingCommunities, setIsLoadingCommunities] = useState(true);
 
     useEffect(() => {
+        const { firestore } = getFirebase();
         if (!firestore) {
             setIsLoadingCommunities(false);
             return;
-        }
+        };
         const q = query(collection(firestore, 'communities'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const communitiesData = snapshot.docs.map(doc => doc.data() as Community);
-            setAllCommunities(communitiesData);
+            setCommunities(communitiesData);
             setIsLoadingCommunities(false);
         }, (error) => {
             console.error("Error fetching communities:", error);
             setIsLoadingCommunities(false);
         });
         return () => unsubscribe();
-    }, [firestore]);
+    }, []);
 
 
     const filteredCommunities = useMemo(() => {
-        if (!allCommunities) return [];
-        return allCommunities.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    }, [allCommunities, searchTerm]);
+        if (!communities) return [];
+        return communities.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }, [communities, searchTerm]);
     
     const userCommunities = useMemo(() => {
-        if (!user || !allCommunities) return [];
-        return allCommunities.filter(c => c.ownerId === user.uid);
-    }, [user, allCommunities]);
+        if (!user || !communities) return [];
+        return communities.filter(c => c.ownerId === user.uid);
+    }, [user, communities]);
 
     const isLoading = isUserLoading || isLoadingCommunities;
-
-    const handleCommunityCreated = (newCommunity: Community) => {
-        setAllCommunities(prev => [newCommunity, ...prev]);
-    }
 
   return (
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
@@ -382,7 +376,7 @@ export default function CommunitiesPage() {
                 </div>
             )}
             
-            <CreateCommunityCard onCommunityCreated={handleCommunityCreated} />
+            <CreateCommunityCard />
 
             <div className="mt-12">
                 <h2 className="text-3xl font-bold mb-6 font-headline">{t('community_find_title')}</h2>
@@ -453,3 +447,5 @@ export default function CommunitiesPage() {
     </main>
   );
 }
+
+    
