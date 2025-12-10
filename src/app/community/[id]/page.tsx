@@ -438,7 +438,10 @@ export default function CommunityProfilePage() {
 
   const isMember = useMemo(() => {
     if (!user || !community) return false;
-    return allMembers.some(member => typeof member !== 'string' && member.userId === user.uid);
+    return allMembers.some(member => {
+        const memberId = typeof member === 'string' ? member : member.userId;
+        return memberId === user.uid;
+    });
 }, [user, community, allMembers]);
 
 
