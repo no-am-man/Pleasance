@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, LoaderCircle, CalendarHeart } from 'lucide-react';
 import { EventForm } from '@/components/events/event-form';
 import { EventCard } from '@/components/events/event-card';
-import { type Event } from '@/lib/types';
+import type { Event } from '@/lib/types';
 import { useTranslation } from '@/hooks/use-translation';
 
 export default function EventsPage() {

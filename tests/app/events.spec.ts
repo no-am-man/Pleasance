@@ -1,7 +1,7 @@
 // tests/app/events.spec.ts
 import { test, expect, describe, beforeAll, afterAll } from 'vitest';
 import { getFirebase } from '@/firebase/config';
-import { addDoc, collection, doc, getDoc, updateDoc, deleteDoc, arrayUnion, arrayRemove, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, getDocs, updateDoc, deleteDoc, arrayUnion, arrayRemove, serverTimestamp, query, orderBy } from 'firebase/firestore';
 import type { Event } from '@/lib/types';
 import type { User } from 'firebase/auth';
 
@@ -46,9 +46,16 @@ const mockOrganizer: User = {
     toJSON: () => ({})
 };
 
-let testEventId: string;
+let testEventIds: string[] = [];
 
 describe('Events Logic', () => {
+
+    // Cleanup created test events after all tests in this suite have run
+    afterAll(async () => {
+        const deletePromises = testEventIds.map(id => deleteDoc(doc(firestore, 'events', id)));
+        await Promise.all(deletePromises);
+        testEventIds = [];
+    });
 
     test('should create a new event successfully', async () => {
         const collectionRef = collection(firestore, 'events');
@@ -64,9 +71,9 @@ describe('Events Logic', () => {
         };
         
         const docRef = await addDoc(collectionRef, newEventData);
-        testEventId = docRef.id;
+        testEventIds.push(docRef.id);
 
-        expect(testEventId).toBeDefined();
+        expect(docRef.id).toBeDefined();
         
         const eventSnap = await getDoc(docRef);
         expect(eventSnap.exists()).toBe(true);
@@ -74,8 +81,26 @@ describe('Events Logic', () => {
 
     }, 30000);
 
+    test('should fetch a list of events', async () => {
+        // Ensure there's at least one event
+        if (testEventIds.length === 0) {
+            const docRef = await addDoc(collection(firestore, 'events'), { title: 'Pre-test event' });
+            testEventIds.push(docRef.id);
+        }
+
+        const eventsQuery = query(collection(firestore, 'events'), orderBy('date', 'desc'));
+        const snapshot = await getDocs(eventsQuery);
+        const eventsData = snapshot.docs.map(doc => doc.data() as Event);
+
+        expect(Array.isArray(eventsData)).toBe(true);
+        expect(eventsData.length).toBeGreaterThan(0);
+        expect(eventsData[0].title).toBeDefined();
+        console.log(`Successfully fetched ${eventsData.length} events.`);
+
+    }, 30000);
+
     test('should allow a user to RSVP to an event', async () => {
-        const eventDocRef = doc(firestore, 'events', testEventId);
+        const eventDocRef = doc(firestore, 'events', testEventIds[0]);
 
         // Simulate RSVPing
         await updateDoc(eventDocRef, {
@@ -90,7 +115,7 @@ describe('Events Logic', () => {
     }, 30000);
 
     test('should allow a user to cancel their RSVP', async () => {
-        const eventDocRef = doc(firestore, 'events', testEventId);
+        const eventDocRef = doc(firestore, 'events', testEventIds[0]);
 
         // Simulate cancelling RSVP
         await updateDoc(eventDocRef, {
@@ -105,7 +130,11 @@ describe('Events Logic', () => {
     }, 30000);
 
     test('should allow the organizer to delete the event', async () => {
-        const eventDocRef = doc(firestore, 'events', testEventId);
+        // Create a dedicated event for this test to avoid race conditions
+        const newEventRef = await addDoc(collection(firestore, 'events'), { title: 'To Be Deleted' });
+        const eventId = newEventRef.id;
+
+        const eventDocRef = doc(firestore, 'events', eventId);
         
         // Fetch the event to make sure it exists before deletion
         const eventSnapBeforeDelete = await getDoc(eventDocRef);
