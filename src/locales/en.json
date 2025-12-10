@@ -397,5 +397,9 @@
   "ambasedor_explanation_p2": "Here are a few examples of what you can ask me to do:",
   "ambasedor_explanation_li1": "Ask me to show you the 'Next Up' column on the public roadmap.",
   "ambasedor_explanation_li2": "Ask me to file a bug report with a title, description, and priority.",
-  "ambasedor_explanation_li3": "Ask me to look up the details of a specific community, like 'Pleasance.'"
+  "ambasedor_explanation_li3": "Ask me to look up the details of a specific community, like 'Pleasance.'",
+  "echo_form_title": "Echo a Thought-Form",
+  "echo_form_desc": "This is the core mechanic for sharing ideas across the federation. Find a message bubble in another community, get its URL, and paste it here to create an 'echo' in your own community's feed.",
+  "echo_form_placeholder": "e.g., https://your-app/community/community-id",
+  "echo_form_button": "Echo"
 }

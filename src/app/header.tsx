@@ -42,11 +42,10 @@ import { Separator } from '@/components/ui/separator';
 import { useTranslation } from '@/hooks/use-translation';
 import { LanguageToggle } from '@/components/language-toggle';
 import { useLanguage } from '@/components/language-provider';
+import { navGroups, adminLink } from '@/components/sidebar';
 
 
 const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com';
-
-const adminLink = { href: '/admin', label: 'navAdmin', icon: Shield };
 
 function NavLink({
   href,
@@ -90,40 +89,7 @@ export function Header() {
     await fetch('/api/auth/session', { method: 'DELETE' });
   };
 
-  const navGroups = [
-      {
-          title: t('navFederation'),
-          links: [
-              { href: '/', label: 'navCommunity', icon: Users },
-              { href: '/museum', label: 'navMuseum', icon: Landmark },
-              { href: '/events', label: 'navEvents', icon: CalendarHeart },
-          ]
-      },
-      {
-          title: t('navCreation'),
-          links: [
-              { href: '/svg3d', label: 'navAIWorkshop', icon: Sparkles },
-              { href: '/story', label: 'navNuncyLingua', icon: BookOpen },
-              { href: '/fabrication', label: 'navFabrication', icon: Warehouse },
-          ]
-      },
-      {
-          title: t('navGovernance'),
-          links: [
-              { href: '/treasury', label: 'navTreasury', icon: Banknote },
-              { href: '/roadmap', label: 'navRoadmap', icon: KanbanIcon },
-              { href: '/bugs', label: 'navBugTracker', icon: Bug },
-              { href: '/conductor', label: 'navConductor', icon: Bot },
-          ]
-      },
-      {
-          title: t('navSystem'),
-          links: [
-              { href: '/wiki', label: 'navWiki', icon: Info },
-              { href: '/pricing', label: 'navPricing', icon: DollarSign },
-          ]
-      }
-  ];
+  const translatedNavGroups = navGroups(t);
 
 
   return (
@@ -154,7 +120,7 @@ export function Header() {
                 </div>
                 <ScrollArea className="flex-1">
                     <nav className="grid items-start p-4 text-sm font-medium">
-                        {navGroups.map((group, groupIndex) => (
+                        {translatedNavGroups.map((group, groupIndex) => (
                             <div key={groupIndex} className="mb-4">
                                 <h3 className={cn("px-3 py-2 text-xs font-semibold uppercase text-muted-foreground tracking-wider", direction === 'rtl' && 'text-right')}>{group.title}</h3>
                                 {group.links.map((link) => {
@@ -175,7 +141,7 @@ export function Header() {
                                 <NavLink
                                     key={adminLink.href}
                                     {...adminLink}
-                                    isActive={pathname === adminLink.href}
+                                    isActive={pathname.startsWith(adminLink.href)}
                                 />
                             </div>
                         )}
@@ -207,7 +173,7 @@ export function Header() {
                             </AlertDialogTrigger>
                         </div>
                     ) : (
-                        <NavLink href="/login" label="navLogin" icon={UserCircle} isActive={false} />
+                        <NavLink href="/login" label="navLogin" icon={UserCircle} isActive={pathname.startsWith('/login')} />
                     )}
                  </div>
             </SheetContent>
