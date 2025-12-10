@@ -250,7 +250,16 @@ function CommunityCard({ community }: { community: Community }) {
       <CardContent className="flex-grow space-y-4">
          <div className="flex items-center text-sm text-muted-foreground">
             <UserIcon className="h-4 w-4 mr-2" />
-            <span>{t('community_founded_by')} <Link href={`/profile/${owner?.userId}`} className="font-semibold underline hover:text-primary">{owner?.name || 'Founder'}</Link></span>
+            <span>
+              {t('community_founded_by')}{' '}
+              {owner && owner.userId ? (
+                <Link href={`/profile/${owner.userId}`} className="font-semibold underline hover:text-primary">
+                  {owner.name || 'Founder'}
+                </Link>
+              ) : (
+                <span>{owner?.name || 'Founder'}</span>
+              )}
+            </span>
         </div>
         <div className="flex items-center text-sm text-muted-foreground">
           <Users className="h-4 w-4 mr-2" />
@@ -421,5 +430,3 @@ export default function CommunitiesPage() {
     </main>
   );
 }
-
-    

@@ -360,7 +360,13 @@ export default function CommunityProfilePage() {
         setAllProfiles(profilesSnapshot.docs.map(d => ({id: d.id, ...d.data()} as CommunityProfile)));
 
         if (user) {
-            setUserCommunities(allComms.filter(c => c.members.some(m => typeof m !== 'string' && m.userId === user.uid)));
+            const userComms = allComms.filter(c => c.members.some(m => {
+                if (typeof m === 'object' && m !== null && 'userId' in m) {
+                    return m.userId === user.uid;
+                }
+                return false;
+            }));
+            setUserCommunities(userComms);
         }
       } catch (e) {
         console.error("Error fetching ancillary data:", e);
@@ -846,5 +852,3 @@ export default function CommunityProfilePage() {
     </main>
   );
 }
-
-    
