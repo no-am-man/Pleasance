@@ -122,8 +122,10 @@ export default function UserProfilePage() {
   return (
     <main className="container mx-auto max-w-2xl py-8">
       <div className="mb-4">
-        <Button onClick={() => router.back()} variant="ghost">
-          <ArrowLeft className="mr-2 h-4 w-4" /> {t('profile_view_back')}
+        <Button asChild variant="ghost">
+          <Link href="/">
+             <ArrowLeft className="mr-2 h-4 w-4" /> {t('community_page_back_all_button')}
+          </Link>
         </Button>
       </div>
       <Card className="shadow-lg">
