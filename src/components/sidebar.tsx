@@ -209,7 +209,7 @@ export function Sidebar() {
         {
             title: t('navSystem'),
             links: [
-                { href: '/home', label: 'navWiki', icon: Info },
+                { href: '/', label: 'navWiki', icon: Info },
                 { href: '/pricing', label: 'navPricing', icon: DollarSign },
             ]
         }
