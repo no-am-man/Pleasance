@@ -396,5 +396,9 @@
   "ambasedor_explanation_p2": "הנה כמה דוגמאות למה שאתה יכול לבקש ממני לעשות:",
   "ambasedor_explanation_li1": "בקש ממני להראות לך את עמודת 'הבא בתור' במפת הדרכים הציבורית.",
   "ambasedor_explanation_li2": "בקש ממני להגיש דוח באג עם כותרת, תיאור ועדיפות.",
-  "ambasedor_explanation_li3": "בקש ממני לחפש את פרטי קהילה ספציפית, כמו 'נעימות'."
+  "ambasedor_explanation_li3": "בקש ממני לחפש את פרטי קהילה ספציפית, כמו 'נעימות'.",
+  "echo_form_title": "הדהד צורת-מחשבה",
+  "echo_form_desc": "זוהי המכניקה המרכזית לשיתוף רעיונות ברחבי הפדרציה. מצא בועת הודעה בקהילה אחרת, קבל את כתובת ה-URL שלה, והדבק אותה כאן כדי ליצור 'הד' בפיד הקהילה שלך.",
+  "echo_form_placeholder": "לדוגמה, https://your-app/community/community-id",
+  "echo_form_button": "הדהד"
 }

@@ -92,19 +92,17 @@ function AmbassadorExplanation() {
             </Card>
             <Card>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><LinkIcon className="text-primary"/> Echo a Thought-Form</CardTitle>
-                    <CardDescription>
-                        This is the core mechanic for sharing ideas across the Federation. Find a message bubble in another community, get its URL, and paste it here to create an "echo" in your own community's feed.
-                    </CardDescription>
+                    <CardTitle className="flex items-center gap-2"><LinkIcon className="text-primary"/> {t('echo_form_title')}</CardTitle>
+                    <CardDescription>{t('echo_form_desc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleEchoSubmit} className="flex gap-2">
                         <Input 
                             value={echoUrl} 
                             onChange={(e) => setEchoUrl(e.target.value)} 
-                            placeholder="e.g., https://your-app/community/community-id"
+                            placeholder={t('echo_form_placeholder')}
                         />
-                        <Button type="submit">Echo</Button>
+                        <Button type="submit">{t('echo_form_button')}</Button>
                     </form>
                 </CardContent>
             </Card>
