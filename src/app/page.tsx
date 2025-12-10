@@ -385,6 +385,20 @@ export default function CommunitiesPage() {
                         url="https://lashirilo.com"
                         imageUrl="https://lashirilo.com/favicon.ico"
                     />
+                    <Card className="flex flex-col shadow-lg">
+                        <CardHeader>
+                            <CardTitle>Link a New Federation</CardTitle>
+                            <CardDescription>Enter the URL of another Pleasance instance to add it to the list.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex-grow flex items-end">
+                            <form className="w-full flex gap-2">
+                                <Input placeholder="https://your-federation-url.com" />
+                                <Button type="submit">
+                                    <PlusCircle className="h-4 w-4" />
+                                </Button>
+                            </form>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
             
