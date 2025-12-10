@@ -94,16 +94,30 @@ function CreateCommunityCard() {
 
       const communityRef = doc(collection(firestore, 'communities'));
       
-      const allMembers = [
-        user.uid, // Add founder as a string ID
-        ...newCommunityData.members, // Add AI members as objects
-      ];
+      const profileRef = doc(firestore, 'community-profiles', user.uid);
+      const profileSnap = await getDoc(profileRef);
+      
+      const ownerMember: Member = {
+          userId: user.uid,
+          name: user.displayName || 'Founder',
+          bio: 'Community Founder',
+          role: 'Founder',
+          type: 'human',
+          avatarUrl: user.photoURL || '',
+      };
+
+      if (profileSnap.exists()) {
+        const profile = profileSnap.data();
+        ownerMember.name = profile.name;
+        ownerMember.bio = profile.bio;
+        ownerMember.avatarUrl = profile.avatarUrl || user.photoURL || '';
+      }
       
       batch.set(communityRef, {
         ...newCommunityData,
         id: communityRef.id,
         ownerId: user.uid,
-        members: allMembers, // Use the new consistent array
+        members: [ownerMember, ...newCommunityData.members],
         createdAt: serverTimestamp(),
       });
       

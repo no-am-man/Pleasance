@@ -1,4 +1,3 @@
-
 // src/lib/types.ts
 import { z } from 'zod';
 import { Timestamp } from 'firebase/firestore';
@@ -75,7 +74,7 @@ export const CommunitySchema = z.object({
   name: z.string(),
   description: z.string(),
   ownerId: z.string(),
-  members: z.array(z.union([z.string(), MemberSchema])),
+  members: z.array(MemberSchema),
   flagUrl: z.string().optional(),
   welcomeMessage: z.string(),
 });
@@ -132,12 +131,15 @@ export const FormSchema = z.object({
     id: z.string(),
     communityId: z.string(),
     originCommunityId: z.string(),
+    originFormId: z.string().optional(),
     userId: z.string(),
     userName: z.string(),
     userAvatarUrl: z.string().optional(),
     type: z.literal('text'),
     text: z.string().optional().nullable(),
     createdAt: z.any(),
+    lastEchoAt: z.any().optional(),
+    echoCount: z.number().optional(),
     status: z.enum(['active', 'done']),
     deleted: z.boolean().optional(),
     deletedAt: z.any().optional(),
