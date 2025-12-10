@@ -1,3 +1,4 @@
+
 // src/components/header.tsx
 'use client';
 
@@ -12,15 +13,14 @@ import {
   UserCircle,
   UserX,
   Users,
-  Landmark,
+  Warehouse,
   Sparkles,
   Bug,
   Bot,
-  Info,
   DollarSign,
-  Github,
+  Landmark,
+  Info,
   CalendarHeart,
-  Warehouse,
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -32,22 +32,19 @@ import {
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useUser } from '@/firebase/use-user';
-import { getFirebase } from '@/firebase/config';
+import { getFirebase } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { KanbanIcon } from '@/components/icons/kanban-icon';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ThemeSwitcher } from '@/components/theme-switcher';
-import { ScrollArea } from './ui/scroll-area';
-import { Separator } from './ui/separator';
-import { LanguageToggle } from './language-toggle';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslation } from '@/hooks/use-translation';
-import { useLanguage } from './language-provider';
+import { LanguageToggle } from '@/components/language-toggle';
+import { useLanguage } from '@/components/language-provider';
+import { navGroups, adminLink } from '@/components/sidebar';
 
 
 const FOUNDER_EMAIL = 'gg.el0ai.com@gmail.com';
-
-const adminLink = { href: '/admin', label: 'navAdmin', icon: Shield };
 
 function NavLink({
   href,
@@ -91,40 +88,7 @@ export function Header() {
     await fetch('/api/auth/session', { method: 'DELETE' });
   };
 
-  const navGroups = [
-      {
-          title: t('navFederation'),
-          links: [
-              { href: '/', label: 'navCommunity', icon: Users },
-              { href: '/museum', label: 'navMuseum', icon: Landmark },
-              { href: '/events', label: 'navEvents', icon: CalendarHeart },
-          ]
-      },
-      {
-          title: t('navCreation'),
-          links: [
-              { href: '/svg3d', label: 'navAIWorkshop', icon: Sparkles },
-              { href: '/story', label: 'navNuncyLingua', icon: BookOpen },
-              { href: '/fabrication', label: 'navFabrication', icon: Warehouse },
-          ]
-      },
-      {
-          title: t('navGovernance'),
-          links: [
-              { href: '/treasury', label: 'navTreasury', icon: Banknote },
-              { href: '/roadmap', label: 'navRoadmap', icon: KanbanIcon },
-              { href: '/bugs', label: 'navBugTracker', icon: Bug },
-              { href: '/conductor', label: 'navAmbasedor', icon: Bot },
-          ]
-      },
-      {
-          title: t('navSystem'),
-          links: [
-              { href: '/wiki', label: 'navWiki', icon: Info },
-              { href: '/pricing', label: 'navPricing', icon: DollarSign },
-          ]
-      }
-  ];
+  const translatedNavGroups = navGroups(t);
 
 
   return (
@@ -155,16 +119,19 @@ export function Header() {
                 </div>
                 <ScrollArea className="flex-1">
                     <nav className="grid items-start p-4 text-sm font-medium">
-                        {navGroups.map((group, groupIndex) => (
+                        {translatedNavGroups.map((group, groupIndex) => (
                             <div key={groupIndex} className="mb-4">
                                 <h3 className={cn("px-3 py-2 text-xs font-semibold uppercase text-muted-foreground tracking-wider", direction === 'rtl' && 'text-right')}>{group.title}</h3>
-                                {group.links.map((link) => (
+                                {group.links.map((link) => {
+                                  const isActive = link.href === '/' ? pathname === link.href : pathname.startsWith(link.href) && link.href !== '/';
+                                  return (
                                     <NavLink
                                         key={link.href}
                                         {...link}
-                                        isActive={pathname === link.href}
+                                        isActive={isActive}
                                     />
-                                ))}
+                                  )
+                                })}
                             </div>
                         ))}
                         {isFounder && (
@@ -173,7 +140,7 @@ export function Header() {
                                 <NavLink
                                     key={adminLink.href}
                                     {...adminLink}
-                                    isActive={pathname === adminLink.href}
+                                    isActive={pathname.startsWith(adminLink.href)}
                                 />
                             </div>
                         )}
@@ -205,7 +172,7 @@ export function Header() {
                             </AlertDialogTrigger>
                         </div>
                     ) : (
-                        <NavLink href="/login" label="navLogin" icon={UserCircle} isActive={false} />
+                        <NavLink href="/login" label="navLogin" icon={UserCircle} isActive={pathname.startsWith('/login')} />
                     )}
                  </div>
             </SheetContent>
