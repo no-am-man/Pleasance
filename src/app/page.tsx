@@ -224,12 +224,12 @@ function CreateCommunityCard() {
   );
 }
 
-function CommunityCard({ community, allProfiles }: { community: Community, allProfiles: CommunityProfile[] }) {
+function CommunityCard({ community }: { community: Community }) {
   const { user } = useUser();
   const { t } = useTranslation();
   if (!community) return null;
   
-  const ownerProfile = useMemo(() => allProfiles.find(p => p.userId === community.ownerId), [allProfiles, community.ownerId]);
+  const owner = community.members?.find(m => m.userId === community.ownerId);
   const isOwner = user?.uid === community.ownerId;
 
   return (
@@ -254,12 +254,12 @@ function CommunityCard({ community, allProfiles }: { community: Community, allPr
             <UserIcon className="h-4 w-4 mr-2" />
             <span>
               {t('community_founded_by')}{' '}
-              {ownerProfile ? (
-                <Link href={`/profile/${ownerProfile.userId}`} className="font-semibold underline hover:text-primary">
-                  {ownerProfile.name || 'Founder'}
+              {owner && owner.userId ? (
+                <Link href={`/profile/${owner.userId}`} className="font-semibold underline hover:text-primary">
+                  {owner.name || 'Founder'}
                 </Link>
               ) : (
-                <span>Founder</span>
+                <span>{owner?.name || 'Founder'}</span>
               )}
             </span>
         </div>
@@ -326,10 +326,6 @@ export default function CommunitiesPage() {
     }, [firestore]);
 
     const { data: communities, isLoading: isLoadingCommunities } = useCollection<Community>(communitiesQuery);
-    
-    const { data: allProfiles, isLoading: isLoadingProfiles } = useCollection<CommunityProfile>(
-        useMemoFirebase(() => firestore ? query(collection(firestore, 'community-profiles')) : null, [firestore])
-    );
 
     const filteredCommunities = useMemo(() => {
         if (!communities) return [];
@@ -341,7 +337,7 @@ export default function CommunitiesPage() {
         return communities.filter(c => c.ownerId === user.uid);
     }, [user, communities]);
 
-    const isLoading = isUserLoading || isLoadingCommunities || isLoadingProfiles;
+    const isLoading = isUserLoading || isLoadingCommunities;
 
   return (
     <main className="container mx-auto min-h-screen max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
@@ -358,7 +354,7 @@ export default function CommunitiesPage() {
                      <h2 className="text-3xl font-bold mb-6 font-headline">{t('community_your_communities')}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {userCommunities.map(community => (
-                            <CommunityCard key={community.id} community={community} allProfiles={allProfiles || []}/>
+                            <CommunityCard key={community.id} community={community} />
                         ))}
                     </div>
                     <Separator className="my-12" />
@@ -383,7 +379,7 @@ export default function CommunitiesPage() {
                 ) : filteredCommunities.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {filteredCommunities.filter(c => !userCommunities.some(uc => uc.id === c.id)).map(community => (
-                            <CommunityCard key={community.id} community={community} allProfiles={allProfiles || []} />
+                            <CommunityCard key={community.id} community={community} />
                         ))}
                     </div>
                 ) : (
