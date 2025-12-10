@@ -1,4 +1,3 @@
-
 // src/ai/flows/translate-text.ts
 'use server';
 /**
@@ -29,8 +28,8 @@ export async function translateText(
 const translatePrompt = ai.definePrompt({
     name: 'translateTextPrompt',
     input: { schema: TranslateTextInputSchema },
-    output: { schema: TranslateTextOutputSchema },
-    prompt: `Translate the following text to {{targetLanguage}}. Return only the translated text as a raw JSON object with a single key "translation", with no additional commentary or formatting.
+    // REMOVED: output: { schema: TranslateTextOutputSchema },
+    prompt: `Translate the following text to {{targetLanguage}}. Return only the translated text, with no additional commentary.
 
 Text to translate:
 "{{text}}"`,
@@ -50,6 +49,20 @@ const translateTextFlow = ai.defineFlow(
 
     const { output } = await translatePrompt(input, { model: GEMINI_PRO });
 
-    return output || { translation: input.text };
+    if (!output) {
+      return { translation: input.text }; // Fallback to original text
+    }
+
+    let translation = '';
+    try {
+        // The model might still return a JSON string.
+        const parsed = JSON.parse(output.text);
+        translation = parsed.translation || output.text;
+    } catch (e) {
+        // Or it might return raw text.
+        translation = output.text;
+    }
+
+    return { translation };
   }
 );
