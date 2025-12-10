@@ -55,6 +55,11 @@ function useCommunityName(communityId: string | null) {
 export function Breadcrumbs() {
   const pathname = usePathname();
   const { t } = useTranslation();
+  
+  if (pathname === '/') {
+    return null; // Don't show breadcrumbs on the root page
+  }
+
   const pathSegments = pathname.split('/').filter(Boolean);
 
   const communityId = pathSegments[0] === 'community' && pathSegments.length > 1 ? pathSegments[1] : null;
@@ -92,7 +97,11 @@ export function Breadcrumbs() {
         </BreadcrumbItem>
         {pathSegments.length > 0 && <BreadcrumbSeparator />}
         {pathSegments.map((segment, index) => {
-          const href = '/' + pathSegments.slice(0, index + 1).join('/');
+          // Special handling for the community link to point to the root
+          const href = (segment === 'community' && index === 0)
+            ? '/'
+            : '/' + pathSegments.slice(0, index + 1).join('/');
+
           const isLast = index === pathSegments.length - 1;
           const isCommunityIdSegment = index === 1 && pathSegments[0] === 'community';
           

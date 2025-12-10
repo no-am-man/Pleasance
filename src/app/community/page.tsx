@@ -1,4 +1,4 @@
-// src/app/page.tsx
+// src/app/community/page.tsx
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -7,8 +7,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useUser, useMemoFirebase, getFirebase } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, where, getDocs, serverTimestamp, writeBatch, doc } from 'firebase/firestore';
-import { refineCommunityPromptAction, createCommunityDetailsAction } from '@/app/actions';
+import { collection, query, where, getDocs, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { refineCommunityPromptAction, createCommunityDetailsAction } from '../actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -22,7 +22,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { FederationDiagram } from '@/components/federation-diagram';
 import { useTranslation } from '@/hooks/use-translation';
 import type { Community, Member } from '@/lib/types';
-import Image from 'next/image';
 
 
 const PromptSchema = z.object({

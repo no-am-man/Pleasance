@@ -95,7 +95,7 @@ export function Header() {
       {
           title: t('navFederation'),
           links: [
-              { href: '/community', label: 'navCommunity', icon: Users },
+              { href: '/', label: 'navCommunity', icon: Users },
               { href: '/museum', label: 'navMuseum', icon: Landmark },
               { href: '/events', label: 'navEvents', icon: CalendarHeart },
           ]
@@ -120,7 +120,7 @@ export function Header() {
       {
           title: t('navSystem'),
           links: [
-              { href: '/', label: 'navWiki', icon: Info },
+              { href: '/wiki', label: 'navWiki', icon: Info },
               { href: '/pricing', label: 'navPricing', icon: DollarSign },
           ]
       }
