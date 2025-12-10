@@ -93,6 +93,7 @@ function EchoFormDialog({ form, userCommunities }: { form: Form; userCommunities
     const [isEchoing, setIsEchoing] = useState(false);
     const [selectedCommunity, setSelectedCommunity] = useState('');
     const [isOpen, setIsOpen] = useState(false);
+    const { t } = useTranslation();
 
     const handleEcho = async () => {
         if (!user || !selectedCommunity) {
@@ -126,14 +127,14 @@ function EchoFormDialog({ form, userCommunities }: { form: Form; userCommunities
             <DialogTrigger asChild>
                 <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
                     <GitBranch className="mr-2 h-4 w-4" />
-                    Echo
+                    {t('echo_form_button')}
                 </Button>
             </DialogTrigger>
             <DialogContent onClick={(e) => e.stopPropagation()}>
                 <DialogHeader>
-                    <DialogTitle>Echo a Thought-Form</DialogTitle>
+                    <DialogTitle>{t('echo_form_title')}</DialogTitle>
                     <DialogDescription>
-                        Select one of your communities to replicate this thought-form into its feed.
+                        {t('echo_form_desc')}
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
@@ -176,6 +177,7 @@ function EchoFormDialog({ form, userCommunities }: { form: Form; userCommunities
 
 function FormBubble({ form, allCommunities, userCommunities, isMember, onClick }: { form: Form; allCommunities: Community[]; userCommunities: Community[]; isMember: boolean; onClick: () => void }) {
     const originCommunity = allCommunities.find(c => c.id === form.originCommunityId);
+    const { t } = useTranslation();
 
     return (
         <motion.div
@@ -676,11 +678,10 @@ export default function CommunityProfilePage() {
       )}
 
         <Tabs defaultValue="feed" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 md:grid-cols-6">
+            <TabsList className="grid w-full grid-cols-4 md:grid-cols-5">
                 <TabsTrigger value="feed">{t('community_tab_feed')}</TabsTrigger>
                 <TabsTrigger value="members">{t('community_tab_members')}</TabsTrigger>
                 {isMember && <TabsTrigger value="tools">{t('community_tab_tools')}</TabsTrigger>}
-                {isMember && <TabsTrigger value="wiki">Wiki</TabsTrigger>}
                 <TabsTrigger value="about">{t('community_tab_about')}</TabsTrigger>
                 {isOwner && <TabsTrigger value="admin">{t('community_tab_admin')}</TabsTrigger>}
             </TabsList>
@@ -743,7 +744,7 @@ export default function CommunityProfilePage() {
                         <CardTitle className="flex items-center gap-2">{t('community_page_tools_title')}</CardTitle>
                         <CardDescription>{t('community_page_tools_desc')}</CardDescription>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <Button asChild variant="outline" className="h-auto py-4">
                             <Link href={`/community/${id}/workshop`} className="flex flex-col items-center gap-2">
                                 <Sparkles className="w-8 h-8 text-primary" />
@@ -765,11 +766,15 @@ export default function CommunityProfilePage() {
                                 <div className="mt-2 text-xs text-center text-muted-foreground">{t('community_page_tool_treasury_desc')}</div>
                             </Link>
                         </Button>
+                         <Button asChild variant="outline" className="h-auto py-4">
+                            <Link href={`/community/${id}/wiki`} className="flex flex-col items-center gap-2">
+                                <BookOpen className="w-8 h-8 text-primary" />
+                                <span className="font-semibold">Wiki</span>
+                                <div className="mt-2 text-xs text-center text-muted-foreground">A shared knowledge base.</div>
+                            </Link>
+                        </Button>
                     </CardContent>
                 </Card>
-            </TabsContent>
-            <TabsContent value="wiki" className="mt-6">
-                <Card><CardHeader><CardTitle>Wiki</CardTitle></CardHeader></Card>
             </TabsContent>
             <TabsContent value="about" className="mt-6">
                 <Card className="shadow-lg">
