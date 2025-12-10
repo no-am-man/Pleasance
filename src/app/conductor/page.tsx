@@ -76,6 +76,21 @@ function AmbassadorExplanation() {
 
     return (
         <div className="mt-8 space-y-8">
+             <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Info className="text-primary"/> {t('ambasedor_explanation_title')}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 text-muted-foreground">
+                    <p>{t('ambasedor_explanation_p1')}</p>
+                    <p>{t('ambasedor_explanation_p2')}</p>
+                    <ul className="list-disc pl-5 space-y-2">
+                        <li><code className="bg-muted px-1 py-0.5 rounded-sm">/roadmap next up</code> - {t('ambasedor_explanation_li1')}</li>
+                        <li><code className="bg-muted px-1 py-0.5 rounded-sm">/bug Title: "Mobile view is broken" Desc: "The main page does not render correctly on mobile devices." P: high</code> - {t('ambasedor_explanation_li2')}</li>
+                        <li><code className="bg-muted px-1 py-0.5 rounded-sm">/community "Pleasance"</code> - {t('ambasedor_explanation_li3')}</li>
+                    </ul>
+                    <p>{t('ambasedor_explanation_p3')}</p>
+                </CardContent>
+            </Card>
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2"><LinkIcon className="text-primary"/> Echo a Thought-Form</CardTitle>
@@ -92,21 +107,6 @@ function AmbassadorExplanation() {
                         />
                         <Button type="submit">Echo</Button>
                     </form>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Info className="text-primary"/> {t('ambasedor_explanation_title')}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 text-muted-foreground">
-                    <p>{t('ambasedor_explanation_p1')}</p>
-                    <p>{t('ambasedor_explanation_p2')}</p>
-                    <ul className="list-disc pl-5 space-y-2">
-                        <li>{t('ambasedor_explanation_li1')}</li>
-                        <li>{t('ambasedor_explanation_li2')}</li>
-                        <li>{t('ambasedor_explanation_li3')}</li>
-                    </ul>
-                    <p>{t('ambasedor_explanation_p3')}</p>
                 </CardContent>
             </Card>
         </div>

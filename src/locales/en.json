@@ -306,7 +306,6 @@
   "community_page_delete_message_dialog_title": "Are you sure you want to delete this message?",
   "community_page_delete_message_dialog_desc": "This will permanently hide the message content. This action cannot be undone.",
   "community_page_mark_done_label": "Mark as done",
-  "community_page_comment_button": "Comment",
   "community_page_ccn_title": "Sphericilify Chat Room",
   "community_page_ccn_desc": "The central feed for community activity.",
   "community_page_ccn_desc_spheres": "A network of spheres in and around spheres.",
@@ -387,5 +386,16 @@
   "community_tab_admin": "Admin",
   "profile_artisan_title": "For Artisans & Fabricators",
   "profile_artisan_desc": "Are you an artist? Do you have a workshop or creation space? Want to be a supplier?",
-  "profile_artisan_cta": "Visit the Workshop of Manifestation"
+  "profile_artisan_cta": "Visit the Workshop of Manifestation",
+  "ambasedor_title": "Ambassador",
+  "ambasedor_subtitle": "Converse with the federation's super-agent.",
+  "ambasedor_login_desc": "You must be logged in to speak with the Ambassador.",
+  "ambasedor_login_button": "Login to Chat",
+  "ambasedor_input_placeholder": "Ask the Ambassador...",
+  "ambasedor_explanation_title": "What Can I Do?",
+  "ambasedor_explanation_p1": "As the Ambassador, I am a super-agent capable of performing complex actions and retrieving information across the entire Pleasance federation. You can ask me to perform tasks using natural language.",
+  "ambasedor_explanation_p2": "Here are a few examples of what you can ask me to do:",
+  "ambasedor_explanation_li1": "Ask me to show you the 'Next Up' column on the public roadmap.",
+  "ambasedor_explanation_li2": "Ask me to file a bug report with a title, description, and priority.",
+  "ambasedor_explanation_li3": "Ask me to look up the details of a specific community, like 'Pleasance'."
 }

@@ -69,7 +69,6 @@
   "community_find_desc": "חפש קהילות להצטרפות או עיין ברשימה למטה.",
   "community_search_placeholder": "חפש לפי שם קהילה...",
   "community_search_results": "תוצאות חיפוש",
-  "community_all_communities": "כל הקהילות",
   "community_create_title": "צור קהילה חדשה",
   "community_create_desc": "תאר את הקהילה שברצונך להביא לידי קיום. מהי מטרתה?",
   "community_vision_label": "חזון הקהילה",
@@ -386,5 +385,16 @@
   "community_tab_admin": "ניהול",
   "profile_artisan_title": "לאומנים וייצרנים",
   "profile_artisan_desc": "אתה אומן? יש לך בית מלאכה או חלל יצירה? רוצה להיות ספק?",
-  "profile_artisan_cta": "בקר בסדנת ההתגשמות"
+  "profile_artisan_cta": "בקר בסדנת ההתגשמות",
+  "ambasedor_title": "שגריר",
+  "ambasedor_subtitle": "שוחח עם סוכן-העל של הפדרציה.",
+  "ambasedor_login_desc": "עליך להיות מחובר כדי לשוחח עם השגריר.",
+  "ambasedor_login_button": "התחבר כדי לשוחח",
+  "ambasedor_input_placeholder": "שאל את השגריר...",
+  "ambasedor_explanation_title": "מה אני יכול לעשות?",
+  "ambasedor_explanation_p1": "כשגריר, אני סוכן-על המסוגל לבצע פעולות מורכבות ולאחזר מידע ברחבי פדרציית נעימות כולה. אתה יכול לבקש ממני לבצע משימות באמצעות שפה טבעית.",
+  "ambasedor_explanation_p2": "הנה כמה דוגמאות למה שאתה יכול לבקש ממני לעשות:",
+  "ambasedor_explanation_li1": "בקש ממני להראות לך את עמודת 'הבא בתור' במפת הדרכים הציבורית.",
+  "ambasedor_explanation_li2": "בקש ממני להגיש דוח באג עם כותרת, תיאור ועדיפות.",
+  "ambasedor_explanation_li3": "בקש ממני לחפש את פרטי קהילה ספציפית, כמו 'נעימות'."
 }
