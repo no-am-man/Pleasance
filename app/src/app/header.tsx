@@ -31,7 +31,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useUser } from '@/firebase/use-user';
-import { auth } from '@/firebase/config';
+import { getFirebase } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { KanbanIcon } from '@/components/icons/kanban-icon';
@@ -85,7 +85,9 @@ export function Header() {
   const isFounder = user?.email === FOUNDER_EMAIL;
 
   const handleSignOut = async () => {
+    const { auth } = getFirebase();
     await signOut(auth);
+    await fetch('/api/auth/session', { method: 'DELETE' });
   };
 
   const navGroups = [
