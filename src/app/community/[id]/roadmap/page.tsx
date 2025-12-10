@@ -275,8 +275,8 @@ export default function CommunityRoadmapPage() {
   };
 
   useEffect(() => {
-    if (isUserLoading) return;
-    if (!communityId || !firestore) {
+    if (isUserLoading || !firestore) return;
+    if (!communityId) {
         setIsCommunityLoading(false);
         return;
     }
@@ -309,7 +309,7 @@ export default function CommunityRoadmapPage() {
     };
     fetchCommunity();
     fetchRoadmap();
-  }, [communityId, isUserLoading]);
+  }, [communityId, isUserLoading, firestore]);
   
   
   const [columns, setColumns] = useState<RoadmapColumnType[]>([]);
