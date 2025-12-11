@@ -377,7 +377,7 @@ export function CommunityClientPage({ serverCommunity, allCommunities, allProfil
   
   const allMembers = useMemo(() => {
     if (!community?.members) return [];
-    // Sort so human members appear first
+    // The server component now hydrates all members, so sorting is simpler
     return [...community.members].sort((a, b) => {
         if (a.type === 'human' && b.type !== 'human') return -1;
         if (a.type !== 'human' && b.type === 'human') return 1;
@@ -425,9 +425,18 @@ export function CommunityClientPage({ serverCommunity, allCommunities, allProfil
   const handleInvite = async (profile: CommunityProfile) => {
     if (!community || !firestore) return;
     
+    // Server hydration ensures members are objects.
+    const newMember: Member = {
+      userId: profile.userId,
+      name: profile.name,
+      bio: profile.bio,
+      role: 'Member',
+      type: 'human',
+      avatarUrl: profile.avatarUrl,
+    };
     const communityDocRef = doc(firestore, 'communities', community.id);
     await updateDoc(communityDocRef, {
-        members: arrayUnion(profile.userId)
+        members: arrayUnion(newMember)
     });
 
     await welcomeNewMemberAction({ communityId: community.id, communityName: community.name, newMemberName: profile.name });
@@ -452,14 +461,9 @@ export function CommunityClientPage({ serverCommunity, allCommunities, allProfil
     
     const communityDocRef = doc(firestore, 'communities', community.id);
     try {
-      const memberIdentifierToRemove = community.members.find(m => (typeof m === 'string' ? m : m.userId) === memberToRemove.userId);
-
-      if (memberIdentifierToRemove === undefined) {
-          throw new Error("Could not find the member in the community list to remove.");
-      }
-      
+      // The member to remove is already a full object, no need to find it again.
       await updateDoc(communityDocRef, {
-        members: arrayRemove(memberIdentifierToRemove)
+        members: arrayRemove(memberToRemove)
       });
 
       toast({ title: t('community_page_member_removed_title'), description: t('community_page_member_removed_desc', { name: memberToRemove.name }) });
@@ -607,7 +611,7 @@ export function CommunityClientPage({ serverCommunity, allCommunities, allProfil
                     <CardContent>
                         <div className="grid grid-cols-1 gap-6">
                             {allMembers.map((member) => (
-                                <MemberCard key={typeof member === 'string' ? member : (member.userId || member.name)} member={member} communityId={community.id} isOwner={isOwner} onRemove={handleRemoveMember} allProfiles={allProfiles}/>
+                                <MemberCard key={typeof member === 'string' ? member : (member.userId || member.name)} member={member} communityId={community.id} isOwner={isOwner} onRemove={handleRemoveMember} />
                             ))}
                         </div>
                     </CardContent>

@@ -8,16 +8,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Bot, User, UserX } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
-import type { Member, CommunityProfile } from '@/lib/types';
+import type { Member } from '@/lib/types';
 import { useUser } from '@/firebase';
-import { useMemo } from 'react';
 
-export function MemberCard({ member, communityId, isOwner, onRemove }: { member: Member | string; communityId: string; isOwner: boolean; onRemove: (member: Member) => void; allProfiles: CommunityProfile[] }) {
+export function MemberCard({ member, communityId, isOwner, onRemove }: { member: Member; communityId: string; isOwner: boolean; onRemove: (member: Member) => void; }) {
     const { t } = useTranslation();
     const { user } = useUser();
 
-    // The member data is now fully hydrated by the server component, so no more complex logic here.
-    const memberData = member as Member;
+    const memberData = member;
 
     if (!memberData) {
         return null; 
