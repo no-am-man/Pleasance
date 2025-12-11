@@ -1,4 +1,3 @@
-
 // src/app/page.tsx
 'use client';
 
@@ -130,9 +129,8 @@ function CreateCommunityCard() {
       });
       form.reset();
 
-      // THE FIX: Navigate after the write has been confirmed.
-      // The onSnapshot listener on the main page will handle the UI update.
-      router.push(`/community/${communityRef.id}`);
+      // THE FIX: Force a full page reload to avoid Next.js router cache issues.
+      window.location.href = `/community/${communityRef.id}`;
 
     } catch (e) {
       const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
@@ -452,5 +450,3 @@ export default function CommunitiesPage() {
     </main>
   );
 }
-
-    
