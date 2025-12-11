@@ -349,7 +349,7 @@ export function CommunityClientPage({ serverCommunity, allCommunities, allProfil
     if (isUserLoading || !user || !firestore) return;
 
     // Set user-specific communities
-    const userComms = allCommunities.filter(c => c.members.some(m => m.userId === user.uid));
+    const userComms = allCommunities.filter(c => c.members.some(m => (typeof m === 'string' ? m : m.userId) === user.uid));
     setUserCommunities(userComms);
 
     // Get user profile
@@ -387,7 +387,7 @@ export function CommunityClientPage({ serverCommunity, allCommunities, allProfil
 
   const isMember = useMemo(() => {
     if (!user || !community?.members) return false;
-    return community.members.some(member => member.userId === user.uid);
+    return community.members.some(member => (typeof member === 'string' ? member : member.userId) === user.uid);
   }, [user, community]);
 
 
@@ -425,17 +425,9 @@ export function CommunityClientPage({ serverCommunity, allCommunities, allProfil
   const handleInvite = async (profile: CommunityProfile) => {
     if (!community || !firestore) return;
     
-    const newMember: Member = {
-        userId: profile.userId,
-        name: profile.name,
-        bio: profile.bio,
-        role: 'Member',
-        type: 'human',
-        avatarUrl: profile.avatarUrl || '',
-    };
     const communityDocRef = doc(firestore, 'communities', community.id);
     await updateDoc(communityDocRef, {
-        members: arrayUnion(newMember)
+        members: arrayUnion(profile.userId)
     });
 
     await welcomeNewMemberAction({ communityId: community.id, communityName: community.name, newMemberName: profile.name });
@@ -460,15 +452,14 @@ export function CommunityClientPage({ serverCommunity, allCommunities, allProfil
     
     const communityDocRef = doc(firestore, 'communities', community.id);
     try {
-      // Find the exact object to remove. This is crucial for arrayRemove to work with objects.
-      const memberObjectToRemove = community.members.find(m => m.userId === memberToRemove.userId && m.name === memberToRemove.name);
+      const memberIdentifierToRemove = community.members.find(m => (typeof m === 'string' ? m : m.userId) === memberToRemove.userId);
 
-      if (!memberObjectToRemove) {
-          throw new Error("Could not find the exact member object to remove.");
+      if (memberIdentifierToRemove === undefined) {
+          throw new Error("Could not find the member in the community list to remove.");
       }
-
+      
       await updateDoc(communityDocRef, {
-        members: arrayRemove(memberObjectToRemove)
+        members: arrayRemove(memberIdentifierToRemove)
       });
 
       toast({ title: t('community_page_member_removed_title'), description: t('community_page_member_removed_desc', { name: memberToRemove.name }) });
@@ -615,8 +606,8 @@ export function CommunityClientPage({ serverCommunity, allCommunities, allProfil
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 gap-6">
-                            {allMembers.map((member, i) => (
-                                <MemberCard key={member.userId || `${member.name}-${i}`} member={member} communityId={community.id} isOwner={isOwner} onRemove={handleRemoveMember}/>
+                            {allMembers.map((member) => (
+                                <MemberCard key={typeof member === 'string' ? member : (member.userId || member.name)} member={member} communityId={community.id} isOwner={isOwner} onRemove={handleRemoveMember} allProfiles={allProfiles}/>
                             ))}
                         </div>
                     </CardContent>
@@ -631,7 +622,7 @@ export function CommunityClientPage({ serverCommunity, allCommunities, allProfil
                             <CardContent>
                                 {allProfiles.length > 0 ? (
                                     <div className="space-y-4">
-                                        {allProfiles.filter(p => !allMembers.some(m => m.userId === p.userId)).map(profile => (
+                                        {allProfiles.filter(p => !allMembers.some(m => (typeof m === 'string' ? m : m.userId) === p.userId)).map(profile => (
                                             <Card key={profile.id} className="flex items-center p-4">
                                                 <Avatar className="w-12 h-12 mr-4">
                                                     <AvatarImage src={profile.avatarUrl || `https://i.pravatar.cc/150?u=${profile.name}`} alt={profile.name} />

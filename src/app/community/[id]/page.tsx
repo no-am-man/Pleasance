@@ -15,29 +15,53 @@ async function getCommunity(id: string): Promise<Community | null> {
             return null;
         }
 
-        const communityData = communityDoc.data() as Omit<Community, 'id'>;
+        const communityData = communityDoc.data() as Omit<Community, 'id' | 'members'>;
+
+        // Ensure members is an array before processing
+        const membersArray = Array.isArray(communityData.members) ? communityData.members : [];
 
         // Hydrate member strings into full Member objects
-        const memberPromises = communityData.members.map(async (member) => {
+        const memberPromises = membersArray.map(async (member) => {
             if (typeof member === 'string') {
-                const profileDoc = await firestore.collection('community-profiles').doc(member).get();
-                if (profileDoc.exists()) {
-                    const profile = profileDoc.data() as CommunityProfile;
-                    return {
-                        userId: profile.userId,
-                        name: profile.name,
-                        bio: profile.bio,
-                        role: 'Member',
-                        type: 'human',
-                        avatarUrl: profile.avatarUrl || '',
-                    } as Member;
+                try {
+                    const profileDoc = await firestore.collection('community-profiles').doc(member).get();
+                    if (profileDoc.exists()) {
+                        const profile = profileDoc.data() as CommunityProfile;
+                        return {
+                            userId: profile.userId,
+                            name: profile.name,
+                            bio: profile.bio,
+                            role: 'Member',
+                            type: 'human',
+                            avatarUrl: profile.avatarUrl || '',
+                        } as Member;
+                    }
+                } catch (e) {
+                     console.error(`Failed to fetch profile for member ID: ${member}`, e);
                 }
-                return null; // Member string ID doesn't correspond to a profile
+                return null; // Member string ID doesn't correspond to a profile or failed to fetch
             }
             return member as Member; // Already a member object (AI)
         });
 
         const resolvedMembers = (await Promise.all(memberPromises)).filter(m => m !== null) as Member[];
+        
+        // Ensure the owner is always included if they are not in the members list
+        if (!resolvedMembers.some(m => m.userId === communityData.ownerId)) {
+            const ownerProfileDoc = await firestore.collection('community-profiles').doc(communityData.ownerId).get();
+            if (ownerProfileDoc.exists()) {
+                 const ownerProfile = ownerProfileDoc.data() as CommunityProfile;
+                 resolvedMembers.unshift({
+                    userId: ownerProfile.userId,
+                    name: ownerProfile.name,
+                    bio: ownerProfile.bio,
+                    role: 'Founder',
+                    type: 'human',
+                    avatarUrl: ownerProfile.avatarUrl || '',
+                 });
+            }
+        }
+
 
         return {
             id: communityDoc.id,

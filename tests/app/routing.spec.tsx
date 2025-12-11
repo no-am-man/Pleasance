@@ -10,7 +10,10 @@ import en from '@/locales/en.json';
 // Mock the hooks used by the components
 vi.mock('next/navigation', () => ({
   usePathname: () => '/',
-  useRouter: () => ({}),
+  useRouter: () => ({
+    push: vi.fn(),
+    refresh: vi.fn(),
+  }),
 }));
 
 vi.mock('@/firebase/use-user', () => ({

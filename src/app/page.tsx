@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useUser, getFirebase } from '@/firebase';
-import { collection, query, onSnapshot, serverTimestamp, writeBatch, doc, getDoc } from 'firebase/firestore';
+import { collection, query, onSnapshot, serverTimestamp, doc, getDoc, writeBatch } from 'firebase/firestore';
 import { refineCommunityPromptAction, createCommunityDetailsAction } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -90,7 +90,8 @@ function CreateCommunityCard() {
           throw new Error("Firestore not initialized.");
       }
       const newCommunityData = await createCommunityDetailsAction(data);
-      
+      const batch = writeBatch(firestore);
+
       const communityRef = doc(collection(firestore, 'communities'));
       
       const profileRef = doc(firestore, 'community-profiles', user.uid);
@@ -112,10 +113,6 @@ function CreateCommunityCard() {
         ownerMember.avatarUrl = profile.avatarUrl || user.photoURL || '';
       }
       
-      const writeBatch = getFirebase().firestore ? getFirestore(getFirebase().app) : null;
-        if (!writeBatch) throw new Error("Firestore not available");
-        const batch = writeBatch(firestore);
-        
       batch.set(communityRef, {
         ...newCommunityData,
         id: communityRef.id,
@@ -128,9 +125,11 @@ function CreateCommunityCard() {
 
       toast({
         title: 'Community Created!',
-        description: `"${newCommunityData.name}" has been founded. Navigating to your new community...`,
+        description: `"${newCommunityData.name}" has been founded.`,
       });
-      
+      form.reset();
+
+      // THE FIX: Navigate after the write has been confirmed, then refresh.
       router.push(`/community/${communityRef.id}`);
       router.refresh();
 

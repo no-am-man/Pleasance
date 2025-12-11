@@ -24,7 +24,7 @@ export const MemberSchema = z.object({
   role: z.string().describe("The member's role in the community."),
   bio: z.string().describe("A short bio describing the member's personality and purpose."),
   type: z.enum(['AI', 'human']).describe('The type of member.'),
-  avatarUrl: z.string().optional(),
+  avatarUrl: z.string().url().optional(),
   userId: z.string().optional(),
 });
 export type Member = z.infer<typeof MemberSchema>;
@@ -74,7 +74,7 @@ export const CommunitySchema = z.object({
   name: z.string(),
   description: z.string(),
   ownerId: z.string(),
-  members: z.array(MemberSchema),
+  members: z.array(z.union([z.string(), MemberSchema])),
   flagUrl: z.string().optional(),
   welcomeMessage: z.string(),
 });
