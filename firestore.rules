@@ -32,11 +32,13 @@ service cloud.firestore {
     
     function isHumanMember(communityId) {
       let communityDoc = get(/databases/$(database)/documents/communities/$(communityId));
-      // Safeguard against missing doc or `members` field.
-      return isSignedIn() 
-          && communityDoc != null
-          && "members" in communityDoc.data
-          && request.auth.uid in communityDoc.data.members;
+      let members = communityDoc.data.members;
+
+      // Check if the user's UID is in the members array, whether it's an array of strings or objects.
+      return isSignedIn() &&
+             communityDoc != null &&
+             "members" in communityDoc.data &&
+             (request.auth.uid in members || members.exists(m, m.userId == request.auth.uid));
     }
     
     // A broader check to see if a user is part of the community, either as owner or member.
@@ -87,9 +89,14 @@ service cloud.firestore {
             allow create, update: if isOwner(userId);
         }
         
-        // Generic rule for member-only access to other sub-collections
-        match /{path=**} {
+        // Creations (workshop/treasury): Readable by members, writable by members.
+        match /creations/{creationId} {
             allow read, write: if isMember(communityId);
+        }
+
+        // Roadmap: Readable and writable only by members.
+        match /roadmap/{columnId} {
+             allow read, write: if isMember(communityId);
         }
     }
     
@@ -131,6 +138,14 @@ service cloud.firestore {
     match /leaderboard/{userId} {
         allow read: if true;
         allow write: if false; // Only server-side writes
+    }
+
+     // Rule for fabrication orders
+    match /fabricationOrders/{orderId} {
+        allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+        // Allow updates only by founder/admin for status changes
+        allow update: if isFounder(); 
     }
   }
 }
