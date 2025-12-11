@@ -20,7 +20,7 @@ export type GenerateSvg3dInput = z.infer<typeof GenerateSvg3dInputSchema>;
 
 // Schema for chat input, as it's used across client and server
 export const MemberSchema = z.object({
-  name: z.string().describe("The AI member's unique name."),
+  name: z.string().describe("The member's unique name."),
   role: z.string().describe("The member's role in the community."),
   bio: z.string().describe("A short bio describing the member's personality and purpose."),
   type: z.enum(['AI', 'human']).describe('The type of member.'),
@@ -74,7 +74,7 @@ export const CommunitySchema = z.object({
   name: z.string(),
   description: z.string(),
   ownerId: z.string(),
-  members: z.array(z.union([z.string(), MemberSchema])),
+  members: z.array(MemberSchema),
   flagUrl: z.string().optional(),
   welcomeMessage: z.string(),
 });

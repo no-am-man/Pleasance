@@ -90,8 +90,7 @@ function CreateCommunityCard() {
           throw new Error("Firestore not initialized.");
       }
       const newCommunityData = await createCommunityDetailsAction(data);
-      const batch = writeBatch(firestore);
-
+      
       const communityRef = doc(collection(firestore, 'communities'));
       
       const profileRef = doc(firestore, 'community-profiles', user.uid);
@@ -113,6 +112,10 @@ function CreateCommunityCard() {
         ownerMember.avatarUrl = profile.avatarUrl || user.photoURL || '';
       }
       
+      const writeBatch = getFirebase().firestore ? getFirestore(getFirebase().app) : null;
+        if (!writeBatch) throw new Error("Firestore not available");
+        const batch = writeBatch(firestore);
+        
       batch.set(communityRef, {
         ...newCommunityData,
         id: communityRef.id,
@@ -125,12 +128,11 @@ function CreateCommunityCard() {
 
       toast({
         title: 'Community Created!',
-        description: `"${newCommunityData.name}" has been founded.`,
+        description: `"${newCommunityData.name}" has been founded. Navigating to your new community...`,
       });
-      form.reset();
-
-      // THE FIX: Force a full page reload to avoid Next.js router cache issues.
-      window.location.href = `/community/${communityRef.id}`;
+      
+      router.push(`/community/${communityRef.id}`);
+      router.refresh();
 
     } catch (e) {
       const message = e instanceof Error ? e.message : 'An unexpected error occurred.';
@@ -233,7 +235,7 @@ function CommunityCard({ community }: { community: Community }) {
   const { t } = useTranslation();
   if (!community) return null;
   
-  const owner = community.members?.find(m => typeof m !== 'string' && m.userId === community.ownerId);
+  const owner = community.members?.find(m => m.userId === community.ownerId);
   const isOwner = user?.uid === community.ownerId;
 
   return (
